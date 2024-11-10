@@ -32,7 +32,10 @@ import type {Marker} from '@googlemaps/markerclusterer';
 
 import {Circle} from './components/circle.js'
 
+// POIの型定義
 type Poi ={ key: string, location: google.maps.LatLngLiteral }
+
+// POIのデータ
 const locations: Poi[] = [
   {key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108  }},
   {key: 'tarongaZoo', location: { lat: -33.8472767, lng: 151.2188164 }},
@@ -51,32 +54,58 @@ const locations: Poi[] = [
   {key: 'barangaroo', location: { lat: - 33.8605523, lng: 151.1972205 }},
 ];
 
+// アプリケーションのメインコンポーネント
 const App = () => (
+  // APIキーを提供
   <APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY} onLoad={() => console.log('Maps API has loaded.')}>
+    {/* 地図コンポーネント */}
     <Map
+      // 初期ズームレベル
       defaultZoom={13}
+      // 地図の中心の初期座標
       defaultCenter={{ lat: -33.860664, lng: 151.208138 }}
+      // カメラ変更時のイベントハンドラ
       onCameraChanged={(ev: MapCameraChangedEvent) =>
         console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
       }
+      // 地図ID
       mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
+      {/* POIマーカーコンポーネント */}
     <PoiMarkers pois={locations} />
     </Map>
   </APIProvider>
 );
 
+// POIマーカーを表示するコンポーネント
 const PoiMarkers = (props: { pois: Poi[] }) => {
+  // useMapフックで地図インスタンスを取得
   const map = useMap();
+
+  // マーカーの状態を管理するstate
   const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
+  // マーカークラスタラーのインスタンスを格納するref
   const clusterer = useRef<MarkerClusterer | null>(null);
+  // 円の中心の座標を管理するstate
   const [circleCenter, setCircleCenter] = useState<google.maps.LatLngLiteral | null>(null);
+  // 現在アクティブなマーカーを管理するstate
   const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+
+  // マーカークリック時のイベントハンドラ
   const handleClick = useCallback((poi: Poi) => {
+    // アクティブなマーカーを更新
     setActiveMarker(poi);
+    // 円の中心を更新
     setCircleCenter(poi.location);
   }, []);
-  // Initialize MarkerClusterer, if the map has changed
+
+  // 地図クリック時のイベントハンドラ
+  const handleMapClick = () => {
+    // アクティブなマーカーをクリア
+    setActiveMarker(null); // Close the info window
+  };
+
+  // 地図が変更されたら、MarkerClustererを初期化
   useEffect(() => {
     if (!map) return;
     if (!clusterer.current) {
@@ -84,12 +113,13 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
     }
   }, [map]);
 
-  // Update markers, if the markers array has changed
+  // マーカーの状態が変更されたら、クラスタラーの表示を更新
   useEffect(() => {
     clusterer.current?.clearMarkers();
     clusterer.current?.addMarkers(Object.values(markers));
   }, [markers]);
 
+  // マーカーのrefをセットする関数
   const setMarkerRef = (marker: Marker | null, key: string) => {
     if (marker && markers[key]) return;
     if (!marker && !markers[key]) return;
@@ -107,6 +137,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
 
   return (
     <>
+      {/* 円の表示 */}
       <Circle
           radius={500}
           center={circleCenter}
@@ -116,6 +147,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           fillColor={'#3b82f6'}
           fillOpacity={0.3}
         />
+      {/* POIのリストをマッピングして、マーカーを表示 */}
       {props.pois.map( (poi: Poi) => (
         <AdvancedMarker
           key={poi.key}
@@ -124,15 +156,17 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           clickable={true}
           onClick={() => handleClick(poi)}
           >
+          {/* マーカーのピン */}
           <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
-          {activeMarker === poi && ( // Conditionally render InfoWindow
+          {/* アクティブなマーカーの場合、情報ウィンドウを表示 */}
+          {activeMarker === poi && (
             <InfoWindow
               position={poi.location}
               onCloseClick={() => setActiveMarker(null)}
             >
               <div>
                 <h2>{poi.key}</h2>
-                {/* Add more information about the POI here */}
+                {/* POIに関する追加情報をここに表示 */}
               </div>
             </InfoWindow>
           )}
@@ -144,6 +178,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
 
 export default App;
 
+// アプリケーションのエントリポイント
 const root = createRoot(document.getElementById('app'));
 root.render(
       <App />
