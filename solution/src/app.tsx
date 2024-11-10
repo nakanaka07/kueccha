@@ -29,7 +29,7 @@ import {
 import {MarkerClusterer} from '@googlemaps/markerclusterer';
 import type {Marker} from '@googlemaps/markerclusterer';
 
-import {Circle} from './components/circle'
+import {Circle} from './components/circle.js'
 
 type Poi ={ key: string, location: google.maps.LatLngLiteral }
 const locations: Poi[] = [
