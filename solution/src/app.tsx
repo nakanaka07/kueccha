@@ -23,7 +23,8 @@ import {
   useMap,
   AdvancedMarker,
   MapCameraChangedEvent,
-  Pin
+  Pin,
+  InfoWindow,
 } from '@vis.gl/react-google-maps';
 
 import {MarkerClusterer} from '@googlemaps/markerclusterer';
@@ -69,14 +70,12 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
   const map = useMap();
   const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
   const clusterer = useRef<MarkerClusterer | null>(null);
-  const [circleCenter, setCircleCenter] = useState(null)
-  const handleClick = useCallback((ev: google.maps.MapMouseEvent) => {
-    if(!map) return;
-    if(!ev.latLng) return;
-    console.log('marker clicked: ', ev.latLng.toString());
-    map.panTo(ev.latLng);
-    setCircleCenter(ev.latLng);
-  });
+  const [circleCenter, setCircleCenter] = useState<google.maps.LatLngLiteral | null>(null);
+  const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+  const handleClick = useCallback((poi: Poi) => {
+    setActiveMarker(poi);
+    setCircleCenter(poi.location);
+  }, []);
   // Initialize MarkerClusterer, if the map has changed
   useEffect(() => {
     if (!map) return;
@@ -109,7 +108,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
   return (
     <>
       <Circle
-          radius={800}
+          radius={500}
           center={circleCenter}
           strokeColor={'#0c4cb3'}
           strokeOpacity={1}
@@ -123,9 +122,20 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           position={poi.location}
           ref={marker => setMarkerRef(marker, poi.key)}
           clickable={true}
-          onClick={handleClick}
+          onClick={() => handleClick(poi)}
           >
-            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          {activeMarker === poi && ( // Conditionally render InfoWindow
+            <InfoWindow
+              position={poi.location}
+              onCloseClick={() => setActiveMarker(null)}
+            >
+              <div>
+                <h2>{poi.key}</h2>
+                {/* Add more information about the POI here */}
+              </div>
+            </InfoWindow>
+          )}
         </AdvancedMarker>
       ))}
     </>
