@@ -92,7 +92,7 @@ const App = () => (
       defaultCenter={{ lat: -33.860664, lng: 151.208138 }}
       // カメラ変更時のイベントハンドラ
       onCameraChanged={(ev: MapCameraChangedEvent) =>
-        console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
+        console.log('地図のカメラが変更されました:', ev.detail.center, 'ズームレベル:', ev.detail.zoom)
       }
       // 地図ID
       mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
@@ -209,11 +209,15 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
         <AdvancedMarker
           key={poi.key} // マーカーのキー
           position={poi.location} // マーカーの座標
+          zIndex={100} // 他の要素よりも高い値を設定
           ref={marker => {
             // マーカーのrefを設定
             setMarkerRef(marker, poi.key);
           }}
-          onClick={() => handleClick(poi)} // マーカークリック時のイベントハンドラ
+          onClick={() => {
+            handleClick(poi);
+            console.log("マーカーがクリックされました:", poi); // クリックされたPOIの情報を出力
+          }} // マーカークリック時のイベントハンドラ
         >
           {/* マーカーのピン */}
           <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
@@ -221,6 +225,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           {activeMarker === poi && (
             <InfoWindow
               position={poi.location} // 情報ウィンドウの座標
+              pixelOffset={new google.maps.Size(0, -40)} // 例：マーカーの上方向に30ピクセルオフセット
               onCloseClick={() => {
                 setActiveMarker(null); // アクティブなマーカーをクリア
                 setShowCircle(false); // InfoWindowを閉じるときに円を閉じる
@@ -229,6 +234,8 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
               <div>
                 <h2>{poi.key}</h2>
                 {/* POIに関する追加情報をここに表示 */}
+                <h3>店名　{poi.key}</h3>
+                <h3>時間　</h3>
               </div>
             </InfoWindow>
           )}
