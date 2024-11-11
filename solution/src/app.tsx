@@ -30,26 +30,47 @@ import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { Circle } from './components/circle.js'
 
 // POI (Point of Interest) の型定義
-type Poi = { key: string, location: google.maps.LatLngLiteral }
+type Poi = {
+  key: string;          //座標値の欄にする
+  location: google.maps.LatLngLiteral;    //緯度と経度
+  name: string;         //名称
+  category: string;     //カテゴリー
+  genre: string;        //ジャンル
+  monday: string;       //月曜日
+  tuesday: string;      //火曜日
+  wednesday: string;    //水曜日
+  thursday: string;     //木曜日
+  friday: string;       //金曜日
+  saturday: string;     //土曜日
+  sunday: string;       //日曜日
+  holiday: string;      //祝日
+  description: string;  //説明
+  reservation: string;  //予約
+  payment: string;      //支払
+  phone: string;        //問い合わせ
+  address: string;      //所在地
+  information: string;  //関連情報
+  View: string;         //Googleマップで見る
+}
 
 // POIのデータ (シドニーの観光スポット)
-const locations: Poi[] = [
-  { key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108 } }, // オペラハウス
-  { key: 'tarongaZoo', location: { lat: -33.8472767, lng: 151.2188164 } }, // タロンガ動物園
-  { key: 'manlyBeach', location: { lat: -33.8209738, lng: 151.2563253 } }, // マンリービーチ
-  { key: 'hyderPark', location: { lat: -33.8690081, lng: 151.2052393 } }, // ハイドパーク
-  { key: 'theRocks', location: { lat: -33.8587568, lng: 151.2058246 } }, // ロックス
-  { key: 'circularQuay', location: { lat: -33.858761, lng: 151.2055688 } }, // サーキュラーキー
-  { key: 'harbourBridge', location: { lat: -33.852228, lng: 151.2038374 } }, // ハーバーブリッジ
-  { key: 'kingsCross', location: { lat: -33.8737375, lng: 151.222569 } }, // キングスクロス
-  { key: 'botanicGardens', location: { lat: -33.864167, lng: 151.216387 } }, // 王立植物園
-  { key: 'museumOfSydney', location: { lat: -33.8636005, lng: 151.2092542 } }, // シドニー博物館
-  { key: 'maritimeMuseum', location: { lat: -33.869395, lng: 151.198648 } }, // 海事博物館
-  { key: 'kingStreetWharf', location: { lat: -33.8665445, lng: 151.1989808 } }, // キングストリートワーフ
-  { key: 'aquarium', location: { lat: -33.869627, lng: 151.202146 } }, // 水族館
-  { key: 'darlingHarbour', location: { lat: -33.87488, lng: 151.1987113 } }, // ダーリングハーバー
-  { key: 'barangaroo', location: { lat: -33.8605523, lng: 151.1972205 } }, // バランガルー
-];
+//const locations: Poi[] = [
+//  { key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108 } }, // オペラハウス
+//  { key: 'tarongaZoo', location: { lat: -33.8472767, lng: 151.2188164 } }, // タロンガ動物園
+//  { key: 'manlyBeach', location: { lat: -33.8209738, lng: 151.2563253 } }, // マンリービーチ
+//  { key: 'hyderPark', location: { lat: -33.8690081, lng: 151.2052393 } }, // ハイドパーク
+//  { key: 'theRocks', location: { lat: -33.8587568, lng: 151.2058246 } }, // ロックス
+//  { key: 'circularQuay', location: { lat: -33.858761, lng: 151.2055688 } }, // サーキュラーキー
+//  { key: 'harbourBridge', location: { lat: -33.852228, lng: 151.2038374 } }, // ハーバーブリッジ
+//  { key: 'kingsCross', location: { lat: -33.8737375, lng: 151.222569 } }, // キングスクロス
+//  { key: 'botanicGardens', location: { lat: -33.864167, lng: 151.216387 } }, // 王立植物園
+//  { key: 'museumOfSydney', location: { lat: -33.8636005, lng: 151.2092542 } }, // シドニー博物館
+//  { key: 'maritimeMuseum', location: { lat: -33.869395, lng: 151.198648 } }, // 海事博物館
+//  { key: 'kingStreetWharf', location: { lat: -33.8665445, lng: 151.1989808 } }, // キングストリートワーフ
+//  { key: 'aquarium', location: { lat: -33.869627, lng: 151.202146 } }, // 水族館
+//  { key: 'darlingHarbour', location: { lat: -33.87488, lng: 151.1987113 } }, // ダーリングハーバー
+//  { key: 'barangaroo', location: { lat: -33.8605523, lng: 151.1972205 } }, // バランガルー
+//];
 
 // AdvancedMarkerElementをラップするクラス
 class AdvancedMarkerWrapper {
