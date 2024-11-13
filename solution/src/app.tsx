@@ -52,7 +52,7 @@ type Poi = {
 };
 
 // スプレッドシートからデータを取得する関数
-const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
+const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[] | Error> => {
   try {
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:AY?gid=95850266`, // シートIDとデータ範囲を修正
@@ -73,33 +73,68 @@ const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
     }
 
     // スプレッドシートのデータをPOI型に変換
-    return data.values.map((row: string[]) => ({
-      key: row[44],
-      location: { lat: parseFloat(row[47]), lng: parseFloat(row[46]) },
-      name: row[43],
-      category: row[26],
-      genre: row[27],
-      monday: row[28],
-      tuesday: row[29],
-      wednesday: row[30],
-      thursday: row[31],
-      friday: row[32],
-      saturday: row[33],
-      sunday: row[34],
-      holiday: row[35],
-      description: row[36],
-      reservation: row[37],
-      payment: row[38],
-      phone: row[39],
-      address: row[40],
-      information: row[41],
-      View: row[42],
-    }));
-  } catch (error) {
-    console.error('エラーが発生しました:', error);
-    return [];
-  }
-};
+    return data.values.map((row: string[]) => {
+      // 各項目の型を検証
+      const lat = parseFloat(row[47]);
+      if (isNaN(lat)) {
+        throw new Error(`緯度の値が不正です: ${row[47]}`);
+      }
+      const lng = parseFloat(row[46]);
+      if (isNaN(lng)) {
+        throw new Error(`経度の値が不正です: ${row[46]}`);
+      }
+
+      // key は string 型なので、特に検証は不要です
+      const key = row[44];
+
+      // location は { lat: number, lng: number } 型なので、lat と lng の検証で十分です
+
+      // name, category, genre, monday から View まではすべて string 型なので、特に検証は不要です
+      const name = row[43];
+      const category = row[26];
+      const genre = row[27];
+      const monday = row[28];
+      const tuesday = row[29];
+      const wednesday = row[30];
+      const thursday = row[31];
+      const friday = row[32];
+      const saturday = row[33];
+      const sunday = row[34];
+      const holiday = row[35];
+      const description = row[36];
+      const reservation = row[37];
+      const payment = row[38];
+      const phone = row[39];
+      const address = row[40];
+      const information = row[41];
+      const View = row[42];
+
+      return {
+        key,
+        location: { lat, lng },
+        name,
+        category,
+        genre,
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+        sunday,
+        holiday,
+        description,
+        reservation,
+        payment,
+        phone,
+        address,
+        information,
+        View,
+      };
+    })
+    .catch((error) => {
+      console.error('エラーが発生しました:', error);
+      return [];
 
 // アプリケーションのメインコンポーネント
 const App = () => {
