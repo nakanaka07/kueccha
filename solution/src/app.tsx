@@ -119,8 +119,8 @@ const App = () => {
   return (
     <APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY}>
       <Map
-        defaultZoom={13}
-        defaultCenter={{ lat: 34.686567, lng: 135.52000 }} // 京都市内の適当な座標を設定
+        defaultZoom={10}
+        defaultCenter={{ lat: 38.00000, lng: 138.4000 }} // 佐渡市内の適当な座標を設定
         mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
         <PoiMarkers pois={pois} />
