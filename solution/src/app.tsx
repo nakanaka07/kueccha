@@ -21,7 +21,6 @@ import {
   Map,
   useMap,
   AdvancedMarker,
-  MapCameraChangedEvent,
   Pin,
   InfoWindow,
 } from '@vis.gl/react-google-maps';
@@ -30,7 +29,7 @@ import { Circle } from './components/circle.js';
 
 // POI (Point of Interest) の型定義
 type Poi = {
-  key: string;          // 座標値の欄にする
+  key: string;          // 座標値にする
   location: google.maps.LatLngLiteral;    // 緯度と経度
   name: string;         // 名称
   category: string;     // カテゴリー
@@ -56,7 +55,7 @@ type Poi = {
 const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
   try {
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A2:U`, // データ範囲を指定
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:AY?gid=95850266`, // シートIDとデータ範囲を修正
       {
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_GOOGLE_SHEETS_API_KEY}`,
@@ -64,7 +63,14 @@ const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
       }
     );
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
     const data = await response.json();
+    if (!data.values) {
+      throw new Error('スプレッドシートのデータが取得できませんでした');
+    }
 
     // スプレッドシートのデータをPOI型に変換
     return data.values.map((row: string[]) => ({
@@ -90,32 +96,43 @@ const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
       View: row[42],
     }));
   } catch (error) {
-    console.error('Failed to fetch spreadsheet data:', error);
+    console.error('エラーが発生しました:', error);
     return [];
   }
 };
 
 // アプリケーションのメインコンポーネント
 const App = () => {
+  // POI の状態を管理する state
   const [pois, setPois] = useState<Poi[]>([]);
+  // ロード状態を管理する state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // データを非同期でロードする関数
     const loadData = async () => {
+      // ロード開始
       setLoading(true);
+      // スプレッドシート ID を環境変数から取得
       const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
+      // スプレッドシートデータを取得
       const data = await fetchSpreadsheetData(spreadsheetId);
+      // 取得したデータを state に設定
       setPois(data);
+      // ロード終了
       setLoading(false);
     };
 
+    // コンポーネントがマウントされたときにデータロードを実行
     loadData();
   }, []);
 
+  // ロード中の場合はローディングメッセージを表示
   if (loading) {
     return <div>Loading...</div>;
   }
 
+  // Google Maps を表示
   return (
     <APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY}>
       <Map
@@ -123,6 +140,7 @@ const App = () => {
         defaultCenter={{ lat: 38.00000, lng: 138.4000 }} // 佐渡市内の適当な座標を設定
         mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
+        {/* POI マーカーを表示するコンポーネント */}
         <PoiMarkers pois={pois} />
       </Map>
     </APIProvider>
@@ -152,48 +170,76 @@ class AdvancedMarkerWrapper {
 
 // POIマーカーを表示するコンポーネント
 const PoiMarkers = (props: { pois: Poi[] }) => {
+  // マップオブジェクトを取得
   const map = useMap();
+  // マーカーの状態を管理する state
   const [markers, setMarkers] = useState<{[key: string]: AdvancedMarkerWrapper}>({});
+  // マーカークラスタラーのインスタンスを保持する ref
   const clusterer = useRef<MarkerClusterer | null>(null);
+  // サークルの状態を管理する state
   const [circleCenter, setCircleCenter] = useState<google.maps.LatLngLiteral | null>(null);
+  // アクティブなマーカーの状態を管理する state
   const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+  // サークルの表示状態を管理する state
   const [showCircle, setShowCircle] = useState(false);
 
+  // マーカークリック時の処理
   const handleClick = useCallback((poi: Poi) => {
+    // アクティブなマーカーを設定
     setActiveMarker(poi);
+    // サークルの位置を設定
     setCircleCenter(poi.location);
+    // サークルを表示
     setShowCircle(true);
   }, []);
 
+  // マップクリック時の処理
   const handleMapClick = () => {
+    // アクティブなマーカーをクリア
     setActiveMarker(null);
+    // サークルを非表示
     setShowCircle(false);
   };
 
+  // マップオブジェクトが変更されたときの処理
   useEffect(() => {
+    // マップオブジェクトがない場合は何もしない
     if (!map) return;
+    // マーカークラスタラーが初期化されていない場合は初期化する
     if (!clusterer.current) {
       clusterer.current = new MarkerClusterer({ map });
     }
+    // マップクリックイベントリスナーを追加
     const listener = map.addListener('click', handleMapClick);
+    // クリーンアップ関数でイベントリスナーを削除
     return () => {
       google.maps.event.removeListener(listener);
     };
   }, [map]);
 
+  // マーカーの状態が変更されたときの処理
   useEffect(() => {
+    // マーカークラスタラーが初期化されていない場合は何もしない
     if (!clusterer.current) return;
+    // クラスタリングをクリア
     clusterer.current?.clearMarkers();
+    // マーカーの配列を取得
     const advancedMarkers = Object.values(markers).map(wrapper =>
       wrapper.getAdvancedMarker());
-      clusterer.current.addMarkers(advancedMarkers);
-    }, [markers]);
+    // マーカーをクラスタリングに追加
+    clusterer.current.addMarkers(advancedMarkers);
+  }, [markers]);
 
+  // マーカーの参照を設定する関数
   const setMarkerRef = (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => {
+    // 既にマーカーが設定されている場合は何もしない
     if (marker && markers[key]) { return; }
+    // マーカーが設定されていない場合は何もしない
     if (!marker && !markers[key]) { return; }
 
+    // マーカーの状態を更新
     setMarkers(prev => {
+      // マーカーが設定されている場合はマーカーを追加
       if (marker) {
         const wrapper = new AdvancedMarkerWrapper({
           position: marker.position,
@@ -201,6 +247,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
         });
         return { ...prev, [key]: wrapper };
       } else {
+        // マーカーが設定されていない場合はマーカーを削除
         const newMarkers = { ...prev };
         delete newMarkers[key];
         return newMarkers;
@@ -208,8 +255,10 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
     });
   };
 
+  // マーカーとサークルを表示
   return (
     <>
+      {/* サークルを表示 */}
       {showCircle && (
         <Circle
           radius={500}
@@ -222,6 +271,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           clickable={false}
         />
       )}
+      {/* POI の数だけマーカーを表示 */}
       {props.pois.map((poi: Poi) => (
         <AdvancedMarker
           key={poi.key}
@@ -232,10 +282,11 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           }}
           onClick={() => {
             handleClick(poi);
-            console.log("マーカーがクリックされました:", poi);
           }}
         >
+          {/* マーカーのアイコン */}
           <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          {/* アクティブなマーカーの場合は情報ウィンドウを表示 */}
           {activeMarker === poi && (
             <InfoWindow
               position={poi.location}
@@ -258,8 +309,10 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
   );
 };
 
+// アプリケーションのエントリーポイント
 export default App;
 
+// DOM にレンダリング
 const root = createRoot(document.getElementById('app'));
 root.render(
   <App />
