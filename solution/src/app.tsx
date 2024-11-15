@@ -68,15 +68,17 @@ function isValidHttpUrl(string: string) {
 
 // メインアプリケーションコンポーネント
 const App = () => {
-  const [pois, setPois] = useState<Poi[]>([]);  // POIデータ
-  const [loading, setLoading] = useState(true); // ローディング状態
-  const [error, setError] = useState<string | null>(null); // エラー状態
+  const [poisRyotsuAikawa, setPoisRyotsuAikawa] = useState<Poi[]>([]);
+  const [poisKanaiSawata, setPoisKanaiSawata] = useState<Poi[]>([]);
+  const [poisAkadomariHamochi, setPoisAkadomariHamochi] = useState<Poi[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
         // スプレッドシートID、APIキー、シート名
     const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
     const apiKey = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
-    const sheetName = '両津・相川地区';
+    const sheetNames = ['両津・相川地区', '金井・佐和田・新穂・畑野・真野地区', '赤泊・羽茂・小木地区'];
 
     // 環境変数のチェック
     if (!spreadsheetId || !apiKey) {
@@ -85,14 +87,14 @@ const App = () => {
       return;
     }
 
-    const loadData = async () => {
+    const loadData = async (sheetName: string, setData: React.Dispatch<React.SetStateAction<Poi[]>>) => {
       try {
-                // スプレッドシートデータの取得
+        // スプレッドシートデータの取得
         const response = await fetch(
           `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${sheetName}'!A:AY?key=${apiKey}`
         );
 
-                // レスポンスのエラーチェック
+        // レスポンスのエラーチェック
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(`HTTP error! status: ${response.status} ${errorData.error.message}`);
@@ -105,7 +107,7 @@ const App = () => {
           throw new Error('スプレッドシートのデータが取得できませんでした');
         }
 
-                // POIデータの変換
+        // POIデータの変換
         const poiData = data.values.slice(1).map((row: any[]) => {
           const lat = parseFloat(row[47]);
           const lng = parseFloat(row[46]);
@@ -134,19 +136,25 @@ const App = () => {
           };
         });
 
-        setPois(poiData);
-
+        setData(poiData);
       } catch (error: any) {
         setError(error.message);
         console.error('スプレッドシートデータの取得中にエラーが発生しました:', error);
-        setPois([]);
-      } finally {
-        setLoading(false);
       }
     };
 
-    setLoading(true); // useEffect 内で一度だけ setLoading(true) を呼ぶ
-    loadData();
+        const loadAllData = async () => {
+          setLoading(true);
+          try {
+            await loadData('両津・相川地区', setPoisRyotsuAikawa);
+            await loadData('金井・佐和田・新穂・畑野・真野地区', setPoisKanaiSawata);
+            await loadData('赤泊・羽茂・小木地区', setPoisAkadomariHamochi);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAllData();
   }, []);
 
 
@@ -166,7 +174,9 @@ const App = () => {
         defaultCenter={{ lat: 38, lng: 138.5 }}
         mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
-        <PoiMarkers pois={pois} /> {/* POIマーカーコンポーネント */}
+        <PoiMarkers pois={poisRyotsuAikawa} pinColor="#FBBC04" />
+        <PoiMarkers pois={poisKanaiSawata} pinColor="#FF0000" />
+        <PoiMarkers pois={poisAkadomariHamochi} pinColor='#FFFFFF' />
         </Map>
     </APIProvider>
   );
@@ -195,7 +205,7 @@ class AdvancedMarkerWrapper {
 
 
 // POIマーカーを表示するコンポーネント
-const PoiMarkers = (props: { pois: Poi[] }) => {
+const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => { // Add pinColor prop
   const map = useMap();
   const [markers, setMarkers] = useState<{[key:string]: AdvancedMarkerWrapper}>({});
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -287,7 +297,7 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
           ref={marker => setMarkerRef(marker, poi.key)}
           onClick={() => handleClick(poi)}
         >
-          <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} /> {/* マーカーのアイコン */}
+          <Pin background={props.pinColor} glyphColor={'#000'} borderColor={'#000'} /> {/* Use pinColor prop here */}
           {/* アクティブなマーカーの場合は情報ウィンドウを表示 */}
           {activeMarker === poi && (
             <InfoWindow
@@ -361,4 +371,3 @@ export default App;
 // DOMにレンダリング
 const root = createRoot(document.getElementById('app')!);
 root.render(<App />);
-
