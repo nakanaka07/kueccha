@@ -27,125 +27,133 @@ import {
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { Circle } from './components/circle.js';
 
-// POI (Point of Interest) の型定義
-interface Poi { // type から interface に変更
-  key: string;          // マーカーのkey
-  location: google.maps.LatLngLiteral;    // 緯度経度
-  name: string;         // 名称
-  category: string;     // カテゴリー
-  genre: string;        // ジャンル
-  monday: string;       // 月曜日の営業時間
-  tuesday: string;      // 火曜日の営業時間
-  wednesday: string;    // 水曜日の営業時間
-  thursday: string;     // 木曜日の営業時間
-  friday: string;       // 金曜日の営業時間
-  saturday: string;     // 土曜日の営業時間
-  sunday: string;       // 日曜日の営業時間
-  holiday: string;      // 祝日の営業時間
-  description: string;  // 説明
-  reservation: string;  // 予約情報
-  payment: string;      // 支払情報
-  phone: string;        // 電話番号
-  address: string;      // 住所
-  information: string;  // 関連情報
-  View: string;         // Googleマップで見るリンク
+
+// POI (Point of Interest) データのインターフェース
+interface Poi {
+  key: string;
+  location: google.maps.LatLngLiteral;
+  name: string;
+  category: string;
+  genre: string;
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+  holiday: string;
+  description: string;
+  reservation: string;
+  payment: string;
+  phone: string;
+  address: string;
+  information: string;
+  view: string;
 }
 
-
-// スプレッドシートからデータを取得する関数
-const fetchSpreadsheetData = async (spreadsheetId: string): Promise<Poi[]> => {
-  try {
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:AY?gid=95850266`, // シートIDとデータ範囲を指定
-      {
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_GOOGLE_SHEETS_API_KEY}`, // APIキーを設定
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data.values) {
-      throw new Error('スプレッドシートのデータが取得できませんでした');
-    }
-
-    // スプレッドシートのデータをPOI型に変換
-    return data.values.slice(1).map((row: string[]) => { // ヘッダー行をスキップ
-      // 各項目の型を検証し、デフォルト値を設定
-      const lat = parseFloat(row[47]);
-      const lng = parseFloat(row[46]);
-
-      return {
-        key: row[44] || '',
-        location: { lat: isNaN(lat) ? 0 : lat, lng: isNaN(lng) ? 0 : lng }, // 不正な値の場合は0を設定
-        name: row[43] || '',
-        category: row[26] || '',
-        genre: row[27] || '',
-        monday: row[28] || '',
-        tuesday: row[29] || '',
-        wednesday: row[30] || '',
-        thursday: row[31] || '',
-        friday: row[32] || '',
-        saturday: row[33] || '',
-        sunday: row[34] || '',
-        holiday: row[35] || '',
-        description: row[36] || '',
-        reservation: row[37] || '',
-        payment: row[38] || '',
-        phone: row[39] || '',
-        address: row[40] || '',
-        information: row[41] || '',
-        View: row[42] || '',
-      };
-    });
-  } catch (error) {
-    console.error('スプレッドシートデータの取得中にエラーが発生しました:', error);
-    return []; // エラー時は空の配列を返す
-  }
-};
-
-
-// アプリケーションのメインコンポーネント
+// メインアプリケーションコンポーネント
 const App = () => {
-  // POI の状態を管理する state
-  const [pois, setPois] = useState<Poi[]>([]);
-  // ロード状態を管理する state
-  const [loading, setLoading] = useState(true);
+  const [pois, setPois] = useState<Poi[]>([]);  // POIデータ
+  const [loading, setLoading] = useState(true); // ローディング状態
+  const [error, setError] = useState<string | null>(null); // エラー状態
 
   useEffect(() => {
-    // データを非同期でロードする関数
-    const loadData = async () => {
-      setLoading(true); // ロード開始
-      const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID; // スプレッドシートID
-      const data = await fetchSpreadsheetData(spreadsheetId); // データを取得
-      setPois(data); // データを設定
-      setLoading(false); // ロード終了
-    };
+        // スプレッドシートID、APIキー、シート名
+    const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
+    const apiKey = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
+    const sheetName = '両津・相川地区';
 
-    loadData(); // コンポーネントがマウントされたときにデータロードを実行
+    // 環境変数のチェック
+    if (!spreadsheetId || !apiKey) {
+      setError("Spreadsheet ID or API Key is missing.");
+      setLoading(false);
+      return;
+    }
+
+    const loadData = async () => {
+      try {
+                // スプレッドシートデータの取得
+        const response = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${sheetName}'!A:AY?key=${apiKey}`
+        );
+
+                // レスポンスのエラーチェック
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP error! status: ${response.status} ${errorData.error.message}`);
+        }
+
+        const data = await response.json();
+
+        // データの存在チェック
+        if (!data.values) {
+          throw new Error('スプレッドシートのデータが取得できませんでした');
+        }
+
+                // POIデータの変換
+        const poiData = data.values.slice(1).map((row: any[]) => {
+          const lat = parseFloat(row[47]);
+          const lng = parseFloat(row[46]);
+
+          return {
+            key: row[44] ?? '',
+            location: { lat: isNaN(lat) ? 0 : lat, lng: isNaN(lng) ? 0 : lng },
+            name: row[43] ?? '',
+            category: row[26] ?? '',
+            genre: row[27] ?? '',
+            monday: row[28] ?? '',
+            tuesday: row[29] ?? '',
+            wednesday: row[30] ?? '',
+            thursday: row[31] ?? '',
+            friday: row[32] ?? '',
+            saturday: row[33] ?? '',
+            sunday: row[34] ?? '',
+            holiday: row[35] ?? '',
+            description: row[36] ?? '',
+            reservation: row[37] ?? '',
+            payment: row[38] ?? '',
+            phone: row[39] ?? '',
+            address: row[40] ?? '',
+            information: row[41] ?? '',
+            view: row[42] ?? '',
+          };
+        });
+
+        setPois(poiData);
+
+      } catch (error: any) {
+        setError(error.message);
+        console.error('スプレッドシートデータの取得中にエラーが発生しました:', error);
+        setPois([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    setLoading(true); // useEffect 内で一度だけ setLoading(true) を呼ぶ
+    loadData();
   }, []);
 
 
-  // ロード中の場合はローディングメッセージを表示
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>; // ローディング表示
   }
 
-  // Google Maps を表示
+  if (error) {
+    return <div>Error: {error}</div>; // エラー表示
+  }
+
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY}>
       <Map
         defaultZoom={10}
-        defaultCenter={{ lat: 38, lng: 138.4 }} // 佐渡市内の適当な座標を設定
-        mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID} // mapIdを設定
+        defaultCenter={{ lat: 38, lng: 138.5 }}
+        mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
-        {/* POI マーカーを表示するコンポーネント */}
-        <PoiMarkers pois={pois} />
-      </Map>
+        <PoiMarkers pois={pois} /> {/* POIマーカーコンポーネント */}
+        </Map>
     </APIProvider>
   );
 };
@@ -292,6 +300,6 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
 // アプリケーションのエントリーポイント
 export default App;
 
-// DOM にレンダリング
-const root = createRoot(document.getElementById('app')!); // null チェックを追加
+// DOMにレンダリング
+const root = createRoot(document.getElementById('app')!);
 root.render(<App />);
