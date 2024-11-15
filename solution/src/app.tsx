@@ -52,6 +52,20 @@ interface Poi {
   view: string;
 }
 
+// Helper function to validate URLs
+function isValidHttpUrl(string: string) {
+  let url;
+
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
+
 // メインアプリケーションコンポーネント
 const App = () => {
   const [pois, setPois] = useState<Poi[]>([]);  // POIデータ
@@ -130,7 +144,7 @@ const App = () => {
         setLoading(false);
       }
     };
-    
+
     setLoading(true); // useEffect 内で一度だけ setLoading(true) を呼ぶ
     loadData();
   }, []);
@@ -182,14 +196,14 @@ class AdvancedMarkerWrapper {
 
 // POIマーカーを表示するコンポーネント
 const PoiMarkers = (props: { pois: Poi[] }) => {
-  const map = useMap(); // map オブジェクトを取得
-  const [markers, setMarkers] = useState<{[key: string]: AdvancedMarkerWrapper}>({}); // マーカーの状態を管理
-  const clusterer = useRef<MarkerClusterer | null>(null); // マーカークラスタラー
-  const [circleCenter, setCircleCenter] = useState<google.maps.LatLngLiteral | null>(null); // サークルの中心座標
-  const [activeMarker, setActiveMarker] = useState<Poi | null>(null); // クリックされたマーカー
-  const [showCircle, setShowCircle] = useState(false); // サークルの表示状態
+  const map = useMap();
+  const [markers, setMarkers] = useState<{[key:string]: AdvancedMarkerWrapper}>({});
+  const clusterer = useRef<MarkerClusterer | null>(null);
+  const [circleCenter, setCircleCenter] = useState<google.maps.LatLngLiteral | null>(null);
+  const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+  const [showCircle, setShowCircle] = useState(false);
 
-  // マーカークリック時の処理
+
   const handleClick = useCallback((poi: Poi) => {
     setActiveMarker(poi); // クリックされたマーカーをアクティブに設定
     setCircleCenter(poi.location); // サークルの中心座標を設定
@@ -284,10 +298,52 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
                 setShowCircle(false);
               }}
             >
-              <div>
-                <h2>{poi.name}</h2>
-                <p>{poi.description}</p>
-                {/* 他のプロパティも必要に応じて表示 */}
+<div>
+  <h2>{poi.name}</h2>
+  <p>カテゴリ: {poi.category}</p>
+  <p>ジャンル: {poi.genre}</p>
+  <p>営業時間:</p>
+  <ul>
+    <li>月: {poi.monday}</li>
+    <li>火: {poi.tuesday}</li>
+    <li>水: {poi.wednesday}</li>
+    <li>木: {poi.thursday}</li>
+    <li>金: {poi.friday}</li>
+    <li>土: {poi.saturday}</li>
+    <li>日: {poi.sunday}</li>
+    <li>祝: {poi.holiday}</li>
+  </ul>
+  <p>補足:{poi.description}</p>
+  <p>予約: {poi.reservation}</p>
+  <p>支払い: {poi.payment}</p>
+  <p>電話番号: {poi.phone}</p>
+  <p>住所: {poi.address}</p>
+
+  {poi.information && (
+                  <p>
+                    情報:{" "}
+                    {isValidHttpUrl(poi.information) ? (
+                      <a href={poi.information} target="_blank" rel="noopener noreferrer">
+                        {poi.information}
+                      </a>
+                    ) : (
+                      poi.information
+                    )}
+                  </p>
+                )}
+
+                {poi.view && (
+                  <p>
+                    Google マップで見る:{" "}
+                    {isValidHttpUrl(poi.view) ? (
+                      <a href={poi.view} target="_blank" rel="noopener noreferrer">
+                        {poi.view}
+                      </a>
+                    ) : (
+                      poi.view
+                    )}
+                  </p>
+                )}
               </div>
             </InfoWindow>
           )}
@@ -297,9 +353,12 @@ const PoiMarkers = (props: { pois: Poi[] }) => {
   );
 };
 
+
 // アプリケーションのエントリーポイント
 export default App;
+
 
 // DOMにレンダリング
 const root = createRoot(document.getElementById('app')!);
 root.render(<App />);
+
