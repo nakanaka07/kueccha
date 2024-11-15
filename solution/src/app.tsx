@@ -175,7 +175,7 @@ const App = () => {
         mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
       >
         <PoiMarkers pois={poisRyotsuAikawa} pinColor="#FBBC04" />
-        <PoiMarkers pois={poisKanaiSawata} pinColor="#FF0000" />
+        <PoiMarkers pois={poisKanaiSawata} pinColor="" />
         <PoiMarkers pois={poisAkadomariHamochi} pinColor='#FFFFFF' />
         </Map>
     </APIProvider>
