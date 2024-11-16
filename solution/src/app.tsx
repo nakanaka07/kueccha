@@ -338,7 +338,7 @@ const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
 					{activeMarker === poi && (
 						<InfoWindow
 							position={poi.location}
-							pixelOffset={new google.maps.Size(0, -40)} // 情報ウィンドウの位置を調整
+							pixelOffset={new google.maps.Size(-200, 0)} // 情報ウィンドウの位置を調整
 							onCloseClick={() => {
 								// 情報ウィンドウを閉じたときの処理
 								setActiveMarker(null);
