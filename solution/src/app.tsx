@@ -27,30 +27,9 @@ import {
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { Circle } from "./components/circle.js";
 import { nanoid } from "nanoid";
+import { Poi } from "./types.js"; // 型定義をインポート
+import { usePoiData } from "./usePoiData.js"; // カスタムフックをインポート
 
-// POI (Point of Interest) データのインターフェース
-interface Poi {
-	key: string;
-	location: google.maps.LatLngLiteral;
-	name: string;
-	category: string;
-	genre: string;
-	monday: string;
-	tuesday: string;
-	wednesday: string;
-	thursday: string;
-	friday: string;
-	saturday: string;
-	sunday: string;
-	holiday: string;
-	description: string;
-	reservation: string;
-	payment: string;
-	phone: string;
-	address: string;
-	information: string;
-	view: string;
-}
 
 // Helper function to validate URLs
 function isValidHttpUrl(string: string) {
@@ -67,118 +46,16 @@ function isValidHttpUrl(string: string) {
 
 // メインアプリケーションコンポーネント
 const App = () => {
-	const [poisRyotsuAikawa, setPoisRyotsuAikawa] = useState<Poi[]>([]);
-	const [poisKanaiSawata, setPoisKanaiSawata] = useState<Poi[]>([]);
-	const [poisAkadomariHamochi, setPoisAkadomariHamochi] = useState<Poi[]>([]);
-	const [poisSnack, setPoisSnack] = useState<Poi[]>([]);
-	const [poisRestroom, setPoisRestroom] = useState<Poi[]>([]);
-	const [poisParking, setPoisParking] = useState<Poi[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const { pois: poisRyotsuAikawa, loading: loading1, error: error1 } = usePoiData("両津・相川地区");
+	const { pois: poisKanaiSawata, loading: loading2, error: error2 } = usePoiData("金井・佐和田・新穂・畑野・真野地区");
+	const { pois: poisAkadomariHamochi, loading: loading3, error: error3 } = usePoiData("赤泊・羽茂・小木地区");
+	const { pois: poisSnack, loading: loading4, error: error4 } = usePoiData("スナック");
+	const { pois: poisRestroom, loading: loading5, error: error5 } = usePoiData("公共トイレ");
+	const { pois: poisParking, loading: loading6, error: error6 } = usePoiData("駐車場");
 
-	useEffect(() => {
-		// スプレッドシートID、APIキー、シート名
-		const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
-		const apiKey = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
-		const sheetNames = [
-			"両津・相川地区",
-			"金井・佐和田・新穂・畑野・真野地区",
-			"赤泊・羽茂・小木地区",
-			"スナック",
-			"公共トイレ",
-			"駐車場",
-		];
+  const loading = loading1 || loading2 || loading3 || loading4 || loading5 || loading6;
+	const error = error1 || error2 || error3 || error4 || error5 || error6;
 
-		// 環境変数のチェック
-		if (!spreadsheetId || !apiKey) {
-			setError("Spreadsheet ID or API Key is missing.");
-			setLoading(false);
-			return;
-		}
-
-		const loadData = async (
-			sheetName: string,
-			setData: React.Dispatch<React.SetStateAction<Poi[]>>
-		) => {
-			try {
-				// スプレッドシートデータの取得
-				const response = await fetch(
-					`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${sheetName}'!A:AY?key=${apiKey}`
-				);
-
-				// レスポンスのエラーチェック
-				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(
-						`HTTP error! status: ${response.status} ${errorData.error.message}`
-					);
-				}
-
-				const data = await response.json();
-
-				// データの存在チェック
-				if (!data.values) {
-					throw new Error("スプレッドシートのデータが取得できませんでした");
-				}
-
-				// POIデータの変換
-				const poiData = data.values.slice(1).map((row: any[]) => {
-					const lat = parseFloat(row[47]);
-					const lng = parseFloat(row[46]);
-
-					return {
-						key: nanoid(), // Add this line
-						location: { lat: isNaN(lat) ? 0 : lat, lng: isNaN(lng) ? 0 : lng },
-						name: row[43] ?? "",
-						category: row[26] ?? "",
-						genre: row[27] ?? "",
-						monday: row[28] ?? "",
-						tuesday: row[29] ?? "",
-						wednesday: row[30] ?? "",
-						thursday: row[31] ?? "",
-						friday: row[32] ?? "",
-						saturday: row[33] ?? "",
-						sunday: row[34] ?? "",
-						holiday: row[35] ?? "",
-						description: row[36] ?? "",
-						reservation: row[37] ?? "",
-						payment: row[38] ?? "",
-						phone: row[39] ?? "",
-						address: row[40] ?? "",
-						information: row[41] ?? "",
-						view: row[42] ?? "",
-					};
-				});
-
-				setData(poiData);
-			} catch (error: any) {
-				setError(error.message);
-				console.error(
-					"スプレッドシートデータの取得中にエラーが発生しました:",
-					error
-				);
-			}
-		};
-
-		const loadAllData = async () => {
-			setLoading(true);
-			try {
-				await loadData("両津・相川地区", setPoisRyotsuAikawa);
-				await loadData(
-					"金井・佐和田・新穂・畑野・真野地区",
-					setPoisKanaiSawata
-				);
-				await loadData("赤泊・羽茂・小木地区", setPoisAkadomariHamochi);
-				await loadData("スナック", setPoisSnack);
-				await loadData("公共トイレ", setPoisRestroom);
-				await loadData("駐車場", setPoisParking);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		loadAllData();
-	}, []);
 
 	if (loading) {
 		return <div>Loading...</div>; // ローディング表示
@@ -206,6 +83,8 @@ const App = () => {
 	);
 };
 
+
+
 // AdvancedMarkerElementをラップするクラス
 class AdvancedMarkerWrapper {
 	private advancedMarker: google.maps.marker.AdvancedMarkerElement;
@@ -227,9 +106,7 @@ class AdvancedMarkerWrapper {
 	}
 }
 
-// POIマーカーを表示するコンポーネント
-const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
-	// Add pinColor prop
+const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { // React.memoを追加
 	const map = useMap();
 	const [markers, setMarkers] = useState<{
 		[key: string]: AdvancedMarkerWrapper;
@@ -241,64 +118,59 @@ const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
 	const [showCircle, setShowCircle] = useState(false);
 
 	const handleClick = useCallback((poi: Poi) => {
-		setActiveMarker(poi); // クリックされたマーカーをアクティブに設定
-		setCircleCenter(poi.location); // サークルの中心座標を設定
-		setShowCircle(true); // サークルを表示
+		setActiveMarker(poi);
+		setCircleCenter(poi.location);
+		setShowCircle(true);
 	}, []);
 
-	// マップクリック時の処理
-	const handleMapClick = () => {
-		setActiveMarker(null); // アクティブなマーカーをクリア
-		setShowCircle(false); // サークルを非表示
-	};
+	const handleMapClick = useCallback(() => {
+		setActiveMarker(null);
+		setShowCircle(false);
+	}, []);
+
 
 	useEffect(() => {
-		if (!map) return; // map オブジェクトがなければ何もしない
+		if (!map) return;
 
 		if (!clusterer.current) {
-			clusterer.current = new MarkerClusterer({ map }); // マーカークラスタラーを初期化
+			clusterer.current = new MarkerClusterer({ map });
 		}
 
-		// mapのクリックイベントリスナー
 		const listener = map.addListener("click", handleMapClick);
 
-		// クリーンアップ関数 : イベントリスナーを削除
 		return () => {
 			google.maps.event.removeListener(listener);
 		};
-	}, [map]);
+	}, [map, handleMapClick]); // handleMapClick を依存配列に追加
 
-	// マーカーの状態が変更されたときの処理
 	useEffect(() => {
 		if (!clusterer.current) return;
 
-		clusterer.current.clearMarkers(); // クラスタリングをクリア
+		clusterer.current.clearMarkers();
 
 		const advancedMarkers = Object.values(markers).map((wrapper) =>
 			wrapper.getAdvancedMarker()
 		);
-		clusterer.current.addMarkers(advancedMarkers); // マーカーをクラスタリングに追加
+		clusterer.current.addMarkers(advancedMarkers);
 	}, [markers]);
 
-	// マーカーの参照を設定
 	const setMarkerRef = (
 		marker: google.maps.marker.AdvancedMarkerElement | null,
 		key: string
 	) => {
-		if (marker && markers[key]) return; // 既にマーカーが設定されている場合は何もしない
-		if (!marker && !markers[key]) return; // マーカーが設定されていない場合は何もしない
+		if (marker && markers[key]) return;
+		if (!marker && !markers[key]) return;
 
 		setMarkers((prev) => {
 			if (marker) {
 				const wrapper = new AdvancedMarkerWrapper({
-					// マーカーをラップ
 					position: marker.position,
 					map: map,
 				});
-				return { ...prev, [key]: wrapper }; // マーカーを追加
+				return { ...prev, [key]: wrapper };
 			} else {
 				const newMarkers = { ...prev };
-				delete newMarkers[key]; // マーカーを削除
+				delete newMarkers[key];
 				return newMarkers;
 			}
 		});
@@ -309,14 +181,14 @@ const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
 			{/* サークルを表示 */}
 			{showCircle && (
 				<Circle
-					radius={500} // サークルの半径
-					center={circleCenter}
-					strokeColor={"#0c4cb3"} // サークルの線の色
-					strokeOpacity={1} // サークルの線の不透明度
-					strokeWeight={3} // サークルの線の太さ
-					fillColor={"#3b82f6"} // サークルの塗りつぶしの色
-					fillOpacity={0.3} // サークルの塗りつぶしの不透明度
-					clickable={false} // サークルをクリックできないように設定
+				radius={500}
+				center={circleCenter}
+				strokeColor={"#0c4cb3"}
+				strokeOpacity={1}
+				strokeWeight={3}
+				fillColor={"#3b82f6"}
+				fillOpacity={0.3}
+				clickable={false}
 				/>
 			)}
 			{/* POI の数だけマーカーを表示 */}
@@ -324,23 +196,21 @@ const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
 				<AdvancedMarker
 					key={poi.key}
 					position={poi.location}
-					zIndex={100} // マーカーのz-indexを設定
+					zIndex={100}
 					ref={(marker) => setMarkerRef(marker, poi.key)}
 					onClick={() => handleClick(poi)}
+					aria-label={`Marker for ${poi.name}`} // アクセシビリティ向上
 				>
 					<Pin
 						background={props.pinColor}
 						glyphColor={"#000"}
 						borderColor={"#000"}
-					/>{" "}
-					{/* Use pinColor prop here */}
-					{/* アクティブなマーカーの場合は情報ウィンドウを表示 */}
+					/>
 					{activeMarker === poi && (
 						<InfoWindow
 							position={poi.location}
-							pixelOffset={new google.maps.Size(-200, 0)} // 情報ウィンドウの位置を調整
+							pixelOffset={new google.maps.Size(0, -50)}
 							onCloseClick={() => {
-								// 情報ウィンドウを閉じたときの処理
 								setActiveMarker(null);
 								setShowCircle(false);
 							}}
@@ -404,7 +274,7 @@ const PoiMarkers = (props: { pois: Poi[]; pinColor: string }) => {
 			))}
 		</>
 	);
-};
+});
 
 // アプリケーションのエントリーポイント
 export default App;
