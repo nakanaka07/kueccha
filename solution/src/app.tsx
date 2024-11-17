@@ -1,19 +1,3 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -26,12 +10,9 @@ import {
 } from "@vis.gl/react-google-maps";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { Circle } from "./components/circle.js";
-import { nanoid } from "nanoid";
-import { Poi } from "./types.js"; // 型定義をインポート
-import { usePoiData } from "./usePoiData.js"; // カスタムフックをインポート
+import { Poi } from "./types.js";
+import { usePoiData } from "./usePoiData.js";
 
-
-// Helper function to validate URLs
 function isValidHttpUrl(string: string) {
 	let url;
 
@@ -44,26 +25,38 @@ function isValidHttpUrl(string: string) {
 	return url.protocol === "http:" || url.protocol === "https:";
 }
 
-// メインアプリケーションコンポーネント
 const App = () => {
-	const { pois: poisRyotsuAikawa, loading: loading1, error: error1 } = usePoiData("両津・相川地区");
-	const { pois: poisKanaiSawata, loading: loading2, error: error2 } = usePoiData("金井・佐和田・新穂・畑野・真野地区");
-	const { pois: poisAkadomariHamochi, loading: loading3, error: error3 } = usePoiData("赤泊・羽茂・小木地区");
-	const { pois: poisSnack, loading: loading4, error: error4 } = usePoiData("スナック");
-	const { pois: poisRestroom, loading: loading5, error: error5 } = usePoiData("公共トイレ");
-	const { pois: poisParking, loading: loading6, error: error6 } = usePoiData("駐車場");
+	const areas = [
+		"両津・相川地区",
+		"金井・佐和田・新穂・畑野・真野地区",
+		"赤泊・羽茂・小木地区",
+		"スナック",
+		"公共トイレ",
+		"駐車場",
+	];
 
-  const loading = loading1 || loading2 || loading3 || loading4 || loading5 || loading6;
-	const error = error1 || error2 || error3 || error4 || error5 || error6;
-
+	const { pois: allPois, loading, error } = usePoiData(areas);
 
 	if (loading) {
-		return <div>Loading...</div>; // ローディング表示
+		return <div>Loading...</div>;
 	}
 
 	if (error) {
-		return <div>Error: {error}</div>; // エラー表示
+		return <div>Error: {error}</div>;
 	}
+
+	const poisRyotsuAikawa = allPois.filter(
+		(poi) => poi.area === "両津・相川地区"
+	);
+	const poisKanaiSawata = allPois.filter(
+		(poi) => poi.area === "金井・佐和田・新穂・畑野・真野地区"
+	);
+	const poisAkadomariHamochi = allPois.filter(
+		(poi) => poi.area === "赤泊・羽茂・小木地区"
+	);
+	const poisSnack = allPois.filter((poi) => poi.area === "スナック");
+	const poisRestroom = allPois.filter((poi) => poi.area === "公共トイレ");
+	const poisParking = allPois.filter((poi) => poi.area === "駐車場");
 
 	return (
 		<APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY}>
@@ -83,9 +76,6 @@ const App = () => {
 	);
 };
 
-
-
-// AdvancedMarkerElementをラップするクラス
 class AdvancedMarkerWrapper {
 	private advancedMarker: google.maps.marker.AdvancedMarkerElement;
 
@@ -106,7 +96,7 @@ class AdvancedMarkerWrapper {
 	}
 }
 
-const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { // React.memoを追加
+const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => {
 	const map = useMap();
 	const [markers, setMarkers] = useState<{
 		[key: string]: AdvancedMarkerWrapper;
@@ -128,7 +118,6 @@ const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { //
 		setShowCircle(false);
 	}, []);
 
-
 	useEffect(() => {
 		if (!map) return;
 
@@ -141,7 +130,7 @@ const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { //
 		return () => {
 			google.maps.event.removeListener(listener);
 		};
-	}, [map, handleMapClick]); // handleMapClick を依存配列に追加
+	}, [map, handleMapClick]);
 
 	useEffect(() => {
 		if (!clusterer.current) return;
@@ -181,14 +170,14 @@ const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { //
 			{/* サークルを表示 */}
 			{showCircle && (
 				<Circle
-				radius={500}
-				center={circleCenter}
-				strokeColor={"#0c4cb3"}
-				strokeOpacity={1}
-				strokeWeight={3}
-				fillColor={"#3b82f6"}
-				fillOpacity={0.3}
-				clickable={false}
+					radius={500}
+					center={circleCenter}
+					strokeColor={"#0c4cb3"}
+					strokeOpacity={1}
+					strokeWeight={3}
+					fillColor={"#3b82f6"}
+					fillOpacity={0.3}
+					clickable={false}
 				/>
 			)}
 			{/* POI の数だけマーカーを表示 */}
@@ -276,9 +265,7 @@ const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => { //
 	);
 });
 
-// アプリケーションのエントリーポイント
 export default App;
 
-// DOMにレンダリング
 const root = createRoot(document.getElementById("app")!);
 root.render(<App />);
