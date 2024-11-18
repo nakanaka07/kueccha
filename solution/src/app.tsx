@@ -1,355 +1,291 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
+import { GoogleMap, useLoadScript } from "@react-google-maps/api";
 import {
-	APIProvider,
-	Map,
-	useMap,
-	AdvancedMarker,
-	Pin,
-	InfoWindow,
-} from "@vis.gl/react-google-maps";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import { Circle } from "./components/circle.js";
-import { Poi } from "./types.js";
-import { usePoiData as useFetchPoiData } from "./usePoiData.js";
+	MarkerClusterer,
+	SuperClusterAlgorithm,
+} from "@googlemaps/markerclusterer";
+import type { Poi } from "./types.js";
+import { useSheetData } from "./useSheetData.js";
+import { InfoWindow } from "@react-google-maps/api";
 
-function isValidHttpUrl(string: string) {
-	let url;
-
+const isValidHttpUrl = (string: string): boolean => {
 	try {
-		url = new URL(string);
-	} catch (_) {
+		return Boolean(new URL(string));
+	} catch {
 		return false;
 	}
+};
 
-	return url.protocol === "http:" || url.protocol === "https:";
-}
+const AREAS = {
+	RYOTSU_AIKAWA: "両津・相川地区",
+	KANAI_AREA: "金井・佐和田・新穂・畑野・真野地区",
+	AKADOMARI_AREA: "赤泊・羽茂・小木地区",
+	SNACK: "スナック",
+	PUBLIC_TOILET: "公共トイレ",
+	PARKING: "駐車場",
+} as const;
 
-const App = () => {
-	const areas = [
-		"両津・相川地区",
-		"金井・佐和田・新穂・畑野・真野地区",
-		"赤泊・羽茂・小木地区",
-		"スナック",
-		"公共トイレ",
-		"駐車場",
-	];
+type AreaType = (typeof AREAS)[keyof typeof AREAS];
 
-	const { pois: allPois, loading, error } = useFetchPoiData(areas);
+const AREA_COLORS: Record<AreaType, string> = {
+	[AREAS.RYOTSU_AIKAWA]: "#FBBC04",
+	[AREAS.KANAI_AREA]: "#00ff40",
+	[AREAS.AKADOMARI_AREA]: "#FFFFFF",
+	[AREAS.SNACK]: "#ff0080",
+	[AREAS.PUBLIC_TOILET]: "#00ffff",
+	[AREAS.PARKING]: "#c0c0c0",
+} as const;
 
-	if (loading) {
-		return <div>Loading...</div>;
+const MAP_CONFIG = {
+	mapContainerStyle: { width: "100%", height: "100vh" },
+	defaultCenter: { lat: 38, lng: 138.5 },
+	defaultZoom: 10,
+} as const;
+
+const App: React.FC = () => {
+	const { pois: allPois, loading, error } = useSheetData(Object.values(AREAS));
+
+	const { isLoaded } = useLoadScript({
+		id: "google-map-script",
+		googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
+		libraries: ["marker"],
+	});
+
+	if (loading || !isLoaded) {
+		return <div className="loading">Loading...</div>;
 	}
 
 	if (error) {
-		return <div>Error: {error}</div>;
+		return <div className="error">Error: {error}</div>;
 	}
 
-	const poisRyotsuAikawa = allPois.filter(
-		(poi) => poi.area === "両津・相川地区"
+	const categorizedPois = Object.values(AREAS).reduce<Record<AreaType, Poi[]>>(
+		(acc, area) => {
+			acc[area as AreaType] = allPois.filter((poi) => poi.area === area);
+			return acc;
+		},
+		{} as Record<AreaType, Poi[]>
 	);
-	const poisKanaiSawata = allPois.filter(
-		(poi) => poi.area === "金井・佐和田・新穂・畑野・真野地区"
-	);
-	const poisAkadomariHamochi = allPois.filter(
-		(poi) => poi.area === "赤泊・羽茂・小木地区"
-	);
-	const poisSnack = allPois.filter((poi) => poi.area === "スナック");
-	const poisRestroom = allPois.filter((poi) => poi.area === "公共トイレ");
-	const poisParking = allPois.filter((poi) => poi.area === "駐車場");
 
 	return (
-		<APIProvider apiKey={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY}>
-			<Map
-				defaultZoom={10}
-				defaultCenter={{ lat: 38, lng: 138.5 }}
-				mapId={import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID}
+		<div className="map-container">
+			<GoogleMap
+				mapContainerStyle={MAP_CONFIG.mapContainerStyle}
+				center={MAP_CONFIG.defaultCenter}
+				zoom={MAP_CONFIG.defaultZoom}
+				options={{
+					mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
+					disableDefaultUI: true,
+					zoomControl: true,
+				}}
 			>
-				<PoiMarkers pois={poisRyotsuAikawa} pinColor="#FBBC04" />
-				<PoiMarkers pois={poisKanaiSawata} pinColor="#00ff40" />
-				<PoiMarkers pois={poisAkadomariHamochi} pinColor="#FFFFFF" />
-				<PoiMarkers pois={poisSnack} pinColor="#ff0080" />
-				<PoiMarkers pois={poisRestroom} pinColor="#00ffff" />
-				<PoiMarkers pois={poisParking} pinColor="#c0c0c0" />
-			</Map>
-		</APIProvider>
+				{Object.entries(categorizedPois).map(([area, pois]) => (
+					<PoiMarkers
+						key={area}
+						pois={pois}
+						pinColor={AREA_COLORS[area as AreaType]}
+					/>
+				))}
+			</GoogleMap>
+		</div>
 	);
 };
 
-class AdvancedMarkerWrapper {
-	private advancedMarker: google.maps.marker.AdvancedMarkerElement;
-
-	constructor(options: google.maps.marker.AdvancedMarkerElementOptions) {
-		this.advancedMarker = new google.maps.marker.AdvancedMarkerElement(options);
-	}
-
-	getPosition() {
-		return this.advancedMarker.position;
-	}
-
-	setMap(map: google.maps.Map | null) {
-		this.advancedMarker.map = map;
-	}
-
-	getAdvancedMarker() {
-		return this.advancedMarker;
-	}
+interface PoiMarkersProps {
+	pois: Poi[];
+	pinColor: string;
 }
 
-const PoiMarkers = React.memo((props: { pois: Poi[]; pinColor: string }) => {
-	const map = useMap();
-	const markersRef = useRef<{ [key: string]: AdvancedMarkerWrapper }>({});
-	const clusterer = useRef<MarkerClusterer | null>(null);
-	const [circleCenter, setCircleCenter] =
-		useState<google.maps.LatLngLiteral | null>(null);
-	const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
-	const [showCircle, setShowCircle] = useState(false);
+const PoiMarkers: React.FC<PoiMarkersProps> = React.memo(
+	({ pois, pinColor }) => {
+		const [map, setMap] = useState<google.maps.Map | null>(null);
+		const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+		const clustererRef = useRef<MarkerClusterer | null>(null);
+		const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
-	const handleClick = useCallback((poi: Poi) => {
-		setActiveMarker(poi);
-		setCircleCenter(poi.location);
-		setShowCircle(true);
-	}, []);
+		const onMapLoad = useCallback((map: google.maps.Map) => {
+			setMap(map);
+		}, []);
 
-	const handleMapClick = useCallback(() => {
-		setActiveMarker(null);
-		setShowCircle(false);
-	}, []);
+		const handleMarkerClick = useCallback((poi: Poi) => {
+			setActiveMarker(poi);
+		}, []);
 
-	const mapRef = useRef<google.maps.Map | null>(null);
-	const visiblePois = useRef<Poi[]>([]);
+		useEffect(() => {
+			if (!map || !google.maps?.marker?.AdvancedMarkerElement) return;
 
-	useEffect(() => {
-		if (!map) return;
-		mapRef.current = map;
-
-		const updateVisiblePois = () => {
-			if (!mapRef.current) return;
-			const bounds = mapRef.current.getBounds();
-			if (!bounds) return;
-
-			visiblePois.current = props.pois.filter((poi) => {
-				return bounds.contains(poi.location);
+			markersRef.current.forEach((marker) => {
+				marker.map = null;
 			});
-		};
 
-		updateVisiblePois();
-
-		const listener = map.addListener("idle", updateVisiblePois);
-
-		return () => {
-			google.maps.event.removeListener(listener);
-		};
-	}, [map, props.pois]);
-
-	useEffect(() => {
-		if (!map) return;
-
-		if (!clusterer.current) {
-			clusterer.current = new MarkerClusterer({
-				map,
-				onClusterClick: (cluster) => {
-					const map = clusterer.current!.getMap() as google.maps.Map;
-                    map.fitBounds(cluster.getBounds()); 
-				},
-			});
-		}
-
-		const listener = map.addListener("click", handleMapClick);
-
-		return () => {
-			google.maps.event.removeListener(listener);
-			if (clusterer.current) {
-				clusterer.current.clearMarkers();
+			if (clustererRef.current) {
+				clustererRef.current.clearMarkers();
 			}
-		};
-	}, [map, handleMapClick]);
 
-	useEffect(() => {
-		if (!map || !clusterer.current) return;
-	}, [map, props.pois]);
-
-	useEffect(() => {
-		// visiblePois の変更で発火
-		visiblePois.current.forEach((poi) => {
-			if (!markersRef.current[poi.key]) {
+			const newMarkers = pois.map((poi) => {
 				const marker = new google.maps.marker.AdvancedMarkerElement({
 					position: poi.location,
-					map: map,
+					map,
+					title: poi.name,
 				});
 
-				markersRef.current[poi.key] = new AdvancedMarkerWrapper({
-					position: marker.position,
-					map: map,
+				marker.addListener("click", () => handleMarkerClick(poi));
+				return marker;
+			});
+
+			if (!clustererRef.current) {
+				const algorithm = new SuperClusterAlgorithm({
+					radius: 60, // クラスターの半径
+					maxZoom: 15, // 最大ズームレベル
+					minPoints: 2, // クラスター形成に必要な最小ポイント数
+				});
+
+				clustererRef.current = new MarkerClusterer({
+					map,
+					markers: newMarkers,
+					algorithm,
+					renderer: {
+						render: ({ count, position }) => {
+							const marker = new google.maps.marker.AdvancedMarkerElement({
+								position,
+								map,
+								content: document.createElement("div"),
+							});
+
+							if (marker.content instanceof HTMLElement) {
+								marker.content.className = "cluster-marker";
+								marker.content.textContent = String(count);
+								marker.content.style.background = pinColor;
+								marker.content.style.width = "30px";
+								marker.content.style.height = "30px";
+								marker.content.style.borderRadius = "50%";
+								marker.content.style.display = "flex";
+								marker.content.style.justifyContent = "center";
+								marker.content.style.alignItems = "center";
+								marker.content.style.color = "#fff";
+								marker.content.style.fontSize = "14px";
+								marker.content.style.fontWeight = "bold";
+							}
+
+							return marker;
+						},
+					},
 				});
 			} else {
-				markersRef.current[poi.key].getAdvancedMarker().position = poi.location;
-				markersRef.current[poi.key].setMap(map);
+				clustererRef.current.addMarkers(newMarkers);
 			}
-		});
 
-		for (const key in markersRef.current) {
-			const isVisible = visiblePois.current.some((poi) => poi.key === key);
+			markersRef.current = newMarkers;
 
-			if (!isVisible) {
-				markersRef.current[key].setMap(null);
-				delete markersRef.current[key];
-			}
-		}
+			return () => {
+				markersRef.current.forEach((marker) => {
+					marker.map = null;
+				});
 
-		clusterer.current.clearMarkers();
+				if (clustererRef.current) {
+					clustererRef.current.clearMarkers();
+					clustererRef.current = null;
+				}
+			};
+		}, [map, pois, handleMarkerClick, pinColor]);
 
-		const visibleMarkers = visiblePois.current.map((poi) =>
-			markersRef.current[poi.key]?.getAdvancedMarker()
-		);
-
-		clusterer.current.addMarkers(
-			visibleMarkers.filter((marker) => marker !== undefined)
-		);
-	}, [map, props.pois, visiblePois.current]);
-
-	return (
-		<>
-			{showCircle && (
-				<Circle
-					radius={500}
-					center={circleCenter}
-					strokeColor="#0c4cb3"
-					strokeOpacity={1}
-					strokeWeight={3}
-					fillColor="#3b82f6"
-					fillOpacity={0.3}
-					clickable={false}
-				/>
-			)}
-			{visiblePois.current.map((poi) => (
-				<AdvancedMarker
-					key={poi.key}
-					position={poi.location}
-					zIndex={100}
-					onClick={() => handleClick(poi)}
-					aria-label={`Marker for ${poi.name}`}
-				>
-					<Pin
-						background={props.pinColor}
-						glyphColor="#000"
-						borderColor="#000"
-					/>
-
-					{activeMarker === poi && (
-						<InfoWindow
-							position={poi.location}
-							pixelOffset={new google.maps.Size(0, -50)}
-							onCloseClick={() => {
-								setActiveMarker(null);
-								setShowCircle(false);
-							}}
-						>
-							<div>
-								<h2>{poi.name}</h2>
-								<p>カテゴリ: {poi.category}</p>
-								<p>ジャンル: {poi.genre}</p>
-								{poi.information && (
-									<p>
-										情報:{" "}
-										{isValidHttpUrl(poi.information) ? (
-											<a
-												href={poi.information}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												{poi.information}
-											</a>
-										) : (
-											poi.information
-										)}
-									</p>
+		const InfoWindowContent: React.FC<{ poi: Poi }> = React.memo(({ poi }) => (
+			<div className="info-window">
+				<h2>{poi.name}</h2>
+				<div className="info-grid">
+					<div className="info-row">
+						<span>カテゴリ:</span>
+						<span>{poi.category}</span>
+					</div>
+					<div className="info-row">
+						<span>ジャンル:</span>
+						<span>{poi.genre}</span>
+					</div>
+					{poi.information && (
+						<div className="info-row">
+							<span>情報:</span>
+							<span>
+								{isValidHttpUrl(poi.information) ? (
+									<a
+										href={poi.information}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										詳細を見る
+									</a>
+								) : (
+									poi.information
 								)}
-								<p>営業時間:</p>
-								<ul>
-									<li>月: {poi.monday}</li>
-									<li>火: {poi.tuesday}</li>
-									<li>水: {poi.wednesday}</li>
-									<li>木: {poi.thursday}</li>
-									<li>金: {poi.friday}</li>
-									<li>土: {poi.saturday}</li>
-									<li>日: {poi.sunday}</li>
-									<li>祝: {poi.holiday}</li>
-								</ul>
-								<p>補足:{poi.description}</p>
-								<p>予約: {poi.reservation}</p>
-								<p>支払い: {poi.payment}</p>
-								<p>電話番号: {poi.phone}</p>
-								<p>住所: {poi.address}</p>
-								{poi.view && (
-									<p>
-										Google マップで見る:{" "}
-										{isValidHttpUrl(poi.view) ? (
-											<a
-												href={poi.view}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												{poi.view}
-											</a>
-										) : (
-											poi.view
-										)}
-									</p>
-								)}
-							</div>
-						</InfoWindow>
+							</span>
+						</div>
 					)}
-				</AdvancedMarker>
-			))}
-		</>
-	);
-});
+					<div className="business-hours">
+						<h3>営業時間</h3>
+						{[
+							{ day: "月", hours: poi.monday },
+							{ day: "火", hours: poi.tuesday },
+							{ day: "水", hours: poi.wednesday },
+							{ day: "木", hours: poi.thursday },
+							{ day: "金", hours: poi.friday },
+							{ day: "土", hours: poi.saturday },
+							{ day: "日", hours: poi.sunday },
+							{ day: "祝", hours: poi.holiday },
+						].map(({ day, hours }) => (
+							<div key={day} className="hours-row">
+								<span>{day}:</span>
+								<span>{hours || "定休日"}</span>
+							</div>
+						))}
+					</div>
+					{[
+						{ label: "補足", value: poi.description },
+						{ label: "予約", value: poi.reservation },
+						{ label: "支払い", value: poi.payment },
+						{ label: "電話番号", value: poi.phone },
+						{ label: "住所", value: poi.address },
+					].map(
+						({ label, value }) =>
+							value && (
+								<div key={label} className="info-row">
+									<span>{label}:</span>
+									<span>{value}</span>
+								</div>
+							)
+					)}
+					{poi.view && (
+						<div className="info-row">
+							<span>Google マップで見る:</span>
+							<a href={poi.view} target="_blank" rel="noopener noreferrer">
+								地図を開く
+							</a>
+						</div>
+					)}
+				</div>
+			</div>
+		));
 
-const usePoiData = (areas: string[]) => {
-	const [pois, setPois] = useState<Poi[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const abortControllerRef = useRef<AbortController | null>(null);
+		return (
+			<>
+				{activeMarker && (
+					<InfoWindow
+						position={activeMarker.location}
+						onCloseClick={() => setActiveMarker(null)}
+					>
+						<InfoWindowContent poi={activeMarker} />
+					</InfoWindow>
+				)}
+			</>
+		);
+	}
+);
 
-	useEffect(() => {
-		abortControllerRef.current = new AbortController(); // AbortController を作成
-
-		const fetchData = async () => {
-			try {
-				setLoading(true);
-				const response = await fetch("your-api-endpoint", {
-					signal: abortControllerRef.current!.signal,
-				}); // signal を追加
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				const data = await response.json();
-				setPois(data);
-			} catch (e: any) {
-				if (e.name !== "AbortError") {
-					setError(
-						"POIデータの取得に失敗しました。しばらく時間をおいて再度お試しください。"
-					); // より具体的なエラーメッセージ
-					console.error("POI data fetch error:", e); // コンソールにエラーログを出力
-					// 必要であれば、ここで再試行の処理を実装
-				}
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchData();
-
-		return () => {
-			abortControllerRef.current?.abort(); // クリーンアップ関数でキャンセル
-		};
-	}, [areas]);
-
-	return { pois, loading, error };
-};
+PoiMarkers.displayName = "PoiMarkers";
 
 export default App;
 
-const root = createRoot(document.getElementById("app")!);
-root.render(<App />);
+const container = document.getElementById("app");
+if (container) {
+	const root = createRoot(container);
+	root.render(<App />);
+}
