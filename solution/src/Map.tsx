@@ -1,7 +1,7 @@
 // Map.tsx
 import React, { useState, useCallback, useEffect, memo } from "react";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
-import { MarkerClusterer, ClustererComponent } from "@react-google-maps/marker-clusterer";
+import { MarkerClusterer } from '@react-google-maps/marker-clusterer';
 import type { Poi } from "./types.d.ts";
 import { AREAS, AREA_COLORS, MAP_CONFIG, isSamePosition, AreaType } from "./app";
 import InfoWindowContentMemo from "./InfoWindowContent";
