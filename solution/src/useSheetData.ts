@@ -1,6 +1,6 @@
 // useSheetData.ts
 import { useEffect, useState, useRef } from "react";
-import { Poi } from "./types.js";
+import type { Poi } from "./types.d.ts";
 import { nanoid } from "nanoid";
 
 // Configuration interface

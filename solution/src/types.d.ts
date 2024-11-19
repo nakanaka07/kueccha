@@ -1,4 +1,4 @@
-// types.ts
+// types.d.ts
 // POI (Point of Interest) type definition
 export type Poi = {
 	key: string;                           // Unique identifier
@@ -22,4 +22,4 @@ export type Poi = {
 	address: string;                       // Physical address
 	view?: string;                         // View-related information
 	area: string;                          // Geographic area
-  };
+};

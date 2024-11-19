@@ -1,14 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es2016",                                  /* 生成されたJavaScriptの言語バージョンを設定し、互換性のあるライブラリ宣言を含める */
-    "lib": ["es2016", "dom"],                            /* ターゲット実行環境を記述したバンドルされたライブラリ宣言ファイルのセットを指定 */
-    "module": "NodeNext",                                  /* 生成されるモジュールコードを指定 */
-    "esModuleInterop": true,                             /* CommonJSモジュールのインポートをサポートするために追加のJavaScriptを生成。これにより、タイプ互換性のために'allowSyntheticDefaultImports'が有効になる */
-    "forceConsistentCasingInFileNames": true,            /* インポート時の大文字小文字が正しいことを確認 */
-    "skipLibCheck": true,                                /* すべての.d.tsファイルのタイプチェックをスキップ */
-    "types": ["node"],                                   /* Node.jsの型定義を追加 */
-    "jsx": "react",                                      /* ReactのJSX構文をサポート */
-    "moduleResolution": "nodenext"                       /* モジュール解決戦略を設定 */
+    "target": "es2020",
+    "lib": ["es2020", "dom", "dom.iterable"], // Add dom.iterable for better browser compatibility
+    "module": "ESNext",                // Use ESNext for modern module resolution
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,                   // Enable stricter type checking (recommended)
+    "skipLibCheck": true,
+    "jsx": "react-jsx",              // Use react-jsx for newer React projects
+    "moduleResolution": "node",         // Use Node-style module resolution
+    "resolveJsonModule": true,        // Enable importing JSON files
+    "isolatedModules": true,           // Helps with tree shaking and build optimization
+    "allowSyntheticDefaultImports": true, // Allows default imports from non-default modules
+    "types": ["vite/client"]           // Essential for Vite projects: defines import.meta.env
   },
-  "include": ["src", "vite-env.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",                  // Include .tsx files explicitly
+    "src/**/*.js",                   // Include JavaScript files if used
+    "vite-env.d.ts"
+  ]
 }
