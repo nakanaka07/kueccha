@@ -1,23 +1,24 @@
-import { useEffect, useState, useMemo } from "react";
+// useSheetData.ts
+import { useEffect, useState, useRef } from "react";
 import { Poi } from "./types.js";
 import { nanoid } from "nanoid";
 
-// 環境変数の型定義を追加
-// type EnvConfig = {
-//   VITE_GOOGLE_SPREADSHEET_ID: string;
-//   VITE_GOOGLE_SHEETS_API_KEY: string;
-// };
+// Configuration interface
+interface Config {
+  spreadsheetId: string;
+  apiKey: string;
+}
 
-// スプレッドシートの設定を外部化
-const config = {
-  spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID as string,
-  apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY as string,
+// Spreadsheet Configuration
+const config: Config = {
+  spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
+  apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
 };
 
-// POIデータのキャッシュは変更なし
+// POI Data Cache for performance optimization
 const poiCache = new Map<string, Poi[]>();
 
-// POIデータの変換関数を独立
+// Transform spreadsheet row to POI object
 const transformRowToPoi = (row: any[], area: string): Poi => ({
   key: nanoid(),
   location: {
@@ -45,94 +46,91 @@ const transformRowToPoi = (row: any[], area: string): Poi => ({
   area,
 });
 
-// APIからデータを取得する関数を独立
-const fetchSheetData = async (area: string) => {
+// Fetch data from Google Sheets API
+const fetchSheetData = async (area: string): Promise<Poi[]> => {
+  console.log(`Fetching data for area: ${area}`); // データ取得開始のログ
+
   const response = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/'${area}'!A:AY?key=${config.apiKey}`
   );
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(`HTTP error! status: ${response.status} ${errorData.error.message}`);
+    console.error(`Error fetching data for ${area}:`, errorData); // エラーログ
+    throw new Error(
+      `HTTP error! status: ${response.status} ${errorData.error.message}`
+    );
   }
 
   const data = await response.json();
+  console.log(`Received data for area: ${area}`, data); // データ受信のログ
   if (!data.values) {
+    console.error(`No data received for area: ${area}`); // データがない場合のエラーログ
     throw new Error("スプレッドシートのデータが取得できませんでした");
   }
 
-  return data.values.slice(1).map((row: any[]) => transformRowToPoi(row, area));
+  const transformedData = data.values.slice(1).map((row: any[]) => transformRowToPoi(row, area));
+  console.log(`Transformed data for area: ${area}`, transformedData); // 変換後のデータのログ
+  return transformedData;
 };
 
-
-// カスタムフックの戻り値の型定義を追加
 interface UseSheetDataResult {
   pois: Poi[];
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
 }
 
-export const useSheetData = (areas: string[]): UseSheetDataResult => {
+export function useSheetData(areas: string[]): UseSheetDataResult {
   const [pois, setPois] = useState<Poi[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const poiCache = useRef(new Map<string, Poi[]>());
+
 
   useEffect(() => {
-    // スプレッドシートIDとAPIキーをconfigから取得するように変更
+    console.log("useSheetData useEffect called with areas:", areas); // useEffect実行のログ
+
     if (!config.spreadsheetId || !config.apiKey) {
-      setError("Spreadsheet ID or API Key is missing.");
-      setLoading(false);
+      console.error("Spreadsheet ID or API Key is missing"); // 設定ミスログ
+      setError("Spreadsheet ID or API Key is missing");
+      setIsLoading(false);
       return;
     }
 
-    const areasToFetch = areas.filter(area => !poiCache.has(area));
+    const areasToFetch = areas.filter((area) => !poiCache.current.has(area));
+    console.log(`Areas to fetch:`, areasToFetch); // Fetch対象のエリアログ
 
-    // loadData関数をasync化
     const loadData = async () => {
+      setIsLoading(true);
       try {
         if (areasToFetch.length === 0) {
-          const cachedPois = areas.flatMap(area => poiCache.get(area) ?? []);
+          const cachedPois = areas.flatMap((area) => poiCache.current.get(area) ?? []);
+          console.log("Using cached data:", cachedPois); // キャッシュ使用のログ
           setPois(cachedPois);
-          setLoading(false);
-          return;
+        } else {
+          const results = await Promise.all(areasToFetch.map(fetchSheetData));
+          console.log("Fetched data:", results); // 取得データのログ
+
+          results.forEach((poiData, index) => {
+            poiCache.current.set(areasToFetch[index], poiData);
+          });
+
+          const allPois = areas.flatMap((area) => poiCache.current.get(area) ?? []);
+          console.log("All Pois:", allPois); // 全Poiデータのログ
+          setPois(allPois);
         }
-
-        // fetchSheetDataを用いてデータ取得
-        const results = await Promise.all(areasToFetch.map(fetchSheetData));
-
-        results.forEach((poiData, index) => {
-          poiCache.set(areasToFetch[index], poiData);
-        });
-
-        const allPois = areas.flatMap(area => poiCache.get(area) ?? []);
-        setPois(allPois);
-
       } catch (err) {
-        // エラーメッセージの取得方法を変更
         const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
-        console.error("スプレッドシートデータの取得中にエラーが発生しました:", err);
+        console.error("Error loading data:", errorMessage, err); // エラーログ
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    if (areasToFetch.length > 0) {
-        loadData();
-    } else {
-      // キャッシュからデータを取得する処理を簡略化
-      const cachedPois = areas.flatMap(area => poiCache.get(area) ?? []);
-      setPois(cachedPois);
-      setLoading(false);
-    }
+    loadData();
 
-    // 依存配列からspreadsheetId, apiKeyを除去。configに変更がある場合は再ビルドされるため不要
   }, [areas]);
 
-    // useMemoを使用して、poisの値が変化したときだけ再計算するように変更
-  return {
-    pois: useMemo(() => pois, [pois]),
-    loading,
-    error,
-  };
-};
+  return { pois, isLoading, error };
+}
