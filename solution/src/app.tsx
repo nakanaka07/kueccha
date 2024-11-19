@@ -37,8 +37,8 @@ export const AREA_COLORS = { // Add 'export' keyword
 } as const;
 
 export const MAP_CONFIG = { // Add 'export' keyword
-  defaultCenter: { lat: 39.3647077, lng: 138.3275003 },
-  defaultZoom: 11,
+  defaultCenter: { lat: 38.0, lng: 138.5 },
+  defaultZoom: 10,
   mapContainerStyle: {
     width: "100%",
     height: "100%",

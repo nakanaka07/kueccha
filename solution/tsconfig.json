@@ -1,23 +1,23 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "lib": ["es2020", "dom", "dom.iterable"], // Add dom.iterable for better browser compatibility
-    "module": "ESNext",                // Use ESNext for modern module resolution
+    "lib": ["es2020", "dom", "dom.iterable"],
+    "module": "ESNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,                   // Enable stricter type checking (recommended)
+    "strict": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",              // Use react-jsx for newer React projects
-    "moduleResolution": "node",         // Use Node-style module resolution
-    "resolveJsonModule": true,        // Enable importing JSON files
-    "isolatedModules": true,           // Helps with tree shaking and build optimization
-    "allowSyntheticDefaultImports": true, // Allows default imports from non-default modules
-    "types": ["vite/client"]           // Essential for Vite projects: defines import.meta.env
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "types": []  // Unless using specific types, leave as an empty array
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",                  // Include .tsx files explicitly
-    "src/**/*.js",                   // Include JavaScript files if used
+    "src/**/*.tsx",
+    "src/**/*.js",
     "vite-env.d.ts"
   ]
 }
