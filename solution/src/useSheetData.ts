@@ -48,30 +48,37 @@ const transformRowToPoi = (row: any[], area: string): Poi => ({
 
 // Fetch data from Google Sheets API
 const fetchSheetData = async (area: string): Promise<Poi[]> => {
-  console.log(`Fetching data for area: ${area}`); // データ取得開始のログ
+  console.log(`Fetching data for area: ${area}`);
 
+  try {
   const response = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/'${area}'!A:AY?key=${config.apiKey}`
   );
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error(`Error fetching data for ${area}:`, errorData); // エラーログ
-    throw new Error(
-      `HTTP error! status: ${response.status} ${errorData.error.message}`
-    );
-  }
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = `HTTP error fetching ${area}: ${response.status} ${JSON.stringify(errorData)}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage); // Re-throw error for outer catch block
+    }
 
   const data = await response.json();
-  console.log(`Received data for area: ${area}`, data); // データ受信のログ
-  if (!data.values) {
-    console.error(`No data received for area: ${area}`); // データがない場合のエラーログ
-    throw new Error("スプレッドシートのデータが取得できませんでした");
-  }
+  console.log(`Received raw data for area: ${area}`, JSON.stringify(data)); // Log the entire data object
+
+    if (!data.values || !Array.isArray(data.values)) {
+      const errorMessage = `Invalid data format for area: ${area}. Data: ${JSON.stringify(data)}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage); // Re-throw error
+    }
 
   const transformedData = data.values.slice(1).map((row: any[]) => transformRowToPoi(row, area));
-  console.log(`Transformed data for area: ${area}`, transformedData); // 変換後のデータのログ
+  console.log(`Transformed data for area: ${area}`, transformedData);
   return transformedData;
+
+} catch (error) {
+  console.error(`Error fetching data for ${area}:`, error); // More specific error logging
+  throw error; // Re-throw to handle in the useEffect
+}
 };
 
 interface UseSheetDataResult {
@@ -88,7 +95,7 @@ export function useSheetData(areas: string[]): UseSheetDataResult {
 
 
   useEffect(() => {
-    console.log("useSheetData useEffect called with areas:", areas); // useEffect実行のログ
+    console.log("useSheetData useEffect called with areas:", areas);
 
     if (!config.spreadsheetId || !config.apiKey) {
       console.error("Spreadsheet ID or API Key is missing"); // 設定ミスログ
@@ -101,6 +108,8 @@ export function useSheetData(areas: string[]): UseSheetDataResult {
     console.log(`Areas to fetch:`, areasToFetch); // Fetch対象のエリアログ
 
     const loadData = async () => {
+      console.log("loadData function started"); // Log when loadData begins
+
       setIsLoading(true);
       try {
         if (areasToFetch.length === 0) {
@@ -125,6 +134,7 @@ export function useSheetData(areas: string[]): UseSheetDataResult {
         console.error("Error loading data:", errorMessage, err); // エラーログ
       } finally {
         setIsLoading(false);
+        console.log("loadData function finished. isLoading:", isLoading); // Log when loadData finishes, including isLoading status
       }
     };
 
