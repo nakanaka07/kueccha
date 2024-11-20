@@ -16,11 +16,10 @@
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  const { GOOGLE_MAPS_API_KEY = '' } = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
 
   return {
     define: {
-      'process.env.GOOGLE_MAPS_API_KEY': JSON.stringify(GOOGLE_MAPS_API_KEY)
     },
     resolve: {
       alias: {
@@ -28,8 +27,8 @@ export default defineConfig(({ mode }) => {
           'https://visgl.github.io/react-google-maps/scripts/examples.js'
       }
     },
-    build: {  // build オプションを追加または修正
-      sourcemap: false // ソースマップを無効化
+    build: {
+      sourcemap: false
     }
   };
 });

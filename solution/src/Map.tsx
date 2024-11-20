@@ -1,12 +1,12 @@
 // Map.tsx
 import React, { useState, useCallback, useEffect, memo } from "react";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
-import { MarkerClusterer } from '@react-google-maps/marker-clusterer';
+import { MarkerClusterer } from "@react-google-maps/marker-clusterer";
 import type { Poi } from "./types.d.ts";
 import { AREAS, AREA_COLORS, MAP_CONFIG, isSamePosition, AreaType } from "./app";
 import InfoWindowContentMemo from "./InfoWindowContent";
 
-type ClustererComponent = ReturnType<typeof MarkerClusterer>; 
+type ClustererComponent = ReturnType<typeof MarkerClusterer>;
 
 export const Map = memo(
   ({ pois, isLoading }: { pois: Poi[]; isLoading: boolean }) => {
