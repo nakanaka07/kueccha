@@ -6,6 +6,8 @@ import type { Poi } from "./types.d.ts";
 import { AREAS, AREA_COLORS, MAP_CONFIG, isSamePosition, AreaType } from "./app";
 import InfoWindowContentMemo from "./InfoWindowContent";
 
+type ClustererComponent = ReturnType<typeof MarkerClusterer>; 
+
 export const Map = memo(
   ({ pois, isLoading }: { pois: Poi[]; isLoading: boolean }) => {
     console.log("Map rendered", pois);
@@ -28,8 +30,8 @@ export const Map = memo(
 
       if (isLoading || !map) return;
 
-      return () => {}; // 空のクリーンアップ関数を返す
-    }, [pois, map, handleMarkerClick, isLoading]);
+      return () => {};
+    }, [pois, map, isLoading]);
 
     return (
       <GoogleMap
@@ -44,7 +46,7 @@ export const Map = memo(
         }}
       >
         <MarkerClusterer options={MAP_CONFIG.clustererOptions}>
-        {(clusterer: ClustererComponent) => // 明示的に型を指定
+          {(clusterer: ClustererComponent) =>
             pois.map((poi) => (
               <Marker
                 key={poi.name}

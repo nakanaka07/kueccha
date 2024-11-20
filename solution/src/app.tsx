@@ -16,7 +16,7 @@ const isValidHttpUrl = (string: string) => {
 };
 
 // Area Definitions
-export const AREAS = { // Add 'export' keyword here
+export const AREAS = {
   RYOTSU_AIKAWA: "両津・相川地区",
   KANAI_AREA: "金井・佐和田・新穂・畑野・真野地区",
   AKADOMARI_AREA: "赤泊・羽茂・小木地区",
@@ -25,9 +25,9 @@ export const AREAS = { // Add 'export' keyword here
   PARKING: "駐車場",
 } as const;
 
-export type AreaType = (typeof AREAS)[keyof typeof AREAS]; // Define AreaType
+export type AreaType = (typeof AREAS)[keyof typeof AREAS];
 
-export const AREA_COLORS = { // Add 'export' keyword
+export const AREA_COLORS = {
   [AREAS.RYOTSU_AIKAWA]: "#4285f4", // 青
   [AREAS.KANAI_AREA]: "#34A853", // 緑
   [AREAS.AKADOMARI_AREA]: "#EA4335", // 赤
@@ -36,7 +36,7 @@ export const AREA_COLORS = { // Add 'export' keyword
   [AREAS.PARKING]: "#999999", // グレー
 } as const;
 
-export const MAP_CONFIG = { // Add 'export' keyword
+export const MAP_CONFIG = {
   defaultCenter: { lat: 38.0, lng: 138.5 },
   defaultZoom: 10,
   mapContainerStyle: {
