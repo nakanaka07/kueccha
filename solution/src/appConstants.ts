@@ -1,4 +1,3 @@
-// appConstants.ts
 export const AREAS = {
   RYOTSU_AIKAWA: "両津・相川地区",
   KANAI_AREA: "金井・佐和田・新穂・畑野・真野地区",

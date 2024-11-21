@@ -1,4 +1,3 @@
-// InfoWindowContent.tsx
 import { memo } from "react";
 import type { Poi } from "./types.d.ts";
 

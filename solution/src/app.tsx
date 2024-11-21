@@ -1,12 +1,11 @@
-// app.tsx
 import { useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { useLoadScript } from "@react-google-maps/api";
 import { useSheetData } from "./useSheetData";
 import MapMemo from "./Map";
-import { AREAS } from "./appConstants"; // Import what you need
+import { AREAS } from "./appConstants";
 
-const App = () => { // ... rest of App component
+const App = () => {
   console.log("App rendered");
 
   const { isLoaded, loadError } = useLoadScript({

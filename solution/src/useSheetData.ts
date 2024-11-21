@@ -1,4 +1,3 @@
-// useSheetData.ts
 import { useEffect, useState, useRef } from "react";
 import type { Poi } from "./types.d.ts";
 import { nanoid } from "nanoid";
