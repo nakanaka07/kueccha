@@ -1,19 +1,23 @@
-// Map.tsx
-import React, { useState, useCallback, useEffect, memo } from "react";
-import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
-import { MarkerClusterer } from "@react-google-maps/marker-clusterer";
+import React, { useState, useCallback, memo } from "react";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import { MarkerClusterer } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
-import { AREAS, AREA_COLORS, MAP_CONFIG, isSamePosition, AreaType } from "./app";
+import { MAP_CONFIG } from "./appConstants";
 import InfoWindowContentMemo from "./InfoWindowContent";
+import { nanoid } from 'nanoid';
 
-type ClustererComponent = ReturnType<typeof MarkerClusterer>;
+
+interface MapProps {
+  pois: Poi[];
+  mapInitialized: boolean;
+  setMapInitialized: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 export const Map = memo(
-  ({ pois, isLoading }: { pois: Poi[]; isLoading: boolean }) => {
+  ({ pois, setMapInitialized }: MapProps) => {
     console.log("Map rendered", pois);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
-    console.log("activeMarker updated:", activeMarker);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
       console.log("handleMarkerClick called", poi);
@@ -23,15 +27,8 @@ export const Map = memo(
     const handleMapLoad = useCallback((map: google.maps.Map) => {
       console.log("handleMapLoad called", map);
       setMap(map);
-    }, []);
-
-    useEffect(() => {
-      console.log("Map useEffect called", pois, map, isLoading);
-
-      if (isLoading || !map) return;
-
-      return () => {};
-    }, [pois, map, isLoading]);
+      setMapInitialized(true);
+    }, [setMapInitialized]);
 
     return (
       <GoogleMap
@@ -45,19 +42,21 @@ export const Map = memo(
           zoomControl: true,
         }}
       >
-        <MarkerClusterer options={MAP_CONFIG.clustererOptions}>
-          {(clusterer: ClustererComponent) =>
-            pois.map((poi) => (
+        <MarkerClusterer>
+        {(clusterer) => (
+    <>
+      {pois.map((poi) => (
               <Marker
-                key={poi.name}
+                key={nanoid()}
                 position={{ lat: poi.location.lat, lng: poi.location.lng }}
                 title={poi.name}
                 onClick={() => handleMarkerClick(poi)}
                 clusterer={clusterer}
-              />
-            ))
-          }
-        </MarkerClusterer>
+                />
+              ))}
+              </>
+            )}
+                  </MarkerClusterer>
 
         {activeMarker && (
           <InfoWindow
@@ -72,6 +71,9 @@ export const Map = memo(
         )}
       </GoogleMap>
     );
+  },
+  (prevProps: MapProps, nextProps: MapProps) => {
+    return prevProps.pois === nextProps.pois && prevProps.mapInitialized === nextProps.mapInitialized;
   }
 );
 

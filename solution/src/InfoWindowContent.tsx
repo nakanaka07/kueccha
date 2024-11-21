@@ -1,5 +1,5 @@
 // InfoWindowContent.tsx
-import React, { memo } from "react";
+import { memo } from "react";
 import type { Poi } from "./types.d.ts";
 
 const InfoWindowContentMemo = memo(({ poi }: { poi: Poi }) => {
