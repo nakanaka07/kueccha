@@ -1,6 +1,6 @@
 import React, { useState, useCallback, memo } from "react";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
-import { MarkerClusterer } from "@react-google-maps/api";
+import { MarkerClusterer } from "@react-google-maps/marker-clusterer";
 import type { Poi } from "./types.d.ts";
 import { MAP_CONFIG, AREA_COLORS } from "./appConstants";
 import InfoWindowContentMemo from "./InfoWindowContent";
@@ -45,12 +45,9 @@ export const Map = memo(
 				}}
 			>
 				<MarkerClusterer>
-					{(clusterer) => (
-						<>
-							{pois.map((poi) => {
-								const markerColor =
-									AREA_COLORS[poi.area as keyof typeof AREA_COLORS] ||
-									"#000000";
+				{(clusterer) =>
+        pois.map((poi) => {
+          const markerColor = AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000";
 
 								return (
 									<Marker
@@ -60,18 +57,16 @@ export const Map = memo(
 										onClick={() => handleMarkerClick(poi)}
 										clusterer={clusterer}
 										icon={{
-											path: google.maps.SymbolPath.CIRCLE, // または他の形状
+											path: google.maps.SymbolPath.CIRCLE,
 											fillColor: markerColor,
 											fillOpacity: 1,
 											strokeColor: markerColor,
 											strokeWeight: 2,
-											scale: 10, // 必要に応じてサイズを調整
+											scale: 10,
 										}}
 									/>
 								);
-							})}
-						</>
-					)}
+							})
 				</MarkerClusterer>
 
 				{activeMarker && (
