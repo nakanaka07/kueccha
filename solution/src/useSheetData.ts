@@ -1,144 +1,93 @@
-import { useEffect, useState, useRef } from "react";
+// useSheetData.ts: スプレッドシートからデータを取得するためのカスタムフック
+import { useState, useEffect } from "react";
 import type { Poi } from "./types.d.ts";
-import { nanoid } from "nanoid";
 
-interface Config {
-	spreadsheetId: string;
-	apiKey: string;
-}
+// データ取得用の関数
+export const useSheetData = (areas: string[]) => {
+  const [pois, setPois] = useState<Poi[]>([]); // POI データ
+  const [isLoading, setIsLoading] = useState(true); // 読み込み状態
+  const [error, setError] = useState<string | null>(null); // エラー状態
 
-const config: Config = {
-	spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
-	apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
-};
 
-const poiCache = new Map<string, Poi[]>();
-
-const transformRowToPoi = (row: any[], area: string): Poi => ({
-	key: nanoid(),
-	location: {
-		lat: parseFloat(row[47]) || 0,
-		lng: parseFloat(row[46]) || 0,
-	},
-	name: row[43] ?? "",
-	category: row[26] ?? "",
-	genre: row[27] ?? "",
-	information: row[41] ?? "",
-	monday: row[28] ?? "",
-	tuesday: row[29] ?? "",
-	wednesday: row[30] ?? "",
-	thursday: row[31] ?? "",
-	friday: row[32] ?? "",
-	saturday: row[33] ?? "",
-	sunday: row[34] ?? "",
-	holiday: row[35] ?? "",
-	description: row[36] ?? "",
-	reservation: row[37] ?? "",
-	payment: row[38] ?? "",
-	phone: row[39] ?? "",
-	address: row[40] ?? "",
-	view: row[42] ?? "",
-	area,
-});
-
-const fetchSheetData = async (area: string): Promise<Poi[]> => {
-	console.log(`Fetching data for area: ${area}`);
-
-	try {
-		const response = await fetch(
-			`https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/'${area}'!A:AY?key=${config.apiKey}`
-		);
-
-		if (!response.ok) {
-			const errorData = await response.json();
-			const errorMessage = `HTTP error fetching ${area}: ${response.status} ${JSON.stringify(errorData)}`;
-			console.error(errorMessage);
-			throw new Error(errorMessage);
-		}
-
-		const data = await response.json();
-		console.log(`Received raw data for area: ${area}`, JSON.stringify(data));
-
-		if (!data.values || !Array.isArray(data.values)) {
-			const errorMessage = `Invalid data format for area: ${area}. Data: ${JSON.stringify(data)}`;
-			console.error(errorMessage);
-			throw new Error(errorMessage);
-		}
-
-		const transformedData = data.values
-			.slice(1)
-			.map((row: any[]) => transformRowToPoi(row, area));
-		console.log(`Transformed data for area: ${area}`, transformedData);
-		return transformedData;
-	} catch (error) {
-		console.error(`Error fetching data for ${area}:`, error);
-		throw error;
-	}
-};
-
-interface UseSheetDataResult {
-	pois: Poi[];
-	isLoading: boolean;
-	error: string | null;
-}
-
-export function useSheetData(areas: string[]): UseSheetDataResult {
-	const [pois, setPois] = useState<Poi[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const poiCache = useRef(new Map<string, Poi[]>());
-
-	useEffect(() => {
-		console.log("useSheetData useEffect called with areas:", areas);
-
-		if (!config.spreadsheetId || !config.apiKey) {
-			console.error("Spreadsheet ID or API Key is missing");
-			setError("Spreadsheet ID or API Key is missing");
-			setIsLoading(false);
-			return;
-		}
-
-		const areasToFetch = areas.filter((area) => !poiCache.current.has(area));
-		console.log(`Areas to fetch:`, areasToFetch);
-
+  useEffect(() => {
+    // データ取得処理を実行
 		const loadData = async () => {
-			console.log("loadData function started");
-
-			setIsLoading(true);
+			console.log("loadData 関数開始");
+			setIsLoading(true); // 読み込み開始
 			try {
-				if (areasToFetch.length === 0) {
-					const cachedPois = areas.flatMap(
-						(area) => poiCache.current.get(area) ?? []
-					);
-					console.log("Using cached data:", cachedPois);
-					setPois(cachedPois);
-				} else {
-					const results = await Promise.all(areasToFetch.map(fetchSheetData));
-					console.log("Fetched data:", results);
+					const allPois = [];
 
-					results.forEach((poiData, index) => {
-						poiCache.current.set(areasToFetch[index], poiData);
-					});
+					// 各エリアのデータを取得
+					for (const area of areas) {
+							console.log(`エリア ${area} のデータを取得中`);
+							const range = `'${area}'!A1:ZZ`; // 取得する範囲を設定
 
-					const allPois = areas.flatMap(
-						(area) => poiCache.current.get(area) ?? []
-					);
-					console.log("All Pois:", allPois);
+							const response = await fetch(
+									`your_gas_api_endpoint?sheetName=${area}&range=${range}` //APIエンドポイントを適宜変更してください。
+							);
+
+							if (!response.ok) {
+									throw new Error(`スプレッドシートデータの取得エラー（${response.status}）`);
+							}
+
+							const data = await response.json();
+							console.log(`エリア ${area} のrawデータを取得:`, data);
+							const transformedData = transformData(data, area); // データを変換
+
+							console.log(`エリア ${area} の変換済みデータ:`, transformedData);
+							allPois.push(...transformedData);
+					}
+
+					// 全てのPOIデータを設定
 					setPois(allPois);
-				}
 			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : "An unknown error occurred";
-				setError(errorMessage);
-				console.error("Error loading data:", errorMessage, err);
+					console.error("データ取得エラー:", err);
+					setError(err instanceof Error ? err.message : "エラーが発生しました");
 			} finally {
-				setIsLoading(false);
-				console.log("loadData function finished. isLoading:", isLoading);
+					setIsLoading(false); // 読み込み終了
+					console.log("loadData 関数終了。isLoading:", isLoading);
 			}
 		};
 
+		// データ取得関数を呼び出し
 		loadData();
-	}, [areas]);
 
-	return { pois, isLoading, error };
-}
+}, [areas]);
+
+
+
+  // スプレッドシートのレスポンスデータを変換する関数
+  const transformData = (data: any, area: string): Poi[] => {
+    // データの形式に合わせて適切な変換処理を実装
+    // ...
+
+		if (!data || !data.values || !Array.isArray(data.values)) {
+			console.warn(`エリア ${area} のデータ形式が不正です`, data);
+			return [];
+		}
+
+    // ヘッダー行を抽出
+    const headers = data.values[0];
+
+    // データ行をPOIオブジェクトの配列に変換
+    return data.values.slice(1).map((row: any[]) => {
+        const poi: Partial<Poi> = { area: area }; // 初期値としてエリアを設定
+        row.forEach((cell, index) => {
+					const header = headers[index];
+					if (header) {
+							(poi as any)[header.toLowerCase().trim().replace(/\s+/g, "")] = cell; // ヘッダーをキーとして値を設定
+							if (header.toLowerCase() === 'google マップで見る') {
+									poi.id = cell; // google マップで見る列の値をIDとして使用
+									console.log("google マップで見る列の値:", poi.id)
+							}
+					}
+				});
+        return poi as Poi;
+    }).filter((poi) => poi.name !== null && poi.name !== undefined) // nameがnullまたはundefinedのPOIを除外
+		.map((poi) => ({...poi, location: {lat: parseFloat(poi.y), lng: parseFloat(poi.x)}})); // xとyをlocationに変換
+
+  };
+
+
+  return { pois, isLoading, error };
+};
