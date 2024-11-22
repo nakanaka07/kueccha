@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from "react";
+import React, { useState, useCallback, memo, useMemo } from "react";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { MarkerClusterer } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
