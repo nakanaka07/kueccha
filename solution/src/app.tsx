@@ -1,57 +1,55 @@
-// app.tsx: アプリケーションのエントリポイント
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
-import { useLoadScript } from "@react-google-maps/api"; // Google Maps API を読み込むためのフック
-import { useSheetData } from "./useSheetData"; // スプレッドシートデータを取得するためのカスタムフック
-import Map from "./Map"; // マップコンポーネント
-import { AREAS } from "./appConstants"; // 定数
+import { useLoadScript } from "@react-google-maps/api";
+import { useSheetData } from "./useSheetData";
+import MapMemo from "./Map";
+import { AREAS } from "./appConstants";
 
 const App = () => {
-  // 開発モードでのみコンソールログを出力
-  if (import.meta.env.MODE === 'development') {
-    console.log("App レンダリング");
-  }
+	console.log("App rendered");
 
-  // Google Maps API の読み込み状態を確認
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY, // APIキー
-    mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID], // マップID
-  });
+	const { isLoaded, loadError } = useLoadScript({
+		googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
+		mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID],
+	});
 
-  // 表示するエリアの配列（定数なのでuseMemo不要）
-  const areas = Object.values(AREAS);
+	const areas = useMemo(() => Object.values(AREAS), []);
+	const { pois: fetchedPois, isLoading, error } = useSheetData(areas);
 
-  // スプレッドシートからデータを取得
-  const { pois: fetchedPois, isLoading, error } = useSheetData(areas);
+	const pois = useMemo(() => {
+		console.log("pois memo recalculated", isLoading, fetchedPois);
+		return isLoading ? [] : fetchedPois;
+	}, [isLoading, fetchedPois]);
 
-  // 位置情報と ID を持つ POI のみフィルタリング。isLoading 中は空の配列を返す
-  const pois = useMemo(() => {
-    return isLoading ? [] : fetchedPois.filter((poi) => poi.location && poi.id);
-  }, [isLoading, fetchedPois]);
+	const [mapInitialized, setMapInitialized] = useState(false);
 
-  // API が読み込み中でない場合、「読み込み中…」を表示
-  if (!isLoaded) {
-    return <div>読み込み中...</div>;
-  }
+	if (!isLoaded) {
+		return <div>Loading...</div>;
+	}
 
-  // API の読み込みエラーまたはデータ取得エラーが発生した場合、エラーメッセージを表示
-  if (loadError || error) {
-    return <div>エラー: {loadError?.message || error}</div>;
-  }
+	if (loadError || error) {
+		return (
+			<div className="error-container">
+				<div>Error: {loadError?.message || error}</div>
+			</div>
+		);
+	}
 
-  // マップコンポーネントをレンダリング
-  return (
-    <div style={{ width: "100%", height: "100vh" }}>
-      <Map pois={pois} />
-    </div>
-  );
+	return (
+		<div style={{ width: "100%", height: "100vh" }}>
+			<MapMemo
+				pois={pois}
+				mapInitialized={mapInitialized}
+				setMapInitialized={setMapInitialized}
+			/>
+		</div>
+	);
 };
-
 
 const container = document.getElementById("app");
 if (container) {
-  const root = createRoot(container);
-  root.render(<App />);
+	const root = createRoot(container);
+	root.render(<App />);
 }
 
 export default App;
