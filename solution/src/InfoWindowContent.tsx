@@ -12,7 +12,7 @@ const truncateUrl = (url: string) => {
 };
 
 // 文字列中のURLをリンクに変換する関数
-const convertUrlsToLinks = (text?: string) => {
+const convertUrlsToLinks = (text?: string, title?: string) => {
     if (!text) return null;
 
     // URLとそれ以外のテキストを分割
@@ -20,6 +20,7 @@ const convertUrlsToLinks = (text?: string) => {
 
     return (
         <>
+                       {title && <span className="link-title">{title}</span>} {/* タイトルを表示 */}
             {parts.map((part, index) =>
                 isURL(part) ? (
                     <a key={index} href={part} target="_blank" rel="noopener noreferrer">
@@ -37,14 +38,14 @@ const convertUrlsToLinks = (text?: string) => {
 const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
     // 営業時間情報を整形
     const businessHours = [
-        { day: "月", hours: poi.monday },
-        { day: "火", hours: poi.tuesday },
-        { day: "水", hours: poi.wednesday },
-        { day: "木", hours: poi.thursday },
-        { day: "金", hours: poi.friday },
-        { day: "土", hours: poi.saturday },
-        { day: "日", hours: poi.sunday },
-        { day: "祝", hours: poi.holiday },
+        { day: "月　", hours: poi.monday },
+        { day: "火　", hours: poi.tuesday },
+        { day: "水　", hours: poi.wednesday },
+        { day: "木　", hours: poi.thursday },
+        { day: "金　", hours: poi.friday },
+        { day: "土　", hours: poi.saturday },
+        { day: "日　", hours: poi.sunday },
+        { day: "祝　", hours: poi.holiday },
     ].filter(({ hours }) => hours);
 
     // 追加情報を整形
@@ -86,10 +87,12 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
             )}
 
             {/* 情報(URL) */}
-            {convertUrlsToLinks(poi.information)}
+            {convertUrlsToLinks(poi.information, "情報")}
+            {poi.information && <br />} {/* 情報(URL)の後に改行を追加 */}
 
             {/* Googleマップのリンク */}
-            {convertUrlsToLinks(poi.view)}
+            {convertUrlsToLinks(poi.view, "Googleマップで見る")}
+            {poi.view && <br />} {/* Googleマップのリンクの後に改行を追加 */}
         </div>
     );
 });
