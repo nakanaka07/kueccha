@@ -1,5 +1,6 @@
 // types.d.ts: POIデータの型定義
-export type Poi = {
+
+export interface Poi {
     key: string;
     location: google.maps.LatLngLiteral;
     name: string;
@@ -21,4 +22,4 @@ export type Poi = {
     address?: string;
     view?: string;
     area: string;
-};
+}

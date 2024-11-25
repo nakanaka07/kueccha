@@ -19,8 +19,8 @@ export const AREA_COLORS = {
     [AREAS.KANAI_AREA]: "#34A853",
     [AREAS.AKADOMARI_AREA]: "#EA4335",
     [AREAS.SNACK]: "#ff80c0",
-    [AREAS.PUBLIC_TOILET]: "#00ffff",
-    [AREAS.PARKING]: "#999999",
+    [AREAS.PUBLIC_TOILET]: "#c0c0c0",
+    [AREAS.PARKING]: "#000000",
 } as const;
 
 // マップの設定
@@ -32,8 +32,8 @@ export const MAP_CONFIG = {
         height: "100%",
     },
     clustererOptions: {
-        minClusterSize: 10,
-        maxZoom: 16,
-        radius: 40,
+        minClusterSize: 0,
+        maxZoom: 5,
+        radius: 0,
     },
 };

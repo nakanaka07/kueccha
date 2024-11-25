@@ -13,7 +13,6 @@ interface MapProps {
 }
 
 const Map = memo(({ pois, setMapInitialized }: MapProps) => {
-    console.log("Map rendered", pois);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 

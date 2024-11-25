@@ -46,7 +46,6 @@ export const transformRowToPoi = (row: any[], area: string): Poi => ({
 });
 
 export const fetchSheetData = async (area: string): Promise<Poi[]> => {
-    console.log(`エリア ${area} のデータを取得中...`);
 
     try {
         const response = await fetch(
@@ -63,7 +62,6 @@ export const fetchSheetData = async (area: string): Promise<Poi[]> => {
         }
 
         const data = await response.json();
-        console.log(`エリア ${area} の生データを受信:`, JSON.stringify(data));
 
         // データのバリデーション
         if (!data.values || !Array.isArray(data.values)) {
@@ -91,7 +89,6 @@ export const fetchSheetData = async (area: string): Promise<Poi[]> => {
             }
         }
 
-        console.log(`エリア ${area} の変換済みデータ:`, transformedData);
         return transformedData;
     } catch (error) {
         console.error(`エラー: ${area} のデータ取得に失敗しました。`, error);

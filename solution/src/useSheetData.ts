@@ -1,91 +1,79 @@
 // useSheetData.ts: スプレッドシートデータを取得・変換するカスタムフック
 import { useState, useEffect, useRef } from "react";
 import type { Poi } from "./types.d.ts";
-import { Config, config, idColumnIndex, transformRowToPoi, fetchSheetData } from './sheetDataHelper'; // スプレッドシート関連の処理を別ファイルに移動
+import { config, fetchSheetData } from './sheetDataHelper';
 
 
-// 文字列がURLかどうかをチェックする簡易関数
+// URL文字列かどうかを確認
 export const isURL = (str: string | null | undefined): boolean => {
     if (!str) return false;
     try {
         new URL(str);
         return true;
-    } catch (error) {
+    } catch {
         return false;
     }
 };
 
-
-// useSheetDataフックの戻り値の型
+// useSheetData フックの戻り値の型
 interface UseSheetDataResult {
-	pois: Poi[];
-	isLoading: boolean;
-	error: string | null;
+    pois: Poi[];
+    isLoading: boolean;
+    error: string | null;
 }
-
 
 export function useSheetData(areas: string[]): UseSheetDataResult {
-	const [pois, setPois] = useState<Poi[]>([]); // POIデータの状態
-	const [isLoading, setIsLoading] = useState(true); // ロード状態
-	const [error, setError] = useState<string | null>(null); // エラー状態
+    const [pois, setPois] = useState<Poi[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-	// useRefを使ってキャッシュを保持。これにより再レンダリング時にキャッシュがクリアされるのを防ぐ。
-	const poiCache = useRef(new Map<string, Poi[]>());
+    // キャッシュ機構（再レンダリングでクリアされないように useRef を使用）
+    const poiCache = useRef(new Map<string, Poi[]>());
 
-	useEffect(() => {
-		console.log("useSheetData useEffect called with areas:", areas);
+    useEffect(() => {
+        // 設定値の確認
+        if (!config.spreadsheetId || !config.apiKey) {
+            const errorMessage = "スプレッドシートIDまたはAPIキーが設定されていません。";
+            console.error(errorMessage);
+            setError(errorMessage);
+            setIsLoading(false);
+            return;
+        }
 
-		// 設定のバリデーション
-		if (!config.spreadsheetId || !config.apiKey) {
-			console.error("Spreadsheet IDまたはAPIキーがありません。");
-			setError("Spreadsheet IDまたはAPIキーがありません。");
-			setIsLoading(false);
-			return;
-		}
+        // キャッシュされていないエリアを抽出
+        const areasToFetch = areas.filter(area => !poiCache.current.has(area));
 
-		// まだキャッシュされていないエリアをフィルタリング
-		const areasToFetch = areas.filter((area) => !poiCache.current.get(area));
-		console.log(`取得が必要なエリア:`, areasToFetch);
+        // データ取得処理
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                if (areasToFetch.length === 0) {
+                    // 全てキャッシュ済みであればキャッシュから取得
+                    setPois(areas.flatMap(area => poiCache.current.get(area) ?? []));
+                } else {
+                    // キャッシュされていないエリアのデータを取得
+                    const newPoiData = await Promise.all(areasToFetch.map(fetchSheetData));
 
-		// データをロードする非同期関数
-		const loadData = async () => {
-			console.log("データのロードを開始...");
+                    // 取得したデータをキャッシュに保存
+                    newPoiData.forEach((data, index) => {
+                        poiCache.current.set(areasToFetch[index], data);
+                    });
 
-			setIsLoading(true);
-			try {
-				// 取得が必要なエリアがない場合は、キャッシュからデータを取得
-				if (areasToFetch.length === 0) {
-					const cachedPois = areas.flatMap((area) => poiCache.current.get(area) ?? []);
-					console.log("キャッシュデータを使用:", cachedPois);
-					setPois(cachedPois);
-				} else {
-					// fetchSheetDataを並列で実行
-					const results = await Promise.all(areasToFetch.map(fetchSheetData));
-					console.log("取得済みデータ:", results);
+                    // キャッシュと合わせて全てのPOIデータをセット
+                    setPois(areas.flatMap(area => poiCache.current.get(area) ?? []));
+                }
 
-					// 取得したデータをキャッシュに保存
-					results.forEach((poiData, index) => {
-						poiCache.current.set(areasToFetch[index], poiData);
-					});
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : "データの取得に失敗しました。";
+                console.error(errorMessage, err);
+                setError(errorMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-					// 全てのエリアのPOIデータを結合
-					const allPois = areas.flatMap((area) => poiCache.current.get(area) ?? []);
-					console.log("全てのPOI:", allPois);
-					setPois(allPois);
-				}
-			} catch (err) {
-				const errorMessage = err instanceof Error ? err.message : "不明なエラーが発生しました。";
-				setError(errorMessage);
-				console.error("データのロード中にエラーが発生しました:", errorMessage, err);
-			} finally {
-				setIsLoading(false);
-				console.log("データのロードが完了しました。isLoading:", isLoading);
-			}
-		};
+        loadData();
+    }, [areas]);
 
-		loadData();
-	}, [areas]);
-
-	return { pois, isLoading, error };
+    return { pois, isLoading, error };
 }
-
