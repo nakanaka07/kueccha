@@ -1,5 +1,4 @@
 // appConstants.ts: アプリケーションで使用する定数
-import type { Poi } from "./types.d.ts";
 
 // エリアの定義
 export const AREAS = {
@@ -26,20 +25,15 @@ export const AREA_COLORS = {
 
 // マップの設定
 export const MAP_CONFIG = {
-    defaultCenter: { lat: 38.0, lng: 138.5 }, // デフォルトの中心座標
-    defaultZoom: 10, // デフォルトのズームレベル
+    defaultCenter: { lat: 38.0, lng: 138.5 },
+    defaultZoom: 10,
     mapContainerStyle: {
         width: "100%",
         height: "100%",
     },
     clustererOptions: {
-        minClusterSize: 4,  // クラスタリングの最小サイズ
-        maxZoom: 16,       // クラスタリングの最大ズームレベル
-        radius: 40,          // クラスタの半径
+        minClusterSize: 10,
+        maxZoom: 16,
+        radius: 40,
     },
-};
-
-// 位置情報が同じかどうかを判定する関数
-export const isSamePosition = (pos1: google.maps.LatLngLiteral, pos2: google.maps.LatLngLiteral): boolean => {
-    return pos1.lat === pos2.lat && pos1.lng === pos2.lng;
 };
