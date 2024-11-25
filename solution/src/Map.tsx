@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useMemo } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { MarkerClusterer } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
@@ -60,12 +60,12 @@ export const Map = memo(
 										onClick={() => handleMarkerClick(poi)}
 										clusterer={clusterer}
 										icon={{
-											path: google.maps.SymbolPath.CIRCLE, // または他の形状
+											path: google.maps.SymbolPath.CIRCLE,
 											fillColor: markerColor,
 											fillOpacity: 1,
 											strokeColor: markerColor,
 											strokeWeight: 2,
-											scale: 10, // 必要に応じてサイズを調整
+											scale: 10,
 										}}
 									/>
 								);
