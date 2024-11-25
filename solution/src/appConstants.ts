@@ -11,7 +11,7 @@ export const AREAS = {
 } as const;
 
 // エリアの型定義
-export type AreaType = typeof AREAS[keyof typeof AREAS];
+export type AreaType = keyof typeof AREAS;
 
 // エリアごとの色定義
 export const AREA_COLORS = {

@@ -76,6 +76,6 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
             )}
         </GoogleMap>
     );
-}, (prevProps, nextProps) => prevProps.pois === nextProps.pois && prevProps.mapInitialized === nextProps.mapInitialized);
+}, (prevProps, nextProps) => prevProps.pois === nextProps.pois); // 依存配列にpoisを追加
 
 export default Map;
