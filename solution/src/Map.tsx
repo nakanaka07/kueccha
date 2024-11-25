@@ -1,3 +1,4 @@
+// Map.tsx: マップを表示するコンポーネント
 import React, { useState, useCallback, memo } from "react";
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import { MarkerClusterer } from "@react-google-maps/api";
@@ -16,21 +17,19 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
+
     const handleMarkerClick = useCallback((poi: Poi) => {
-        console.log("handleMarkerClick called", poi);
         setActiveMarker(poi);
     }, []);
 
     const handleMapLoad = useCallback((map: google.maps.Map) => {
-        console.log("handleMapLoad called", map);
         setMap(map);
         setMapInitialized(true);
     }, [setMapInitialized]);
 
     const handleMapClick = useCallback(() => {
-        setActiveMarker(null); // マップクリック時にactiveMarkerをnullにする
+        setActiveMarker(null);
     }, []);
-
 
     return (
         <GoogleMap
@@ -43,42 +42,35 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
                 disableDefaultUI: true,
                 zoomControl: true,
             }}
-            onClick={handleMapClick} // onClickイベントリスナーを追加
+            onClick={handleMapClick}
         >
             <MarkerClusterer>
                 {(clusterer) => (
-                    <>
-                        {pois.map((poi) => {
-                            const markerColor = AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000";
-
-                            return (
-                                <Marker
-                                    key={poi.key} // poi.keyをキーとして使用
-                                    position={{ lat: poi.location.lat, lng: poi.location.lng }}
-                                    title={poi.name}
-                                    onClick={() => handleMarkerClick(poi)}
-                                    clusterer={clusterer}
-                                    icon={{
-                                        path: google.maps.SymbolPath.CIRCLE,
-                                        fillColor: markerColor,
-                                        fillOpacity: 1,
-                                        strokeColor: markerColor,
-                                        strokeWeight: 2,
-                                        scale: 10,
-                                    }}
-                                />
-                            );
-                        })}
-                    </>
+                    <React.Fragment>
+                        {pois.map((poi) => (
+                            <Marker
+                                key={poi.key}
+                                position={poi.location}
+                                title={poi.name}
+                                onClick={() => handleMarkerClick(poi)}
+                                clusterer={clusterer}
+                                icon={{
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    fillColor: AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000",
+                                    fillOpacity: 1,
+                                    strokeColor: AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000",
+                                    strokeWeight: 2,
+                                    scale: 10,
+                                }}
+                            />
+                        ))}
+                    </React.Fragment>
                 )}
             </MarkerClusterer>
 
             {activeMarker && (
                 <InfoWindow
-                    position={{
-                        lat: activeMarker.location.lat,
-                        lng: activeMarker.location.lng,
-                    }}
+                    position={activeMarker.location}
                     onCloseClick={() => setActiveMarker(null)}
                 >
                     <InfoWindowContent poi={activeMarker} />
@@ -86,8 +78,6 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
             )}
         </GoogleMap>
     );
-}, (prevProps, nextProps) => {
-    return prevProps.pois === nextProps.pois && prevProps.mapInitialized === nextProps.mapInitialized;
-});
+}, (prevProps, nextProps) => prevProps.pois === nextProps.pois && prevProps.mapInitialized === nextProps.mapInitialized);
 
 export default Map;
