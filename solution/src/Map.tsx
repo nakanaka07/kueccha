@@ -38,8 +38,7 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
             zoom={MAP_CONFIG.defaultZoom}
             options={{
                 mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
-                disableDefaultUI: true,
-                zoomControl: true,
+                disableDefaultUI: false,
             }}
             onClick={handleMapClick}
         >
@@ -59,7 +58,7 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
                                     fillOpacity: 1,
                                     strokeColor: AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000",
                                     strokeWeight: 2,
-                                    scale: 10,
+                                    scale: 12,
                                 }}
                             />
                         ))}

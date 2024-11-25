@@ -33,7 +33,7 @@ export const MAP_CONFIG = {
     },
     clustererOptions: {
         minClusterSize: 0,
-        maxZoom: 0,
+        maxZoom: 10,
         radius: 0,
     },
 };
