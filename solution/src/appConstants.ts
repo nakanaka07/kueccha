@@ -15,12 +15,12 @@ export type AreaName = typeof AREAS[AreaType];
 
 
 export const AREA_COLORS = {
-    [AREAS.RYOTSU_AIKAWA as string]: "#ff8000",
-    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO as string]: "#34A853",
-    [AREAS.AKADOMARI_HAMOCHI_OGI as string]: "#EA4335",
-    [AREAS.SNACK as string]: "#ff80c0",
-    [AREAS.PUBLIC_TOILET as string]: "#c0c0c0",
-    [AREAS.PARKING as string]: "#400080",
+    [AREAS.RYOTSU_AIKAWA]: "#ff8000",
+    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#34A853",
+    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#EA4335",
+    [AREAS.SNACK]: "#ff80c0",
+    [AREAS.PUBLIC_TOILET]: "#c0c0c0",
+    [AREAS.PARKING]: "#400080",
 } as const;
 
 
