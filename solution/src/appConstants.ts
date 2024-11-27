@@ -3,8 +3,8 @@
 // エリアの定義
 export const AREAS = {
     RYOTSU_AIKAWA: "両津・相川地区",
-    KANAI_AREA: "金井・佐和田・新穂・畑野・真野地区",
-    AKADOMARI_AREA: "赤泊・羽茂・小木地区",
+    KANAI_SAWADA_NIIBO_HATANO_MANO: "金井・佐和田・新穂・畑野・真野地区",
+    AKADOMARI_HAMOCHI_OGI: "赤泊・羽茂・小木地区",
     SNACK: "スナック",
     PUBLIC_TOILET: "公共トイレ",
     PARKING: "駐車場",
@@ -16,8 +16,8 @@ export type AreaType = keyof typeof AREAS;
 // エリアごとの色定義
 export const AREA_COLORS = {
     [AREAS.RYOTSU_AIKAWA]: "#ff8000",
-    [AREAS.KANAI_AREA]: "#34A853",
-    [AREAS.AKADOMARI_AREA]: "#EA4335",
+    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#34A853",
+    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#EA4335",
     [AREAS.SNACK]: "#ff80c0",
     [AREAS.PUBLIC_TOILET]: "#c0c0c0",
     [AREAS.PARKING]: "#000000",

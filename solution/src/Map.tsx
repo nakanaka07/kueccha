@@ -16,7 +16,6 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
-
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
     }, []);
@@ -76,6 +75,6 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
             )}
         </GoogleMap>
     );
-}, (prevProps, nextProps) => prevProps.pois === nextProps.pois); // 依存配列にpoisを追加
+}, (prevProps, nextProps) => prevProps.pois === nextProps.pois);
 
 export default Map;

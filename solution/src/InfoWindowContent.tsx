@@ -3,24 +3,20 @@ import React, { memo } from "react";
 import type { Poi } from "./types.d.ts";
 import { isURL } from "./useSheetData";
 
-// URLの最大表示文字数
 const URL_MAX_LENGTH = 30;
 
-// 長いURLを省略表示する関数
 const truncateUrl = (url: string) => {
     return url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
 };
 
-// 文字列中のURLをリンクに変換する関数
 const convertUrlsToLinks = (text?: string, title?: string) => {
     if (!text) return null;
 
-    // URLとそれ以外のテキストを分割
     const parts = text.split(/(https?:\/\/[^\s]+)/g);
 
     return (
         <>
-                       {title && <span className="link-title">{title}</span>} {/* タイトルを表示 */}
+            {title && <span className="link-title">{title}</span>}
             {parts.map((part, index) =>
                 isURL(part) ? (
                     <a key={index} href={part} target="_blank" rel="noopener noreferrer">
@@ -36,7 +32,6 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 };
 
 const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
-    // 営業時間情報を整形
     const businessHours = [
         { day: "月　", hours: poi.monday },
         { day: "火　", hours: poi.tuesday },
@@ -48,7 +43,6 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { day: "祝　", hours: poi.holiday },
     ].filter(({ hours }) => hours);
 
-    // 追加情報を整形
     const additionalInfo = [
         { label: "補足", value: poi.description },
         { label: "予約", value: poi.reservation },
@@ -57,12 +51,10 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { label: "住所", value: poi.address },
     ].filter(({ value }) => value);
 
-
     return (
         <div className="info-window">
             <h3>{poi.name}</h3>
 
-            {/* 営業時間 */}
             {businessHours.length > 0 && (
                 <div className="business-hours">
                     {businessHours.map(({ day, hours }) => (
@@ -74,7 +66,6 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
                 </div>
             )}
 
-            {/* 追加情報 */}
             {additionalInfo.length > 0 && (
                 <div className="additional-info">
                     {additionalInfo.map(({ label, value }) => (
@@ -86,13 +77,11 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
                 </div>
             )}
 
-            {/* 情報(URL) */}
             {convertUrlsToLinks(poi.information, "情報")}
-            {poi.information && <br />} {/* 情報(URL)の後に改行を追加 */}
+            {poi.information && <br />}
 
-            {/* Googleマップのリンク */}
             {convertUrlsToLinks(poi.view, "Googleマップで見る")}
-            {poi.view && <br />} {/* Googleマップのリンクの後に改行を追加 */}
+            {poi.view && <br />}
         </div>
     );
 });
