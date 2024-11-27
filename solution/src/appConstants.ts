@@ -11,6 +11,7 @@ export const AREAS = {
 
 
 export type AreaType = keyof typeof AREAS;
+export type AreaName = typeof AREAS[AreaType];
 
 
 export const AREA_COLORS = {

@@ -1,5 +1,5 @@
 // app.tsx: アプリケーションのエントリポイント
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { useLoadScript } from "@react-google-maps/api";
 import { useSheetData } from "./useSheetData";
@@ -15,14 +15,15 @@ const App = () => {
 
     const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
         Object.fromEntries(
-            Object.keys(AREAS).map((area) => [area, true]) // Object.keys を使用
-        ) as Record<AreaType, boolean>
-    );
-
-    const areas = useMemo<AreaType[]>(() => Object.keys(AREAS), []); // Object.keys を使用
+            (Object.keys(AREAS) as AreaType[]).map(area => [area, true])
+        ) as Record<AreaType, boolean>    );
+    const areas = useMemo<AreaType[]>(() => Object.keys(AREAS) as AreaType[], []);
     const { pois, isLoading, error } = useSheetData(areas);
 
-    const filteredPois = useMemo(() => pois.filter(poi => areaVisibility[poi.area]), [pois, areaVisibility]);
+    const filteredPois = useMemo(
+        () => pois.filter(poi => areaVisibility[poi.area as AreaType]),
+        [pois, areaVisibility]
+    );
 
     const [mapInitialized, setMapInitialized] = useState(false);
 
@@ -37,11 +38,11 @@ const App = () => {
                     <div key={areaKey}>
                         <input
                             type="checkbox"
-                            checked={areaVisibility[areaKey]} // areaKey を使用
+                            checked={areaVisibility[areaKey as AreaType]}
                             onChange={(e) => {
                                 setAreaVisibility((prev) => ({
                                     ...prev,
-                                    [areaKey]: e.target.checked, // areaKey を使用
+                                    [areaKey]: e.target.checked,
                                 }));
                             }}
                         />
@@ -52,8 +53,8 @@ const App = () => {
 
             <Map pois={filteredPois} mapInitialized={mapInitialized} setMapInitialized={setMapInitialized} />
         </div>
-    )
-}
+    );
+};
 
 const container = document.getElementById("app");
 if (container) {

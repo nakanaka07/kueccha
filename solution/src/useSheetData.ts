@@ -61,10 +61,8 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
 								throw new Error(errorMessage);
 							}
 
-							return data.values
-								.slice(1)
-								.map((row: any) => transformRowToPoi(row, area));
-						})
+                                return data.values.slice(1).map((row: any) => transformRowToPoi(row, area));
+                            })
 					);
 					newPoiData.forEach((data, index) => {
 						poiCache.current.set(areasToFetch[index], data);
