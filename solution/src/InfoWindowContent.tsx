@@ -5,13 +5,11 @@ import { isURL } from "./useSheetData";
 
 const URL_MAX_LENGTH = 30;
 
-const truncateUrl = (url: string) => {
-    return url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
-};
+const truncateUrl = (url: string) =>
+    url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
 
 const convertUrlsToLinks = (text?: string, title?: string) => {
     if (!text) return null;
-
     const parts = text.split(/(https?:\/\/[^\s]+)/g);
 
     return (
@@ -19,7 +17,12 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
             {title && <span className="link-title">{title}</span>}
             {parts.map((part, index) =>
                 isURL(part) ? (
-                    <a key={index} href={part} target="_blank" rel="noopener noreferrer">
+                    <a
+                        key={index}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         {truncateUrl(part)}
                         <br />
                     </a>
@@ -41,7 +44,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { day: "土　", hours: poi.saturday },
         { day: "日　", hours: poi.sunday },
         { day: "祝　", hours: poi.holiday },
-    ].filter(({ hours }) => hours);
+    ].filter(({ hours }) => !!hours);
 
     const additionalInfo = [
         { label: "補足", value: poi.description },
@@ -49,7 +52,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { label: "支払い", value: poi.payment },
         { label: "電話番号", value: poi.phone },
         { label: "住所", value: poi.address },
-    ].filter(({ value }) => value);
+    ].filter(({ value }) => !!value);
 
     return (
         <div className="info-window">
@@ -57,8 +60,8 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 
             {businessHours.length > 0 && (
                 <div className="business-hours">
-                    {businessHours.map(({ day, hours }) => (
-                        <div key={day} className="hours-row">
+                    {businessHours.map(({ day, hours }, index) => (
+                        <div key={index} className="hours-row">
                             <span className="day">{day}</span>
                             <span className="hours">{hours}</span>
                         </div>
@@ -68,8 +71,8 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 
             {additionalInfo.length > 0 && (
                 <div className="additional-info">
-                    {additionalInfo.map(({ label, value }) => (
-                        <div key={label} className="info-row">
+                    {additionalInfo.map(({ label, value }, index) => (
+                        <div key={index} className="info-row">
                             <span className="label">{label}: </span>
                             <span className="value">{value}</span>
                         </div>

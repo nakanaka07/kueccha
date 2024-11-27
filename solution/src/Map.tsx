@@ -12,7 +12,7 @@ interface MapProps {
     setMapInitialized: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Map = memo(({ pois, setMapInitialized }: MapProps) => {
+const Map = memo(({ pois, mapInitialized, setMapInitialized }: MapProps) => {
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
@@ -43,7 +43,7 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
         >
             <MarkerClusterer>
                 {(clusterer) => (
-                    <React.Fragment>
+                    <>
                         {pois.map((poi) => (
                             <Marker
                                 key={poi.key}
@@ -53,15 +53,15 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
                                 clusterer={clusterer}
                                 icon={{
                                     path: google.maps.SymbolPath.CIRCLE,
-                                    fillColor: AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000",
+                                    fillColor: AREA_COLORS[poi.area] || "#000000",
                                     fillOpacity: 1,
-                                    strokeColor: AREA_COLORS[poi.area as keyof typeof AREA_COLORS] || "#000000",
+                                    strokeColor: AREA_COLORS[poi.area] || "#000000",
                                     strokeWeight: 2,
                                     scale: 12,
                                 }}
                             />
                         ))}
-                    </React.Fragment>
+                    </>
                 )}
             </MarkerClusterer>
 
@@ -75,6 +75,6 @@ const Map = memo(({ pois, setMapInitialized }: MapProps) => {
             )}
         </GoogleMap>
     );
-}, (prevProps, nextProps) => prevProps.pois === nextProps.pois);
+}, (prevProps, nextProps) => prevProps.pois === nextProps.pois && prevProps.mapInitialized === nextProps.mapInitialized);
 
 export default Map;
