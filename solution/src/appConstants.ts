@@ -20,7 +20,7 @@ export const AREA_COLORS = {
     [AREAS.AKADOMARI_HAMOCHI_OGI as string]: "#EA4335",
     [AREAS.SNACK as string]: "#ff80c0",
     [AREAS.PUBLIC_TOILET as string]: "#c0c0c0",
-    [AREAS.PARKING as string]: "#000000",
+    [AREAS.PARKING as string]: "#400080",
 } as const;
 
 
