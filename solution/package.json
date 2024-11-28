@@ -18,7 +18,6 @@
     "@googlemaps/markerclusterer": "^2.5.3",
     "@react-google-maps/api": "^2.20.3",
     "@react-google-maps/marker-clusterer": "^2.20.0",
-    "@types/google.maps": "3.58.1",
     "@types/nanoid": "2.1.0",
     "@vis.gl/react-google-maps": "1.4.0",
     "core-js": "3.39.0",
@@ -39,6 +38,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.58.1",
     "@types/googlemaps": "^3.43.3",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
