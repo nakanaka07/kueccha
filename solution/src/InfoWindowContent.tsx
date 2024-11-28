@@ -15,20 +15,29 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 	return (
 		<>
 			{title && <span className="link-title">{title}</span>}
-            {parts.map((part, index) => {
-                if (isURL(part)) {
-                    return (
-<a key={index} href={part} target="_blank" rel="noopener noreferrer" title={part}> {/* title属性を追加 */}
-    {truncateUrl(part)}
-    <br />
-</a>
-                    );
-                } else if (part.trim() !== "") { // <- 空文字列でない場合のみ表示
-                    return <React.Fragment key={index}>{part}</React.Fragment>;
-                } else {
-                    return null; // 空文字列の場合は何も表示しない
-                }
-            })}
+			{parts.map((part, index) => {
+				if (isURL(part)) {
+					return (
+						<a
+							key={index}
+							href={part}
+							target="_blank"
+							rel="noopener noreferrer"
+							title={part}
+						>
+							{" "}
+							{/* title属性を追加 */}
+							{truncateUrl(part)}
+							<br />
+						</a>
+					);
+				} else if (part.trim() !== "") {
+					// <- 空文字列でない場合のみ表示
+					return <React.Fragment key={index}>{part}</React.Fragment>;
+				} else {
+					return null; // 空文字列の場合は何も表示しない
+				}
+			})}
 		</>
 	);
 };

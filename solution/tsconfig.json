@@ -2,18 +2,18 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "bundler",  // Keep this as it is - essential for Vite
-    "jsx": "react-jsx",  // Or "react" if using newer React versions
-    "strict": true,  // Recommended: Enforces stricter type checking
-    "esModuleInterop": true, // Often helpful for compatibility
-    "skipLibCheck": true, // Improves build performance
-    "forceConsistentCasingInFileNames": true, // Enforces consistent casing
-    "isolatedModules": true, // Recommended for build performance with Vite
-    "noEmit": true, // Vite handles emitting JS; this prevents conflicts
-    "incremental": true,  // Improves incremental build speeds
-    "resolveJsonModule": true, // Enables importing JSON modules
-    "types": ["vite/client"] // Necessary for Vite's type definitions
+    "moduleResolution": "bundler",  // Viteには必須なので、この設定のままにしてください
+    "jsx": "react-jsx",  // 新しいReactバージョンを使用している場合は"react"も可
+    "strict": true,  // 推奨：より厳格な型チェックを強制します
+    "esModuleInterop": true, // 互換性のために役立つことが多いです
+    "skipLibCheck": true, // ビルドパフォーマンスを向上させます
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字の統一を強制します
+    "isolatedModules": true, // Viteでのビルドパフォーマンスのために推奨されます
+    "noEmit": true, // ViteがJSの生成を処理するので、競合を防ぎます
+    "incremental": true,  // 増分ビルドの速度を向上させます
+    "resolveJsonModule": true, // JSONモジュールのインポートを有効にします
+    "types": ["vite/client"] // Viteの型定義に必要です
   },
-  "include": ["src"], //  Sufficient in most cases; simpler than "src/**/*"
-  "exclude": ["node_modules"]  //  "dist" is handled by Vite; no need to exclude
+  "include": ["src"], //  ほとんどの場合これで十分です。 "src/**/*" よりシンプルです
+  "exclude": ["node_modules"]  //  "dist" はViteが処理するので、除外する必要はありません
 }

@@ -87,9 +87,9 @@ const App: React.FC = () => {
 					</div>
 				))}
 			</div>
-
 			{/* マップ */}
-            <Map pois={filteredPois} />  {/* Mapコンポーネントにpoisプロパティのみを渡す */}
+			<Map pois={filteredPois} />{" "}
+			{/* Mapコンポーネントにpoisプロパティのみを渡す */}
 		</div>
 	);
 };
