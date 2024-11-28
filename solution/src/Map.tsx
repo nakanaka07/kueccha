@@ -28,7 +28,7 @@ const Map: React.FC<MapProps> = memo(
 		// マップ読み込み時のハンドラ (メモ化)
 		const handleMapLoad = useCallback((map: google.maps.Map) => {
 			setMap(map);
-		}, []); // setMapInitializedを削除
+		}, []);
 
 		// マップクリック時のハンドラ (メモ化)
 		const handleMapClick = useCallback(() => {
@@ -99,6 +99,6 @@ const Map: React.FC<MapProps> = memo(
 		);
 	},
 	(prevProps, nextProps) => prevProps.pois === nextProps.pois
-); // MapPropsに合わせて修正
+); 
 
 export default Map;

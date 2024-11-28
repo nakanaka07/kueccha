@@ -51,7 +51,7 @@ const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string => {
 // スプレッドシートのセル値を取得し、数値に変換するヘルパー関数
 const getNumberValue = (row: SpreadsheetRow, index: ColumnIndex): number => {
 	const value = row[ColumnIndices[index]];
-	const num = parseFloat(String(value)); // parseFloatの前にStringに変換
+	const num = parseFloat(String(value)); 
 	return isNaN(num) ? 0 : num;
 };
 

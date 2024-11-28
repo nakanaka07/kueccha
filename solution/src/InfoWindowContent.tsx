@@ -32,10 +32,9 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 						</a>
 					);
 				} else if (part.trim() !== "") {
-					// <- 空文字列でない場合のみ表示
 					return <React.Fragment key={index}>{part}</React.Fragment>;
 				} else {
-					return null; // 空文字列の場合は何も表示しない
+					return null;
 				}
 			})}
 		</>
