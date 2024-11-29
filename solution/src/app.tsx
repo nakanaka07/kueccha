@@ -7,8 +7,6 @@ import { AREAS, AreaType, AreaName } from "./appConstants";
 import type { Poi } from "./types.d.ts";
 
 const App: React.FC = () => {
-
-
     const initialAreaVisibility = useMemo<Record<AreaName, boolean>>(() => {
         const initialVisibility: Record<AreaName, boolean> = {} as Record<AreaName, boolean>;
         for (const areaName in AREAS) {
@@ -21,22 +19,15 @@ const App: React.FC = () => {
 
     const { pois, isLoading, error } = useSheetData(Object.keys(AREAS) as AreaType[]);
 
-    const filteredPois: Poi[] = useMemo(() => {
-        const filtered = pois.filter((poi) => areaVisibility[AREAS[poi.area]]);
-        return filtered.length > 0 ? filtered : [];
-    }, [pois, areaVisibility]);
-
     const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaName: AreaName) => {
         setAreaVisibility((prev) => ({ ...prev, [areaName]: e.target.checked }));
     }, []);
 
-    // データの読み込み状態に応じて表示を切り替える
-    if (isLoading) return <div>Loading...</div>; // データ読み込み中の場合
-    if (error) return <div>エラー: {error}</div>;      // データ取得エラーの場合
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>エラー: {error}</div>;
 
     return (
         <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-            {/* エリア選択チェックボックス */}
             <div style={{ position: "absolute", top: 100, left: 10, zIndex: 1, backgroundColor: "white", padding: 10 }}>
                 {Object.entries(AREAS).map(([areaKey, areaName]) => (
                     <div key={areaKey}>
@@ -46,7 +37,7 @@ const App: React.FC = () => {
                 ))}
             </div>
 
-            <Map pois={filteredPois} /> {/* Map コンポーネントをレンダリング */}
+            <Map pois={pois} areaVisibility={areaVisibility} />
         </div>
     );
 };
@@ -58,3 +49,4 @@ if (container) {
 }
 
 export default App;
+

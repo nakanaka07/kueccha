@@ -45,10 +45,10 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
 		const areasToFetch = areas.filter((area) => !poiCache.current.has(area));
 
 		if (areasToFetch.length === 0) {
-			const cachedPois = areas.reduce<Poi[]>((acc, area) => {
+			const allCachedPois = areas.reduce<Poi[]>((acc, area) => {
 				return acc.concat(poiCache.current.get(area) ?? []);
 			}, []);
-			setPois(cachedPois);
+			setPois(allCachedPois); // キャッシュされたデータを設定
 			setIsLoading(false);
 			return;
 		}
@@ -118,7 +118,7 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
 		};
 
 		loadData();
-	}, [areasKey]);
+	}, [areasKey, poiCache]); // poiCacheを依存配列に追加 (後述)
 
 	return { pois, isLoading, error };
 }
