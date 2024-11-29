@@ -1,104 +1,94 @@
 // Map.tsx: マップを表示するコンポーネント
 import React, { useState, useCallback, memo } from "react";
-import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
-import { MarkerClusterer } from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, Marker, MarkerClusterer } from "@react-google-maps/api"; // useJsApiLoader を削除
 import type { Poi } from "./types.d.ts";
 import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
 // MapコンポーネントのPropsの型定義
 interface MapProps {
-	pois: Poi[];
+    pois: Poi[];
 }
 
 // Mapコンポーネント (メモ化)
-const Map: React.FC<MapProps> = memo(
-	({ pois }: MapProps) => {
-		// MapPropsに合わせて修正
-		// マップインスタンスを格納するstate
-		const [map, setMap] = useState<google.maps.Map | null>(null);
-		// クリックされたマーカーの情報を格納するstate
-		const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
+    // useJsApiLoader を削除
 
-		// マーカークリック時のハンドラ (メモ化)
-		const handleMarkerClick = useCallback((poi: Poi) => {
-			setActiveMarker(poi);
-		}, []);
+    // マップインスタンスを格納するstate
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+    // クリックされたマーカーの情報を格納するstate
+    const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
-		// マップ読み込み時のハンドラ (メモ化)
-		const handleMapLoad = useCallback((map: google.maps.Map) => {
-			setMap(map);
-		}, []);
+    // マーカークリック時のハンドラ (メモ化)
+    const handleMarkerClick = useCallback((poi: Poi) => {
+        setActiveMarker(poi);
+    }, []);
 
-		// マップクリック時のハンドラ (メモ化)
-		const handleMapClick = useCallback(() => {
-			setActiveMarker(null);
-		}, []);
+    // マップ読み込み時のハンドラ (メモ化)
+    const handleMapLoad = useCallback((map: google.maps.Map) => {
+        setMap(map);
+    }, []);
 
-		// マーカーのアイコン設定 (共通化)
-		const markerIcon = useCallback(
-			(color: string) => ({
-				path: google.maps.SymbolPath.CIRCLE,
-				fillColor: color,
-				fillOpacity: 1,
-				strokeColor: color,
-				strokeWeight: 2,
-				scale: 12,
-			}),
-			[]
-		);
+    // マップクリック時のハンドラ (メモ化)
+    const handleMapClick = useCallback(() => {
+        setActiveMarker(null);
+    }, []);
 
-		return (
-			// Google Mapコンポーネント
-			<GoogleMap
-				onLoad={handleMapLoad} // マップの読み込み時にhandleMapLoadを呼び出す
-				mapContainerStyle={MAP_CONFIG.mapContainerStyle} // マップコンテナのスタイル
-				center={MAP_CONFIG.defaultCenter} // マップの中心座標
-				zoom={MAP_CONFIG.defaultZoom} // マップのズームレベル
-				options={{
-					mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
-					disableDefaultUI: false, // デフォルトUIを無効にする場合はtrue
-				}}
-				onClick={handleMapClick} // マップクリック時にhandleMapClickを呼び出す
-			>
-				{/* マーカーのクラスタリング */}
-				<MarkerClusterer>
-					{(clusterer) => (
-						<>
-							{/* マーカーをレンダリング */}
-							{pois.map(
-								(
-									poi,
-									index // keyとしてindexを使用
-								) => (
-									<Marker
-										key={index} // keyにindexを使用
-										position={poi.location}
-										title={poi.name}
-										onClick={() => handleMarkerClick(poi)}
-										clusterer={clusterer}
-										icon={markerIcon(AREA_COLORS[AREAS[poi.area]] || "#000000")} // デフォルトの色
-									/>
-								)
-							)}
-						</>
-					)}
-				</MarkerClusterer>
+    // マーカーのアイコン設定 (共通化)
+    const markerIcon = useCallback((color: string) => ({
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: color,
+        strokeWeight: 2,
+        scale: 12,
+    }), []);
 
-				{/* 情報ウィンドウ */}
-				{activeMarker && (
-					<InfoWindow
-						position={activeMarker.location}
-						onCloseClick={() => setActiveMarker(null)}
-					>
-						{/* 情報ウィンドウの内容を表示するコンポーネント */}
-						<InfoWindowContent poi={activeMarker} />
-					</InfoWindow>
-				)}
-			</GoogleMap>
-		);
-	},
-	(prevProps, nextProps) => prevProps.pois === nextProps.pois
-); 
+
+    // API が読み込まれていることを前提とするため、読み込み状態の確認は不要
+
+
+    return (
+        <GoogleMap
+            onLoad={handleMapLoad}
+            mapContainerStyle={MAP_CONFIG.mapContainerStyle}
+            center={MAP_CONFIG.defaultCenter}
+            zoom={MAP_CONFIG.defaultZoom}
+            options={{
+                mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
+                disableDefaultUI: false,
+            }}
+            onClick={handleMapClick}
+        >
+            <MarkerClusterer>
+                {(clusterer) => (
+                    <>
+                        {/* マーカーをレンダリング */}
+                        {pois.map((poi, index) => (
+                            <Marker
+                                key={index}
+                                position={poi.location}
+                                title={poi.name}
+                                onClick={() => handleMarkerClick(poi)}
+                                icon={markerIcon(AREA_COLORS[AREAS[poi.area]] || "#000000")}
+                            />
+                        ))}
+                    </>
+                )}
+            </MarkerClusterer>
+
+            {/* 情報ウィンドウ */}
+            {activeMarker && (
+                <InfoWindow
+                    position={activeMarker.location}
+                    onCloseClick={() => setActiveMarker(null)}
+                >
+                    <InfoWindowContent poi={activeMarker} />
+                </InfoWindow>
+            )}
+        </GoogleMap>
+    );
+}, (prevProps, nextProps) => prevProps.pois === nextProps.pois);
+
 
 export default Map;
