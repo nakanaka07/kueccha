@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
+      'process.env': env
     },
     resolve: {
       alias: {
@@ -29,7 +30,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: './src/index.html'
       },
-      sourcemap: false
-    }
+      sourcemap: mode !== 'production'    }
   };
 });

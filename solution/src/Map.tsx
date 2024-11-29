@@ -1,4 +1,4 @@
-// Map.tsx: マップを表示するコンポーネント
+// Map.tsx
 import React, { useState, useCallback, useMemo, memo } from "react";
 import {
     GoogleMap,
@@ -6,24 +6,26 @@ import {
     Marker,
     MarkerClusterer,
     useJsApiLoader,
+    Libraries,
 } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
 import { MAP_CONFIG, AREA_COLORS, AREAS, AreaType, AreaName } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
-// MapコンポーネントのPropsの型定義
 interface MapProps {
     pois: Poi[];
-    areaVisibility: Record<AreaName, boolean>;
+    areaVisibility: Record<AreaType, boolean>; // Use AreaType here
 }
 
-const defaultMarkerColor = "#000000"; // デフォルトのマーカーの色
+const defaultMarkerColor = "#000000";
 
-const Map: React.FC<MapProps> = memo(({ pois, areaVisibility }: MapProps) => {
+const LIBRARIES: Libraries = ['marker'];
+
+const Map: React.FC<MapProps> = ({ pois, areaVisibility }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
-        libraries: ["marker"],
+        libraries: LIBRARIES,
         mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID],
     });
 
@@ -37,23 +39,28 @@ const Map: React.FC<MapProps> = memo(({ pois, areaVisibility }: MapProps) => {
         setActiveMarker(null);
     }, []);
 
-    const markerIcon = useCallback(
-        (area: AreaType) => ({
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: AREA_COLORS[AREAS[area]] || defaultMarkerColor,
-            fillOpacity: 1,
-            strokeColor: AREA_COLORS[AREAS[area]] || defaultMarkerColor,
-            strokeWeight: 2,
-            scale: 12,
-        }),
-        []
+    const markerIcons = useMemo<Record<AreaType, { fillColor: string; strokeColor: string }> | {}>(() => {
+        if (!isLoaded) return {};
+
+        const icons: Record<AreaType, { fillColor: string; strokeColor: string }> = {
+            // すべてのAreaTypeを初期化
+            ...(Object.keys(AREAS) as Array<keyof typeof AREAS>).reduce((acc, key) => {
+                acc[key as AreaType] = {
+                    fillColor: AREA_COLORS[AREAS[key as AreaType]] || defaultMarkerColor,
+                    strokeColor: AREA_COLORS[AREAS[key as AreaType]] || defaultMarkerColor,
+                };
+                return acc;
+            }, {} as Record<AreaType, { fillColor: string; strokeColor: string }>),
+        };
+        return icons;
+    }, [isLoaded]);
+
+    const filteredPois = useMemo(
+        () => pois.filter((poi) => areaVisibility[poi.area]), // Directly use poi.area (AreaType)
+        [pois, areaVisibility]
     );
 
-    const filteredPois = useMemo(() => {
-        return pois.filter((poi) => areaVisibility[AREAS[poi.area]]);
-    }, [pois, areaVisibility]);
-
-    const map = useMemo(() => {
+    const googleMap = useMemo(() => {
         if (!isLoaded) return <div>Loading...</div>;
 
         return (
@@ -70,15 +77,21 @@ const Map: React.FC<MapProps> = memo(({ pois, areaVisibility }: MapProps) => {
                 <MarkerClusterer>
                     {(clusterer) => (
                         <>
-                            {filteredPois.map((poi) => (
-                                <Marker
-                                    key={poi.key}
-                                    position={poi.location}
-                                    title={poi.name}
-                                    onClick={() => handleMarkerClick(poi)}
-                                    icon={markerIcon(poi.area)}
-                                />
-                            ))}
+                            {filteredPois.map((poi) => {
+                                // オプショナル連鎖演算子と条件付きレンダリング
+                                const icon = isLoaded ? markerIcons[poi.area as AreaType] : undefined;
+
+                                return (
+                                    <Marker
+                                        key={poi.key}
+                                        position={poi.location}
+                                        title={poi.name}
+                                        onClick={() => handleMarkerClick(poi)}
+                                        icon={icon} // icon変数を使用
+                                        clusterer={clusterer}
+                                    />
+                                );
+                            })}
                         </>
                     )}
                 </MarkerClusterer>
@@ -93,9 +106,10 @@ const Map: React.FC<MapProps> = memo(({ pois, areaVisibility }: MapProps) => {
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, filteredPois, markerIcon, handleMapClick]);
+    }, [isLoaded, filteredPois, handleMapClick, markerIcons, handleMarkerClick]);
 
-    return map;
-});
 
-export default Map;
+    return <>{googleMap}</>;
+};
+
+export default memo(Map);
