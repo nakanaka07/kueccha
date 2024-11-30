@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: './src/index.html'
       },
-      sourcemap: mode !== 'production'    }
+      sourcemap: false 
+    }
   };
 });
