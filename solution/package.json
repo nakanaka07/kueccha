@@ -17,6 +17,7 @@
 	"dependencies": {
 		"@googlemaps/markerclusterer": "^2.5.3",
 		"@react-google-maps/api": "^2.20.3",
+		"@react-google-maps/infobox": "^2.20.0",
 		"@react-google-maps/marker-clusterer": "^2.20.0",
 		"core-js": "^3.39.0",
 		"nanoid": "^5.0.9",
