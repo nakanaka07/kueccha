@@ -1,63 +1,68 @@
-// Map.tsx: マップを表示するコンポーネント
 import React, { useState, useCallback, useMemo, memo } from "react";
 import {
     GoogleMap,
     InfoWindow,
-    Marker,
-    MarkerClusterer,
     useJsApiLoader,
-    Libraries, // Libraries型をインポート
+    Libraries,
 } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
 import { MAP_CONFIG, AREA_COLORS, AREAS, AreaType } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
-// MapコンポーネントのPropsの型定義
 interface MapProps {
     pois: Poi[];
 }
 
-const defaultMarkerColor = "#000000"; // デフォルトのマーカーの色
+const defaultMarkerColor = "#000000";
+const libraries: Libraries = ["marker"];
 
-const libraries: Libraries = ["marker"]; // Libraries型を指定
-
-
-// Mapコンポーネント (メモ化)
 const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
-        libraries: libraries, // 定数を参照
+        libraries: libraries,
         mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID],
     });
 
-    // クリックされたマーカーの情報を格納するstate
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
 
-    // マーカークリック時のハンドラ (メモ化)
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
     }, []);
 
-    // マップクリック時のハンドラ (メモ化) 情報ウィンドウを閉じる
     const handleMapClick = useCallback(() => {
         setActiveMarker(null);
     }, []);
 
-    // マーカーのアイコン設定 (共通化、依存配列を空に)
-    const markerIcon = useCallback(
-        (area: AreaType) => ({
-            // area を引数として受け取る
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: AREA_COLORS[AREAS[area]] || defaultMarkerColor, // フォールバックカラー
-            fillOpacity: 1,
-            strokeColor: AREA_COLORS[AREAS[area]] || defaultMarkerColor, // フォールバックカラー
-            strokeWeight: 2,
-            scale: 12,
-        }),
-        []
+    const createAdvancedMarker = useCallback(
+        (poi: Poi, map: google.maps.Map) => {
+            const markerColor = AREA_COLORS[AREAS[poi.area]] || defaultMarkerColor;
+
+            const markerElement = new google.maps.marker.AdvancedMarkerElement({
+                map,
+                position: poi.location,
+                title: poi.name,
+                content: createMarkerContent(markerColor),
+            });
+
+            markerElement.addListener('click', () => handleMarkerClick(poi));
+
+            return markerElement;
+        },
+        [handleMarkerClick]
     );
 
+    // マーカーのカスタムコンテンツを生成する関数
+    const createMarkerContent = useCallback((color: string) => {
+        const div = document.createElement('div');
+        div.style.width = '24px';
+        div.style.height = '24px';
+        div.style.borderRadius = '50%';
+        div.style.backgroundColor = color;
+        div.style.border = '2px solid white';
+        div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        return div;
+    }, []);
 
     const map = useMemo(() => {
         if (!isLoaded) return <div>Loading...</div>;
@@ -71,25 +76,13 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                     mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
                     disableDefaultUI: false,
                 }}
+                onLoad={(map) => {
+                    // マーカーの生成はマップロード後に行う
+                    const markers = pois.map(poi => createAdvancedMarker(poi, map));
+                }}
                 onClick={handleMapClick}
             >
-                <MarkerClusterer>
-                    {(clusterer) => (
-                        <>
-                            {pois.map((poi) => (
-                                <Marker
-                                    key={poi.key}
-                                    position={poi.location}
-                                    title={poi.name}
-                                    onClick={() => handleMarkerClick(poi)}
-                                    icon={markerIcon(poi.area)}
-                                />
-                            ))}
-                        </>
-                    )}
-                </MarkerClusterer>
-
-                {/* 情報ウィンドウ */}
+                {/* InfoWindowの処理は変更なし */}
                 {activeMarker && (
                     <InfoWindow
                         position={activeMarker.location}
@@ -100,9 +93,9 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, pois, markerIcon, handleMapClick]); // 依存配列を追加
+    }, [isLoaded, pois, handleMapClick, createAdvancedMarker]);
 
-    return map; // useMemo の結果を返す
+    return map;
 });
 
 export default Map;
