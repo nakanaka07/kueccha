@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@googlemaps/js-api-loader':
+        specifier: ^1.16.8
+        version: 1.16.8
       '@googlemaps/markerclusterer':
         specifier: ^2.5.3
         version: 2.5.3

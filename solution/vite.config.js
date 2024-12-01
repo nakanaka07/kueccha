@@ -27,8 +27,9 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
+      sourcemap: true, // ソースマップを生成
       rollupOptions: {
-        input: './src/index.html'
+        input: './index.html'
       },
     }
   };
