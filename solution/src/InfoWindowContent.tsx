@@ -1,4 +1,3 @@
-// InfoWindowContent.tsx: インフォウィンドウの内容を表示するコンポーネント
 import React, { memo, useMemo } from "react";
 import type { Poi } from "./types.d.ts";
 import { isURL } from "./useSheetData";
@@ -41,7 +40,7 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 };
 
 const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
-    const businessHours = [
+    const businessHours = useMemo(() => [
         { day: "月　", hours: poi.monday },
         { day: "火　", hours: poi.tuesday },
         { day: "水　", hours: poi.wednesday },
@@ -50,15 +49,15 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { day: "土　", hours: poi.saturday },
         { day: "日　", hours: poi.sunday },
         { day: "祝　", hours: poi.holiday },
-    ].filter(({ hours }) => !!hours);
+    ].filter(({ hours }) => !!hours), [poi]);
 
-    const additionalInfo = [
+    const additionalInfo = useMemo(() => [
         { label: "補足", value: poi.description },
         { label: "予約", value: poi.reservation },
         { label: "支払い", value: poi.payment },
         { label: "電話番号", value: poi.phone },
         { label: "住所", value: poi.address },
-    ].filter(({ value }) => !!value);
+    ].filter(({ value }) => !!value), [poi]);
 
     const informationLinks = useMemo(() => convertUrlsToLinks(poi.information, "情報"), [poi.information]);
     const viewLinks = useMemo(() => convertUrlsToLinks(poi.view, "Googleマップで見る"), [poi.view]);

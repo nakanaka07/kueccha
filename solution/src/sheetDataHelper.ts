@@ -1,24 +1,20 @@
-// sheetDataHelper.ts: スプレッドシート関連の処理
 import type { Poi } from "./types.d.ts";
 import { AreaType, AREAS } from "./appConstants";
 
-// スプレッドシートの設定interface
 interface Config {
     spreadsheetId: string;
     apiKey: string;
 }
 
-// スプレッドシートIDとAPIキー
 export const config: Config = {
     spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
     apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
 };
 
-// スプレッドシートの各列のインデックスをオブジェクトで定義
 export const ColumnIndices = {
     id: 49,
-    lat: 47, // 緯度
-    lng: 46, // 経度
+    lat: 47,
+    lng: 46,
     name: 43,
     category: 26,
     genre: 27,
@@ -39,23 +35,16 @@ export const ColumnIndices = {
     view: 42,
 } as const;
 
-// ColumnIndices のキーの型を定義
 type ColumnIndex = keyof typeof ColumnIndices;
 
-// スプレッドシートのセル値を取得し、文字列に変換するヘルパー関数
-const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string => {
-    const value = row[ColumnIndices[index]];
-    return String(value ?? "");
-};
+const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string => String(row[ColumnIndices[index]] ?? "");
 
-// スプレッドシートのセル値を取得し、数値に変換するヘルパー関数
 const getNumberValue = (row: SpreadsheetRow, index: ColumnIndex): number => {
     const value = row[ColumnIndices[index]];
     const num = parseFloat(String(value));
     return isNaN(num) ? 0 : num;
 };
 
-// スプレッドシートの行データの型を定義。必須項目を明確化
 export interface SpreadsheetRow {
     [ColumnIndices.id]: string;
     [ColumnIndices.lat]: string;
@@ -80,16 +69,11 @@ export interface SpreadsheetRow {
     [ColumnIndices.view]: string;
 }
 
-
-// スプレッドシートの行データからPoiオブジェクトを生成する関数
 export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
-    // 緯度経度を数値に変換 - getNumberValueを使用
     const lat = getNumberValue(row, "lat");
     const lng = getNumberValue(row, "lng");
     const name = getStringValue(row, "name");
 
-
-    // 必須項目が欠けている場合、または緯度経度が無効な値の場合はエラーをスロー
     if (!name) {
         throw new Error(`名称が欠落しています。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}`);
     }
@@ -100,8 +84,6 @@ export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
         throw new Error(`経度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lng}`);
     }
 
-
-    // データを変換してPoiオブジェクトを返す
     return {
         key: getStringValue(row, "id"),
         location: { lat, lng },

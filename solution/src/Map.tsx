@@ -6,7 +6,7 @@ import {
     Libraries,
 } from "@react-google-maps/api";
 import type { Poi } from "./types.d.ts";
-import { MAP_CONFIG, AREA_COLORS, AREAS, AreaType } from "./appConstants";
+import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
 interface MapProps {
@@ -20,7 +20,7 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
-        libraries: libraries,
+        libraries,
         mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID],
     });
 
@@ -34,35 +34,32 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
         setActiveMarker(null);
     }, []);
 
+    const createMarkerContent = useCallback((color: string) => {
+        const div = document.createElement("div");
+        div.style.width = "24px";
+        div.style.height = "24px";
+        div.style.borderRadius = "50%";
+        div.style.backgroundColor = color;
+        div.style.border = "2px solid white";
+        div.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+        return div;
+    }, []);
+
+
     const createAdvancedMarker = useCallback(
         (poi: Poi, map: google.maps.Map) => {
             const markerColor = AREA_COLORS[AREAS[poi.area]] || defaultMarkerColor;
-
             const markerElement = new google.maps.marker.AdvancedMarkerElement({
                 map,
                 position: poi.location,
                 title: poi.name,
                 content: createMarkerContent(markerColor),
             });
-
-            markerElement.addListener('click', () => handleMarkerClick(poi));
-
+            markerElement.addListener("click", () => handleMarkerClick(poi));
             return markerElement;
         },
-        [handleMarkerClick]
+        [handleMarkerClick, createMarkerContent]
     );
-
-    // マーカーのカスタムコンテンツを生成する関数
-    const createMarkerContent = useCallback((color: string) => {
-        const div = document.createElement('div');
-        div.style.width = '24px';
-        div.style.height = '24px';
-        div.style.borderRadius = '50%';
-        div.style.backgroundColor = color;
-        div.style.border = '2px solid white';
-        div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-        return div;
-    }, []);
 
     const map = useMemo(() => {
         if (!isLoaded) return <div>Loading...</div>;
@@ -75,14 +72,11 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 options={{
                     mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
                     disableDefaultUI: false,
+                    clickableIcons: false, // マーカーのクリックイベントをマップに伝播させない
                 }}
-                onLoad={(map) => {
-                    // マーカーの生成はマップロード後に行う
-                    const markers = pois.map(poi => createAdvancedMarker(poi, map));
-                }}
+                onLoad={(map) => pois.forEach(poi => createAdvancedMarker(poi, map))}
                 onClick={handleMapClick}
             >
-                {/* InfoWindowの処理は変更なし */}
                 {activeMarker && (
                     <InfoWindow
                         position={activeMarker.location}
@@ -93,7 +87,7 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, pois, handleMapClick, createAdvancedMarker]);
+    }, [isLoaded, pois, handleMapClick, createAdvancedMarker, activeMarker]);
 
     return map;
 });
