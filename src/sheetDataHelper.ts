@@ -1,5 +1,5 @@
 import type { Poi } from "./types";
-import { AreaType, AREAS } from "./appConstants.ts";
+import { AreaType, AREAS } from "./appConstants";
 
 interface Config {
 	spreadsheetId: string;

@@ -7,8 +7,8 @@ import {
 } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
-import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants.ts";
-import InfoWindowContent from "./InfoWindowContent.tsx";
+import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants";
+import InfoWindowContent from "./InfoWindowContent";
 
 interface MapProps {
     pois: Poi[];

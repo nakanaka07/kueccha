@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"target": "ESNext", // 最新のJavaScript標準をターゲット
+		"module": "ESNext", // ESNextモジュールシステムを使用
+		"strict": true, // 厳密な型チェックを有効化
+		"jsx": "react-jsx", // ReactのJSXサポートを有効化
+		"esModuleInterop": true, // ESモジュールとCommonJSの互換性を有効化
+		"moduleResolution": "node", // モジュール解決戦略をNode.jsに合わせる
+		"skipLibCheck": true, // 型定義ファイルのチェックをスキップ
+		"forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字の一貫性を強制
+		"baseUrl": "./", // ベースURLをプロジェクトルートに設定
+		"paths": {
+			// エイリアスの設定（必要に応じて追加）
+			"@/*": ["src/*"]
+		},
+		"resolveJsonModule": true, // JSONモジュールのインポートをサポート
+		"isolatedModules": true // 各ファイルをモジュールとして扱う
+	},
+	"include": [
+		"src", // ソースコードディレクトリを含める
+		"env.d.ts" // 環境変数の型定義ファイルを含める
+	],
+	"exclude": [
+		"node_modules", // node_modulesディレクトリを除外
+		"dist" // ビルド出力ディレクトリを除外
+	]
+}

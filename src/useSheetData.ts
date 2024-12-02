@@ -4,8 +4,8 @@ import {
 	config,
 	transformRowToPoi,
 	SpreadsheetRow,
-} from "./sheetDataHelper.ts";
-import { AREAS, AreaType } from "./appConstants.ts";
+} from "./sheetDataHelper";
+import { AREAS, AreaType } from "./appConstants";
 
 // URL妥当性チェック関数
 export const isURL = (str: string | null | undefined): boolean => {
