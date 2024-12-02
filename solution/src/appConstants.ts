@@ -10,6 +10,7 @@ export const AREAS = {
 export type AreaType = keyof typeof AREAS;
 export type AreaName = typeof AREAS[AreaType];
 
+
 export const AREA_COLORS = {
     [AREAS.RYOTSU_AIKAWA]: "#ff8000",
     [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#34A853",

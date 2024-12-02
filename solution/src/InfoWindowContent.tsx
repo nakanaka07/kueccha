@@ -4,8 +4,7 @@ import { isURL } from "./useSheetData";
 
 const URL_MAX_LENGTH = 30;
 
-const truncateUrl = (url: string) =>
-    url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
+const truncateUrl = (url: string) => url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
 
 const convertUrlsToLinks = (text?: string, title?: string) => {
     if (!text) return null;
@@ -29,11 +28,8 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
                             <br />
                         </a>
                     );
-                } else if (part.trim() !== "") {
-                    return <React.Fragment key={index}>{part}</React.Fragment>;
-                } else {
-                    return null;
                 }
+                return part.trim() !== "" ? <React.Fragment key={index}>{part}</React.Fragment> : null;
             })}
         </>
     );
@@ -61,6 +57,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 
     const informationLinks = useMemo(() => convertUrlsToLinks(poi.information, "情報"), [poi.information]);
     const viewLinks = useMemo(() => convertUrlsToLinks(poi.view, "Googleマップで見る"), [poi.view]);
+
 
     return (
         <div className="info-window">

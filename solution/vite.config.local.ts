@@ -23,11 +23,13 @@ export default defineConfig(({ mode }) => {
       'process.env': env
     },
     resolve: {
-      alias: {
-      }
+      alias: {} // 変更なし
+    },
+    optimizeDeps: { // 追記
+      include: ['@react-google-maps/api'],
     },
     build: {
-      sourcemap: true, // ソースマップを生成
+      sourcemap: true,
       rollupOptions: {
         input: './index.html'
       },
