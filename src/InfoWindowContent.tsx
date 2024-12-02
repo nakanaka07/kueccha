@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
-import type { Poi } from "./types.d.ts";
-import { isURL } from "./useSheetData";
+import type { Poi } from "./types";
+import { isURL } from "./useSheetData.ts";
 
 const URL_MAX_LENGTH = 30;
 

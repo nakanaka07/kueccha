@@ -5,9 +5,9 @@ import {
 	useJsApiLoader,
 	Libraries,
 } from "@react-google-maps/api";
-import type { Poi } from "./types.d.ts";
-import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants";
-import InfoWindowContent from "./InfoWindowContent";
+import type { Poi } from "./types";
+import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants.ts";
+import InfoWindowContent from "./InfoWindowContent.tsx";
 
 interface MapProps {
 	pois: Poi[];
