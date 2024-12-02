@@ -19,9 +19,9 @@ const libraries: Libraries = ["marker"];
 const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 	const { isLoaded } = useJsApiLoader({
 		id: "google-map-script",
-		googleMapsApiKey: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY,
+		googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
 		libraries,
-		mapIds: [import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID],
+		mapIds: [import.meta.env.VITE_GOOGLE_MAPS_MAP_ID],
 		version: "weekly",
 	});
 
@@ -70,9 +70,9 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 				center={MAP_CONFIG.defaultCenter}
 				zoom={MAP_CONFIG.defaultZoom}
 				options={{
-					mapId: import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_MAP_ID,
+					mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
 					disableDefaultUI: false,
-					clickableIcons: false, 
+					clickableIcons: false,
 				}}
 				onLoad={(map) => pois.forEach((poi) => createAdvancedMarker(poi, map))}
 				onClick={handleMapClick}
