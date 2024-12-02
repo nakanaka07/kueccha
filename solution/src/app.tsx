@@ -36,7 +36,7 @@ const App: React.FC = () => {
     return (
         <div style={{ width: "100%", height: "100vh", position: "relative" }}>
             {/* エリア選択チェックボックス */}
-            <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1, backgroundColor: "white", padding: 10 }}>
+            <div style={{ position: "absolute", top: 100, left: 10, zIndex: 1, backgroundColor: "white", padding: 10 }}>
                 {Object.entries(AREAS).map(([areaKey, areaName]) => (
                     <div key={areaKey}>
                         <input
