@@ -51,7 +51,7 @@ const App: React.FC = () => {
             </div>
 
             {/* マップ */}
-            <Map pois={filteredPois} />
+            <Map key={filteredPois.length} pois={filteredPois} />
         </div>
     );
 };
