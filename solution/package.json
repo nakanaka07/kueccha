@@ -1,54 +1,52 @@
 {
-	"name": "solution",
-	"version": "1.0.0",
-	"description": "Solution for the Kueccha challenge",
-	"type": "module",
-	"private": true,
-	"repository": {
-		"type": "git",
-		"url": "git+https://your-repo-url.git"
-	},
-	"author": "Your Name <your.email@example.com>",
-	"license": "MIT",
-	"engines": {
-		"node": ">=22.0.0",
-		"npm": ">=10.0.0"
-	},
-	"dependencies": {
-		"@googlemaps/js-api-loader": "^1.16.8",
-		"@googlemaps/markerclusterer": "^2.5.3",
-		"@react-google-maps/api": "^2.20.3",
-		"@react-google-maps/infobox": "^2.20.0",
-		"@react-google-maps/marker-clusterer": "^2.20.0",
-		"core-js": "^3.39.0",
-		"nanoid": "^5.0.9",
-		"papaparse": "^5.4.1",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
-	},
-	"scripts": {
-		"dev": "vite",
-		"start": "vite",
-		"start-local": "vite --config ./vite.config.local.js",
-		"build": "vite build",
-		"build:dev": "vite build --mode development",
-		"build:prod": "vite build --mode production",
-		"lint": "eslint src --ext .ts,.tsx",
-		"lint:fix": "eslint src --ext .ts,.tsx --fix",
-		"preview": "vite preview"
-	},
-	"devDependencies": {
-		"@types/google.maps": "^3.58.1",
-		"@types/nanoid": "^2.1.0",
-		"@types/react": "^18.3.12",
-		"@types/react-dom": "^18.3.1",
-		"@typescript-eslint/eslint-plugin": "^8.16.0",
-		"@typescript-eslint/parser": "^8.16.0",
-		"eslint": "^9.16.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-react": "^7.37.2",
-		"prettier": "^3.4.1",
-		"typescript": "^5.3.2",
-		"vite": "^6.0.1"
-	}
+  "name": "solution",
+  "version": "1.0.0",
+  "description": "Solution for the Kueccha challenge",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://your-repo-url.git"
+  },
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "@googlemaps/markerclusterer": "^2.5.3",
+    "@react-google-maps/api": "^2.20.3",
+    "@react-google-maps/infobox": "^2.20.0",
+    "@react-google-maps/marker-clusterer": "^2.20.0",
+    "core-js": "^3.39.0",
+    "nanoid": "^5.0.9",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.58.1",
+    "@types/nanoid": "^2.1.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "prettier": "^3.4.1",
+    "typescript": "^5.3.2",
+    "vite": "^6.0.1"
+  }
 }

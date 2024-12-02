@@ -23,9 +23,9 @@ export default defineConfig(({ mode }) => {
       'process.env': env
     },
     resolve: {
-      alias: {} // 変更なし
+      alias: {}
     },
-    optimizeDeps: { // 追記
+    optimizeDeps: { 
       include: ['@react-google-maps/api'],
     },
     build: {
