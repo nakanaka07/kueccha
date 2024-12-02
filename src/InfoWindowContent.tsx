@@ -61,7 +61,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 
     return (
         <div className="info-window">
-            <h3>{poi.name}</h3>
+            <h4>{poi.name}</h4>
 
             {businessHours.length > 0 && (
                 <div className="business-hours">
