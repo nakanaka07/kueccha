@@ -91,7 +91,7 @@ const App: React.FC = () => {
                 <div
                     style={{
                         position: "absolute",
-                        top: 10,
+                        top: 100,
                         left: 10,
                         zIndex: 1,
                         backgroundColor: "white",

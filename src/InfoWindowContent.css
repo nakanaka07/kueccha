@@ -1,0 +1,22 @@
+.info-window {
+    display: flex; /* Flexboxを適用 */
+    align-items: flex-start; /* 上部に揃える */
+}
+
+.info-window .title-bar {
+    flex-grow: 1; /* h4 が利用可能なスペースを最大限使用する */
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* 閉じるボタンのスタイルを上書き.  */
+.info-window > button[title="閉じる"] {
+    margin-top: 10px; /* タイトルバーとの垂直方向の調整 */
+    align-self: flex-start; /* 上部に揃える */
+}
+
+.info-window > button[title="閉じる"] > span {
+    /* 必要に応じて閉じるボタンのアイコンサイズを調整 */
+    transform: scale(1.4);
+}
