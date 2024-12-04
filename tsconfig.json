@@ -14,7 +14,8 @@
 			"@/*": ["src/*"]
 		},
 		"resolveJsonModule": true, // JSONモジュールのインポートをサポート
-		"isolatedModules": true // 各ファイルをモジュールとして扱う
+		"isolatedModules": true, // 各ファイルをモジュールとして扱う
+		"types": ["node"]
 	},
 	"include": [
 		"src", // ソースコードディレクトリを含める
