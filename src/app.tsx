@@ -41,7 +41,7 @@ const App: React.FC = () => {
         if (!isLoading && showLoader) {
             timerRef.current = setTimeout(() => {
                 setShowLoader(false);
-            }, 777);
+            }, 500);
         }
 
         // クリーンアップ関数: コンポーネントがアンマウントされる前にタイマーをクリアする
