@@ -33,6 +33,23 @@ const App: React.FC = () => {
 
     // ローディング状態を管理。true: ローディング中、false: ロード完了
     const [showLoader, setShowLoader] = useState(true);
+
+    // チェックボックスエリアの表示状態を管理するstate (true: 表示, false: 非表示)
+    const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
+
+    // チェックボックスエリアのスタイルをuseMemoでキャッシュ
+    const checkboxAreaStyle = useMemo(() => ({
+        opacity: isCheckboxVisible ? 1 : 0, // isCheckboxVisibleに基づいてopacityを設定
+        transition: "opacity 0.3s ease-in-out",
+        position: "absolute" as const,
+        top: "120px",
+        left: "10px",
+        zIndex: 1,
+        backgroundColor: "white",
+        padding: "10px",
+    }), [isCheckboxVisible]); // isCheckboxVisible を依存配列に追加
+
+
     // setTimeoutのタイマーIDを格納
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // マップコンテナのref
@@ -77,27 +94,32 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            {/* showLoaderがfalseでマップとチェックボックスを表示 */}
             <div
                 ref={mapContainerRef}
                 style={{
-                    opacity: showLoader ? 0 : 1, // showLoaderに基づいてopacityを設定。フェードインアニメーション
+                    opacity: showLoader ? 0 : 1,
                     transition: "opacity 4s ease-in-out",
                     width: "100%",
                     height: "100%",
+                    position: "relative", // relativeを追加
                 }}
-            >
-                {/* エリア選択チェックボックス */}
-                <div
+                        >
+                {/* スライダーをボタンに変更 */}
+                <button
+                    onClick={() => setIsCheckboxVisible(!isCheckboxVisible)} // クリックでisCheckboxVisibleを反転
                     style={{
-                        position: "absolute",
-                        top: 100,
-                        left: 10,
-                        zIndex: 1,
-                        backgroundColor: "white",
-                        padding: 10,
+                        position: "absolute", // 絶対配置を追加
+                        top: "90px",       // 上からの位置を200pxに設定
+                        left: "10px",         // 左からの位置を設定 (必要に応じて調整)
+                        zIndex: 2,           // マップ要素より上に表示するためにzIndexを設定
+                        /* 他のスタイル */
                     }}
-                >
+                                >
+                    {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
+                </button>
+
+                {/* エリア選択チェックボックス */}
+                <div style={checkboxAreaStyle}>
                     {Object.entries(AREAS).map(([areaKey, areaName]) => (
                         <div key={areaKey}>
                             <input
@@ -111,12 +133,12 @@ const App: React.FC = () => {
                     ))}
                 </div>
 
-                {/* マップコンポーネント */}
                 <Map key={filteredPois.length} pois={filteredPois} />
             </div>
         </div>
     );
 };
+
 
 // アプリケーションのエントリポイント
 const container = document.getElementById("app");

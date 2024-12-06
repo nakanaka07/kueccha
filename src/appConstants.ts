@@ -13,11 +13,11 @@ export type AreaName = typeof AREAS[AreaType]; // エリアの表示名の型を
 
 export const AREA_COLORS = {
     [AREAS.RYOTSU_AIKAWA]: "#ff8000", // 両津・相川地区の色
-    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#34A853", // 金井・佐和田・新穂・畑野・真野地区の色
-    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#EA4335", // 赤泊・羽茂・小木地区の色
+    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#ff8000", // 金井・佐和田・新穂・畑野・真野地区の色
+    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#ff8000", // 赤泊・羽茂・小木地区の色
     [AREAS.SNACK]: "#ff80c0", // スナックの色
-    [AREAS.PUBLIC_TOILET]: "#c0c0c0", // 公共トイレの色
-    [AREAS.PARKING]: "#400080", // 駐車場の色
+    [AREAS.PUBLIC_TOILET]: "#408080", // 公共トイレの色
+    [AREAS.PARKING]: "#408080", // 駐車場の色
 } as const; // 各エリアの色を定義。as constで定数として型付け
 
 export const MAP_CONFIG = {
