@@ -1,58 +1,50 @@
 import type { Poi } from "./types";
 import { AreaType, AREAS } from "./appConstants";
 
-// スプレッドシートの設定を格納するインターフェース
 interface Config {
-    spreadsheetId: string; // スプレッドシートID
-    apiKey: string;        // APIキー
+    spreadsheetId: string;
+    apiKey: string;
 }
 
-// スプレッドシートの設定。環境変数から値を取得
 export const config: Config = {
     spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
     apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
 };
 
-// スプレッドシートの列インデックスを定数として定義
 export const ColumnIndices = {
-    id: 49,              // ID
-    lat: 47,             // 緯度
-    lng: 46,             // 経度
-    name: 43,            // 名称
-    category: 26,        // カテゴリ
-    genre: 27,           // ジャンル
-    information: 41,     // 情報
-    monday: 28,          // 月曜日の営業時間
-    tuesday: 29,         // 火曜日の営業時間
-    wednesday: 30,       // 水曜日の営業時間
-    thursday: 31,        // 木曜日の営業時間
-    friday: 32,          // 金曜日の営業時間
-    saturday: 33,        // 土曜日の営業時間
-    sunday: 34,          // 日曜日の営業時間
-    holiday: 35,         // 祝日の営業時間
-    description: 36,     // 補足
-    reservation: 37,    // 予約
-    payment: 38,        // 支払い
-    phone: 39,          // 電話番号
-    address: 40,         // 住所
-    view: 42,           // GoogleマップURL
+    id: 49,
+    lat: 47,
+    lng: 46,
+    name: 43,
+    category: 26,
+    genre: 27,
+    information: 41,
+    monday: 28,
+    tuesday: 29,
+    wednesday: 30,
+    thursday: 31,
+    friday: 32,
+    saturday: 33,
+    sunday: 34,
+    holiday: 35,
+    description: 36,
+    reservation: 37,
+    payment: 38,
+    phone: 39,
+    address: 40,
+    view: 42,
 } as const;
 
-// 列インデックスの型を定義
 type ColumnIndex = keyof typeof ColumnIndices;
 
-// スプレッドシートの行から文字列値を取得するヘルパー関数
 const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string => String(row[ColumnIndices[index]] ?? "");
 
-// スプレッドシートの行から数値を取得するヘルパー関数
 const getNumberValue = (row: SpreadsheetRow, index: ColumnIndex): number => {
     const value = row[ColumnIndices[index]];
     const num = parseFloat(String(value));
-    return isNaN(num) ? 0 : num; // 数値に変換できない場合は0を返す
+    return isNaN(num) ? 0 : num;
 };
 
-
-// スプレッドシートの行データの型を定義
 export interface SpreadsheetRow {
     [key: number]: any;
     [ColumnIndices.id]: string;
@@ -78,14 +70,11 @@ export interface SpreadsheetRow {
     [ColumnIndices.view]: string;
 }
 
-
-// スプレッドシートの行データをPoiオブジェクトに変換する関数
 export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
     const lat = getNumberValue(row, "lat");
     const lng = getNumberValue(row, "lng");
     const name = getStringValue(row, "name");
 
-    // データのバリデーションチェック。不正なデータがあればエラーをスロー
     if (!name) {
         throw new Error(`名称が欠落しています。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}`);
     }
@@ -96,7 +85,6 @@ export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
         throw new Error(`経度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lng}`);
     }
 
-    // Poiオブジェクトを生成して返す
     return {
         key: getStringValue(row, "id"),
         location: { lat, lng },

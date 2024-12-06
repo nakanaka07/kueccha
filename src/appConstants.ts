@@ -5,26 +5,25 @@ export const AREAS = {
     SNACK: "スナック",
     PUBLIC_TOILET: "公共トイレ",
     PARKING: "駐車場",
-} as const; // 各エリアのキーと表示名を定義。as constで定数として型付け
+} as const;
 
-export type AreaType = keyof typeof AREAS; // エリアのキーの型を定義
-export type AreaName = typeof AREAS[AreaType]; // エリアの表示名の型を定義
-
+export type AreaType = keyof typeof AREAS;
+export type AreaName = typeof AREAS[AreaType];
 
 export const AREA_COLORS = {
-    [AREAS.RYOTSU_AIKAWA]: "#ff8000", // 両津・相川地区の色
-    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#ff8000", // 金井・佐和田・新穂・畑野・真野地区の色
-    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#ff8000", // 赤泊・羽茂・小木地区の色
-    [AREAS.SNACK]: "#ff80c0", // スナックの色
-    [AREAS.PUBLIC_TOILET]: "#00ffff", // 公共トイレの色
-    [AREAS.PARKING]: "#000000", // 駐車場の色
-} as const; // 各エリアの色を定義。as constで定数として型付け
+    [AREAS.RYOTSU_AIKAWA]: "#ff8000",
+    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#ff8000",
+    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#ff8000",
+    [AREAS.SNACK]: "#ff80c0",
+    [AREAS.PUBLIC_TOILET]: "#00ffff",
+    [AREAS.PARKING]: "#000000",
+} as const;
 
 export const MAP_CONFIG = {
-    defaultCenter: { lat: 38.0, lng: 138.5 }, // マップの初期中心座標（佐渡島）
-    defaultZoom: 10, // マップの初期ズームレベル
+    defaultCenter: { lat: 38.0, lng: 138.5 },
+    defaultZoom: 10,
     mapContainerStyle: {
-        width: "100%", // マップコンテナの幅
-        height: "100%", // マップコンテナの高さ
+        width: "100%",
+        height: "100%",
     },
-} as const; // マップの設定を定義。as constで定数として型付け
+} as const;
