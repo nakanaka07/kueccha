@@ -16,8 +16,8 @@ export const AREA_COLORS = {
     [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#ff8000", // 金井・佐和田・新穂・畑野・真野地区の色
     [AREAS.AKADOMARI_HAMOCHI_OGI]: "#ff8000", // 赤泊・羽茂・小木地区の色
     [AREAS.SNACK]: "#ff80c0", // スナックの色
-    [AREAS.PUBLIC_TOILET]: "#408080", // 公共トイレの色
-    [AREAS.PARKING]: "#408080", // 駐車場の色
+    [AREAS.PUBLIC_TOILET]: "#00ffff", // 公共トイレの色
+    [AREAS.PARKING]: "#000000", // 駐車場の色
 } as const; // 各エリアの色を定義。as constで定数として型付け
 
 export const MAP_CONFIG = {
