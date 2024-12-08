@@ -33,12 +33,16 @@ const App: React.FC = () => {
 		[pois, areaVisibility]
 	);
 
-	const handleCheckboxChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
-			setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
-		},
-		[]
-	);
+	const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
+        setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
+    }, []);
+
+    const handleMarkerClick = useCallback((areaType: AreaType) => {
+        setAreaVisibility((prev) => ({
+            ...prev,
+            [areaType]: !prev[areaType], // マーカークリックで表示状態を反転
+        }));
+    }, []);
 
 	const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
 	const checkboxAreaClassName = isCheckboxVisible
@@ -124,11 +128,13 @@ const App: React.FC = () => {
 									marginRight: "5px",
 									border: "1px solid white",
 									opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5,
+									cursor: "pointer", // ポインターカーソルを追加
 								}}
+								onClick={() => handleMarkerClick(areaType as AreaType)} // onClick ハンドラを追加
 							/>
 							<input
 								type="checkbox"
-								id={`checkbox-${areaType}`} // id を修正
+								id={`checkbox-${areaType}`} 
 								checked={areaVisibility[areaType as AreaType]}
 								onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
 							/>
