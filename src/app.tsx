@@ -1,162 +1,123 @@
 // src/app.tsx
-import React, {
-	useState,
-	useMemo,
-	useCallback,
-	useEffect,
-	useRef,
-} from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { useSheetData } from "./useSheetData";
 import Map from "./Map";
-import { AREAS, AreaType, AreaName } from "./appConstants";
+import { AREAS, AreaType, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import loadingImage from "./row1.png";
 
 const App: React.FC = () => {
-	// エリア表示状態初期値 (全表示)
-	const initialAreaVisibility = useMemo(
-		() =>
-			Object.values(AREAS).reduce(
-				(acc, areaName) => {
-					acc[areaName] = true;
-					return acc;
-				},
-				{} as Record<AreaName, boolean>
-			),
-		[]
-	);
+    const initialAreaVisibility = useMemo(() => {
+        const initialVisibility: Record<AreaType, boolean> = {} as any;
+        for (const areaName in AREAS) {
+            initialVisibility[areaName as AreaType] = true;
+        }
+        return initialVisibility;
+    }, []);
 
-	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-	const { pois, isLoading, error } = useSheetData(
-		Object.keys(AREAS) as AreaType[]
-	);
+    const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
+    const { pois, isLoading, error } = useSheetData();
+    const filteredPois = useMemo(
+        () => pois.filter(poi => areaVisibility[poi.area]),
+        [pois, areaVisibility]
+    );
 
-	// 表示POIを絞り込み
-	const filteredPois = useMemo(
-		() => pois.filter((poi) => areaVisibility[AREAS[poi.area]]),
-		[pois, areaVisibility]
-	);
+    const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
+        setAreaVisibility(prev => ({ ...prev, [areaType]: e.target.checked }));
+    }, []);
 
-	// チェックボックス変更ハンドラ
-	const handleCheckboxChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>, areaName: AreaName) => {
-			setAreaVisibility((prev) => ({ ...prev, [areaName]: e.target.checked }));
-		},
-		[]
-	);
+    const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
+    const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";  // 変数に格納
 
-	const [showLoader, setShowLoader] = useState(true);
-	const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
-	const checkboxAreaStyle = useMemo(
-		() => ({
-			opacity: isCheckboxVisible ? 1 : 0,
-			transition: "opacity 0.3s ease-in-out",
-			position: "absolute" as const,
-			top: "120px",
-			left: "10px",
-			zIndex: 1,
-			backgroundColor: "white",
-			padding: "10px",
-		}),
-		[isCheckboxVisible]
-	);
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        if (!isLoading && mapContainerRef.current) { // mapContainerRef.currentが存在することを確認
+            timer = setTimeout(() => {
+                mapContainerRef.current!.style.opacity = '1'; // !でnullでないことを明示
+            }, 500);
+        }
+        return () => clearTimeout(timer);
+    }, [isLoading, mapContainerRef]);  // mapContainerRefを依存配列に追加
 
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    if (error) return <div>エラー: {error}</div>;
 
-	// ローディング表示制御
-	useEffect(() => {
-		// マップコンテナが描画されてロードが完了したらローディングを非表示
-		if (!isLoading && showLoader && mapContainerRef.current) {
-			timerRef.current = setTimeout(() => setShowLoader(false), 500);
-		}
 
-		return () =>
-			clearTimeout(timerRef.current as ReturnType<typeof setTimeout>);
-	}, [isLoading, showLoader, mapContainerRef.current]);
+    return (
+        <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
+            <div
+                ref={mapContainerRef}
+                style={{
+                    opacity: 0,
+                    transition: "opacity 0.5s ease-in-out",
+                    width: "100%",
+                    height: "100%",
+                    position: "relative"
+                }}
+            >
+                <Map pois={filteredPois} />
 
-	if (error) return <div>エラー: {error}</div>;
+                <button
+                    onClick={() => setIsCheckboxVisible(prev => !prev)} // state更新を簡略化
+                    style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
+                >
+                    {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
+                </button>
 
-	return (
-		<div
-			style={{
-				width: "100%",
-				height: "100vh",
-				position: "relative",
-				overflow: "hidden",
-			}}
-		>
-			{/* ローディング画面 */}
-			{showLoader && (
-				<div
-					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						width: "100%",
-						height: "100%",
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						backgroundColor: "white",
-						opacity: showLoader ? 1 : 0,
-						transition: "opacity 4s ease-in-out",
-						zIndex: 2,
-					}}
-				>
-					<img
-						src={loadingImage}
-						alt="Loading..."
-						style={{ maxWidth: "80vw", maxHeight: "80vh" }}
-					/>{" "}
-					{/* 画像サイズ調整 */}
-				</div>
-			)}
+                <div className={checkboxAreaClassName} style={{ position: "absolute", top: "40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
+                    {Object.entries(AREAS).map(([areaType, areaName]) => (
+                        <div key={areaType} style={{ display: "flex", alignItems: "center" }}>
+                            <span
+                                style={{
+                                    display: "inline-block",
+                                    width: "16px",
+                                    height: "16px",
+                                    borderRadius: "50%",
+                                    backgroundColor: filteredPois.some(poi => poi.area === areaType)
+                                        ? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
+                                        : "gray",
+                                    marginRight: "5px",
+                                    border: "1px solid white",
+                                    opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5,
+                                }}
+                            />
+                            <input
+                                type="checkbox"
+                                id={areaType}
+                                checked={areaVisibility[areaType as AreaType]}
+                                onChange={e => handleCheckboxChange(e, areaType as AreaType)}
+                            />
+                            <label htmlFor={areaType}>{areaName}</label>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-			<div
-				ref={mapContainerRef}
-				style={{
-					opacity: showLoader ? 0 : 1,
-					transition: "opacity 4s ease-in-out",
-					width: "100%",
-					height: "100%",
-					position: "relative",
-				}}
-			>
-				<button
-					onClick={() => setIsCheckboxVisible(!isCheckboxVisible)}
-					style={{ position: "absolute", top: "90px", left: "10px", zIndex: 2 }}
-				>
-					{isCheckboxVisible
-						? "チェックボックスを隠す"
-						: "チェックボックスを表示"}
-				</button>
-
-				<div style={checkboxAreaStyle}>
-					{Object.entries(AREAS).map(([areaKey, areaName]) => (
-						<div key={areaKey}>
-							<input
-								type="checkbox"
-								id={areaKey}
-								checked={areaVisibility[areaName]}
-								onChange={(e) => handleCheckboxChange(e, areaName)}
-							/>
-							<label htmlFor={areaKey}>{areaName}</label>
-						</div>
-					))}
-				</div>
-
-				<Map key={filteredPois.length} pois={filteredPois} />
-			</div>
-		</div>
-	);
+            {isLoading && (
+                <div style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "white",
+                    zIndex: 2,
+                }}>
+                    <img src={loadingImage} alt="Loading..." style={{ maxWidth: "80vw"}} />
+                </div>
+            )}
+        </div>
+    );
 };
 
 const container = document.getElementById("app");
 if (container) {
-	const root = createRoot(container);
-	root.render(<App />);
+    const root = createRoot(container);
+    root.render(<App />);
 }
 
 export default App;

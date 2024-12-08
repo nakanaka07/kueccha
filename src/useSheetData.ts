@@ -9,24 +9,23 @@ import { AREAS, AreaType } from "./appConstants";
 const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
 
 // URLチェック関数
-const isURL = (str: string | null | undefined): boolean => !!str && urlRegex.test(str);
+export const isURL = (str: string | null | undefined): boolean => !!str && urlRegex.test(str);
 
-export { isURL };
 
-// useSheetDataの戻り値型
 interface UseSheetDataResult {
     pois: Poi[];
     isLoading: boolean;
     error: string | null;
 }
 
-export function useSheetData(areas: AreaType[]): UseSheetDataResult {
+export function useSheetData(): UseSheetDataResult { // areas引数を削除
     const [pois, setPois] = useState<Poi[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const poiCache = useRef(new Map<AreaType, Poi[]>());
-    const areasKey = useMemo(() => JSON.stringify(areas), [areas]);
+    const areas = Object.keys(AREAS) as AreaType[]; // AREASのキーをAreaType配列に変換
+    const areasKey = useMemo(() => JSON.stringify(areas), [areas]); // 常に同じ値なので、useMemoは不要
 
     useEffect(() => {
         // 設定値がない場合はエラー
@@ -46,7 +45,6 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
             return;
         }
 
-        // データフェッチ関数
         const fetchData = async (area: AreaType) => {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/'${AREAS[area]}'!A:AY?key=${config.apiKey}`;
 
@@ -59,7 +57,7 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
                 }
 
                 const data = await response.json();
-                return (data.values?.slice(1) as SpreadsheetRow[]) ?? []; // ヘッダーを除外
+                return (data.values?.slice(1) as SpreadsheetRow[]) ?? [];
 
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -67,33 +65,25 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
             }
         };
 
-        // データロード関数
         const loadData = async () => {
             setIsLoading(true);
             setError(null);
 
             try {
-                const poiMap = new Map<string, Poi>();
+                const newPoiMap = new Map<string, Poi>(); // 新しいMapを作成
 
-                // "おすすめ"を最後に処理
-                const sortedAreasToFetch = [...areasToFetch].sort((a, b) => {
-                    if (a === "RECOMMEND") return 1;
-                    if (b === "RECOMMEND") return -1;
-                    return 0;
-                });
-
-                for (const area of sortedAreasToFetch) {
+                for (const area of areasToFetch) { // areasToFetchをループ
                     const rows = await fetchData(area);
                     const newPois = rows.map(row => transformRowToPoi(row, area));
 
-                    // IDで上書き
-                    newPois.forEach(poi => poiMap.set(poi.key, poi));
+                    // 新しいPOIを追加、既存のPOIは上書き
+                    newPois.forEach(poi => newPoiMap.set(poi.key, poi));
 
-                    // キャッシュ更新
-                    poiCache.current.set(area, Array.from(poiMap.values()).filter(poi => poi.area === area));
+                    poiCache.current.set(area, newPois); // キャッシュを更新
+
                 }
+                setPois(Array.from(newPoiMap.values()));
 
-                setPois(Array.from(poiMap.values()));
 
             } catch (error) {
                 setError(error instanceof Error ? error.message : String(error));
@@ -104,7 +94,9 @@ export function useSheetData(areas: AreaType[]): UseSheetDataResult {
         };
 
         loadData();
-    }, [areasKey]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [areasKey]); // areasKeyは常に同じなので依存配列から外しても良い
 
     return { pois, isLoading, error };
 }
+

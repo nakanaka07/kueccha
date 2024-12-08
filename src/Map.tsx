@@ -1,53 +1,38 @@
 // src/Map.tsx
 
-import React, { useState, useCallback, useMemo, memo } from "react";
+import React, { useState, useCallback, useMemo, memo, useEffect, useRef } from "react";
 import {
     GoogleMap,
     InfoWindow,
     useJsApiLoader,
     Libraries,
 } from "@react-google-maps/api";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import MarkerClustererPlus from "@googlemaps/markerclustererplus";
 import type { Poi } from "./types";
-import { MAP_CONFIG, AREA_COLORS, AREAS } from "./appConstants";
+import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
-// MapコンポーネントのProps型
 interface MapProps {
     pois: Poi[];
 }
 
-const defaultMarkerColor = "#000000"; // デフォルトのマーカーの色
-const libraries: Libraries = ["marker"];  // 使用するライブラリ
+const libraries: Libraries = ["marker"];
 
 const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
-    // Google Maps APIの読み込み状態
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
         libraries,
         mapIds: [import.meta.env.VITE_GOOGLE_MAPS_MAP_ID],
         version: "weekly",
-        language: 'ja', // 日本語設定
+        language: "ja",
     });
 
-    // アクティブなマーカーの状態
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
-    // マーカークラスタラーの状態
-    const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const markerClustererRef = useRef<MarkerClustererPlus | null>(null);
+    const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
-
-    // マーカークリック時のコールバック関数
-    const handleMarkerClick = useCallback((poi: Poi) => {
-        setActiveMarker(poi);
-    }, []);
-
-    // マップクリック時のコールバック関数
-    const handleMapClick = useCallback(() => {
-        setActiveMarker(null);
-    }, []);
-
-    // マーカーコンテンツ生成関数
     const createMarkerContent = useCallback((color: string) => {
         const div = document.createElement("div");
         div.style.width = "24px";
@@ -59,9 +44,45 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
         return div;
     }, []);
 
-    // マップのメモ化
+    useEffect(() => {
+        if (isLoaded && mapRef.current) {
+            // 既存のマーカーを削除
+            markersRef.current.forEach(marker => marker.setMap(null));
+            if (markerClustererRef.current) {
+                markerClustererRef.current.clearMarkers();
+            }
+            markersRef.current = [];
+
+            const markers: google.maps.marker.AdvancedMarkerElement[] = pois.map(poi => {
+                const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+                const markerElement = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapRef.current,
+                    position: poi.location,
+                    content: createMarkerContent(markerColor),
+                });
+
+                markerElement.addListener("click", () => setActiveMarker(poi));
+                return markerElement;
+            });
+
+            markersRef.current = markers;
+
+            // MarkerClustererPlusを使用してクラスタリング
+            markerClustererRef.current = new MarkerClustererPlus(mapRef.current, markers, {
+            });
+        }
+
+        // クリーンアップ処理
+        return () => {
+            markersRef.current.forEach(marker => marker.setMap(null));
+        };
+    }, [isLoaded, pois, createMarkerContent]);
+
+    const handleMapClick = useCallback(() => {
+        setActiveMarker(null);
+    }, []);
+
     const map = useMemo(() => {
-        // APIが読み込み完了していない場合はローディング表示
         if (!isLoaded) return <div>Loading...</div>;
 
         return (
@@ -74,33 +95,9 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                     disableDefaultUI: false,
                     clickableIcons: false,
                 }}
-                // マップ読み込み時の処理
-                onLoad={(map) => {
-                    // マーカーの作成
-                    const markers = pois.map(poi => {
-                        const markerColor = AREA_COLORS[AREAS[poi.area]] || defaultMarkerColor;
-                        const markerElement = new google.maps.marker.AdvancedMarkerElement({
-                            map,
-                            position: poi.location,
-                            title: poi.name,
-                            content: createMarkerContent(markerColor),
-                        });
-                        markerElement.addListener("click", () => handleMarkerClick(poi));
-                        return markerElement;
-                    });
-
-                    // 既存のクラスタをクリア
-                    if (markerClusterer) {
-                        markerClusterer.clearMarkers();
-                    }
-
-                    // 新しいクラスタを作成
-                    const newMarkerClusterer = new MarkerClusterer({ map, markers });
-                    setMarkerClusterer(newMarkerClusterer);
-                }}
+                onLoad={map => { mapRef.current = map; }}
                 onClick={handleMapClick}
             >
-                {/* アクティブなマーカーがあればInfoWindowを表示 */}
                 {activeMarker && (
                     <InfoWindow
                         position={activeMarker.location}
@@ -111,8 +108,8 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 )}
             </GoogleMap>
         );
-        // 依存配列
-    }, [isLoaded, pois, handleMapClick, createMarkerContent, activeMarker, markerClusterer]);
+    }, [isLoaded, handleMapClick, activeMarker]);
+
 
     return map;
 });

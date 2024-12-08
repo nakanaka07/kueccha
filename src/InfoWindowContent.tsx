@@ -66,7 +66,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { label: "支払い", value: poi.payment },
         { label: "電話番号", value: poi.phone },
         { label: "住所", value: poi.address },
-        { label: "表示シート", value: areaDisplayName },
+        { label: "シート", value: areaDisplayName },
     ].filter(({ value }) => !!value), [poi, areaDisplayName]);
 
     // 関連情報リンク

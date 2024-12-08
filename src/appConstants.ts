@@ -13,19 +13,19 @@ export const AREAS = {
 
 // エリア型
 export type AreaType = keyof typeof AREAS;
-// エリア名型
-export type AreaName = typeof AREAS[AreaType];
+
+export const defaultMarkerColor = "#000000";
 
 // エリア色定義
-export const AREA_COLORS = {
-    [AREAS.RYOTSU_AIKAWA]: "#ff8000",
-    [AREAS.KANAI_SAWADA_NIIBO_HATANO_MANO]: "#ff8000",
-    [AREAS.AKADOMARI_HAMOCHI_OGI]: "#ff8000",
-    [AREAS.SNACK]: "#ff80c0",
-    [AREAS.PUBLIC_TOILET]: "#00ffff",
-    [AREAS.PARKING]: "#000000",
-    [AREAS.RECOMMEND]: "#ff0000",
-} as const;
+export const AREA_COLORS: Record<AreaType, string> = { // 型注釈を追加
+    RYOTSU_AIKAWA: "#ff8000",
+    KANAI_SAWADA_NIIBO_HATANO_MANO: "#ff8000",
+    AKADOMARI_HAMOCHI_OGI: "#ff8000",
+    SNACK: "#ff80c0",
+    PUBLIC_TOILET: "#00ffff",
+    PARKING: "#000000",
+    RECOMMEND: "#ff0000",
+};
 
 // マップ設定
 export const MAP_CONFIG = {
