@@ -26,6 +26,9 @@ importers:
       '@react-google-maps/marker-clusterer':
         specifier: ^2.20.0
         version: 2.20.0
+      '@types/google-maps':
+        specifier: ^3.2.6
+        version: 3.2.6
       core-js:
         specifier: ^3.39.0
         version: 3.39.0

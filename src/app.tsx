@@ -27,22 +27,28 @@ const App: React.FC = () => {
 	}, []);
 
 	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-	const { pois, isLoading } = useSheetData(); // error handling removed as it's handled in the return statement
+	const { pois, isLoading } = useSheetData();
 	const filteredPois = useMemo(
 		() => pois.filter((poi) => areaVisibility[poi.area]),
 		[pois, areaVisibility]
 	);
 
-	const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
-        setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
-    }, []);
+	console.log("App component rendered. Filtered POIs:", filteredPois);  // filteredPois の内容を確認
 
-    const handleMarkerClick = useCallback((areaType: AreaType) => {
-        setAreaVisibility((prev) => ({
-            ...prev,
-            [areaType]: !prev[areaType],
-        }));
-    }, []);
+
+	const handleCheckboxChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
+			setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
+		},
+		[]
+	);
+
+	const handleMarkerClick = useCallback((areaType: AreaType) => {
+		setAreaVisibility((prev) => ({
+			...prev,
+			[areaType]: !prev[areaType],
+		}));
+	}, []);
 
 	const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
 	const checkboxAreaClassName = isCheckboxVisible
@@ -60,7 +66,6 @@ const App: React.FC = () => {
 		}
 		return () => clearTimeout(timer);
 	}, [isLoading, mapContainerRef]);
-
 
 	return (
 		<div
@@ -87,7 +92,9 @@ const App: React.FC = () => {
 					onClick={() => setIsCheckboxVisible((prev) => !prev)}
 					style={{ position: "absolute", top: "90px", left: "10px", zIndex: 2 }}
 				>
-					{isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
+					{isCheckboxVisible
+						? "チェックボックスを隠す"
+						: "チェックボックスを表示"}
 				</button>
 
 				<div
@@ -102,18 +109,25 @@ const App: React.FC = () => {
 					}}
 				>
 					{Object.entries(AREAS).map(([areaType, areaName]) => (
-        <label
-		key={areaType}
-		htmlFor={`checkbox-${areaType}`}
-		style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }} // cursor: "pointer" を追加、marginBottomで間隔調整
-	>
-						<span
+						<label
+							key={areaType}
+							htmlFor={`checkbox-${areaType}`}
+							style={{
+								display: "flex",
+								alignItems: "center",
+								cursor: "pointer",
+								marginBottom: "5px",
+							}}
+						>
+							<span
 								style={{
 									display: "inline-block",
 									width: "16px",
 									height: "16px",
 									borderRadius: "50%",
-									backgroundColor: filteredPois.some((poi) => poi.area === areaType)
+									backgroundColor: filteredPois.some(
+										(poi) => poi.area === areaType
+									)
 										? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
 										: "gray",
 									marginRight: "5px",
@@ -129,8 +143,8 @@ const App: React.FC = () => {
 								checked={areaVisibility[areaType as AreaType]}
 								onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
 							/>
-            {areaName} {/* ラベルテキスト */}
-			</label>
+							{areaName}
+						</label>
 					))}
 				</div>
 			</div>
