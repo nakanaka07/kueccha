@@ -57,7 +57,12 @@ const App: React.FC = () => {
 		return () => clearTimeout(timer);
 	}, [isLoading, mapContainerRef]);
 
-	if (error) return <div>エラー: {error}</div>;
+    if (error) return <div>エラー: {error}</div>;
+
+        console.log("Initial POI data:", pois); // 初期POIデータを確認
+    console.log("Filtered POI data:", filteredPois); // フィルターされたPOIデータを確認
+    console.log("Area Visibility:", areaVisibility);
+
 
 	return (
 		<div
@@ -82,7 +87,7 @@ const App: React.FC = () => {
 
 				<button
 					onClick={() => setIsCheckboxVisible((prev) => !prev)}
-					style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
+					style={{ position: "absolute", top: "90px", left: "10px", zIndex: 2 }}
 				>
 					{isCheckboxVisible
 						? "チェックボックスを隠す"
@@ -93,7 +98,7 @@ const App: React.FC = () => {
 					className={checkboxAreaClassName}
 					style={{
 						position: "absolute",
-						top: "40px",
+						top: "120px",
 						left: "10px",
 						zIndex: 1,
 						backgroundColor: "white",

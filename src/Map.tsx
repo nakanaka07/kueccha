@@ -61,8 +61,11 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 
 	// マップのメモ化
 	const map = useMemo(() => {
-		// APIが読み込み完了していない場合はローディング表示
 		if (!isLoaded) return <div>Loading...</div>;
+
+		console.log("Google Maps API loaded.", { poiCount: pois.length }); // POIの件数のみを出力
+		console.debug("AREA_COLORS:", AREA_COLORS); // デバッグレベルで出力
+		console.debug("AREAS:", AREAS); // デバッグレベルで出力
 
 		return (
 			<GoogleMap
@@ -76,28 +79,56 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 				}}
 				// マップ読み込み時の処理
 				onLoad={(map) => {
-					// マーカーの作成
-					const markers = pois.map((poi) => {
-						// poi.area は AreaType 型なので、AREA_COLORS に直接アクセスできる
-						const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-						const markerElement = new google.maps.marker.AdvancedMarkerElement({
-							map,
-							position: poi.location,
-							title: poi.name,
-							content: createMarkerContent(markerColor),
-						});
-						markerElement.addListener("click", () => handleMarkerClick(poi));
-						return markerElement;
-					});
+					console.log("Google Maps API loaded.", { poiCount: pois.length });
+					console.debug("AREA_COLORS:", AREA_COLORS);
+					console.debug("AREAS:", AREAS);
+					console.log("Map onLoad called.");
 
-					// 既存のクラスタをクリア
+					const markers = pois
+						.map((poi, index) => {
+							try {
+								const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+								const markerElement =
+									new google.maps.marker.AdvancedMarkerElement({
+										map,
+										position: poi.location,
+										title: poi.name,
+										content: createMarkerContent(markerColor),
+									});
+
+								markerElement.addListener("click", () =>
+									handleMarkerClick(poi)
+								);
+
+								return markerElement;
+							} catch (error) {
+								console.error(
+									"Error creating marker for POI at index",
+									index,
+									":",
+									error,
+									poi
+								);
+								return null;
+							}
+						})
+						.filter((marker) => marker !== null);
+
 					if (markerClusterer) {
 						markerClusterer.clearMarkers();
 					}
 
-					// 新しいクラスタを作成
-					const newMarkerClusterer = new MarkerClusterer({ map, markers });
-					setMarkerClusterer(newMarkerClusterer);
+					try {
+						const newMarkerClusterer = new MarkerClusterer({ map, markers });
+						setMarkerClusterer(newMarkerClusterer);
+						console.log(
+							"MarkerClusterer created with",
+							markers.length,
+							"markers."
+						);
+					} catch (clustererError) {
+						console.error("Error creating MarkerClusterer:", clustererError);
+					}
 				}}
 				onClick={handleMapClick}
 			>
@@ -114,7 +145,6 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 		);
 		// 依存配列
 	}, [
-		isLoaded,
 		pois,
 		handleMapClick,
 		createMarkerContent,
