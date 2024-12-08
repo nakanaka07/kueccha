@@ -1,6 +1,8 @@
+// src/types.d.ts
+
 import { AreaType } from "./appConstants";
 
-// POI (Point of Interest) のデータ構造を定義するインターフェース
+// POIデータ構造
 export interface Poi {
     key: string;
     location: google.maps.LatLngLiteral;

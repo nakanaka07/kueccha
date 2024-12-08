@@ -1,16 +1,21 @@
+// src/sheetDataHelper.ts
+
 import type { Poi } from "./types";
 import { AreaType, AREAS } from "./appConstants";
 
+// 設定型
 interface Config {
     spreadsheetId: string;
     apiKey: string;
 }
 
+// 設定
 export const config: Config = {
     spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
     apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
 };
 
+// 列インデックス
 export const ColumnIndices = {
     id: 49,
     lat: 47,
@@ -35,16 +40,20 @@ export const ColumnIndices = {
     view: 42,
 } as const;
 
+// 列インデックス型
 type ColumnIndex = keyof typeof ColumnIndices;
 
+// 文字列値取得関数
 const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string => String(row[ColumnIndices[index]] ?? "");
 
+// 数値取得関数
 const getNumberValue = (row: SpreadsheetRow, index: ColumnIndex): number => {
     const value = row[ColumnIndices[index]];
     const num = parseFloat(String(value));
     return isNaN(num) ? 0 : num;
 };
 
+// スプレッドシート行型
 export interface SpreadsheetRow {
     [key: number]: any;
     [ColumnIndices.id]: string;
@@ -70,11 +79,14 @@ export interface SpreadsheetRow {
     [ColumnIndices.view]: string;
 }
 
+// スプレッドシート行からPOIデータに変換する関数
 export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
     const lat = getNumberValue(row, "lat");
     const lng = getNumberValue(row, "lng");
     const name = getStringValue(row, "name");
 
+
+    // バリデーション
     if (!name) {
         throw new Error(`名称が欠落しています。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}`);
     }
@@ -84,6 +96,7 @@ export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
     if (isNaN(lng) || lng < -180 || lng > 180) {
         throw new Error(`経度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lng}`);
     }
+
 
     return {
         key: getStringValue(row, "id"),
