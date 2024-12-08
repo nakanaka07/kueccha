@@ -40,7 +40,7 @@ const App: React.FC = () => {
         }
         return () => clearTimeout(timer);
     }, [isLoading, mapContainerRef]);
-    
+
 
     if (error) return <div>エラー: {error}</div>;
 
@@ -84,11 +84,13 @@ const App: React.FC = () => {
                             />
                             <input
                                 type="checkbox"
-                                id={areaType}
+                                id={`checkbox-${areaType}`}  // id を修正
                                 checked={areaVisibility[areaType as AreaType]}
                                 onChange={e => handleCheckboxChange(e, areaType as AreaType)}
                             />
-                            <label htmlFor={areaType}>{areaName}</label>
+                        <label htmlFor={`checkbox-${areaType}`}>
+                            {areaName}
+                        </label>
                         </div>
                     ))}
                 </div>
