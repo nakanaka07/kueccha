@@ -18,22 +18,28 @@ const App: React.FC = () => {
 
 
 	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-	const { pois, isLoading, error } = useSheetData();
+	const { pois, isLoading } = useSheetData();
 	const filteredPois = useMemo(
 		() => pois.filter((poi) => areaVisibility[poi.area]),
 		[pois, areaVisibility]
 	);
 
-	const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
-        setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
-    }, []);
+	console.log("App component rendered. Filtered POIs:", filteredPois);  // filteredPois の内容を確認
 
-    const handleMarkerClick = useCallback((areaType: AreaType) => {
-        setAreaVisibility((prev) => ({
-            ...prev,
-            [areaType]: !prev[areaType], // マーカークリックで表示状態を反転
-        }));
-    }, []);
+
+	const handleCheckboxChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
+			setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
+		},
+		[]
+	);
+
+	const handleMarkerClick = useCallback((areaType: AreaType) => {
+		setAreaVisibility((prev) => ({
+			...prev,
+			[areaType]: !prev[areaType],
+		}));
+	}, []);
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
     const checkboxAreaClassName = isCheckboxVisible
@@ -42,22 +48,15 @@ const App: React.FC = () => {
 
     const mapContainerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        if (!isLoading && mapContainerRef.current) {
-            timer = setTimeout(() => {
-                mapContainerRef.current!.style.opacity = "1";
-            }, 500);
-        }
-        return () => clearTimeout(timer);
-    }, [isLoading, mapContainerRef]);
-
-    if (error) return <div>エラー: {error}</div>;
-
-        console.log("Initial POI data:", pois); // 初期POIデータを確認
-    console.log("Filtered POI data:", filteredPois); // フィルターされたPOIデータを確認
-    console.log("Area Visibility:", areaVisibility);
-
+	useEffect(() => {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		if (!isLoading && mapContainerRef.current) {
+			timer = setTimeout(() => {
+				mapContainerRef.current!.style.opacity = "1";
+			}, 500);
+		}
+		return () => clearTimeout(timer);
+	}, [isLoading, mapContainerRef]);
 
 	return (
 		<div
@@ -101,9 +100,15 @@ const App: React.FC = () => {
 					}}
 				>
 					{Object.entries(AREAS).map(([areaType, areaName]) => (
-						<div
+						<label
 							key={areaType}
-							style={{ display: "flex", alignItems: "center" }}
+							htmlFor={`checkbox-${areaType}`}
+							style={{
+								display: "flex",
+								alignItems: "center",
+								cursor: "pointer",
+								marginBottom: "5px",
+							}}
 						>
 							<span
 								style={{
@@ -129,8 +134,8 @@ const App: React.FC = () => {
 								checked={areaVisibility[areaType as AreaType]}
 								onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
 							/>
-							<label htmlFor={`checkbox-${areaType}`}>{areaName}</label>
-						</div>
+							{areaName}
+						</label>
 					))}
 				</div>
 			</div>
