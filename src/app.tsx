@@ -27,22 +27,22 @@ const App: React.FC = () => {
     }, []);
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
-    const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";  // 変数に格納
+    const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";
 
     const mapContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout> | undefined;
-        if (!isLoading && mapContainerRef.current) { // mapContainerRef.currentが存在することを確認
+        if (!isLoading && mapContainerRef.current) {
             timer = setTimeout(() => {
-                mapContainerRef.current!.style.opacity = '1'; // !でnullでないことを明示
+                mapContainerRef.current!.style.opacity = '1';
             }, 500);
         }
         return () => clearTimeout(timer);
-    }, [isLoading, mapContainerRef]);  // mapContainerRefを依存配列に追加
+    }, [isLoading, mapContainerRef]);
+    
 
     if (error) return <div>エラー: {error}</div>;
-
 
     return (
         <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
@@ -59,7 +59,7 @@ const App: React.FC = () => {
                 <Map pois={filteredPois} />
 
                 <button
-                    onClick={() => setIsCheckboxVisible(prev => !prev)} // state更新を簡略化
+                    onClick={() => setIsCheckboxVisible(prev => !prev)}
                     style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
                 >
                     {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}

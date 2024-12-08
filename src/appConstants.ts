@@ -1,6 +1,5 @@
 // src/appConstants.ts
 
-// エリア定義
 export const AREAS = {
     RYOTSU_AIKAWA: "両津・相川地区",
     KANAI_SAWADA_NIIBO_HATANO_MANO: "金井・佐和田・新穂・畑野・真野地区",
@@ -11,13 +10,12 @@ export const AREAS = {
     RECOMMEND: "おすすめ",
 } as const;
 
-// エリア型
 export type AreaType = keyof typeof AREAS;
 
 export const defaultMarkerColor = "#000000";
 
-// エリア色定義
-export const AREA_COLORS: Record<AreaType, string> = { // 型注釈を追加
+
+export const AREA_COLORS: Record<AreaType, string> = {
     RYOTSU_AIKAWA: "#ff8000",
     KANAI_SAWADA_NIIBO_HATANO_MANO: "#ff8000",
     AKADOMARI_HAMOCHI_OGI: "#ff8000",
@@ -27,7 +25,6 @@ export const AREA_COLORS: Record<AreaType, string> = { // 型注釈を追加
     RECOMMEND: "#ff0000",
 };
 
-// マップ設定
 export const MAP_CONFIG = {
     defaultCenter: { lat: 38.0, lng: 138.5 },
     defaultZoom: 10,

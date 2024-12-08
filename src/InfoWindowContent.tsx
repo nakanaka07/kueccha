@@ -5,13 +5,10 @@ import type { Poi } from "./types";
 import { isURL } from "./useSheetData";
 import { AREAS } from "./appConstants";
 
-// URL文字数制限
 const URL_MAX_LENGTH = 30;
 
-// URL短縮関数
 const truncateUrl = (url: string) => url.length <= URL_MAX_LENGTH ? url : url.substring(0, URL_MAX_LENGTH) + "...";
 
-// URLをリンクに変換
 const convertUrlsToLinks = (text?: string, title?: string) => {
     if (!text) return null;
 
@@ -41,10 +38,8 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 
 
 const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
-
     const areaDisplayName = AREAS[poi.area] || poi.area;
 
-    // 営業時間
     const businessHours = useMemo(() => [
         { day: "月", hours: poi.monday },
         { day: "火", hours: poi.tuesday },
@@ -56,8 +51,6 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { day: "祝", hours: poi.holiday },
     ].filter(({ hours }) => !!hours), [poi]);
 
-
-    // 追加情報
     const additionalInfo = useMemo(() => [
         { label: "カテゴリー", value: poi.category },
         { label: "ジャンル", value: poi.genre },
@@ -69,10 +62,7 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         { label: "シート", value: areaDisplayName },
     ].filter(({ value }) => !!value), [poi, areaDisplayName]);
 
-    // 関連情報リンク
     const informationLinks = useMemo(() => convertUrlsToLinks(poi.information, "関連情報"), [poi.information]);
-
-    // Googleマップリンク
     const viewLinks = useMemo(() => convertUrlsToLinks(poi.view, "Googleマップで見る"), [poi.view]);
 
 
@@ -80,7 +70,6 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
         <div>
             <h2>{poi.name}</h2>
 
-            {/* 営業時間 */}
             {businessHours.length > 0 && (
                 <div>
                     {businessHours.map(({ day, hours }, index) => (
@@ -91,7 +80,6 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
                 </div>
             )}
 
-            {/* 追加情報 */}
             {additionalInfo.length > 0 && (
                 <div>
                     {additionalInfo.map(({ label, value }, index) => (
