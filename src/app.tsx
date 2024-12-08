@@ -27,7 +27,7 @@ const App: React.FC = () => {
 	}, []);
 
 	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-	const { pois, isLoading, error } = useSheetData();
+	const { pois, isLoading } = useSheetData(); // error handling removed as it's handled in the return statement
 	const filteredPois = useMemo(
 		() => pois.filter((poi) => areaVisibility[poi.area]),
 		[pois, areaVisibility]
@@ -40,7 +40,7 @@ const App: React.FC = () => {
     const handleMarkerClick = useCallback((areaType: AreaType) => {
         setAreaVisibility((prev) => ({
             ...prev,
-            [areaType]: !prev[areaType], // マーカークリックで表示状態を反転
+            [areaType]: !prev[areaType],
         }));
     }, []);
 
@@ -60,12 +60,6 @@ const App: React.FC = () => {
 		}
 		return () => clearTimeout(timer);
 	}, [isLoading, mapContainerRef]);
-
-    if (error) return <div>エラー: {error}</div>;
-
-        console.log("Initial POI data:", pois); // 初期POIデータを確認
-    console.log("Filtered POI data:", filteredPois); // フィルターされたPOIデータを確認
-    console.log("Area Visibility:", areaVisibility);
 
 
 	return (
@@ -93,9 +87,7 @@ const App: React.FC = () => {
 					onClick={() => setIsCheckboxVisible((prev) => !prev)}
 					style={{ position: "absolute", top: "90px", left: "10px", zIndex: 2 }}
 				>
-					{isCheckboxVisible
-						? "チェックボックスを隠す"
-						: "チェックボックスを表示"}
+					{isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
 				</button>
 
 				<div
@@ -110,36 +102,35 @@ const App: React.FC = () => {
 					}}
 				>
 					{Object.entries(AREAS).map(([areaType, areaName]) => (
-						<div
-							key={areaType}
-							style={{ display: "flex", alignItems: "center" }}
-						>
-							<span
+        <label
+		key={areaType}
+		htmlFor={`checkbox-${areaType}`}
+		style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }} // cursor: "pointer" を追加、marginBottomで間隔調整
+	>
+						<span
 								style={{
 									display: "inline-block",
 									width: "16px",
 									height: "16px",
 									borderRadius: "50%",
-									backgroundColor: filteredPois.some(
-										(poi) => poi.area === areaType
-									)
+									backgroundColor: filteredPois.some((poi) => poi.area === areaType)
 										? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
 										: "gray",
 									marginRight: "5px",
 									border: "1px solid white",
 									opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5,
-									cursor: "pointer", // ポインターカーソルを追加
+									cursor: "pointer",
 								}}
-								onClick={() => handleMarkerClick(areaType as AreaType)} // onClick ハンドラを追加
+								onClick={() => handleMarkerClick(areaType as AreaType)}
 							/>
 							<input
 								type="checkbox"
-								id={`checkbox-${areaType}`} 
+								id={`checkbox-${areaType}`}
 								checked={areaVisibility[areaType as AreaType]}
 								onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
 							/>
-							<label htmlFor={`checkbox-${areaType}`}>{areaName}</label>
-						</div>
+            {areaName} {/* ラベルテキスト */}
+			</label>
 					))}
 				</div>
 			</div>
