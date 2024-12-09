@@ -16,7 +16,6 @@ const App: React.FC = () => {
         return initialVisibility;
     }, []);
 
-
 	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
 	const { pois, isLoading } = useSheetData();
 	const filteredPois = useMemo(
