@@ -23,7 +23,7 @@ const App: React.FC = () => {
 		[pois, areaVisibility]
 	);
 
-	console.log("App component rendered. Filtered POIs:", filteredPois);  // filteredPois の内容を確認
+	console.log("App component rendered. Filtered POIs:", filteredPois);  
 
 
 	const handleCheckboxChange = useCallback(
