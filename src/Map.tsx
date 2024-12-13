@@ -1,15 +1,9 @@
 // src/Map.tsx
-
-import React, { useState, useCallback, useMemo, memo } from "react";
-import {
-    GoogleMap,
-    InfoWindow,
-    useJsApiLoader,
-    Libraries,
-} from "@react-google-maps/api";
+import React, { useState, useCallback, useEffect, memo, useRef, useMemo } from "react";
+import { GoogleMap, InfoWindow, useJsApiLoader, Libraries } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
-import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants"; // defaultMarkerColorをappConstantsからインポート
+import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
 interface MapProps {
@@ -17,7 +11,6 @@ interface MapProps {
 }
 
 const libraries: Libraries = ["marker"];
-
 
 const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
@@ -30,8 +23,8 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     });
 
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
     const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
-
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
@@ -52,8 +45,53 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
         return div;
     }, []);
 
+
+    useEffect(() => {
+        if (isLoaded && mapRef.current && pois.length > 0) {
+            const markers = pois.map((poi) => {
+                try {
+                    const location = {
+                        lat: Number(poi.location.lat),
+                        lng: Number(poi.location.lng),
+                    };
+
+                    const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+                    const markerElement = new google.maps.marker.AdvancedMarkerElement({
+                        map: mapRef.current,
+                        position: location,
+                        title: poi.name,
+                        content: createMarkerContent(markerColor),
+                    });
+
+                    markerElement.addListener("click", () => handleMarkerClick(poi));
+                    return markerElement;
+                } catch (error) {
+                    console.error("Error creating AdvancedMarkerElement:", error, poi);
+                    return null;
+                }
+            }).filter(marker => marker !== null) as google.maps.marker.AdvancedMarkerElement[];
+
+            console.log("markers:", markers);
+
+            if (markers.length > 0) { // markers が空でないことを確認
+                if (!markerClusterer && mapRef.current) {
+                    const newMarkerClusterer = new MarkerClusterer({ map: mapRef.current, markers });
+                    setMarkerClusterer(newMarkerClusterer);
+                } else if (markerClusterer) {
+                    markerClusterer.addMarkers(markers);
+                }
+            } else {
+                console.error("No markers to add to MarkerClusterer.");
+            }
+
+        }
+
+
+    }, [isLoaded, pois, markerClusterer]);
+
     const map = useMemo(() => {
         if (!isLoaded) return <div>Loading...</div>;
+
 
         return (
             <GoogleMap
@@ -66,45 +104,22 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                     clickableIcons: false,
                 }}
                 onLoad={(map) => {
-                    const markers = pois.map((poi) => {
-                        try {
-                            const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-                            const markerElement = new google.maps.marker.AdvancedMarkerElement({
-                                map,
-                                position: poi.location,
-                                title: poi.name,
-                                content: createMarkerContent(markerColor),
-                            });
-
-                            markerElement.addListener("click", () => handleMarkerClick(poi));
-
-                            return markerElement;
-                        } catch (error) {
-                            console.error("Error creating marker:", error, poi); // エラーログは残す
-                            return null;
-                        }
-                    }).filter(marker => marker !== null) as google.maps.marker.AdvancedMarkerElement[];
-
-
-                    if (!markerClusterer) {
-                        setMarkerClusterer(new MarkerClusterer({ map, markers }));
-                    } else {
-                        markerClusterer.addMarkers(markers);
-                    }
+                    mapRef.current = map;
+                    console.log("mapRef.current:", mapRef.current);
                 }}
                 onClick={handleMapClick}
             >
                 {activeMarker && (
-                    <InfoWindow
-                        position={activeMarker.location}
-                        onCloseClick={() => setActiveMarker(null)}
-                    >
+                    <InfoWindow position={activeMarker.location} onCloseClick={() => setActiveMarker(null)}>
                         <InfoWindowContent poi={activeMarker} />
                     </InfoWindow>
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, pois, handleMarkerClick, handleMapClick, createMarkerContent]);
+
+
+    }, [isLoaded, handleMapClick]); // handleMapClick を依存配列に追加
+
 
     return map;
 });
