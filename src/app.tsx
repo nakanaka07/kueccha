@@ -16,6 +16,7 @@ const App: React.FC = () => {
         return initialVisibility;
     }, []);
 
+
 	const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
 	const { pois, isLoading } = useSheetData();
 	const filteredPois = useMemo(
@@ -23,7 +24,7 @@ const App: React.FC = () => {
 		[pois, areaVisibility]
 	);
 
-	console.log("App component rendered. Filtered POIs:", filteredPois);  
+	console.log("App component rendered. Filtered POIs:", filteredPois);  // filteredPois の内容を確認
 
 
 	const handleCheckboxChange = useCallback(

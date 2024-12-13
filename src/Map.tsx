@@ -1,14 +1,15 @@
 // src/Map.tsx
 
-import React, { useState, useCallback, useEffect, memo } from "react";
+import React, { useState, useCallback, useMemo, memo } from "react";
 import {
+    GoogleMap,
     InfoWindow,
     useJsApiLoader,
     Libraries,
 } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
-import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
+import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants"; // defaultMarkerColorをappConstantsからインポート
 import InfoWindowContent from "./InfoWindowContent";
 
 interface MapProps {
@@ -16,6 +17,7 @@ interface MapProps {
 }
 
 const libraries: Libraries = ["marker"];
+
 
 const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
@@ -28,9 +30,15 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     });
 
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+    const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
+    }, []);
+
+    const handleMapClick = useCallback(() => {
+        setActiveMarker(null);
     }, []);
 
     const createMarkerContent = useCallback((color: string) => {
@@ -44,73 +52,61 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
         return div;
     }, []);
 
-    useEffect(() => {
-        let map: google.maps.Map | null = null;
-        let markerClusterer: MarkerClusterer | null = null;
+    const map = useMemo(() => {
+        if (!isLoaded) return <div>Loading...</div>;
 
-        if (isLoaded) {
-            map = new google.maps.Map(document.getElementById("map") as HTMLElement, {
-                center: MAP_CONFIG.defaultCenter,
-                zoom: MAP_CONFIG.defaultZoom,
-                mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
-                disableDefaultUI: false,
-                clickableIcons: false,
-            });
+        return (
+            <GoogleMap
+                mapContainerStyle={MAP_CONFIG.mapContainerStyle}
+                center={MAP_CONFIG.defaultCenter}
+                zoom={MAP_CONFIG.defaultZoom}
+                options={{
+                    mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
+                    disableDefaultUI: false,
+                    clickableIcons: false,
+                }}
+                onLoad={(map) => {
+                    const markers = pois.map((poi) => {
+                        try {
+                            const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+                            const markerElement = new google.maps.marker.AdvancedMarkerElement({
+                                map,
+                                position: poi.location,
+                                title: poi.name,
+                                content: createMarkerContent(markerColor),
+                            });
 
-            const markers: google.maps.Marker[] = pois.map((poi) => {
-                try {
-                    const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-                    const markerElement = new google.maps.Marker({
-                        map,
-                        position: poi.location,
-                        title: poi.name,
-                        icon: { // Set the icon using the createMarkerContent function
-                            url: "", // This is required, but the URL is irrelevant since we use a custom element
-                            scaledSize: new google.maps.Size(24, 24), // Size of the marker
-                            origin: new google.maps.Point(0, 0),
-                            anchor: new google.maps.Point(12, 12), // Center the marker
-                            labelOrigin: new google.maps.Point(12, 12)
+                            markerElement.addListener("click", () => handleMarkerClick(poi));
+
+                            return markerElement;
+                        } catch (error) {
+                            console.error("Error creating marker:", error, poi); // エラーログは残す
+                            return null;
                         }
-                    });
-
-                // Set marker content after creation since we're using Marker now
-                const markerContent = createMarkerContent(markerColor);
-
-                markerElement.setIcon(markerContent); //  Use setIcon
+                    }).filter(marker => marker !== null) as google.maps.marker.AdvancedMarkerElement[];
 
 
-                    markerElement.addListener("click", () => handleMarkerClick(poi));
+                    if (!markerClusterer) {
+                        setMarkerClusterer(new MarkerClusterer({ map, markers }));
+                    } else {
+                        markerClusterer.addMarkers(markers);
+                    }
+                }}
+                onClick={handleMapClick}
+            >
+                {activeMarker && (
+                    <InfoWindow
+                        position={activeMarker.location}
+                        onCloseClick={() => setActiveMarker(null)}
+                    >
+                        <InfoWindowContent poi={activeMarker} />
+                    </InfoWindow>
+                )}
+            </GoogleMap>
+        );
+    }, [isLoaded, pois, handleMarkerClick, handleMapClick, createMarkerContent]);
 
-                    return markerElement;
-                } catch (error) {
-                    console.error("Error creating marker:", error, poi);
-                    return null;
-                }
-            }).filter(Boolean) as google.maps.Marker[]; // 型アサーションと filter を簡潔に記述
-
-            markerClusterer = new MarkerClusterer({ map, markers });
-        }    return () => {
-            if (markerClusterer) { // markerClustererがnullでないことを確認
-                markerClusterer.clearMarkers();
-        }
-        markers.forEach(marker => marker?.setMap(null)); // markersがnullでないことを確認
-        map?.setMap(null); // mapがnullでないことを確認
-        };
- }, [isLoaded, pois, createMarkerContent, handleMarkerClick]);
-
-    return (
-        <div id="map" style={MAP_CONFIG.mapContainerStyle}>
-            {isLoaded ? null : <div>Loading...</div>}
-            {activeMarker && isLoaded && (
-                <InfoWindow
-                    position={activeMarker.location}
-                    onCloseClick={() => setActiveMarker(null)}
-                >
-                    <InfoWindowContent poi={activeMarker} />
-                </InfoWindow>
-            )}
-        </div>
-    );
+    return map;
 });
 
 export default Map;
