@@ -48,9 +48,6 @@ importers:
       '@types/google.maps':
         specifier: ^3.58.1
         version: 3.58.1
-      '@types/markerclustererplus':
-        specifier: ^2.1.33
-        version: 2.1.33
       '@types/node':
         specifier: ^22.10.1
         version: 22.10.2
@@ -419,9 +416,6 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-
-  '@types/markerclustererplus@2.1.33':
-    resolution: {integrity: sha512-ZDxsLUp8BmK9MVZZeQVDDzVrEXgRL0021AQcfXqfreFhdfZ9+PS0P6o4nZBvoIVYTmGSBemdCdI6mL6hf9yWvg==}
 
   '@types/node@22.10.2':
     resolution: {integrity: sha512-Xxr6BBRCAOQixvonOye19wnzyDiUtTeqldOOmj3CkeblonbccA12PFwlufvRdrpjXxqnmUaeiU5EOA+7s5diUQ==}
@@ -1687,10 +1681,6 @@ snapshots:
   '@types/google.maps@3.58.1': {}
 
   '@types/json-schema@7.0.15': {}
-
-  '@types/markerclustererplus@2.1.33':
-    dependencies:
-      '@types/google-maps': 3.2.6
 
   '@types/node@22.10.2':
     dependencies:

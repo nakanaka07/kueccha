@@ -47,7 +47,7 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 
 
     useEffect(() => {
-        if (isLoaded && mapRef.current && pois.length > 0) {
+        if (isLoaded && mapRef.current) {
             const markers = pois.map((poi) => {
                 try {
                     const location = {
@@ -73,25 +73,23 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
 
             console.log("markers:", markers);
 
-            if (markers.length > 0) { // markers が空でないことを確認
-                if (!markerClusterer && mapRef.current) {
+            if (!markerClusterer) {
+                if (markers.length > 0) {
                     const newMarkerClusterer = new MarkerClusterer({ map: mapRef.current, markers });
+                    console.log("markerClusterer after creation:", newMarkerClusterer);
                     setMarkerClusterer(newMarkerClusterer);
-                } else if (markerClusterer) {
-                    markerClusterer.addMarkers(markers);
+                } else {
+                    console.error("No markers to add to MarkerClusterer.");
                 }
-            } else {
-                console.error("No markers to add to MarkerClusterer.");
+            } else if (markers.length > 0) {
+                markerClusterer.setMarkers(markers);
+                console.log("markerClusterer after setMarkers:", markerClusterer);
             }
-
         }
-
-
     }, [isLoaded, pois, markerClusterer]);
 
     const map = useMemo(() => {
         if (!isLoaded) return <div>Loading...</div>;
-
 
         return (
             <GoogleMap
@@ -116,10 +114,7 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 )}
             </GoogleMap>
         );
-
-
-    }, [isLoaded, handleMapClick]); // handleMapClick を依存配列に追加
-
+    }, [isLoaded, handleMapClick]);
 
     return map;
 });
