@@ -1,4 +1,3 @@
-// src/Map.tsx
 import React, { useState, useCallback, useEffect, memo, useRef, useMemo } from "react";
 import { GoogleMap, InfoWindow, useJsApiLoader, Libraries } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
@@ -8,12 +7,14 @@ import InfoWindowContent from "./InfoWindowContent";
 
 interface MapProps {
     pois: Poi[];
+    isLoaded: boolean;
+    setIsLoaded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const libraries: Libraries = ["marker"];
 
-const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
-    const { isLoaded } = useJsApiLoader({
+const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps) => {
+    const { isLoaded: apiLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
         libraries,
@@ -25,6 +26,11 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
     const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+    const markersRef = useRef<google.maps.Marker[]>([]);
+
+    useEffect(() => {
+        setIsLoaded(apiLoaded);
+    }, [apiLoaded, setIsLoaded]);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
@@ -34,21 +40,19 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
         setActiveMarker(null);
     }, []);
 
-    const createMarkerContent = useCallback((color: string) => {
-        const div = document.createElement("div");
-        div.style.width = "24px";
-        div.style.height = "24px";
-        div.style.borderRadius = "50%";
-        div.style.backgroundColor = color;
-        div.style.border = "2px solid white";
-        div.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-        return div;
-    }, []);
-
+    const createMarkerContent = useCallback((color: string) => ({
+        url: `https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}`,
+        scaledSize: new google.maps.Size(30, 30),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(15, 30),
+    }), []);
 
     useEffect(() => {
         if (isLoaded && mapRef.current) {
-            const markers = pois.map((poi) => {
+            markersRef.current.forEach(marker => marker.setMap(null));
+            markersRef.current = [];
+
+            const markers = pois.reduce<google.maps.Marker[]>((acc, poi) => {
                 try {
                     const location = {
                         lat: Number(poi.location.lat),
@@ -56,40 +60,35 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                     };
 
                     const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-                    const markerElement = new google.maps.marker.AdvancedMarkerElement({
+
+                    const marker = new google.maps.Marker({
                         map: mapRef.current,
                         position: location,
                         title: poi.name,
-                        content: createMarkerContent(markerColor),
+                        icon: createMarkerContent(markerColor),
                     });
 
-                    markerElement.addListener("click", () => handleMarkerClick(poi));
-                    return markerElement;
+                    marker.addListener("click", () => handleMarkerClick(poi));
+                    acc.push(marker);
                 } catch (error) {
-                    console.error("Error creating AdvancedMarkerElement:", error, poi);
-                    return null;
+                    console.error("マーカー作成エラー:", error, poi);
                 }
-            }).filter(marker => marker !== null) as google.maps.marker.AdvancedMarkerElement[];
+                return acc;
+            }, []);
 
-            console.log("markers:", markers);
+            markersRef.current = markers;
 
-            if (!markerClusterer) {
-                if (markers.length > 0) {
-                    const newMarkerClusterer = new MarkerClusterer({ map: mapRef.current, markers });
-                    console.log("markerClusterer after creation:", newMarkerClusterer);
-                    setMarkerClusterer(newMarkerClusterer);
-                } else {
-                    console.error("No markers to add to MarkerClusterer.");
-                }
+            if (markerClusterer) {
+                markerClusterer.clearMarkers();
+                markerClusterer.addMarkers(markers);
             } else if (markers.length > 0) {
-                markerClusterer.setMarkers(markers);
-                console.log("markerClusterer after setMarkers:", markerClusterer);
+                setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers }));
             }
         }
-    }, [isLoaded, pois, markerClusterer]);
+    }, [isLoaded, pois, markerClusterer, createMarkerContent, handleMarkerClick]);
 
-    const map = useMemo(() => {
-        if (!isLoaded) return <div>Loading...</div>;
+    const mapComponent = useMemo(() => {
+        if (!isLoaded) return <div>地図を読み込んでいます...</div>;
 
         return (
             <GoogleMap
@@ -103,20 +102,22 @@ const Map: React.FC<MapProps> = memo(({ pois }: MapProps) => {
                 }}
                 onLoad={(map) => {
                     mapRef.current = map;
-                    console.log("mapRef.current:", mapRef.current);
                 }}
                 onClick={handleMapClick}
             >
                 {activeMarker && (
-                    <InfoWindow position={activeMarker.location} onCloseClick={() => setActiveMarker(null)}>
+                    <InfoWindow
+                        position={activeMarker.location}
+                        onCloseClick={() => setActiveMarker(null)}
+                    >
                         <InfoWindowContent poi={activeMarker} />
                     </InfoWindow>
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, handleMapClick]);
+    }, [isLoaded, handleMapClick, activeMarker]);
 
-    return map;
+    return mapComponent;
 });
 
 export default Map;

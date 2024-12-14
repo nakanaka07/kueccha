@@ -1,133 +1,142 @@
-// src/app.tsx
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { createRoot } from "react-dom/client";
-import { useSheetData } from "./useSheetData";
-import Map from "./Map";
-import { AREAS, AreaType, AREA_COLORS, defaultMarkerColor } from "./appConstants";
-import loadingImage from "./row1.png";
+import React, { useState, useCallback, useEffect, memo, useRef, useMemo } from "react";
+import { GoogleMap, InfoWindow, useJsApiLoader, Libraries } from "@react-google-maps/api";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import type { Poi } from "./types";
+import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor, AREAS } from "./appConstants";
+import InfoWindowContent from "./InfoWindowContent";
 
-const App: React.FC = () => {
-    const initialAreaVisibility = useMemo(() => {
-        const initialVisibility: Record<AreaType, boolean> = {} as any;
-        for (const areaName in AREAS) {
-            initialVisibility[areaName as AreaType] = true;
-        }
-        return initialVisibility;
-    }, []);
-
-    const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-    const { pois, isLoading } = useSheetData();
-
-    // ここで pois の内容を確認
-    console.log("pois data:", pois);
-
-    const filteredPois = useMemo(
-        () => pois.filter((poi) => areaVisibility[poi.area]),
-        [pois, areaVisibility]
-    );
-
-    console.log("App component rendered. Filtered POIs:", filteredPois.length, filteredPois);
-
-    const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
-        setAreaVisibility((prev) => ({ ...prev, [areaType]: e.target.checked }));
-    }, []);
-
-    const handleMarkerClick = useCallback((areaType: AreaType) => {
-        setAreaVisibility((prev) => ({ ...prev, [areaType]: !prev[areaType] }));
-    }, []);
-
-    const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
-    const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";
-    const mapContainerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        if (!isLoading && mapContainerRef.current) {
-            timer = setTimeout(() => {
-                mapContainerRef.current!.style.opacity = "1";
-            }, 500);
-        }
-        return () => clearTimeout(timer);
-    }, [isLoading, mapContainerRef]);
-
-    return (
-        <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
-            <div
-                ref={mapContainerRef}
-                style={{
-                    opacity: 0,
-                    transition: "opacity 0.5s ease-in-out",
-                    width: "100%",
-                    height: "100%",
-                    position: "relative",
-                }}
-            >
-                <Map pois={filteredPois} />
-
-                <button
-                    onClick={() => setIsCheckboxVisible((prev) => !prev)}
-                    style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
-                >
-                    {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
-                </button>
-
-                <div className={checkboxAreaClassName}
-                     style={{ position: "absolute", top:"40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
-                    {Object.entries(AREAS).map(([areaType, areaName]) => (
-                        <label key={areaType} htmlFor={`checkbox-${areaType}`} style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }}>
-                            <span
-                                style={{
-                                    display: "inline-block",
-                                    width: "16px",
-                                    height: "16px",
-                                    borderRadius: "50%",
-                                    backgroundColor: filteredPois.some(poi => poi.area === areaType)
-                                        ? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
-                                        : "gray",
-                                    marginRight: "5px",
-                                    border: "1px solid white",
-                                    opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5,
-                                    cursor: "pointer",
-                                }}
-                                onClick={() => handleMarkerClick(areaType as AreaType)}
-                            />
-                            <input
-                                type="checkbox"
-                                id={`checkbox-${areaType}`}
-                                checked={areaVisibility[areaType as AreaType]}
-                                onChange={e => handleCheckboxChange(e, areaType as AreaType)}
-                            />
-                            {areaName} ({filteredPois.filter(poi => poi.area === areaType).length})
-                        </label>
-                    ))}
-                </div>
-            </div>
-
-            {isLoading && (
-                <div style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "white",
-                    zIndex: 2
-                }}>
-                    <img src={loadingImage} alt="Loading..." style={{ maxWidth: "80vw" }} />
-                </div>
-            )}
-        </div>
-    );
-};
-
-
-const container = document.getElementById("app");
-if (container) {
-    const root = createRoot(container);
-    root.render(<App />);
+interface MapProps {
+    pois: Poi[];
+    isLoaded: boolean;
+    setIsLoaded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default App;
+const libraries: Libraries = ["marker"];
+
+const getMarkerColor = (area: string) => AREA_COLORS[area as keyof typeof AREA_COLORS] || defaultMarkerColor; // AREA_COLORSアクセス用のヘルパー関数
+
+const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps) => {
+    const { isLoaded: apiLoaded } = useJsApiLoader({
+        id: "google-map-script",
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        libraries,
+        mapIds: [import.meta.env.VITE_GOOGLE_MAPS_MAP_ID],
+        version: "weekly",
+        language: "ja",
+    });
+
+    const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const markerClustererRef = useRef<MarkerClusterer | null>(null);
+    const markersRef = useRef<Map<string, google.maps.Marker>>(new Map()); // マーカーをIDで管理
+
+    useEffect(() => {
+        setIsLoaded(apiLoaded);
+    }, [apiLoaded, setIsLoaded]);
+
+    const handleMarkerClick = useCallback((poi: Poi) => {
+        setActiveMarker(poi);
+    }, []);
+
+
+    const createMarkerContent = useCallback((color: string) => ({
+        url: `https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}`,
+        scaledSize: new google.maps.Size(30, 30),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(15, 30),
+    }), []);
+
+    useEffect(() => {
+        if (isLoaded && mapRef.current) {
+            const newMarkers = new Map<string, google.maps.Marker>();
+
+            pois.forEach((poi) => {
+                const poiId = poi.id; // Poiにidがあると仮定
+
+                if (markersRef.current.has(poiId)) {
+                    // マーカーが既に存在する場合は更新 (必要に応じて位置、アイコンなどを更新)
+                    const existingMarker = markersRef.current.get(poiId)!;
+                   // ... 更新ロジック ...
+                   newMarkers.set(poiId, existingMarker)
+
+                } else {
+                    // 新しいマーカーを作成
+                    try {
+                        const location = {
+                            lat: Number(poi.location.lat),
+                            lng: Number(poi.location.lng),
+                        };
+
+                        const markerColor = getMarkerColor(poi.area);  // ヘルパー関数を使用
+                        const marker = new google.maps.Marker({
+                            map: mapRef.current,
+                            position: location,
+                            title: poi.name,
+                            icon: createMarkerContent(markerColor),
+                        });
+
+                        marker.addListener("click", () => handleMarkerClick(poi));
+                        newMarkers.set(poiId, marker)
+                    } catch (error) {
+                        console.error("マーカー作成エラー:", error, poi);
+                    }
+                }
+
+
+            });
+
+            // 存在しないマーカーを削除
+            markersRef.current.forEach((marker, id) => {
+                if (!newMarkers.has(id)) {
+                    marker.setMap(null);
+                }
+            });
+
+            markersRef.current = newMarkers;
+
+
+
+                if(markerClustererRef.current){
+                    markerClustererRef.current.clearMarkers();
+                    markerClustererRef.current.addMarkers([...newMarkers.values()])
+                } else {
+                    markerClustererRef.current = new MarkerClusterer({map:mapRef.current, markers:[...newMarkers.values()]})
+                }
+
+        }
+    }, [isLoaded, pois, createMarkerContent, handleMarkerClick]);
+
+    const mapComponent = useMemo(() => {  // activeMarkerを依存配列から削除
+        if (!isLoaded) return <div>地図を読み込んでいます...</div>;
+
+        return (
+            <GoogleMap
+                mapContainerStyle={MAP_CONFIG.mapContainerStyle}
+                center={MAP_CONFIG.defaultCenter}
+                zoom={MAP_CONFIG.defaultZoom}
+                options={{
+                    mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
+                    disableDefaultUI: false,
+                    clickableIcons: false,
+                }}
+                onLoad={(map) => {
+                    mapRef.current = map;
+                }}
+            >
+                 {activeMarker && (  // InfoWindowをMapコンポーネント内でレンダリング
+                    <InfoWindow
+                        position={activeMarker.location}
+                        onCloseClick={() => setActiveMarker(null)}
+                    >
+                        <InfoWindowContent poi={activeMarker} />
+                    </InfoWindow>
+                )}
+            </GoogleMap>
+        );
+    }, [isLoaded]); // activeMarkerを除外
+
+    return mapComponent;
+});
+
+export default Map;
+
