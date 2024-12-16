@@ -33,14 +33,13 @@ const convertUrlsToLinks = (text?: string, title?: string) => {
 					);
 				}
 				if (part.trim() !== "") {
-					return <span key={index}>{part}</span>; 
+					return <span key={index}>{part}</span>;
 				}
 				return null;
 			})}
 		</>
 	);
 };
-
 
 const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 	const areaDisplayName = AREAS[poi.area] || poi.area;
@@ -85,31 +84,30 @@ const InfoWindowContent = memo(({ poi }: { poi: Poi }) => {
 		<div>
 			<h2>{poi.name}</h2>
 
-{businessHours.length > 0 && (
-	<div>
-		{businessHours.map(({ day, hours }, index) => (
-			<div key={index}>
-				<strong>{day}: </strong> {hours}
-			</div>
-		))}
-	</div>
-)}
+			{businessHours.length > 0 && (
+				<div>
+					{businessHours.map(({ day, hours }, index) => (
+						<div key={index}>
+							<strong>{day}: </strong> {hours}
+						</div>
+					))}
+				</div>
+			)}
 
-{additionalInfo.length > 0 && (
-	<div>
-		{additionalInfo.map(({ label, value }, index) => (
-			<div key={index}>
-				<strong>{label}: </strong> {value}
-			</div>
-		))}
-	</div>
-)}
+			{additionalInfo.length > 0 && (
+				<div>
+					{additionalInfo.map(({ label, value }, index) => (
+						<div key={index}>
+							<strong>{label}: </strong> {value}
+						</div>
+					))}
+				</div>
+			)}
 
-{informationLinks}
-{viewLinks}
-</div>
+			{informationLinks}
+			{viewLinks}
+		</div>
 	);
 });
-
 
 export default InfoWindowContent;
