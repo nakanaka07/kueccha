@@ -40,7 +40,7 @@ const App: React.FC = () => {
             }, 500);
         }
         return () => clearTimeout(timer);
-    }, [isLoading, mapContainerRef]);
+    }, [isLoading]);
 
     if (error) {
         return <div>エラーが発生しました：{error.message}<button onClick={retry}>再試行</button></div>;
