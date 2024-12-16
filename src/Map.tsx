@@ -1,21 +1,19 @@
 // src/Map.tsx
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { GoogleMap, InfoWindow, useJsApiLoader, Libraries } from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, useJsApiLoader, LoadScript, Libraries } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
 import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
-interface MapProps {
-    pois: Poi[];
-    isLoaded: boolean;
-    setIsLoaded: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
 const libraries: Libraries = ["marker"];
 
-const Map: React.FC<MapProps> = ({ pois, isLoaded, setIsLoaded }: MapProps) => {
-    const { isLoaded: apiLoaded } = useJsApiLoader({
+interface MapProps {
+    pois: Poi[];
+}
+
+const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
+    const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
         libraries,
@@ -24,14 +22,10 @@ const Map: React.FC<MapProps> = ({ pois, isLoaded, setIsLoaded }: MapProps) => {
         language: "ja",
     });
 
-    useEffect(() => {
-        setIsLoaded(apiLoaded);
-    }, [apiLoaded, setIsLoaded]);
-
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
     const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
-    const markers = useRef<google.maps.Marker[]>([]);
+    const markers = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
@@ -41,45 +35,50 @@ const Map: React.FC<MapProps> = ({ pois, isLoaded, setIsLoaded }: MapProps) => {
         setActiveMarker(null);
     }, []);
 
-    const createMarkerContent = useCallback((color: string) => ({
-        url: `https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}`,
-        scaledSize: new google.maps.Size(30, 30),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(15, 30),
-    }), []);
+    const createMarkerContent = useCallback((color: string) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<img src="https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}" style="width:30px;height:30px;" />`;
+        return div;
+    }, []);
 
     useEffect(() => {
         if (isLoaded && mapRef.current) {
-            // markers を削除
-            markers.current.forEach(marker => marker.setMap(null));
+            markers.current.forEach(marker => marker.map = null);
             markers.current = [];
 
-            // markers を再作成
             pois.forEach(poi => {
                 const location = {
                     lat: Number(poi.location.lat),
                     lng: Number(poi.location.lng),
                 };
+
                 const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-                const marker = new google.maps.Marker({
-                    map: mapRef.current,
+
+                const markerContent = createMarkerContent(markerColor);
+
+                const marker = new google.maps.marker.AdvancedMarkerElement({
                     position: location,
                     title: poi.name,
-                    icon: createMarkerContent(markerColor),
+                    content: markerContent // contentプロパティを使用
                 });
+
                 marker.addListener("click", () => handleMarkerClick(poi));
+
+                if (mapRef.current) {
+                    marker.map = mapRef.current;
+                }
+
                 markers.current.push(marker);
             });
 
-
             if (markerClusterer) {
                 markerClusterer.clearMarkers();
-                markerClusterer.addMarkers(markers.current); // markers.current を使用する
+                markerClusterer.addMarkers(markers.current);
             } else {
-                setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers: markers.current })); // markers.current を使用する
+                setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers: markers.current }));
             }
         }
-    }, [isLoaded, pois, markerClusterer, createMarkerContent, handleMarkerClick]);
+    }, [isLoaded, pois, handleMarkerClick, createMarkerContent, markerClusterer, mapRef]);
 
     const mapComponent = useMemo(() => {
         if (!isLoaded) return <div>地図を読み込んでいます...</div>;
@@ -107,9 +106,20 @@ const Map: React.FC<MapProps> = ({ pois, isLoaded, setIsLoaded }: MapProps) => {
                 )}
             </GoogleMap>
         );
-    }, [isLoaded, handleMapClick, activeMarker]);
+    }, [isLoaded, activeMarker, handleMapClick]);
 
-    return mapComponent;
+    return (
+        <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={libraries}
+            id="google-map-script"
+            mapIds={[import.meta.env.VITE_GOOGLE_MAPS_MAP_ID]}
+            version="weekly"
+            language="ja"
+        >
+            {mapComponent}
+        </LoadScript>
+    );
 };
 
 export default Map;
