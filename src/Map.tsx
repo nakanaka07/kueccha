@@ -1,5 +1,5 @@
 // src/Map.tsx
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import { GoogleMap, InfoWindow, useJsApiLoader, LoadScript, Libraries } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
@@ -42,7 +42,11 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
     }, []);
 
     const createMarkers = useCallback(() => {
-        markers.current.forEach(marker => marker.map = null);
+        markers.current.forEach(marker => {
+            if (marker) {
+                marker.map = null;
+            }
+        });
         markers.current = [];
 
         pois.forEach(poi => {
@@ -61,28 +65,19 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
             marker.element = markerElement;
             marker.addListener("click", () => handleMarkerClick(poi));
 
-            // mapRef.current が null でないことを確認してからマーカーを追加
-            if (mapRef.current) {
+            if (mapRef.current) {  // mapRef.current が null でないことを確認してからマーカーを追加
                 marker.map = mapRef.current;
+                markers.current.push(marker); // マーカーの追加を mapRef.current のチェック後に移動
             }
-
-            markers.current.push(marker);
         });
 
-        if (markerClusterer) {
+        if (markerClusterer && mapRef.current) { //markerClustererとmapRef.currentの存在を確認
             markerClusterer.clearMarkers();
             markerClusterer.addMarkers(markers.current);
         } else if (mapRef.current) {
             setMarkerClusterer(new MarkerClusterer({ markers: markers.current, map: mapRef.current }));
         }
-    }, [pois, createMarkerElement, handleMarkerClick, mapRef.current]); // mapRef.current を依存配列に追加
-
-    useEffect(() => {
-        if (isLoaded) {
-            createMarkers();
-        }
-    }, [isLoaded, createMarkers, pois]); // pois を依存配列に追加
-
+    }, [pois, createMarkerElement, handleMarkerClick]);
 
     const mapComponent = useMemo(() => {
         if (!isLoaded) return <div>地図を読み込んでいます...</div>;
@@ -121,7 +116,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
             version="weekly"
             language="ja"
             onLoad={() => {
-                createMarkers();
+                 if(mapRef.current) createMarkers(); // mapRef.current の存在を確認
             }}
         >
             {mapComponent}
