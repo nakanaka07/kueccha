@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect, memo, useRef, useMemo } from "react";
+// src/Map.tsx
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { GoogleMap, InfoWindow, useJsApiLoader, Libraries } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
@@ -13,7 +14,7 @@ interface MapProps {
 
 const libraries: Libraries = ["marker"];
 
-const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps) => {
+const Map: React.FC<MapProps> = ({ pois, isLoaded, setIsLoaded }: MapProps) => {
     const { isLoaded: apiLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -23,14 +24,14 @@ const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps)
         language: "ja",
     });
 
-    const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
-    const mapRef = useRef<google.maps.Map | null>(null);
-    const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
-    const markersRef = useRef<google.maps.Marker[]>([]);
-
     useEffect(() => {
         setIsLoaded(apiLoaded);
     }, [apiLoaded, setIsLoaded]);
+
+    const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+    const markers = useRef<google.maps.Marker[]>([]);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
@@ -49,40 +50,33 @@ const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps)
 
     useEffect(() => {
         if (isLoaded && mapRef.current) {
-            markersRef.current.forEach(marker => marker.setMap(null));
-            markersRef.current = [];
+            // markers を削除
+            markers.current.forEach(marker => marker.setMap(null));
+            markers.current = [];
 
-            const markers = pois.reduce<google.maps.Marker[]>((acc, poi) => {
-                try {
-                    const location = {
-                        lat: Number(poi.location.lat),
-                        lng: Number(poi.location.lng),
-                    };
+            // markers を再作成
+            pois.forEach(poi => {
+                const location = {
+                    lat: Number(poi.location.lat),
+                    lng: Number(poi.location.lng),
+                };
+                const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+                const marker = new google.maps.Marker({
+                    map: mapRef.current,
+                    position: location,
+                    title: poi.name,
+                    icon: createMarkerContent(markerColor),
+                });
+                marker.addListener("click", () => handleMarkerClick(poi));
+                markers.current.push(marker);
+            });
 
-                    const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-
-                    const marker = new google.maps.Marker({
-                        map: mapRef.current,
-                        position: location,
-                        title: poi.name,
-                        icon: createMarkerContent(markerColor),
-                    });
-
-                    marker.addListener("click", () => handleMarkerClick(poi));
-                    acc.push(marker);
-                } catch (error) {
-                    console.error("マーカー作成エラー:", error, poi);
-                }
-                return acc;
-            }, []);
-
-            markersRef.current = markers;
 
             if (markerClusterer) {
                 markerClusterer.clearMarkers();
-                markerClusterer.addMarkers(markers);
-            } else if (markers.length > 0) {
-                setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers }));
+                markerClusterer.addMarkers(markers.current); // markers.current を使用する
+            } else {
+                setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers: markers.current })); // markers.current を使用する
             }
         }
     }, [isLoaded, pois, markerClusterer, createMarkerContent, handleMarkerClick]);
@@ -100,9 +94,7 @@ const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps)
                     disableDefaultUI: false,
                     clickableIcons: false,
                 }}
-                onLoad={(map) => {
-                    mapRef.current = map;
-                }}
+                onLoad={map => { mapRef.current = map; }}
                 onClick={handleMapClick}
             >
                 {activeMarker && (
@@ -118,6 +110,6 @@ const Map: React.FC<MapProps> = memo(({ pois, isLoaded, setIsLoaded }: MapProps)
     }, [isLoaded, handleMapClick, activeMarker]);
 
     return mapComponent;
-});
+};
 
 export default Map;
