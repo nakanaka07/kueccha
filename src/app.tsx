@@ -58,7 +58,7 @@ const App: React.FC = () => {
             <div
                 ref={mapContainerRef}
                 style={{
-                    opacity: isLoading ? 0 : 1, // isLoading に応じて opacity を変更
+                    opacity: isLoading ? 0 : 1,
                     transition: "opacity 0.5s ease-in-out",
                     width: "100%",
                     height: "100%",
@@ -107,7 +107,6 @@ const App: React.FC = () => {
         </div>
     );
 };
-
 
 const container = document.getElementById("app");
 if (container) {

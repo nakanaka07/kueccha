@@ -35,7 +35,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
         setActiveMarker(null);
     }, []);
 
-    const createMarkerContent = useCallback((color: string) => {
+    const createMarkerElement = useCallback((color: string) => {
         const div = document.createElement('div');
         div.innerHTML = `<img src="https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}" style="width:30px;height:30px;" />`;
         return div;
@@ -53,21 +53,15 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                 };
 
                 const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
-
-                const markerContent = createMarkerContent(markerColor);
+                const markerElement = createMarkerElement(markerColor);
 
                 const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapRef.current,
                     position: location,
                     title: poi.name,
-                    content: markerContent // contentプロパティを使用
                 });
-
+                marker.element = markerElement;
                 marker.addListener("click", () => handleMarkerClick(poi));
-
-                if (mapRef.current) {
-                    marker.map = mapRef.current;
-                }
-
                 markers.current.push(marker);
             });
 
@@ -78,7 +72,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                 setMarkerClusterer(new MarkerClusterer({ map: mapRef.current, markers: markers.current }));
             }
         }
-    }, [isLoaded, pois, handleMarkerClick, createMarkerContent, markerClusterer, mapRef]);
+    }, [isLoaded, pois, handleMarkerClick, createMarkerElement, markerClusterer, mapRef]);
 
     const mapComponent = useMemo(() => {
         if (!isLoaded) return <div>地図を読み込んでいます...</div>;
