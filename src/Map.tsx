@@ -1,12 +1,10 @@
 // src/Map.tsx
-import React, { useState, useCallback, useRef, useMemo } from "react";
-import { GoogleMap, InfoWindow, useJsApiLoader, LoadScript, Libraries } from "@react-google-maps/api";
+import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { GoogleMap, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Poi } from "./types";
 import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
-
-const libraries: Libraries = ["marker"];
 
 interface MapProps {
     pois: Poi[];
@@ -16,7 +14,6 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-        libraries,
         mapIds: [import.meta.env.VITE_GOOGLE_MAPS_MAP_ID],
         version: "weekly",
         language: "ja",
@@ -24,7 +21,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
 
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
-    const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+    const markerClusterer = useRef<MarkerClusterer | null>(null);
     const markers = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
@@ -42,11 +39,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
     }, []);
 
     const createMarkers = useCallback(() => {
-        markers.current.forEach(marker => {
-            if (marker) {
-                marker.map = null;
-            }
-        });
+        markers.current.forEach(marker => marker.map = null);
         markers.current = [];
 
         pois.forEach(poi => {
@@ -59,25 +52,35 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
             const markerElement = createMarkerElement(markerColor);
 
             const marker = new google.maps.marker.AdvancedMarkerElement({
+                map: mapRef.current,
                 position: location,
                 title: poi.name,
             });
-            marker.element = markerElement;
-            marker.addListener("click", () => handleMarkerClick(poi));
 
-            if (mapRef.current) {  // mapRef.current が null でないことを確認してからマーカーを追加
-                marker.map = mapRef.current;
-                markers.current.push(marker); // マーカーの追加を mapRef.current のチェック後に移動
-            }
+            marker.element = markerElement; // マーカー作成後に element を設定
+
+            marker.addListener("click", () => handleMarkerClick(poi));
+            markers.current.push(marker);
         });
 
-        if (markerClusterer && mapRef.current) { //markerClustererとmapRef.currentの存在を確認
-            markerClusterer.clearMarkers();
-            markerClusterer.addMarkers(markers.current);
-        } else if (mapRef.current) {
-            setMarkerClusterer(new MarkerClusterer({ markers: markers.current, map: mapRef.current }));
+        if (mapRef.current) {
+            if (markerClusterer.current) {
+                markerClusterer.current.clearMarkers();
+                markerClusterer.current.addMarkers(markers.current);
+            } else {
+                markerClusterer.current = new MarkerClusterer({
+                    markers: markers.current,
+                    map: mapRef.current,
+                });
+            }
         }
     }, [pois, createMarkerElement, handleMarkerClick]);
+
+    useEffect(() => {
+        if (isLoaded) {
+            createMarkers();
+        }
+    }, [isLoaded, createMarkers, pois]);
 
     const mapComponent = useMemo(() => {
         if (!isLoaded) return <div>地図を読み込んでいます...</div>;
@@ -107,21 +110,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
         );
     }, [isLoaded, activeMarker, handleMapClick]);
 
-    return (
-        <LoadScript
-            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-            libraries={libraries}
-            id="google-map-script"
-            mapIds={[import.meta.env.VITE_GOOGLE_MAPS_MAP_ID]}
-            version="weekly"
-            language="ja"
-            onLoad={() => {
-                 if(mapRef.current) createMarkers(); // mapRef.current の存在を確認
-            }}
-        >
-            {mapComponent}
-        </LoadScript>
-    );
+    return mapComponent;
 };
 
 export default Map;

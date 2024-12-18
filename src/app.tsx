@@ -1,10 +1,13 @@
 // src/app.tsx
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { useSheetData } from "./useSheetData";
 import Map from "./Map";
 import { AREAS, AreaType, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import loadingImage from "./row1.png";
+import { LoadScript, Libraries } from "@react-google-maps/api";
+
+const libraries: Libraries = ["marker"];
 
 const App: React.FC = () => {
     const { pois, isLoading, error, retry } = useSheetData();
@@ -29,24 +32,6 @@ const App: React.FC = () => {
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
     const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";
-    const mapContainerRef = useRef<HTMLDivElement>(null);
-
-    // useCallback for optimization if fade-in is necessary
-    const updateOpacity = useCallback(() => {
-        if (mapContainerRef.current) {
-            mapContainerRef.current.style.opacity = isLoading ? "0" : "1";
-        }
-    }, [isLoading]);
-
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        if (mapContainerRef.current) {
-            timer = setTimeout(() => {
-                updateOpacity(); // useCallback を使用
-            }, 500);
-        }
-        return () => clearTimeout(timer);
-    }, [isLoading, updateOpacity]);
 
     if (error) {
         return (
@@ -66,52 +51,58 @@ const App: React.FC = () => {
     }
 
     return (
-        <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
-            <div
-                ref={mapContainerRef}
-                style={{
-                    opacity: isLoading ? 0 : 1,
-                    transition: "opacity 0.5s ease-in-out",
-                    width: "100%",
-                    height: "100%",
-                    position: "relative",
-                }}
-            >
-                <Map pois={filteredPois} />
-
-                <button
-                    onClick={() => setIsCheckboxVisible((prev) => !prev)}
-                    style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
+        <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={libraries}
+            id="google-map-script"
+            mapIds={[import.meta.env.VITE_GOOGLE_MAPS_MAP_ID]}
+            version="weekly"
+            language="ja"
+        >
+            <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
+                <div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "relative",
+                    }}
                 >
-                    {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
-                </button>
+                    <Map pois={filteredPois} />
 
-                <div className={checkboxAreaClassName}
-                    style={{ position: "absolute", top: "40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
-                    {Object.entries(AREAS).map(([areaType, areaName]) => (
-                        <label key={areaType} htmlFor={`checkbox-${areaType}`}
-                            style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }}>
-                            <span
-                                style={{
-                                    display: "inline-block", width: "16px", height: "16px", borderRadius: "50%",
-                                    backgroundColor: filteredPois.some(poi => poi.area === areaType)
-                                        ? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
-                                        : "gray",
-                                    marginRight: "5px", border: "1px solid white",
-                                    opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5, cursor: "pointer"
-                                }}
-                                onClick={() => handleMarkerClick(areaType as AreaType)}
-                            />
-                            <input type="checkbox" id={`checkbox-${areaType}`}
-                                checked={areaVisibility[areaType as AreaType]}
-                                onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
-                            />
-                            {areaName} ({filteredPois.filter(poi => poi.area === areaType).length})
-                        </label>
-                    ))}
+                    <button
+                        onClick={() => setIsCheckboxVisible((prev) => !prev)}
+                        style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
+                    >
+                        {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
+                    </button>
+
+                    <div className={checkboxAreaClassName}
+                        style={{ position: "absolute", top: "40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
+                        {Object.entries(AREAS).map(([areaType, areaName]) => (
+                            <label key={areaType} htmlFor={`checkbox-${areaType}`}
+                                style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }}>
+                                <span
+                                    style={{
+                                        display: "inline-block", width: "16px", height: "16px", borderRadius: "50%",
+                                        backgroundColor: filteredPois.some(poi => poi.area === areaType)
+                                            ? AREA_COLORS[areaType as AreaType] || defaultMarkerColor
+                                            : "gray",
+                                        marginRight: "5px", border: "1px solid white",
+                                        opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5, cursor: "pointer"
+                                    }}
+                                    onClick={() => handleMarkerClick(areaType as AreaType)}
+                                />
+                                <input type="checkbox" id={`checkbox-${areaType}`}
+                                    checked={areaVisibility[areaType as AreaType]}
+                                    onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
+                                />
+                                {areaName} ({filteredPois.filter(poi => poi.area === areaType).length})
+                            </label>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </div>
+        </LoadScript>
     );
 };
 
