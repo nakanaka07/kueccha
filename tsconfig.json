@@ -1,30 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es2020", // More specific target
-    "module": "es2020",
-    "strict": true,
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "skipLibCheck": true, // Use with caution
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"] // Example additional alias
+    "target": "es2020", // コンパイル先のECMAScriptバージョンを指定。ブラウザの互換性を考慮して適切なバージョンを選択
+    "module": "es2020", // モジュールの種類を指定。ES Modulesを使用
+    "strict": true, // より厳格な型チェックを有効にすることで、バグを早期に発見できる
+    "jsx": "react-jsx", // JSXの変換方法を指定。React 17以降で推奨される新しいJSX変換を使用
+    "esModuleInterop": true, // CommonJSモジュールとの相互運用性を有効にする
+    "moduleResolution": "node", // モジュールの解決方法を指定。Node.jsの標準的な方法を使用
+    "skipLibCheck": true, // 型定義ファイル（.d.ts）の型チェックをスキップ。パフォーマンスが向上するが、型エラーを見逃す可能性があるので注意
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字の区別を強制する。クロスプラットフォームでの開発で重要
+    "baseUrl": "./", // 相対パスの基準ディレクトリを指定
+    "paths": { // パスエイリアスを設定。import文を簡潔に記述できる
+      "@/*": ["src/*"], // srcディレクトリへのエイリアス
+      "@components/*": ["src/components/*"] // componentsディレクトリへのエイリアス（例）
     },
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true, // Incremental builds
-    "types": [] // Or specific types if needed
+    "resolveJsonModule": true, // JSONファイルをモジュールとして解決することを許可する
+    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う。バンドル時のエラーを回避するために必要
+    "incremental": true, // 差分ビルドを有効にする。ビルド時間を短縮できる
+    "types": [] // グローバルに利用可能な型定義ファイルを指定。空の配列を指定すると、グローバル型定義は使用されない
   },
-  "include": [
-    "src",
-    "env.d.ts"
+  "include": [ // コンパイル対象のファイルを指定
+    "src", // srcディレクトリ内のファイルをコンパイル対象に含める
+    "env.d.ts" // 型定義ファイルenv.d.tsをコンパイル対象に含める
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
+  "exclude": [ // コンパイル対象から除外するファイルを指定
+    "node_modules", // node_modulesディレクトリを除外
+    "dist" // distディレクトリを除外
   ]
 }
-

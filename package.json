@@ -1,14 +1,14 @@
 {
-  "name": "solution",
+  "name": "kueccha-solution",
   "version": "1.0.0",
-  "description": "Solution for the Kueccha challenge",
+  "description": "Solution for the Kueccha challenge using React, Google Maps, and TypeScript.",
   "type": "module",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://your-repo-url.git"
+    "url": "git+https://github.com/nakanaka07/kueccha.git"
   },
-  "author": "Your Name <your.email@example.com>",
+  "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -30,10 +30,7 @@
     "@react-google-maps/api": "^2.20.3",
     "@react-google-maps/infobox": "^2.20.0",
     "@react-google-maps/marker-clusterer": "^2.20.0",
-    "@types/google-maps": "^3.2.6",
     "core-js": "^3.39.0",
-    "nanoid": "^5.0.9",
-    "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rimraf": "^6.0.1"
