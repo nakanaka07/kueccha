@@ -2,51 +2,58 @@
 import type { Poi } from "./types";
 import { AreaType, AREAS } from "./appConstants";
 
+// 設定インターフェース
 interface Config {
-	spreadsheetId: string;
-	apiKey: string;
+    spreadsheetId: string | undefined; // スプレッドシートID。undefinedを許容
+    apiKey: string | undefined; // APIキー。undefinedを許容
 }
 
+// 設定
 export const config: Config = {
-	spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
-	apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
+    spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID,
+    apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY,
 };
 
+// 列インデックス
 export const ColumnIndices = {
-	id: 49,
-	lat: 47,
-	lng: 46,
-	name: 43,
-	category: 26,
-	genre: 27,
-	information: 41,
-	monday: 28,
-	tuesday: 29,
-	wednesday: 30,
-	thursday: 31,
-	friday: 32,
-	saturday: 33,
-	sunday: 34,
-	holiday: 35,
-	description: 36,
-	reservation: 37,
-	payment: 38,
-	phone: 39,
-	address: 40,
-	view: 42,
+    id: 49,
+    lat: 47,
+    lng: 46,
+    name: 43,
+    category: 26,
+    genre: 27,
+    information: 41,
+    monday: 28,
+    tuesday: 29,
+    wednesday: 30,
+    thursday: 31,
+    friday: 32,
+    saturday: 33,
+    sunday: 34,
+    holiday: 35,
+    description: 36,
+    reservation: 37,
+    payment: 38,
+    phone: 39,
+    address: 40,
+    view: 42,
 } as const;
 
+// 列インデックスの型
 type ColumnIndex = keyof typeof ColumnIndices;
 
+// スプレッドシートの行データから文字列値を取得するヘルパー関数
 const getStringValue = (row: SpreadsheetRow, index: ColumnIndex): string =>
-	String(row[ColumnIndices[index]] ?? "");
+    String(row[ColumnIndices[index]] ?? "");
 
+// スプレッドシートの行データから数値を取得するヘルパー関数
 const getNumberValue = (row: SpreadsheetRow, index: ColumnIndex): number => {
-	const value = row[ColumnIndices[index]];
-	const num = parseFloat(String(value));
-	return isNaN(num) ? 0 : num;
+    const value = row[ColumnIndices[index]];
+    const num = parseFloat(String(value));
+    return isNaN(num) ? 0 : num; // 数値でない場合は0を返す
 };
 
+// スプレッドシートの行データのインターフェース
 export interface SpreadsheetRow {
 	[key: number]: any;
 	[ColumnIndices.id]: string;
@@ -71,49 +78,55 @@ export interface SpreadsheetRow {
 	[ColumnIndices.address]: string;
 	[ColumnIndices.view]: string;
 }
-
 export const transformRowToPoi = (row: SpreadsheetRow, area: AreaType): Poi => {
-	const lat = getNumberValue(row, "lat");
-	const lng = getNumberValue(row, "lng");
-	const name = getStringValue(row, "name");
+    // 緯度と経度を数値に変換。getNumberValue関数を使用
+    const lat = getNumberValue(row, "lat");
+    const lng = getNumberValue(row, "lng");
+    const name = getStringValue(row, "name");
 
-	if (!name) {
-		throw new Error(
-			`名称が欠落しています。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}`
-		);
-	}
-	if (isNaN(lat) || lat < -90 || lat > 90) {
-		throw new Error(
-			`緯度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lat}`
-		);
-	}
-	if (isNaN(lng) || lng < -180 || lng > 180) {
-		throw new Error(
-			`経度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lng}`
-		);
-	}
+    // データのバリデーション
+    if (!name) {
+        // 名称が空の場合はエラーをスロー
+        throw new Error(
+            `名称が欠落しています。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}`
+        );
+    }
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+        // 緯度が不正な場合はエラーをスロー
+        throw new Error(
+            `緯度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lat}`
+        );
+    }
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+        // 経度が不正な場合はエラーをスロー
+        throw new Error(
+            `経度が不正です。シート名: ${AREAS[area]}, id: ${getStringValue(row, "id")}, 値: ${lng}`
+        );
+    }
 
-	return {
-		key: getStringValue(row, "id"),
-		location: { lat, lng },
-		name,
-		category: getStringValue(row, "category"),
-		genre: getStringValue(row, "genre"),
-		information: getStringValue(row, "information"),
-		monday: getStringValue(row, "monday"),
-		tuesday: getStringValue(row, "tuesday"),
-		wednesday: getStringValue(row, "wednesday"),
-		thursday: getStringValue(row, "thursday"),
-		friday: getStringValue(row, "friday"),
-		saturday: getStringValue(row, "saturday"),
-		sunday: getStringValue(row, "sunday"),
-		holiday: getStringValue(row, "holiday"),
-		description: getStringValue(row, "description"),
-		reservation: getStringValue(row, "reservation"),
-		payment: getStringValue(row, "payment"),
-		phone: getStringValue(row, "phone"),
-		address: getStringValue(row, "address"),
-		view: getStringValue(row, "view"),
-		area,
-	};
+    // POIオブジェクトを生成
+    return {
+        key: getStringValue(row, "id"), // キー
+        location: { lat, lng }, // 位置情報
+        name, // 名称
+        category: getStringValue(row, "category"), // カテゴリー
+        genre: getStringValue(row, "genre"), // ジャンル
+        information: getStringValue(row, "information"), // 情報
+        monday: getStringValue(row, "monday"), // 月曜日の営業時間
+        tuesday: getStringValue(row, "tuesday"), // 火曜日の営業時間
+        wednesday: getStringValue(row, "wednesday"), // 水曜日の営業時間
+        thursday: getStringValue(row, "thursday"), // 木曜日の営業時間
+        friday: getStringValue(row, "friday"), // 金曜日の営業時間
+        saturday: getStringValue(row, "saturday"), // 土曜日の営業時間
+        sunday: getStringValue(row, "sunday"), // 日曜日の営業時間
+        holiday: getStringValue(row, "holiday"), // 祝日の営業時間
+        description: getStringValue(row, "description"), // 説明
+        reservation: getStringValue(row, "reservation"), // 予約情報
+        payment: getStringValue(row, "payment"), // 支払い情報
+        phone: getStringValue(row, "phone"), // 電話番号
+        address: getStringValue(row, "address"), // 住所
+        view: getStringValue(row, "view"), // GoogleマップのURL
+        area, // エリア
+    };
 };
+

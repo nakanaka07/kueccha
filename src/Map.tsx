@@ -6,11 +6,13 @@ import type { Poi } from "./types";
 import { MAP_CONFIG, AREA_COLORS, defaultMarkerColor } from "./appConstants";
 import InfoWindowContent from "./InfoWindowContent";
 
+// MapコンポーネントのPropsの型定義
 interface MapProps {
     pois: Poi[];
 }
 
 const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
+    // Google Maps APIの読み込み状態を確認
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -19,29 +21,41 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
         language: "ja",
     });
 
+    // クリックされたマーカーの情報を格納するState
     const [activeMarker, setActiveMarker] = useState<Poi | null>(null);
+
+    // GoogleMapインスタンスを格納するRef
     const mapRef = useRef<google.maps.Map | null>(null);
+    // MarkerClustererインスタンスを格納するRef
     const markerClusterer = useRef<MarkerClusterer | null>(null);
+    // マーカーの配列を格納するRef
     const markers = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
+
+    // マーカークリック時のコールバック関数
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
     }, []);
 
+    // マップクリック時のコールバック関数
     const handleMapClick = useCallback(() => {
         setActiveMarker(null);
     }, []);
 
+    // マーカーのアイコン要素を作成する関数
     const createMarkerElement = useCallback((color: string) => {
-        const div = document.createElement('div');
+        const div = document.createElement("div");
         div.innerHTML = `<img src="https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}" style="width:30px;height:30px;" />`;
         return div;
     }, []);
 
+    // マーカーを作成する関数
     const createMarkers = useCallback(() => {
-        markers.current.forEach(marker => marker.map = null);
+        // 既存のマーカーをマップから削除
+        markers.current.forEach(marker => marker.setMap(null));
         markers.current = [];
 
+        // 渡されたPOIデータに基づいてマーカーを作成
         pois.forEach(poi => {
             const location = {
                 lat: Number(poi.location.lat),
@@ -55,15 +69,15 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                 map: mapRef.current,
                 position: location,
                 title: poi.name,
+                element: markerElement,
             });
-
-            marker.element = markerElement; // マーカー作成後に element を設定
 
             marker.addListener("click", () => handleMarkerClick(poi));
             markers.current.push(marker);
         });
 
-        if (mapRef.current) {
+        // マーカークラスタリングを設定
+        if (mapRef.current && markers.current.length > 0) { // markers.current.length > 0 条件を追加
             if (markerClusterer.current) {
                 markerClusterer.current.clearMarkers();
                 markerClusterer.current.addMarkers(markers.current);
@@ -73,15 +87,19 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                     map: mapRef.current,
                 });
             }
+        } else if (markerClusterer.current) { // markers.current.length == 0 の場合、既存のクラスタをクリア
+            markerClusterer.current.clearMarkers();
         }
     }, [pois, createMarkerElement, handleMarkerClick]);
 
+    // Google Maps APIが読み込まれ、poisが変更されたときにマーカーを再作成
     useEffect(() => {
         if (isLoaded) {
             createMarkers();
         }
     }, [isLoaded, createMarkers, pois]);
 
+    // マップコンポーネントをレンダリング
     const mapComponent = useMemo(() => {
         if (!isLoaded) return <div>地図を読み込んでいます...</div>;
 
@@ -95,9 +113,10 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                     disableDefaultUI: false,
                     clickableIcons: false,
                 }}
-                onLoad={map => { mapRef.current = map; }}
+                onLoad={(map) => { mapRef.current = map; }}
                 onClick={handleMapClick}
             >
+                {/* アクティブなマーカーがあればInfoWindowを表示 */}
                 {activeMarker && (
                     <InfoWindow
                         position={activeMarker.location}
@@ -110,7 +129,9 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
         );
     }, [isLoaded, activeMarker, handleMapClick]);
 
+
     return mapComponent;
 };
 
 export default Map;
+
