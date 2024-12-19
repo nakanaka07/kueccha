@@ -24,7 +24,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
 
     const mapRef = useRef<google.maps.Map | null>(null);
     const markerClusterer = useRef<MarkerClusterer | null>(null);
-    const markers = useRef<React.ReactNode[]>([]);
+    const markers = useRef<React.ReactElement<AdvancedMarkerProps & { ref?: React.RefObject<google.maps.Marker> }>>([]);
 
     const handleMarkerClick = useCallback((poi: Poi) => {
         setActiveMarker(poi);
@@ -42,6 +42,7 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
             };
 
             const markerColor = AREA_COLORS[poi.area] || defaultMarkerColor;
+            const markerRef = React.createRef<google.maps.Marker>();
 
             return (
                 <AdvancedMarker
@@ -52,18 +53,21 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                     color={markerColor}
                     onClick={handleMarkerClick}
                     poi={poi}
+                    ref={markerRef} // refをAdvancedMarkerコンポーネントに渡す
                 />
             );
         });
 
+
         // マーカークラスタリング処理を最適化
         if (mapRef.current) {
-            const mapMarkers = markers.current.map(marker => (marker as React.ReactElement).ref.current) as google.maps.Marker[];
+            // refからgoogle.maps.Markerの配列を取得
+            const mapMarkers = markers.current.map(marker => marker.ref.current?.getMarker()) as google.maps.Marker[];
 
             if (markerClusterer.current) {
                 markerClusterer.current.clearMarkers();
                 markerClusterer.current.addMarkers(mapMarkers);
-            } else if (mapMarkers.length > 0) { // markers.current.length > 0 条件を mapMarkers に適用
+            } else if (mapMarkers.length > 0) {
                 markerClusterer.current = new MarkerClusterer({
                     markers: mapMarkers,
                     map: mapRef.current,
@@ -71,7 +75,6 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
             }
         }
     }, [pois, handleMarkerClick]);
-
 
     useEffect(() => {
         if (isLoaded && mapRef.current) {
@@ -94,11 +97,12 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
                 }}
                 onLoad={(map) => {
                     mapRef.current = map;
-                    // onLoad時にマーカークラスタリングを初期化
-                    if (markers.current.length > 0 ) {
+                    // マーカークラスタリングを初期化
+                     if (markers.current.length > 0) {
+                        const mapMarkers = markers.current.map(marker => marker.ref.current?.getMarker()) as google.maps.Marker[];
                         markerClusterer.current = new MarkerClusterer({
                             map,
-                            markers: markers.current.map(marker => (marker as React.ReactElement).ref.current) as google.maps.Marker[],
+                            markers: mapMarkers,
                         });
                     }
                 }}
@@ -121,4 +125,3 @@ const Map: React.FC<MapProps> = ({ pois }: MapProps) => {
 };
 
 export default Map;
-

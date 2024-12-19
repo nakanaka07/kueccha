@@ -7,7 +7,7 @@ import { AREAS, AreaType, AREA_COLORS, defaultMarkerColor } from "./appConstants
 import loadingImage from "./row1.png";
 import { LoadScript } from "@react-google-maps/api";
 
-const libraries = ["marker"];
+// 必要なGoogle Maps APIのライブラリを指定
 
 const App: React.FC = () => {
     const { pois, isLoading, error, retry } = useSheetData();
@@ -57,7 +57,7 @@ const App: React.FC = () => {
     return (
         <LoadScript
             googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-            libraries={libraries}
+            libraries={["marker"]} // Libraries型の値を使用
             id="google-map-script"
             mapIds={[import.meta.env.VITE_GOOGLE_MAPS_MAP_ID]}
             version="weekly"
@@ -67,6 +67,7 @@ const App: React.FC = () => {
                 <div style={{ width: "100%", height: "100%", position: "relative" }}>
                     <Map pois={filteredPois} />
 
+                    {/* チェックボックス表示切り替えボタン */}
                     <button
                         onClick={() => setIsCheckboxVisible(!isCheckboxVisible)}
                         style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
@@ -74,9 +75,11 @@ const App: React.FC = () => {
                         {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
                     </button>
 
+                    {/* チェックボックスエリア */}
                     <div className={checkboxAreaClassName} style={{ position: "absolute", top: "40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
                         {Object.entries(AREAS).map(([areaType, areaName]) => (
                             <label key={areaType} htmlFor={`checkbox-${areaType}`} style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }}>
+                                {/* マーカーの色を表示する丸 */}
                                 <span
                                     style={{
                                         display: "inline-block",
@@ -91,12 +94,14 @@ const App: React.FC = () => {
                                     }}
                                     onClick={() => handleMarkerClick(areaType as AreaType)}
                                 />
+                                {/* チェックボックス */}
                                 <input
                                     type="checkbox"
                                     id={`checkbox-${areaType}`}
                                     checked={areaVisibility[areaType as AreaType]}
                                     onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
                                 />
+                                {/* エリア名とPOI数 */}
                                 {areaName} ({filteredPois.filter(poi => poi.area === areaType).length})
                             </label>
                         ))}

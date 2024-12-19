@@ -1,5 +1,5 @@
 // src/AdvancedMarker.tsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef } from 'react';
 import type { Poi } from './types';
 
 interface AdvancedMarkerProps {
@@ -11,41 +11,39 @@ interface AdvancedMarkerProps {
   poi: Poi;
 }
 
-const AdvancedMarker: React.FC<AdvancedMarkerProps> = ({ position, map, title, color, onClick, poi }) => {
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+const AdvancedMarker: React.FC<AdvancedMarkerProps> = forwardRef(({ position, map, title, color, onClick, poi }, ref) => {
+    const markerRef = useRef<google.maps.Marker | null>(null);
 
-  useEffect(() => {
-    // mapがない場合は早期リターン
-    if (!map) return;
+    useEffect(() => {
+        if (!map) return;
 
-    // マーカーの作成
-    markerRef.current = new google.maps.marker.AdvancedMarkerElement({
-      map,
-      position,
-      title,
-      icon: {
-        url: `https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}`,
-        scaledSize: new google.maps.Size(30, 30),
-      },
-    });
+        markerRef.current = new google.maps.Marker({
+            map,
+            position,
+            title,
+            icon: {
+                url: `https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%98%85|${color}`,
+                scaledSize: new google.maps.Size(30, 30),
+            },
+        });
 
-    // クリックリスナーを追加
-    const listener = markerRef.current.addListener("click", () => onClick(poi));
+        const listener = markerRef.current.addListener("click", () => onClick(poi));
 
-    // クリーンアップ関数: コンポーネントがアンマウントされる際に、マーカーとリスナーを削除
-    return () => {
-      if (markerRef.current) {
-        google.maps.event.removeListener(listener);
-        markerRef.current.setMap(null);
-      }
-    };
+        return () => {
+            if (markerRef.current) {
+                google.maps.event.removeListener(listener);
+                markerRef.current.setMap(null);
+            }
+        };
+    }, [map, position, title, color, onClick, poi]);
 
-    // 依存配列: 全てのpropsを指定することで、propsが変更された際にuseEffectが再実行される
-    // これにより、マーカーの位置、タイトル、色などが更新された際に、マーカーが再描画される
-  }, [map, position, title, color, onClick, poi]);
+    // @ts-ignore
+    (React.useImperativeHandle as any)(ref, () => ({
+        marker: markerRef.current,
+        getMarker: () => markerRef.current,
+    }));
 
-  return null; // AdvancedMarkerはラッパーコンポーネントなので、JSXを返さない
-};
+    return null;
+});
 
 export default AdvancedMarker;
-
