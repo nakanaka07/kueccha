@@ -5,50 +5,55 @@ import type { Poi, AreaType } from '../types';
 import { AREAS } from '../types';
 type LatLngLiteral = google.maps.LatLngLiteral;
 
+console.log('useSheetData.ts: Initializing useSheetData hook');
+
 export function useSheetData() {
+  console.log('useSheetData.ts: Hook called');
   const [pois, setPois] = useState<Poi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    console.log('isLoading:', isLoading);
-  }, [isLoading]);
+    console.log('useSheetData.ts: Starting data fetch');
 
-  useEffect(() => {
-    console.log('Error:', error);
-  }, [error]);
-
-  useEffect(() => {
     const fetchData = async () => {
-      console.log('Spreadsheet ID:', CONFIG.sheets.spreadsheetId); // 追記
-      console.log('API Key:', CONFIG.sheets.apiKey); // 追記
+      console.group('useSheetData.ts: API Configuration');
+      console.log('Spreadsheet ID:', CONFIG.sheets.spreadsheetId);
+      console.log('API Key Status:', CONFIG.sheets.apiKey ? 'Present' : 'Missing');
+      console.groupEnd();
 
       if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
+        console.error('useSheetData.ts: Missing API configuration');
         const err = new Error('API configuration missing');
-        console.error('Error fetching data:', err);
         setError(err);
         setIsLoading(false);
         return;
       }
 
       try {
+        console.group('useSheetData.ts: Fetching Area Data');
         const areaPromises = Object.keys(AREAS).map(async (area) => {
-          const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheets.spreadsheetId}/values/${AREAS[area as AreaType]}!A:AY?key=${CONFIG.sheets.apiKey}`;
-          console.log('Fetching URL:', url); // この行を追加
+          const areaName = AREAS[area as AreaType];
+          console.log(`Fetching data for area: ${areaName}`);
+
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheets.spreadsheetId}/values/${areaName}!A:AY?key=${CONFIG.sheets.apiKey}`;
+          console.log(`Request URL for ${area}:`, url);
+
           const response = await fetch(url);
 
           if (!response.ok) {
-            const err = new Error(`API error: ${response.status} ${response.statusText}`); // ステータスコードだけでなく、ステータステキストもエラーメッセージに含める
-            console.error('Error fetching data:', err, url); // エラーが発生したURLも出力
-            throw err;
+            console.error(`API error for ${area}:`, response.status, response.statusText, url);
+            throw new Error(`API error: ${response.status} ${response.statusText}`);
           }
 
           const data = await response.json();
-          console.log('Fetched Data for', area, ':', data); // エリアごとにデータを確認
+          console.log(`Data received for ${area}:`, {
+            rowCount: data.values?.length || 0,
+            hasValues: !!data.values,
+          });
 
           const values: string[][] | undefined = data.values;
-
-          return (values?.slice(1) || [])
+          const processedPois = (values?.slice(1) || [])
             .filter((row) => row[49] && row[43])
             .map(
               (row): Poi => ({
@@ -78,31 +83,39 @@ export function useSheetData() {
                 holiday: row[35],
               }),
             );
-        });
 
+          console.log(`Processed ${processedPois.length} POIs for ${area}`);
+          return processedPois;
+        });
+        console.groupEnd();
+
+        console.group('useSheetData.ts: Processing Results');
         const poisArrays = await Promise.all(areaPromises);
         const allPois = poisArrays.flat();
+        console.log('Total POIs before deduplication:', allPois.length);
 
         const uniquePois = Array.from(new Map(allPois.map((poi) => [poi.id, poi])).values());
+        console.log('Unique POIs after deduplication:', uniquePois.length);
         setPois(uniquePois);
+        console.groupEnd();
       } catch (err) {
+        console.group('useSheetData.ts: Error Details');
         console.error('Error fetching data:', err);
         if (err instanceof Error) {
-          setError(err);
+          console.error('Stack trace:', err.stack);
         } else {
-          setError(new Error('Unknown error occurred'));
+          console.error('No stack trace available.');
         }
+        console.groupEnd();
+        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
       } finally {
+        console.log('useSheetData.ts: Data fetch completed');
         setIsLoading(false);
       }
     };
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    console.log('Pois updated:', pois);
-  }, [pois]);
 
   return { pois, isLoading, error };
 }

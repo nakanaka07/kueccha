@@ -2,47 +2,56 @@ import React, { useState, useMemo } from 'react';
 import { Map } from './components/Map';
 import { FilterPanel } from './components/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
-import type { AreaType, Poi } from './types';
+import type { AreaType } from './types';
 import { AREAS } from './types';
 import row1 from './row1.png';
 
-// ローディング画像
-const LoadingImage = () => (
-  <img src={row1} alt="Loading..." className="w-12 h-12" />
-);
+console.log('app.tsx: Application initializing');
+
+const LoadingImage = () => {
+  console.log('app.tsx: Rendering loading image');
+  return <img src={row1} alt="Loading..." className="w-12 h-12" />;
+};
 
 export const App = () => {
-  const { pois, isLoading, error } = useSheetData() as {
-    pois: Poi[];
-    isLoading: boolean;
-    error: string | null;
-  };
+  console.log('app.tsx: App component rendering');
 
-  const [isFilterVisible, setIsFilterVisible] = useState(true);
+  const { pois, isLoading, error } = useSheetData();
+
+  console.log('app.tsx: Sheet data state:', { poisCount: pois.length, isLoading, error });
+
+  const [isFilterVisible] = useState(true);
   const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
     Object.values(AREAS).reduce(
       (acc, area) => ({ ...acc, [area]: true }),
-      {} as Record<AreaType, boolean>
-    )
+      {} as Record<AreaType, boolean>,
+    ),
   );
 
+  console.log('app.tsx: Area visibility state:', areaVisibility);
+
   const areaCounts = useMemo(() => {
+    console.log('app.tsx: Calculating area counts');
     const initialCounts = Object.values(AREAS).reduce(
       (acc, area) => ({ ...acc, [area]: 0 }),
-      {} as Record<AreaType, number>
+      {} as Record<AreaType, number>,
     );
-    return pois.reduce((acc, poi) => {
+    const counts = pois.reduce((acc, poi) => {
       acc[poi.area] = (acc[poi.area] || 0) + 1;
       return acc;
     }, initialCounts);
+    console.log('app.tsx: Area counts calculated:', counts);
+    return counts;
   }, [pois]);
 
   const visiblePois = useMemo(() => {
+    console.log('app.tsx: Filtering visible POIs');
     const visibleAreas = Object.entries(areaVisibility)
       .filter(([, visible]) => visible)
       .map(([area]) => area as AreaType);
-
-    return pois.filter((poi) => visibleAreas.includes(poi.area));
+    const filteredPois = pois.filter((poi) => visibleAreas.includes(poi.area));
+    console.log('app.tsx: Visible POIs count:', filteredPois.length);
+    return filteredPois;
   }, [pois, areaVisibility]);
 
   return (
@@ -52,13 +61,13 @@ export const App = () => {
           <LoadingImage />
           {error && (
             <div className="text-red-500">
-              データの読み込み中にエラーが発生しました: {error}
+              データの読み込み中にエラーが発生しました: {error.message}
             </div>
           )}
         </div>
       ) : error ? (
         <div className="text-red-500">
-          エラーが発生しました: {error}。しばらくしてからもう一度お試しください。
+          エラーが発生しました: {error.message}しばらくしてからもう一度お試しください。
         </div>
       ) : (
         <>

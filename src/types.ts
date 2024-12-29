@@ -14,6 +14,13 @@ export interface MapConfig {
   libraries: Library[];
   language: string;
   version: string;
+  style: {
+    mapContainerStyle: { width: '100%'; height: '100%' };
+    options: {
+      disableDefaultUI: boolean;
+      clickableIcons: boolean;
+    };
+  };
 }
 
 export const AREAS = {

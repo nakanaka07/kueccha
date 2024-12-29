@@ -5,10 +5,10 @@ import { AREAS } from '../types';
 
 interface InfoWindowProps {
   poi: Poi;
+  onCloseClick: () => void;
 }
 
-const InfoWindow = React.memo(({ poi }: InfoWindowProps) => {
-  // 関数コンポーネントに名前を付ける
+const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
   const businessHours = [
     { day: '月', hours: poi.monday },
     { day: '火', hours: poi.tuesday },
@@ -21,7 +21,10 @@ const InfoWindow = React.memo(({ poi }: InfoWindowProps) => {
   ];
 
   return (
-    <div className="bg-white p-4 rounded shadow-lg max-w-sm">
+    <div className="bg-white p-4 rounded shadow-lg max-w-sm relative">
+      <button onClick={onCloseClick} className="absolute top-2 right-2 cursor-pointer">
+        &times;
+      </button>
       <h3 className="text-lg font-bold mb-2">{poi.name}</h3>
 
       {businessHours.length > 0 && (
@@ -66,6 +69,6 @@ const InfoWindow = React.memo(({ poi }: InfoWindowProps) => {
   );
 });
 
-InfoWindow.displayName = 'InfoWindow'; // displayNameを設定
+InfoWindow.displayName = 'InfoWindow';
 
-export { InfoWindow }; // export方法を変更
+export { InfoWindow };
