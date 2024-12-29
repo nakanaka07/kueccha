@@ -1,19 +1,51 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+console.log('Vite configuration starting...');
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
   build: {
-    sourcemap: true, // ソースマップを生成 (デバッグに役立つ)
+    outDir: 'dist',
+    sourcemap: true,
     rollupOptions: {
       output: {
-        // ライブラリを個別のチャンクに分割
-        // キャッシュ効率が向上し、ページの読み込み速度が改善される可能性がある
         manualChunks: {
-          vendor: ['react', 'react-dom', '@react-google-maps/api', "@googlemaps/markerclusterer"], // react, react-dom, Google Maps API関連ライブラリをvendorチャンクにまとめる
+          vendor: ['react', 'react-dom'],
+          maps: [
+            '@react-google-maps/api',
+            '@googlemaps/js-api-loader',
+            '@react-google-maps/marker-clusterer',
+            '@react-google-maps/infobox',
+            '@googlemaps/markerclusterer',
+          ],
         },
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
       },
     },
-    chunkSizeWarningLimit: 1600, // チャンクサイズの警告制限を1600KBに設定
+    target: 'es2022',
+  },
+  optimizeDeps: {
+    include: [
+      '@googlemaps/js-api-loader',
+      '@react-google-maps/api',
+      '@react-google-maps/marker-clusterer',
+      '@react-google-maps/infobox',
+      '@googlemaps/markerclusterer',
+    ],
+    esbuild: {
+      logOverride: { 'this-is-undefined-in-esm': 'silent' },
+    },
+    esbuildOptions: {
+      sourcemap: false,
+    },
   },
 });

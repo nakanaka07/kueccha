@@ -1,121 +1,82 @@
-// src/app.tsx
-import React, { useState, useMemo, useCallback } from "react";
-import { createRoot } from "react-dom/client";
-import { useSheetData } from "./useSheetData";
-import Map from "./Map";
-import { AREAS, AreaType, AREA_COLORS, defaultMarkerColor } from "./appConstants";
-import loadingImage from "./row1.png";
-import { LoadScript } from "@react-google-maps/api";
+import React, { useState, useMemo } from 'react';
+import { Map } from './components/Map';
+import { FilterPanel } from './components/FilterPanel';
+import { useSheetData } from './hooks/useSheetData';
+import type { AreaType, Poi } from './types';
+import { AREAS } from './types';
+import row1 from './row1.png';
 
-// 必要なGoogle Maps APIのライブラリを指定
+// ローディング画像
+const LoadingImage = () => (
+  <img src={row1} alt="Loading..." className="w-12 h-12" />
+);
 
-const App: React.FC = () => {
-    const { pois, isLoading, error, retry } = useSheetData();
+export const App = () => {
+  const { pois, isLoading, error } = useSheetData() as {
+    pois: Poi[];
+    isLoading: boolean;
+    error: string | null;
+  };
 
-    const initialAreaVisibility = useMemo(() => {
-        return Object.keys(AREAS).reduce((acc, area) => {
-            acc[area as AreaType] = true;
-            return acc;
-        }, {} as Record<AreaType, boolean>);
-    }, []);
+  const [isFilterVisible, setIsFilterVisible] = useState(true);
+  const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
+    Object.values(AREAS).reduce(
+      (acc, area) => ({ ...acc, [area]: true }),
+      {} as Record<AreaType, boolean>
+    )
+  );
 
-    const [areaVisibility, setAreaVisibility] = useState(initialAreaVisibility);
-
-    const filteredPois = useMemo(
-        () => pois.filter(poi => areaVisibility[poi.area]),
-        [pois, areaVisibility]
+  const areaCounts = useMemo(() => {
+    const initialCounts = Object.values(AREAS).reduce(
+      (acc, area) => ({ ...acc, [area]: 0 }),
+      {} as Record<AreaType, number>
     );
+    return pois.reduce((acc, poi) => {
+      acc[poi.area] = (acc[poi.area] || 0) + 1;
+      return acc;
+    }, initialCounts);
+  }, [pois]);
 
-    const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, areaType: AreaType) => {
-        setAreaVisibility(prev => ({ ...prev, [areaType]: e.target.checked }));
-    }, []);
+  const visiblePois = useMemo(() => {
+    const visibleAreas = Object.entries(areaVisibility)
+      .filter(([, visible]) => visible)
+      .map(([area]) => area as AreaType);
 
-    const handleMarkerClick = useCallback((areaType: AreaType) => {
-        setAreaVisibility(prev => ({ ...prev, [areaType]: !prev[areaType] }));
-    }, []);
+    return pois.filter((poi) => visibleAreas.includes(poi.area));
+  }, [pois, areaVisibility]);
 
-    const [isCheckboxVisible, setIsCheckboxVisible] = useState(true);
-    const checkboxAreaClassName = isCheckboxVisible ? "checkbox-area visible" : "checkbox-area hidden";
-
-    if (error) {
-        return (
-            <div>
-                <p>エラーが発生しました：{error.message}</p>
-                <button onClick={retry}>再試行</button>
+  return (
+    <div className="relative w-full h-screen overflow-hidden flex">
+      {isLoading ? (
+        <div className="flex justify-center items-center w-full h-full">
+          <LoadingImage />
+          {error && (
+            <div className="text-red-500">
+              データの読み込み中にエラーが発生しました: {error}
             </div>
-        );
-    }
-
-    if (isLoading) {
-        return (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-                <img src={loadingImage} alt="Loading..." style={{ width: "20%", minWidth: "200px", maxWidth: "80vw" }} />
-            </div>
-        );
-    }
-
-    return (
-        <LoadScript
-            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-            libraries={["marker"]} // Libraries型の値を使用
-            id="google-map-script"
-            mapIds={[import.meta.env.VITE_GOOGLE_MAPS_MAP_ID]}
-            version="weekly"
-            language="ja"
-        >
-            <div style={{ width: "100%", height: "100vh", position: "relative", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "100%", position: "relative" }}>
-                    <Map pois={filteredPois} />
-
-                    {/* チェックボックス表示切り替えボタン */}
-                    <button
-                        onClick={() => setIsCheckboxVisible(!isCheckboxVisible)}
-                        style={{ position: "absolute", top: "10px", left: "10px", zIndex: 2 }}
-                    >
-                        {isCheckboxVisible ? "チェックボックスを隠す" : "チェックボックスを表示"}
-                    </button>
-
-                    {/* チェックボックスエリア */}
-                    <div className={checkboxAreaClassName} style={{ position: "absolute", top: "40px", left: "10px", zIndex: 1, backgroundColor: "white", padding: "10px" }}>
-                        {Object.entries(AREAS).map(([areaType, areaName]) => (
-                            <label key={areaType} htmlFor={`checkbox-${areaType}`} style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "5px" }}>
-                                {/* マーカーの色を表示する丸 */}
-                                <span
-                                    style={{
-                                        display: "inline-block",
-                                        width: "16px",
-                                        height: "16px",
-                                        borderRadius: "50%",
-                                        backgroundColor: filteredPois.some(poi => poi.area === areaType) ? AREA_COLORS[areaType as AreaType] || defaultMarkerColor : "gray",
-                                        marginRight: "5px",
-                                        border: "1px solid white",
-                                        opacity: areaVisibility[areaType as AreaType] ? 1 : 0.5,
-                                        cursor: "pointer"
-                                    }}
-                                    onClick={() => handleMarkerClick(areaType as AreaType)}
-                                />
-                                {/* チェックボックス */}
-                                <input
-                                    type="checkbox"
-                                    id={`checkbox-${areaType}`}
-                                    checked={areaVisibility[areaType as AreaType]}
-                                    onChange={(e) => handleCheckboxChange(e, areaType as AreaType)}
-                                />
-                                {/* エリア名とPOI数 */}
-                                {areaName} ({filteredPois.filter(poi => poi.area === areaType).length})
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </LoadScript>
-    );
+          )}
+        </div>
+      ) : error ? (
+        <div className="text-red-500">
+          エラーが発生しました: {error}。しばらくしてからもう一度お試しください。
+        </div>
+      ) : (
+        <>
+          <div className="w-full lg:w-3/4 xl:w-4/5">
+            <Map pois={visiblePois} />
+          </div>
+          <div className="w-full lg:w-1/4 xl:w-1/5 bg-white p-4">
+            <FilterPanel
+              isVisible={isFilterVisible}
+              areaCounts={areaCounts}
+              areaVisibility={areaVisibility}
+              onAreaToggle={(area, visible) =>
+                setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
+              }
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
-
-const container = document.getElementById("app");
-if (container) {
-    const root = createRoot(container);
-    root.render(<App />);
-}
-
-export default App;

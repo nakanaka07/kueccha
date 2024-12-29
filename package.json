@@ -1,51 +1,74 @@
 {
-	"name": "kueccha-solution",
-	"version": "1.0.0",
-	"description": "Solution for the Kueccha challenge using React, Google Maps, and TypeScript.",
-	"type": "module",
-	"private": true,
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/nakanaka07/kueccha.git"
-	},
-	"author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
-	"license": "MIT",
-	"engines": {
-		"node": ">=20"
-	},
-	"scripts": {
-		"dev": "vite",
-		"start": "vite",
-		"build": "vite build",
-		"build:dev": "vite build --mode development",
-		"build:prod": "vite build --mode production",
-		"lint": "eslint src",
-		"lint:fix": "eslint src --fix",
-		"preview": "vite preview",
-		"clean-all": "rd /s /q node_modules"
-	},
-	"dependencies": {
-		"@googlemaps/js-api-loader": "^1.16.8",
-		"@googlemaps/markerclusterer": "^2.5.3",
-		"@react-google-maps/api": "^2.20.3",
-		"@react-google-maps/infobox": "^2.20.0",
-		"@react-google-maps/marker-clusterer": "^2.20.0",
-		"core-js": "^3.39.0",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
-	},
-	"devDependencies": {
-		"@types/google.maps": "^3.58.1",
-		"@types/node": "^22.10.2",
-		"@types/react": "^19.0.2",
-		"@types/react-dom": "^19.0.2",
-		"@typescript-eslint/eslint-plugin": "^8.18.1",
-		"@typescript-eslint/parser": "^8.18.1",
-		"eslint": "^9.17.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-react": "^7.37.2",
-		"prettier": "^3.4.2",
-		"typescript": "^5.7.2",
-		"vite": "^6.0.3"
-	}
+  "name": "sadodekueccha",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Solution for the Kueccha challenge using React, Google Maps, and TypeScript.",
+  "keywords": [
+    "react",
+    "google maps",
+    "typescript",
+    "kueccha"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nakanaka07/kueccha.git"
+  },
+  "homepage": "https://github.com/nakanaka07/kueccha#readme",
+  "bugs": {
+    "url": "https://github.com/nakanaka07/kueccha/issues"
+  },
+  "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview",
+    "lint": "eslint . --config eslint.config.js",
+    "lint:fix": "eslint . --fix --config eslint.config.js",
+    "clean-all": "rimraf node_modules"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "1.16.8",
+    "@googlemaps/markerclusterer": "2.5.3",
+    "@react-google-maps/api": "2.20.5",
+    "@react-google-maps/infobox": "2.20.0",
+    "@react-google-maps/marker-clusterer": "2.20.0",
+    "glob": "11.0.0",
+    "lru-cache": "11.0.2",
+    "react": "19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/google.maps": "^3.58.1",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-define-config": "^2.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.6",
+    "vite-plugin-env-compatible": "^2.0.1",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "$schema": "https://json.schemastore.org/package"
 }
