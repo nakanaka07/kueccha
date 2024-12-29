@@ -80,6 +80,8 @@ const App = () => {
         <div className="text-red-500">
           エラーが発生しました: {error.message}
           しばらくしてからもう一度お試しください。
+          エラーが発生しました: {error.message}
+          しばらくしてからもう一度お試しください。
         </div>
       ) : (
         <>

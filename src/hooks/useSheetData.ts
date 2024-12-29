@@ -26,6 +26,15 @@ export function useSheetData() {
 
     checkConfig();
 
+    const checkConfig = () => {
+      console.log('useSheetData.ts: Config check', {
+        hasSpreadsheetId: !!CONFIG.sheets.spreadsheetId,
+        hasApiKey: !!CONFIG.sheets.apiKey,
+      });
+    };
+
+    checkConfig();
+
     const fetchData = async () => {
       try {
         console.log('useSheetData.ts: Fetch開始');
@@ -51,6 +60,12 @@ export function useSheetData() {
           const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheets.spreadsheetId}/values/${areaName}!A:AY?key=${CONFIG.sheets.apiKey}`;
           console.log(`Request URL for ${area}:`, url);
 
+          try {
+            console.log(`Fetch start for ${areaName}`);
+            const response = await fetch(url);
+            console.log(`Response received for ${areaName}`);
+            const data = await response.json();
+            console.log(`Data parsed for ${areaName}`);
           try {
             console.log(`Fetch start for ${areaName}`);
             const response = await fetch(url);
@@ -89,6 +104,37 @@ export function useSheetData() {
                   holiday: row[35],
                 }),
               );
+            const values: string[][] | undefined = data.values;
+            const processedPois = (values?.slice(1) || [])
+              .filter((row) => row[49] && row[43])
+              .map(
+                (row): Poi => ({
+                  id: String(row[49]),
+                  name: String(row[43]),
+                  area: area as AreaType,
+                  location: {
+                    lat: Number(row[47]),
+                    lng: Number(row[46]),
+                  } as LatLngLiteral,
+                  category: row[26],
+                  genre: row[27],
+                  description: row[36],
+                  reservation: row[37],
+                  payment: row[38],
+                  phone: row[39],
+                  address: row[40],
+                  information: row[41],
+                  view: row[42],
+                  monday: row[28],
+                  tuesday: row[29],
+                  wednesday: row[30],
+                  thursday: row[31],
+                  friday: row[32],
+                  saturday: row[33],
+                  sunday: row[34],
+                  holiday: row[35],
+                }),
+              );
 
             console.log(`Processed ${processedPois.length} POIs for ${area}`);
             return processedPois;
@@ -96,7 +142,14 @@ export function useSheetData() {
             console.error(`Fetch error for ${areaName}:`, err);
             throw err; // エラーを再スロー
           }
+            console.log(`Processed ${processedPois.length} POIs for ${area}`);
+            return processedPois;
+          } catch (err) {
+            console.error(`Fetch error for ${areaName}:`, err);
+            throw err; // エラーを再スロー
+          }
         });
+
 
         console.groupEnd();
 
