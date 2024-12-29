@@ -45,6 +45,13 @@ export const CONFIG = {
   },
 } as const;
 
+// 環境変数チェックのログをCONFIGの宣言後に移動
+console.log('環境変数チェック:', {
+  mapsApiKey: !!CONFIG.maps.apiKey,
+  sheetsApiKey: !!CONFIG.sheets.apiKey,
+  spreadsheetId: !!CONFIG.sheets.spreadsheetId,
+});
+
 // API Key validation and logging
 if (CONFIG.maps.apiKey) {
   console.log('config.ts: Google Maps API Key loaded successfully');

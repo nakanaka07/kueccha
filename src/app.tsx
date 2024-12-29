@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { useState, useMemo, useEffect } from 'react';
 import { Map } from './components/Map';
 import { FilterPanel } from './components/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
@@ -13,12 +15,12 @@ const LoadingImage = () => {
   return <img src={row1} alt="Loading..." className="w-12 h-12" />;
 };
 
-export const App = () => {
-  console.log('app.tsx: App component rendering');
+const App = () => {
+  console.log('app.tsx: Starting initial render');
 
   const { pois, isLoading, error } = useSheetData();
 
-  console.log('app.tsx: Sheet data state:', { poisCount: pois.length, isLoading, error });
+  console.log('app.tsx: After useSheetData hook', { isLoading, error });
 
   const [isFilterVisible] = useState(true);
   const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
@@ -54,6 +56,15 @@ export const App = () => {
     return filteredPois;
   }, [pois, areaVisibility]);
 
+  useEffect(() => {
+    if (error) {
+      console.error('アプリケーションエラー:', error);
+    }
+    if (!isLoading) {
+      console.log('データ読み込み完了');
+    }
+  }, [error, isLoading]); // error, isLoading を依存配列に追加
+
   return (
     <div className="relative w-full h-screen overflow-hidden flex">
       {isLoading ? (
@@ -67,7 +78,8 @@ export const App = () => {
         </div>
       ) : error ? (
         <div className="text-red-500">
-          エラーが発生しました: {error.message}しばらくしてからもう一度お試しください。
+          エラーが発生しました: {error.message}
+          しばらくしてからもう一度お試しください。
         </div>
       ) : (
         <>
@@ -89,3 +101,13 @@ export const App = () => {
     </div>
   );
 };
+
+// Appコンポーネントをレンダリングする処理を追加
+const container = document.getElementById('app');
+if (!container) throw new Error('コンテナ要素が見つかりません');
+const root = createRoot(container);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
