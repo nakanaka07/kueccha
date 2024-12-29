@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Map } from './components/Map';
 import { FilterPanel } from './components/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
@@ -14,11 +14,11 @@ const LoadingImage = () => {
 };
 
 export const App = () => {
-  console.log('app.tsx: App component rendering');
+  console.log('app.tsx: Starting initial render'); // 追加: レンダリング開始ログ
 
   const { pois, isLoading, error } = useSheetData();
 
-  console.log('app.tsx: Sheet data state:', { poisCount: pois.length, isLoading, error });
+  console.log('app.tsx: After useSheetData hook', { isLoading, error }); // 追加: useSheetData hook 後のログ
 
   const [isFilterVisible] = useState(true);
   const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
@@ -54,6 +54,10 @@ export const App = () => {
     return filteredPois;
   }, [pois, areaVisibility]);
 
+  useEffect(() => {
+    console.log('App.tsx: Initial render', { isLoading, error });
+  }, []);
+
   return (
     <div className="relative w-full h-screen overflow-hidden flex">
       {isLoading ? (
@@ -67,7 +71,8 @@ export const App = () => {
         </div>
       ) : error ? (
         <div className="text-red-500">
-          エラーが発生しました: {error.message}しばらくしてからもう一度お試しください。
+          エラーが発生しました: {error.message}
+          しばらくしてからもう一度お試しください。
         </div>
       ) : (
         <>

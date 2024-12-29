@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { CONFIG } from '../config';
 import type { Poi } from '../types';
@@ -16,7 +16,7 @@ const Map = React.memo(({ pois }: MapProps) => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: CONFIG.maps.apiKey ? 'Present' : 'Missing',
+    googleMapsApiKey: CONFIG.maps.apiKey, // 修正: 直接 apiKey を渡す
     mapIds: [CONFIG.maps.mapId],
     language: CONFIG.maps.language,
     version: CONFIG.maps.version,
@@ -24,6 +24,14 @@ const Map = React.memo(({ pois }: MapProps) => {
   });
 
   console.log('Map.tsx: Map loading status:', { isLoaded, loadError });
+
+  useEffect(() => {
+    console.log('Map.tsx: Map initialization', {
+      isLoaded,
+      loadError,
+      hasApiKey: !!CONFIG.maps.apiKey,
+    });
+  }, [isLoaded, loadError]);
 
   const handleMarkerClick = useCallback((poi: Poi) => {
     console.log('Map.tsx: Marker clicked:', poi.name);
