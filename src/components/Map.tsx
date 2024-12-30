@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { CONFIG } from '../config';
 import type { Poi } from '../types';

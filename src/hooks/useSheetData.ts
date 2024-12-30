@@ -17,15 +17,7 @@ export function useSheetData() {
   useEffect(() => {
     console.log('useSheetData.ts: Starting data fetch');
 
-    const checkConfig = () => {
-      console.log('useSheetData.ts: Config check', {
-        hasSpreadsheetId: !!CONFIG.sheets.spreadsheetId,
-        hasApiKey: !!CONFIG.sheets.apiKey,
-      });
-    };
-
-    checkConfig();
-
+    // 重複するcheckConfig関数を削除し、一度だけ呼び出す
     const checkConfig = () => {
       console.log('useSheetData.ts: Config check', {
         hasSpreadsheetId: !!CONFIG.sheets.spreadsheetId,
@@ -66,44 +58,8 @@ export function useSheetData() {
             console.log(`Response received for ${areaName}`);
             const data = await response.json();
             console.log(`Data parsed for ${areaName}`);
-          try {
-            console.log(`Fetch start for ${areaName}`);
-            const response = await fetch(url);
-            console.log(`Response received for ${areaName}`);
-            const data = await response.json();
-            console.log(`Data parsed for ${areaName}`);
 
-            const values: string[][] | undefined = data.values;
-            const processedPois = (values?.slice(1) || [])
-              .filter((row) => row[49] && row[43])
-              .map(
-                (row): Poi => ({
-                  id: String(row[49]),
-                  name: String(row[43]),
-                  area: area as AreaType,
-                  location: {
-                    lat: Number(row[47]),
-                    lng: Number(row[46]),
-                  } as LatLngLiteral,
-                  category: row[26],
-                  genre: row[27],
-                  description: row[36],
-                  reservation: row[37],
-                  payment: row[38],
-                  phone: row[39],
-                  address: row[40],
-                  information: row[41],
-                  view: row[42],
-                  monday: row[28],
-                  tuesday: row[29],
-                  wednesday: row[30],
-                  thursday: row[31],
-                  friday: row[32],
-                  saturday: row[33],
-                  sunday: row[34],
-                  holiday: row[35],
-                }),
-              );
+            // 重複するtry-catchと内部の処理を削除
             const values: string[][] | undefined = data.values;
             const processedPois = (values?.slice(1) || [])
               .filter((row) => row[49] && row[43])
@@ -136,12 +92,6 @@ export function useSheetData() {
                 }),
               );
 
-            console.log(`Processed ${processedPois.length} POIs for ${area}`);
-            return processedPois;
-          } catch (err) {
-            console.error(`Fetch error for ${areaName}:`, err);
-            throw err; // エラーを再スロー
-          }
             console.log(`Processed ${processedPois.length} POIs for ${area}`);
             return processedPois;
           } catch (err) {
@@ -150,7 +100,6 @@ export function useSheetData() {
           }
         });
 
-
         console.groupEnd();
 
         console.group('useSheetData.ts: Processing Results');
@@ -158,12 +107,13 @@ export function useSheetData() {
         const allPois = poisArrays.flat();
         console.log('Total POIs before deduplication:', allPois.length);
 
-        const uniquePois = Array.from(new Map(allPois.map((poi) => [poi.id, poi])).values());
+        // 正しい型のPoi[]を返すmap関数を使用
+        const uniquePois: Poi[] = Array.from(new Map(allPois.map((poi) => [poi.id, poi])).values());
         console.log('Unique POIs after deduplication:', uniquePois.length);
         setPois(uniquePois);
         console.groupEnd();
 
-        console.log('useSheetData.ts: Fetch成功'); // fetchData内の成功ログ
+        console.log('useSheetData.ts: Fetch成功');
       } catch (err) {
         console.error('useSheetData.ts: Fetchエラー', err);
         setError(err instanceof Error ? err : new Error('Unknown error'));
