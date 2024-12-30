@@ -15,11 +15,10 @@ export interface MapConfig {
   language: string;
   version: string;
   style: {
-    mapContainerStyle: { width: '100%'; height: '100%' };
-    options: {
-      disableDefaultUI: boolean;
-      clickableIcons: boolean;
-    };
+    width: string;
+    height: string;
+    disableDefaultUI: boolean;
+    clickableIcons: boolean;
   };
 }
 

@@ -26,11 +26,10 @@ export const CONFIG = {
     language: 'ja',
     version: 'weekly',
     style: {
-      mapContainerStyle: { width: '100%', height: '100%' },
-      options: {
-        disableDefaultUI: false,
-        clickableIcons: false,
-      },
+      width: '100%',
+      height: '100%',
+      disableDefaultUI: false, // ここに統合
+      clickableIcons: false, // ここに統合
     },
   } as MapConfig,
   sheets: {

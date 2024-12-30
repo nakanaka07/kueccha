@@ -56,21 +56,27 @@ const Map = React.memo(({ pois }: MapProps) => {
   }
 
   return (
-    <GoogleMap
-      mapContainerStyle={CONFIG.maps.style.mapContainerStyle}
-      center={CONFIG.maps.defaultCenter}
-      zoom={CONFIG.maps.defaultZoom}
-      options={{
-        ...CONFIG.maps.style.options,
-        mapId: CONFIG.maps.mapId,
-      }}
-      onClick={handleMapClick}
-    >
-      {pois.map((poi) => (
-        <Marker key={poi.id} poi={poi} onClick={handleMarkerClick} />
-      ))}
-      {selectedPoi && <InfoWindow poi={selectedPoi} onCloseClick={() => setSelectedPoi(null)} />}
-    </GoogleMap>
+    <div style={CONFIG.maps.style}>
+      {' '}
+      {/* div要素にstyleを適用 */}
+      <GoogleMap
+        // mapContainerStyle={CONFIG.maps.style.mapContainerStyle} 不要になったので削除
+        center={CONFIG.maps.defaultCenter}
+        zoom={CONFIG.maps.defaultZoom}
+        options={{
+          // ...CONFIG.maps.style.options, 不要になったので削除
+          disableDefaultUI: CONFIG.maps.style.disableDefaultUI, // ここに移動
+          clickableIcons: CONFIG.maps.style.clickableIcons, // ここに移動
+          mapId: CONFIG.maps.mapId,
+        }}
+        onClick={handleMapClick}
+      >
+        {pois.map((poi) => (
+          <Marker key={poi.id} poi={poi} onClick={handleMarkerClick} />
+        ))}
+        {selectedPoi && <InfoWindow poi={selectedPoi} onCloseClick={() => setSelectedPoi(null)} />}
+      </GoogleMap>
+    </div>
   );
 });
 
