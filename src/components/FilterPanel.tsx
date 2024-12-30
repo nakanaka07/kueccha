@@ -10,14 +10,14 @@ interface FilterPanelProps {
   onAreaToggle: (area: AreaType, visible: boolean) => void;
 }
 
-// デフォルト値の初期化
+// デフォルト値の初期化をコンポーネントの外で行う
 const defaultAreaCounts: Record<AreaType, number> = Object.keys(AREAS).reduce(
   (acc, key) => ({ ...acc, [key]: 0 }),
   {} as Record<AreaType, number>,
 );
 
 const defaultAreaVisibility: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
-  (acc, key) => ({ ...acc, [key]: false }),
+  (acc, key) => ({ ...acc, [key]: true }), // trueをデフォルト値として設定
   {} as Record<AreaType, boolean>,
 );
 
@@ -33,8 +33,8 @@ const FilterPanel = React.memo(
         Object.entries(AREAS).map(([area, name]) => ({
           area: area as AreaType,
           name,
-          count: areaCounts[area as AreaType],
-          isVisible: areaVisibility[area as AreaType],
+          count: areaCounts[area as AreaType] ?? 0,
+          isVisible: areaVisibility[area as AreaType] ?? true,
         })),
       [areaCounts, areaVisibility],
     );
