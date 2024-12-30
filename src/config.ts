@@ -16,6 +16,26 @@ export const MARKER_COLORS = {
 
 console.log('config.ts: Marker colors initialized:', MARKER_COLORS);
 
+const validateConfig = (config: typeof CONFIG) => {
+  const required = {
+    'Google Maps API Key': config.maps.apiKey,
+    'Google Maps Map ID': config.maps.mapId,
+    'Google Sheets API Key': config.sheets.apiKey,
+    'Google Sheets Spreadsheet ID': config.sheets.spreadsheetId,
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+  }
+};
+
+// 開発環境判定の修正
+const isDevelopment = import.meta.env.MODE === 'development';
+
 export const CONFIG = {
   maps: {
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -44,55 +64,29 @@ export const CONFIG = {
   },
 } as const;
 
-// 環境変数チェックのログをCONFIGの宣言後に移動
-console.log('環境変数チェック:', {
-  mapsApiKey: !!CONFIG.maps.apiKey,
-  sheetsApiKey: !!CONFIG.sheets.apiKey,
-  spreadsheetId: !!CONFIG.sheets.spreadsheetId,
-});
+// 設定の検証を実行
+try {
+  validateConfig(CONFIG);
 
-// API Key validation and logging
-if (CONFIG.maps.apiKey) {
-  console.log('config.ts: Google Maps API Key loaded successfully');
-  const apiKeyPreview = '******' + CONFIG.maps.apiKey.slice(-7);
-  console.log('config.ts: Maps API Key preview:', apiKeyPreview);
-} else {
-  console.error('config.ts: Google Maps API Key is missing');
+  if (isDevelopment) {
+    // 開発環境でのみログを出力
+    Object.entries({
+      'Maps API Key': CONFIG.maps.apiKey,
+      'Map ID': CONFIG.maps.mapId,
+      'Sheets API Key': CONFIG.sheets.apiKey,
+      'Spreadsheet ID': CONFIG.sheets.spreadsheetId,
+    }).forEach(([key, value]) => {
+      if (value) {
+        const preview = '******' + String(value).slice(-7);
+        console.log(`${key} loaded: ${preview}`);
+      }
+    });
+  }
+} catch (error) {
+  console.error('Configuration Error:', error instanceof Error ? error.message : 'Unknown error');
+  throw error;
 }
 
-// Map ID validation and logging
-if (CONFIG.maps.mapId) {
-  console.log('config.ts: Google Maps Map ID loaded successfully');
-  const mapIdPreview = '******' + CONFIG.maps.mapId.slice(-7);
-  console.log('config.ts: Map ID preview:', mapIdPreview);
-} else {
-  console.error('config.ts: Google Maps Map ID is missing');
-}
-
-// Sheets API Key validation and logging
-if (CONFIG.sheets.apiKey) {
-  console.log('config.ts: Google Sheets API Key loaded successfully');
-  const apiKeyPreview = '******' + CONFIG.sheets.apiKey.slice(-7);
-  console.log('config.ts: Sheets API Key preview:', apiKeyPreview);
-} else {
-  console.error('config.ts: Google Sheets API Key is missing');
-}
-
-// Spreadsheet ID validation and logging
-if (CONFIG.sheets.spreadsheetId) {
-  console.log('config.ts: Google Sheets Spreadsheet ID loaded successfully');
-  const spreadsheetIdPreview = '******' + CONFIG.sheets.spreadsheetId.slice(-7);
-  console.log('config.ts: Spreadsheet ID preview:', spreadsheetIdPreview);
-} else {
-  console.error('config.ts: Google Sheets Spreadsheet ID is missing');
-}
-
-console.log('config.ts: Final configuration:', {
-  defaultCenter: CONFIG.maps.defaultCenter,
-  defaultZoom: CONFIG.maps.defaultZoom,
-  libraries: CONFIG.maps.libraries,
-  language: CONFIG.maps.language,
-  version: CONFIG.maps.version,
-});
+export type Config = typeof CONFIG;
 
 console.groupEnd();

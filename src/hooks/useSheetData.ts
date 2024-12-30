@@ -1,5 +1,5 @@
 // hooks/useSheetData.ts
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { CONFIG } from '../config';
 import type { Poi, AreaType } from '../types';
 import { AREAS } from '../types';
@@ -12,30 +12,27 @@ export function useSheetData() {
   const [pois, setPois] = useState<Poi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const hasFetchedData = useRef(false); // データ取得状態を管理するRef
+  const [isFetched, setIsFetched] = useState(false); // useRefの代わりにuseStateを使用
 
   console.log('useSheetData.ts: Initial state set', { isLoading, error });
 
   useEffect(() => {
     console.log('useSheetData.ts: Starting data fetch');
 
-    if (hasFetchedData.current) {
+    if (isFetched) {
       console.log('useSheetData.ts: Data already fetched, skipping.');
       return;
     }
 
-    // 重複するcheckConfig関数を削除し、一度だけ呼び出す
     const checkConfig = () => {
-      console.log('useSheetData.ts: Config check', {
-        hasSpreadsheetId: !!CONFIG.sheets.spreadsheetId,
-        hasApiKey: !!CONFIG.sheets.apiKey,
-      });
+      if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
+        throw new Error('API configuration missing');
+      }
     };
-
-    checkConfig();
 
     const fetchData = async () => {
       try {
+        checkConfig();
         console.log('useSheetData.ts: Fetch開始');
 
         console.group('useSheetData.ts: API Configuration');
@@ -66,7 +63,6 @@ export function useSheetData() {
             const data = await response.json();
             console.log(`Data parsed for ${areaName}`);
 
-            // 重複するtry-catchと内部の処理を削除
             const values: string[][] | undefined = data.values;
             const processedPois = (values?.slice(1) || [])
               .filter((row) => row[49] && row[43])
@@ -114,30 +110,25 @@ export function useSheetData() {
         const allPois = poisArrays.flat();
         console.log('Total POIs before deduplication:', allPois.length);
 
-        // 正しい型のPoi[]を返すmap関数を使用
         const uniquePois: Poi[] = Array.from(new Map(allPois.map((poi) => [poi.id, poi])).values());
         console.log('Unique POIs after deduplication:', uniquePois.length);
         setPois(uniquePois);
+        setIsFetched(true); // データ取得完了をマーク
         console.groupEnd();
 
         console.log('useSheetData.ts: Fetch成功');
       } catch (err) {
-        console.error('useSheetData.ts: Fetchエラー', err);
-        setError(err instanceof Error ? err : new Error('Unknown error'));
+        const errorMessage = err instanceof Error ? err.message : '未知のエラーが発生しました';
+        setError(new Error(errorMessage));
+        console.error('useSheetData.ts: Fetchエラー', errorMessage);
       } finally {
         console.log('useSheetData.ts: Fetch完了');
         setIsLoading(false);
       }
     };
 
-    fetchData()
-      .then(() => {
-        hasFetchedData.current = true; // データ取得完了後にtrueを設定
-      })
-      .catch((error) => {
-        console.error('useSheetData.ts: 未処理のエラー', error);
-      });
-  }, []);
+    fetchData();
+  }, []); // 依存配列は空のままで正しい
 
   return { pois, isLoading, error };
 }

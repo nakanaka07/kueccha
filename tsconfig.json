@@ -19,7 +19,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["@types/react", "@types/google.maps"]
+    "types": ["@types/react", "@types/google.maps", "node"]
   },
   "include": ["./src", "*.config.ts"],
   "exclude": ["node_modules", "dist"]
