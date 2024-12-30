@@ -102,3 +102,4 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
 InfoWindow.displayName = 'InfoWindow';
 
 export { InfoWindow };
+export default InfoWindow;

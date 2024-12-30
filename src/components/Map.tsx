@@ -77,3 +77,4 @@ const Map = React.memo(({ pois }: MapProps) => {
 Map.displayName = 'Map';
 
 export { Map };
+export default Map;

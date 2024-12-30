@@ -80,3 +80,4 @@ const FilterPanel = React.memo(
 FilterPanel.displayName = 'FilterPanel';
 
 export { FilterPanel };
+export default FilterPanel;
