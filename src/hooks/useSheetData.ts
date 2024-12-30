@@ -1,5 +1,5 @@
 // hooks/useSheetData.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CONFIG } from '../config';
 import type { Poi, AreaType } from '../types';
 import { AREAS } from '../types';
@@ -12,10 +12,17 @@ export function useSheetData() {
   const [pois, setPois] = useState<Poi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const hasFetchedData = useRef(false); // データ取得状態を管理するRef
+
   console.log('useSheetData.ts: Initial state set', { isLoading, error });
 
   useEffect(() => {
     console.log('useSheetData.ts: Starting data fetch');
+
+    if (hasFetchedData.current) {
+      console.log('useSheetData.ts: Data already fetched, skipping.');
+      return;
+    }
 
     // 重複するcheckConfig関数を削除し、一度だけ呼び出す
     const checkConfig = () => {
@@ -123,9 +130,13 @@ export function useSheetData() {
       }
     };
 
-    fetchData().catch((error) => {
-      console.error('useSheetData.ts: 未処理のエラー', error);
-    });
+    fetchData()
+      .then(() => {
+        hasFetchedData.current = true; // データ取得完了後にtrueを設定
+      })
+      .catch((error) => {
+        console.error('useSheetData.ts: 未処理のエラー', error);
+      });
   }, []);
 
   return { pois, isLoading, error };
