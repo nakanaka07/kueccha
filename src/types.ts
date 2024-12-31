@@ -1,9 +1,19 @@
-// types.ts
 import { Library } from '@googlemaps/js-api-loader';
+import { AREAS, MARKER_COLORS } from './constants';
+
+export type AreaType = keyof typeof AREAS;
+export type MarkerColorType = keyof typeof MARKER_COLORS;
 
 export interface Location {
   lat: number;
   lng: number;
+}
+
+export interface MapStyle {
+  width: string;
+  height: string;
+  disableDefaultUI: boolean;
+  clickableIcons: boolean;
 }
 
 export interface MapConfig {
@@ -14,40 +24,20 @@ export interface MapConfig {
   libraries: Library[];
   language: string;
   version: string;
-  style: {
-    width: string;
-    height: string;
-    disableDefaultUI: boolean;
-    clickableIcons: boolean;
-  };
+  style: MapStyle;
 }
-
-export const AREAS = {
-  RYOTSU_AIKAWA: '両津・相川地区',
-  KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',
-  AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
-  SNACK: 'スナック',
-  PUBLIC_TOILET: '公共トイレ',
-  PARKING: '駐車場',
-  RECOMMEND: 'おすすめ',
-} as const;
-
-export type AreaType = keyof typeof AREAS;
 
 export interface Poi {
   id: string;
   name: string;
   area: AreaType;
-  location: { lat: number; lng: number };
+  location: Location;
   category?: string;
   genre?: string;
   description?: string;
-  reservation?: string;
   payment?: string;
   phone?: string;
   address?: string;
-  information?: string;
-  view?: string;
   monday?: string;
   tuesday?: string;
   wednesday?: string;
