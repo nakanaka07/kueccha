@@ -90,9 +90,15 @@ const Map = React.memo(({ pois }: MapProps) => {
         mapContainerStyle={{ width: '100%', height: '100%' }}
         onLoad={onLoad}
       >
-        {pois.map((poi) => (
-          <Marker key={poi.id} poi={poi} onClick={handleMarkerClick} />
-        ))}
+        {map &&
+          pois.map((poi) => (
+            <Marker
+              key={poi.id}
+              poi={poi}
+              onClick={handleMarkerClick}
+              map={map} // mapインスタンスを渡す
+            />
+          ))}
         {selectedPoi && <InfoWindow poi={selectedPoi} onCloseClick={handleInfoWindowClose} />}
       </GoogleMap>
     </div>

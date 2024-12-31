@@ -1,36 +1,45 @@
-import React, { useMemo } from 'react';
-import { MarkerF } from '@react-google-maps/api';
+import React, { useEffect, useRef } from 'react';
 import type { Poi } from '../types';
 import { MARKER_COLORS } from '../constants';
 
 interface MarkerProps {
   poi: Poi;
   onClick: (poi: Poi) => void;
+  map: google.maps.Map | null;
 }
 
-const Marker = React.memo(({ poi, onClick }: MarkerProps) => {
-  const color = MARKER_COLORS[poi.area] || MARKER_COLORS.DEFAULT;
+const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
-  const markerIcon = useMemo(
-    () => ({
-      path: google.maps.SymbolPath.CIRCLE,
-      fillColor: color,
-      fillOpacity: 1,
-      strokeColor: '#FFFFFF',
-      strokeWeight: 2,
-      scale: 8,
-    }),
-    [color],
-  );
+  useEffect(() => {
+    if (!map || !window.google?.maps) return;
 
-  return (
-    <MarkerF
-      position={poi.location}
-      title={poi.name}
-      icon={markerIcon}
-      onClick={() => onClick(poi)}
-    />
-  );
+    const pin = new google.maps.marker.PinElement({
+      glyph: '',
+      background: MARKER_COLORS[poi.area] || MARKER_COLORS.DEFAULT,
+      borderColor: '#ffffff',
+      scale: 1.0,
+    });
+
+    const marker = new google.maps.marker.AdvancedMarkerElement({
+      position: poi.location,
+      map,
+      title: poi.name,
+      content: pin.element,
+    });
+
+    marker.addListener('click', () => onClick(poi));
+    markerRef.current = marker;
+
+    return () => {
+      if (markerRef.current) {
+        markerRef.current.map = null;
+        google.maps.event.clearInstanceListeners(markerRef.current);
+      }
+    };
+  }, [map, poi, onClick]);
+
+  return null;
 });
 
 Marker.displayName = 'Marker';

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import type { Poi } from '../types';
 import { AREAS } from '../constants';
 
@@ -9,26 +10,26 @@ interface InfoWindowProps {
 
 interface BusinessHour {
   day: string;
-  hours: string | undefined;
+  key: string;
 }
 
 const BUSINESS_HOURS: BusinessHour[] = [
-  { day: '月', hours: undefined },
-  { day: '火', hours: undefined },
-  { day: '水', hours: undefined },
-  { day: '木', hours: undefined },
-  { day: '金', hours: undefined },
-  { day: '土', hours: undefined },
-  { day: '日', hours: undefined },
-  { day: '祝', hours: undefined },
+  { day: '月', key: 'monday' },
+  { day: '火', key: 'tuesday' },
+  { day: '水', key: 'wednesday' },
+  { day: '木', key: 'thursday' },
+  { day: '金', key: 'friday' },
+  { day: '土', key: 'saturday' },
+  { day: '日', key: 'sunday' },
+  { day: '祝', key: 'holiday' },
 ];
 
 const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
   const businessHours = useMemo(
     () =>
-      BUSINESS_HOURS.map(({ day }) => ({
+      BUSINESS_HOURS.map(({ day, key }) => ({
         day,
-        hours: poi[`${day}day` as keyof Poi],
+        hours: poi[key as keyof Poi],
       })).filter(({ hours }) => hours),
     [poi],
   );
@@ -43,83 +44,118 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
     [encodedAddress],
   );
 
+  const formatInformation = (text: string) => {
+    if (!text) return null;
+
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split('\n').map((line, lineIndex) => (
+      <React.Fragment key={`line-${lineIndex}`}>
+        {line.split(urlRegex).map((part, partIndex) => {
+          if (part.match(urlRegex)) {
+            return (
+              <a
+                key={`${lineIndex}-${partIndex}`}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline break-all block leading-tight"
+              >
+                {part}
+              </a>
+            );
+          }
+          return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
+        })}
+        <br />
+      </React.Fragment>
+    ));
+  };
+
   return (
-    <div
-      className="bg-white p-4 rounded shadow-lg max-w-sm relative"
-      role="dialog"
-      aria-labelledby="poi-name"
-      aria-modal="true"
-    >
-      <button
-        onClick={onCloseClick}
-        className="absolute top-2 right-2 cursor-pointer p-2 hover:bg-gray-100 rounded-full"
-        aria-label="閉じる"
-      >
-        <span aria-hidden="true">&times;</span>
-      </button>
-
-      <h2 id="poi-name" className="text-lg font-bold mb-2">
-        {poi.name}
-      </h2>
-
-      {businessHours.length > 0 && (
-        <div className="mb-4">
-          <h3 className="font-semibold mb-1">営業時間</h3>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-2">
-            {businessHours.map(({ day, hours }) => (
-              <React.Fragment key={day}>
-                <dt className="text-sm">{day}:</dt>
-                <dd className="text-sm">{typeof hours === 'string' ? hours : ''}</dd>
-              </React.Fragment>
-            ))}
-          </dl>
+    <GoogleInfoWindow position={poi.location} onCloseClick={onCloseClick}>
+      <div className="bg-white p-4 rounded shadow-lg max-w-sm space-y-2">
+        {/* ヘッダー */}
+        <div>
+          <h2 id="poi-name" className="text-lg font-bold">
+            {poi.name}
+          </h2>
         </div>
-      )}
 
-      <div className="grid gap-2 text-sm">
-        {poi.category && (
-          <div>
-            <span className="font-semibold">カテゴリー:</span> {poi.category}
+        {/* 営業時間セクション */}
+        {businessHours.length > 0 && (
+          <div className="border-t pt-2">
+            <div className="space-y-2">
+              {businessHours.map(({ day, hours }) => (
+                <div key={day} className="flex items-center text-sm">
+                  <span className="text-gray-600 w-8">{day}:</span>
+                  <span>{typeof hours === 'string' ? hours : ''}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        {poi.genre && (
-          <div>
-            <span className="font-semibold">ジャンル:</span> {poi.genre}
+
+        {/* 基本情報セクション */}
+        <div className="border-t pt-2">
+          <div className="space-y-2">
+            {[
+              { label: 'カテゴリー', value: poi.category },
+              { label: 'ジャンル', value: poi.genre },
+              { label: 'エリア', value: AREAS[poi.area] },
+              ...(poi.phone ? [{ label: '電話', value: poi.phone, isPhone: true }] : []),
+              ...(poi.address ? [{ label: '住所', value: poi.address, isAddress: true }] : []),
+            ].map(
+              ({ label, value, isPhone, isAddress }) =>
+                value && (
+                  <div key={label} className="grid grid-cols-[6rem_1fr] items-baseline">
+                    <span className="text-sm font-semibold text-gray-600">{label}:</span>
+                    {isPhone ? (
+                      <a href={`tel:${value}`} className="text-sm text-blue-600 hover:underline">
+                        {value}
+                      </a>
+                    ) : isAddress ? (
+                      <a
+                        href={mapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <span className="text-sm">{value}</span>
+                    )}
+                  </div>
+                ),
+            )}
+          </div>
+        </div>
+
+        {/* 関連情報セクション */}
+        {poi.information && (
+          <div className="border-t pt-2">
+            <div className="text-sm text-gray-800 leading-tight">
+              {formatInformation(poi.information)}
+            </div>
           </div>
         )}
-        {AREAS[poi.area] && (
-          <div>
-            <span className="font-semibold">エリア:</span> {AREAS[poi.area]}
-          </div>
-        )}
-        {poi.phone && (
-          <div>
-            <span className="font-semibold">電話:</span>{' '}
-            <a
-              href={`tel:${poi.phone}`}
-              className="text-blue-600 hover:underline"
-              aria-label={`${poi.name}に電話する: ${poi.phone}`}
-            >
-              {poi.phone}
-            </a>
-          </div>
-        )}
+
+        {/* Googleマップボタン */}
         {poi.address && (
-          <div>
-            <span className="font-semibold">住所:</span>{' '}
+          <div className="border-t pt-2">
             <a
               href={mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-              aria-label={`${poi.name}の場所をGoogleマップで表示`}
+              className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
-              {poi.address}
+              Googleマップで見る
             </a>
           </div>
         )}
       </div>
-    </div>
+    </GoogleInfoWindow>
   );
 });
 
