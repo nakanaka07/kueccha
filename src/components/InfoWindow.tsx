@@ -7,38 +7,57 @@ interface InfoWindowProps {
   onCloseClick: () => void;
 }
 
+interface BusinessHour {
+  day: string;
+  hours: string | undefined;
+}
+
+const BUSINESS_HOURS: BusinessHour[] = [
+  { day: '月', hours: undefined },
+  { day: '火', hours: undefined },
+  { day: '水', hours: undefined },
+  { day: '木', hours: undefined },
+  { day: '金', hours: undefined },
+  { day: '土', hours: undefined },
+  { day: '日', hours: undefined },
+  { day: '祝', hours: undefined },
+];
+
 const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
   const businessHours = useMemo(
     () =>
-      [
-        { day: '月', hours: poi.monday },
-        { day: '火', hours: poi.tuesday },
-        { day: '水', hours: poi.wednesday },
-        { day: '木', hours: poi.thursday },
-        { day: '金', hours: poi.friday },
-        { day: '土', hours: poi.saturday },
-        { day: '日', hours: poi.sunday },
-        { day: '祝', hours: poi.holiday },
-      ].filter(({ hours }) => hours),
+      BUSINESS_HOURS.map(({ day }) => ({
+        day,
+        hours: poi[`${day}day` as keyof Poi],
+      })).filter(({ hours }) => hours),
     [poi],
   );
 
-  const encodedAddress = encodeURIComponent(`${poi.address}`);
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  const encodedAddress = useMemo(
+    () => (poi.address ? encodeURIComponent(poi.address) : ''),
+    [poi.address],
+  );
+
+  const mapUrl = useMemo(
+    () => `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`,
+    [encodedAddress],
+  );
 
   return (
     <div
       className="bg-white p-4 rounded shadow-lg max-w-sm relative"
       role="dialog"
       aria-labelledby="poi-name"
+      aria-modal="true"
     >
       <button
         onClick={onCloseClick}
-        className="absolute top-2 right-2 cursor-pointer p-2"
+        className="absolute top-2 right-2 cursor-pointer p-2 hover:bg-gray-100 rounded-full"
         aria-label="閉じる"
       >
-        &times;
+        <span aria-hidden="true">&times;</span>
       </button>
+
       <h2 id="poi-name" className="text-lg font-bold mb-2">
         {poi.name}
       </h2>
@@ -50,7 +69,7 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
             {businessHours.map(({ day, hours }) => (
               <React.Fragment key={day}>
                 <dt className="text-sm">{day}:</dt>
-                <dd className="text-sm">{hours}</dd>
+                <dd className="text-sm">{typeof hours === 'string' ? hours : ''}</dd>
               </React.Fragment>
             ))}
           </dl>
@@ -76,7 +95,11 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
         {poi.phone && (
           <div>
             <span className="font-semibold">電話:</span>{' '}
-            <a href={`tel:${poi.phone}`} className="text-blue-600 hover:underline">
+            <a
+              href={`tel:${poi.phone}`}
+              className="text-blue-600 hover:underline"
+              aria-label={`${poi.name}に電話する: ${poi.phone}`}
+            >
               {poi.phone}
             </a>
           </div>
@@ -89,6 +112,7 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
+              aria-label={`${poi.name}の場所をGoogleマップで表示`}
             >
               {poi.address}
             </a>
