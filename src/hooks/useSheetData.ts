@@ -2,18 +2,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONFIG } from '../config';
 import type { Poi, AreaType } from '../types';
-import { AREAS } from '../types';
+import { AREAS } from '../constants';
 
-// 型定義
+// Google Maps型
 type LatLngLiteral = google.maps.LatLngLiteral;
-type FetchError = {
+
+// エラー型の定義
+interface FetchError {
   message: string;
   code: string;
-};
+}
 
-// 定数
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+// APIフェッチの設定
+const API_CONFIG = {
+  MAX_RETRIES: 3,
+  RETRY_DELAY: 1000,
+  BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
+} as const;
 
 // ユーティリティ関数
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,17 +29,15 @@ export function useSheetData() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
-  // API設定のバリデーション
   const validateConfig = useCallback(() => {
     if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
       throw new Error('API configuration missing');
     }
   }, []);
 
-  // 単一エリアのデータフェッチ
   const fetchAreaData = useCallback(async (area: string, retryCount = 0): Promise<Poi[]> => {
     const areaName = AREAS[area as AreaType];
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheets.spreadsheetId}/values/${areaName}!A:AY?key=${CONFIG.sheets.apiKey}`;
+    const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${areaName}!A:AY?key=${CONFIG.sheets.apiKey}`;
 
     try {
       const response = await fetch(url);
@@ -42,12 +45,11 @@ export function useSheetData() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      const values: string[][] | undefined = data.values;
 
-      return (values?.slice(1) || [])
-        .filter((row) => row[49] && row[43])
+      return (data.values?.slice(1) || [])
+        .filter((row: string[]) => row[49] && row[43])
         .map(
-          (row): Poi => ({
+          (row: string[]): Poi => ({
             id: String(row[49]),
             name: String(row[43]),
             area: area as AreaType,
@@ -75,27 +77,27 @@ export function useSheetData() {
           }),
         );
     } catch (err) {
-      if (retryCount < MAX_RETRIES) {
-        await delay(RETRY_DELAY * (retryCount + 1));
+      if (retryCount < API_CONFIG.MAX_RETRIES) {
+        await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
         return fetchAreaData(area, retryCount + 1);
       }
       throw err;
     }
   }, []);
 
-  // メインのデータフェッチ関数
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
     setIsLoading(true);
+    setError(null);
+
     try {
       validateConfig();
-
       const areaPromises = Object.keys(AREAS).map((area) => fetchAreaData(area));
       const poisArrays = await Promise.all(areaPromises);
-      const allPois = poisArrays.flat();
-
-      const uniquePois = Array.from(new Map(allPois.map((poi) => [poi.id, poi])).values());
+      const uniquePois = Array.from(
+        new Map(poisArrays.flat().map((poi) => [poi.id, poi])).values(),
+      );
 
       setPois(uniquePois);
       setIsFetched(true);
@@ -111,17 +113,14 @@ export function useSheetData() {
 
   useEffect(() => {
     const abortController = new AbortController();
-
     if (!isFetched) {
       fetchData();
     }
-
     return () => {
       abortController.abort();
     };
   }, [fetchData, isFetched]);
 
-  // データの再フェッチ用の関数
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);

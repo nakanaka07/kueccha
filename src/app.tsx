@@ -1,7 +1,7 @@
 import React, { useState, useMemo, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType } from './types';
-import { AREAS } from './types';
+import { AREAS } from './constants';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
 import { useSheetData } from './hooks/useSheetData';

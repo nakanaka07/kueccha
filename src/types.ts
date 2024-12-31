@@ -35,9 +35,12 @@ export interface Poi {
   category?: string;
   genre?: string;
   description?: string;
+  reservation?: string;
   payment?: string;
   phone?: string;
   address?: string;
+  information?: string;
+  view?: string;
   monday?: string;
   tuesday?: string;
   wednesday?: string;
