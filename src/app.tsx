@@ -6,59 +6,54 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
 import { useSheetData } from './hooks/useSheetData';
 
-const Map = lazy(() => import('./components/Map'));
-const FilterPanel = lazy(() => import('./components/FilterPanel'));
+// lazy loadingの型安全性向上
+const Map = lazy(() => import('./components/Map').then((module) => ({ default: module.default })));
+const FilterPanel = lazy(() =>
+  import('./components/FilterPanel').then((module) => ({ default: module.default })),
+);
 
-const INITIAL_AREA_VISIBILITY = Object.values(AREAS).reduce(
+// 定数の分離と型付け
+const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.values(AREAS).reduce(
   (acc, area) => ({ ...acc, [area]: true }),
   {} as Record<AreaType, boolean>,
 );
 
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
-  const [areaVisibility, setAreaVisibility] = useState(INITIAL_AREA_VISIBILITY);
+  const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
 
+  // メモ化ロジックの最適化
   const { filteredPois, areaCounts } = useMemo(() => {
     if (!pois?.length) {
       return {
         filteredPois: [],
-        areaCounts: {} as Record<AreaType, number>, // 初期値は空オブジェクトで十分
+        areaCounts: {} as Record<AreaType, number>,
       };
     }
 
-    const visibleAreas = Object.keys(areaVisibility).filter(
-      (area) => areaVisibility[area as AreaType], // areaVisibilityのkeyをAreaTypeとして扱う
-    ) as AreaType[];
+    const visibleAreas = Object.entries(areaVisibility)
+      .filter(([, isVisible]) => isVisible)
+      .map(([area]) => area) as AreaType[];
 
     const filtered = pois.filter((poi) => visibleAreas.includes(poi.area));
-
     const counts = filtered.reduce(
       (acc, poi) => ({
         ...acc,
         [poi.area]: (acc[poi.area] || 0) + 1,
       }),
-      {} as Record<AreaType, number>, // 初期値は空オブジェクトで十分
+      {} as Record<AreaType, number>,
     );
 
     return { filteredPois: filtered, areaCounts: counts };
   }, [pois, areaVisibility]);
 
-  const handleRetry = () => {
-    // handleRetryをここに移動
-    refetch();
-  };
-
   if (error) {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
-        {' '}
-        {/* flex-colを追加 */}
         <div className="text-red-500 p-4 rounded bg-red-100">
-          {' '}
-          {/* 背景色を薄く */}
           <p>{error.message}</p>
           <button
-            onClick={handleRetry} // handleRetryを定義
+            onClick={refetch}
             className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             再試行
@@ -80,10 +75,10 @@ const App: React.FC = () => {
             <Map pois={filteredPois} />
           </div>
           <div className="w-full lg:w-1/4 xl:w-1/5 bg-white p-4">
-            <FilterPanel // FilterPanelComponentは不要
-              isVisible={true} // 常にtrueなので不要かも？
+            <FilterPanel
               areaCounts={areaCounts}
               areaVisibility={areaVisibility}
+              isVisible={true}
               onAreaToggle={(area, visible) =>
                 setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
               }
