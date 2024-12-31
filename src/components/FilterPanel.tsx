@@ -1,52 +1,34 @@
 import React, { useMemo } from 'react';
-import { AREAS } from '../types';
+import { AREAS } from '../constants';
 import type { AreaType } from '../types';
 import { CONFIG } from '../config';
 
 interface FilterPanelProps {
-  isVisible: boolean;
   areaCounts: Record<AreaType, number>;
   areaVisibility: Record<AreaType, boolean>;
   onAreaToggle: (area: AreaType, visible: boolean) => void;
 }
 
-// デフォルト値の初期化をコンポーネントの外で行う
-const defaultAreaCounts: Record<AreaType, number> = Object.keys(AREAS).reduce(
-  (acc, key) => ({ ...acc, [key]: 0 }),
-  {} as Record<AreaType, number>,
-);
+const FilterPanel = React.memo(({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelProps) => {
+  const memoizedAreas = useMemo(
+    () =>
+      Object.entries(AREAS).map(([area, name]) => ({
+        area: area as AreaType,
+        name,
+        count: areaCounts[area as AreaType] ?? 0,
+        isVisible: areaVisibility[area as AreaType] ?? true,
+      })),
+    [areaCounts, areaVisibility],
+  );
 
-const defaultAreaVisibility: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
-  (acc, key) => ({ ...acc, [key]: true }), // trueをデフォルト値として設定
-  {} as Record<AreaType, boolean>,
-);
-
-const FilterPanel = React.memo(
-  ({
-    isVisible,
-    areaCounts = defaultAreaCounts,
-    areaVisibility = defaultAreaVisibility,
-    onAreaToggle,
-  }: FilterPanelProps) => {
-    const memoizedAreas = useMemo(
-      () =>
-        Object.entries(AREAS).map(([area, name]) => ({
-          area: area as AreaType,
-          name,
-          count: areaCounts[area as AreaType] ?? 0,
-          isVisible: areaVisibility[area as AreaType] ?? true,
-        })),
-      [areaCounts, areaVisibility],
-    );
-
-    if (!isVisible) return null;
-
-    return (
-      <div
-        className="absolute top-16 left-4 z-10 p-4 bg-white rounded shadow max-h-[calc(100vh-5rem)] overflow-y-auto"
-        role="region"
-        aria-label="エリアフィルター"
-      >
+  return (
+    <nav
+      className="p-4 bg-white rounded shadow max-h-[calc(100vh-5rem)] overflow-y-auto"
+      role="navigation"
+      aria-label="エリアフィルター"
+    >
+      <fieldset>
+        <legend className="sr-only">表示するエリアの選択</legend>
         {memoizedAreas.map(({ area, name, count, isVisible }) => (
           <label
             key={area}
@@ -55,7 +37,7 @@ const FilterPanel = React.memo(
             <span
               className="inline-block w-4 h-4 rounded-full border border-white"
               style={{
-                backgroundColor: CONFIG.markers.colors.areas[area] || CONFIG.markers.colors.default,
+                backgroundColor: CONFIG.markers.colors[area] || CONFIG.markers.colors.DEFAULT,
                 opacity: isVisible ? 1 : 0.5,
               }}
               aria-hidden="true"
@@ -72,10 +54,10 @@ const FilterPanel = React.memo(
             </span>
           </label>
         ))}
-      </div>
-    );
-  },
-);
+      </fieldset>
+    </nav>
+  );
+});
 
 FilterPanel.displayName = 'FilterPanel';
 

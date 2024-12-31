@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { Poi } from '../types';
-import { AREAS } from '../types';
+import { AREAS } from '../constants';
 
 interface InfoWindowProps {
   poi: Poi;

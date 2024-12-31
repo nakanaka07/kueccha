@@ -78,7 +78,6 @@ const App: React.FC = () => {
             <FilterPanel
               areaCounts={areaCounts}
               areaVisibility={areaVisibility}
-              isVisible={true}
               onAreaToggle={(area, visible) =>
                 setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
               }
