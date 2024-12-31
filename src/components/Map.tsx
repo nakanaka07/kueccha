@@ -1,15 +1,18 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { GoogleMap, useLoadScript, LoadScriptProps } from '@react-google-maps/api';
 import { CONFIG } from '../config';
 import type { Poi } from '../types';
 import { Marker } from './Marker';
 import { InfoWindow } from './InfoWindow';
+
+const libraries: LoadScriptProps['libraries'] = ['places', 'geometry', 'drawing', 'marker'];
 
 interface MapProps {
   pois: Poi[];
 }
 
 const Map = React.memo(({ pois }: MapProps) => {
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
@@ -17,7 +20,7 @@ const Map = React.memo(({ pois }: MapProps) => {
     mapIds: [CONFIG.maps.mapId],
     language: CONFIG.maps.language,
     version: CONFIG.maps.version,
-    libraries: CONFIG.maps.libraries,
+    libraries,
   });
 
   const mapOptions = useMemo(
@@ -32,6 +35,20 @@ const Map = React.memo(({ pois }: MapProps) => {
     }),
     [],
   );
+
+  // マップのインスタンスを保存
+  const onLoad = useCallback((map: google.maps.Map) => {
+    setMap(map);
+  }, []);
+
+  // マーカーが更新されたときにマップを再描画
+  useEffect(() => {
+    if (map && pois.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      pois.forEach((poi) => bounds.extend(poi.location));
+      map.fitBounds(bounds);
+    }
+  }, [map, pois]);
 
   const handleMarkerClick = useCallback((poi: Poi) => {
     setSelectedPoi(poi);
@@ -64,18 +81,14 @@ const Map = React.memo(({ pois }: MapProps) => {
   }
 
   return (
-    <div
-      style={CONFIG.maps.style}
-      role="region"
-      aria-label="地図"
-      className="relative w-full h-full"
-    >
+    <div style={{ width: '100%', height: '100vh' }} role="region" aria-label="地図">
       <GoogleMap
         center={CONFIG.maps.defaultCenter}
         zoom={CONFIG.maps.defaultZoom}
         options={mapOptions}
         onClick={handleMapClick}
-        mapContainerClassName="w-full h-full"
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        onLoad={onLoad}
       >
         {pois.map((poi) => (
           <Marker key={poi.id} poi={poi} onClick={handleMarkerClick} />
