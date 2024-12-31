@@ -13,8 +13,11 @@ const FilterPanel = lazy(() =>
 );
 
 // 定数の分離と型付け
-const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.values(AREAS).reduce(
-  (acc, area) => ({ ...acc, [area]: true }),
+const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
+  (acc, area) => ({
+    ...acc,
+    [area]: true, // すべてのエリアを表示
+  }),
   {} as Record<AreaType, boolean>,
 );
 
@@ -22,20 +25,16 @@ const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
 
-  // メモ化ロジックの最適化
   const { filteredPois, areaCounts } = useMemo(() => {
-    if (!pois?.length) {
-      return {
-        filteredPois: [],
-        areaCounts: {} as Record<AreaType, number>,
-      };
-    }
+    if (!pois?.length) return { filteredPois: [], areaCounts: {} as Record<AreaType, number> };
 
+    // シンプルなフィルタリング
     const visibleAreas = Object.entries(areaVisibility)
       .filter(([, isVisible]) => isVisible)
-      .map(([area]) => area) as AreaType[];
+      .map(([area]) => area as AreaType);
 
     const filtered = pois.filter((poi) => visibleAreas.includes(poi.area));
+
     const counts = filtered.reduce(
       (acc, poi) => ({
         ...acc,
