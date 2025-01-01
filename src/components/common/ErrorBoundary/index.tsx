@@ -1,9 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
+import React, { Component, ErrorInfo } from 'react';
+import type { ErrorBoundaryProps } from '../../../types';
+import { ERROR_MESSAGES } from '../../../constants/messages';
 
 interface State {
   hasError: boolean;
@@ -11,7 +8,7 @@ interface State {
   errorInfo?: ErrorInfo;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   public state: State = {
     hasError: false,
   };
@@ -34,19 +31,17 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div
-            className="flex flex-col items-center justify-center min-h-screen bg-gray-50"
-            role="alert"
-            aria-live="assertive"
-          >
+          <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
             <div className="p-8 bg-white rounded-lg shadow-lg">
-              <h1 className="text-2xl font-bold text-red-600 mb-4">エラーが発生しました</h1>
+              <h1 className="text-2xl font-bold text-red-600 mb-4">
+                {ERROR_MESSAGES.SYSTEM.UNKNOWN}
+              </h1>
               <p className="text-gray-700 mb-4">
-                {this.state.error?.message || '予期せぬエラーが発生しました'}
+                {this.state.error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}
               </p>
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 再試行
               </button>

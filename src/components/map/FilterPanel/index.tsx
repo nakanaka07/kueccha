@@ -1,13 +1,7 @@
 import React, { useMemo } from 'react';
-import { AREAS } from '../constants';
-import type { AreaType } from '../types';
-import { CONFIG } from '../config';
-
-interface FilterPanelProps {
-  areaCounts: Record<AreaType, number>;
-  areaVisibility: Record<AreaType, boolean>;
-  onAreaToggle: (area: AreaType, visible: boolean) => void;
-}
+import type { FilterPanelProps, AreaType } from '../../../types';
+import { AREAS } from '../../../constants';
+import { CONFIG } from '../../../config';
 
 const FilterPanel = React.memo(({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelProps) => {
   const memoizedAreas = useMemo(

@@ -1,15 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { GoogleMap, useLoadScript, LoadScriptProps } from '@react-google-maps/api';
-import { CONFIG } from '../config';
-import type { Poi } from '../types';
-import { Marker } from './Marker';
-import { InfoWindow } from './InfoWindow';
-
-const libraries: LoadScriptProps['libraries'] = ['places', 'geometry', 'drawing', 'marker'];
-
-interface MapProps {
-  pois: Poi[];
-}
+import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import { CONFIG } from '../../../config';
+import type { MapProps, Poi } from '../../../types';
+import { Marker } from '../Marker';
+import { InfoWindow } from '../InfoWindow';
+import { ERROR_MESSAGES } from '../../../constants/messages';
 
 const Map = React.memo(({ pois }: MapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -20,18 +15,15 @@ const Map = React.memo(({ pois }: MapProps) => {
     mapIds: [CONFIG.maps.mapId],
     language: CONFIG.maps.language,
     version: CONFIG.maps.version,
-    libraries,
+    libraries: CONFIG.maps.libraries,
   });
 
   const mapOptions = useMemo(
     () => ({
+      ...CONFIG.maps.options,
       disableDefaultUI: CONFIG.maps.style.disableDefaultUI,
       clickableIcons: CONFIG.maps.style.clickableIcons,
       mapId: CONFIG.maps.mapId,
-      zoomControl: true,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
     }),
     [],
   );
@@ -64,18 +56,19 @@ const Map = React.memo(({ pois }: MapProps) => {
 
   if (loadError) {
     return (
-      <div role="alert" className="p-4 bg-red-100 text-red-700 rounded" aria-live="assertive">
-        <h2 className="font-bold mb-2">エラーが発生しました</h2>
-        <p>マップの読み込みに失敗しました。しばらく経ってから再度お試しください。</p>
+      <div role="alert" className="p-4 bg-red-100 text-red-700 rounded">
+        <h2 className="font-bold mb-2">{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h2>
+        <p>{ERROR_MESSAGES.MAP.LOAD_FAILED}</p>
+        <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
       </div>
     );
   }
 
   if (!isLoaded) {
     return (
-      <div role="status" className="p-4 flex items-center justify-center" aria-live="polite">
+      <div role="status" className="p-4 flex items-center justify-center">
         <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
-        <span>マップを読み込んでいます...</span>
+        <span>{ERROR_MESSAGES.LOADING.MAP}</span>
       </div>
     );
   }

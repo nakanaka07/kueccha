@@ -1,30 +1,18 @@
 import React, { useMemo } from 'react';
 import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
-import type { Poi } from '../types';
-import { AREAS } from '../constants';
-
-interface InfoWindowProps {
-  poi: Poi;
-  onCloseClick: () => void;
-}
-
-interface BusinessHour {
-  day: string;
-  key: string;
-}
-
-const BUSINESS_HOURS: BusinessHour[] = [
-  { day: '月', key: 'monday' },
-  { day: '火', key: 'tuesday' },
-  { day: '水', key: 'wednesday' },
-  { day: '木', key: 'thursday' },
-  { day: '金', key: 'friday' },
-  { day: '土', key: 'saturday' },
-  { day: '日', key: 'sunday' },
-  { day: '祝', key: 'holiday' },
-];
+import type { InfoWindowProps, Poi } from '../../../types';
+import { AREAS, BUSINESS_HOURS } from '../../../constants';
+import { formatInformation } from '../../../utils/formatters';
 
 const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
+  const position = useMemo(
+    () => ({
+      lat: poi.location.lat,
+      lng: poi.location.lng,
+    }),
+    [poi.location],
+  );
+
   const businessHours = useMemo(
     () =>
       BUSINESS_HOURS.map(({ day, key }) => ({
@@ -44,36 +32,8 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
     [encodedAddress],
   );
 
-  const formatInformation = (text: string) => {
-    if (!text) return null;
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    return text.split('\n').map((line, lineIndex) => (
-      <React.Fragment key={`line-${lineIndex}`}>
-        {line.split(urlRegex).map((part, partIndex) => {
-          if (part.match(urlRegex)) {
-            return (
-              <a
-                key={`${lineIndex}-${partIndex}`}
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all block leading-tight"
-              >
-                {part}
-              </a>
-            );
-          }
-          return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
-        })}
-        <br />
-      </React.Fragment>
-    ));
-  };
-
   return (
-    <GoogleInfoWindow position={poi.location} onCloseClick={onCloseClick}>
+    <GoogleInfoWindow position={position} onCloseClick={onCloseClick}>
       <div className="bg-white p-4 rounded shadow-lg max-w-sm space-y-2">
         {/* ヘッダー */}
         <div>
@@ -135,7 +95,7 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
         {/* 関連情報セクション */}
         {poi.information && (
           <div className="border-t pt-2">
-            <div className="text-sm text-gray-800 leading-tight">
+            <div className="text-sm text-gray-800 leading-normal">
               {formatInformation(poi.information)}
             </div>
           </div>

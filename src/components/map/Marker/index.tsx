@@ -1,12 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import type { Poi } from '../types';
-import { MARKER_COLORS } from '../constants';
-
-interface MarkerProps {
-  poi: Poi;
-  onClick: (poi: Poi) => void;
-  map: google.maps.Map | null;
-}
+import type { MarkerProps } from '../../../types';
+import { MARKER_COLORS } from '../../../constants';
 
 const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);

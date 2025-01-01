@@ -1,16 +1,13 @@
-import React, { useState, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType } from './types';
 import { AREAS } from './constants';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { LoadingFallback } from './components/LoadingFallback';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoadingFallback } from './components/common/LoadingFallback/index';
+import { Map } from './components/map/Map';
+import { FilterPanel } from './components/map/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
-
-// lazy loadingの型安全性向上
-const Map = lazy(() => import('./components/Map').then((module) => ({ default: module.default })));
-const FilterPanel = lazy(() =>
-  import('./components/FilterPanel').then((module) => ({ default: module.default })),
-);
+import { ERROR_MESSAGES } from './constants/messages';
 
 // 定数の分離と型付け
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
@@ -87,7 +84,7 @@ const App: React.FC = () => {
 };
 
 const container = document.getElementById('app');
-if (!container) throw new Error('コンテナ要素が見つかりません');
+if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 
 const root = createRoot(container);
 root.render(

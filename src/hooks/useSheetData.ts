@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { CONFIG } from '../config';
 import type { Poi, AreaType } from '../types';
 import { AREAS } from '../constants';
+import { ERROR_MESSAGES } from '../constants/messages';
 
 // Google Maps型
 type LatLngLiteral = google.maps.LatLngLiteral;
@@ -31,7 +32,7 @@ export function useSheetData() {
 
   const validateConfig = useCallback(() => {
     if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
-      throw new Error('API configuration missing');
+      throw new Error(ERROR_MESSAGES.CONFIG.MISSING);
     }
   }, []);
 
@@ -78,11 +79,12 @@ export function useSheetData() {
             }),
           );
       } catch (err) {
+        console.error(err);
         if (retryCount < API_CONFIG.MAX_RETRIES) {
           await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
           return fetchAreaData(area, retryCount + 1);
         }
-        throw err;
+        throw new Error(ERROR_MESSAGES.DATA.FETCH_FAILED);
       }
     }
     // 他のエリアの処理
@@ -125,12 +127,12 @@ export function useSheetData() {
             holiday: row[35],
           }),
         );
-    } catch (err) {
+    } catch {
       if (retryCount < API_CONFIG.MAX_RETRIES) {
         await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
         return fetchAreaData(area, retryCount + 1);
       }
-      throw err;
+      throw new Error(ERROR_MESSAGES.DATA.FETCH_FAILED);
     }
   }, []);
 
@@ -160,6 +162,7 @@ export function useSheetData() {
       setPois(Array.from(poisMap.values()));
       setIsFetched(true);
     } catch (err) {
+      console.error(err);
       setError({
         message: err instanceof Error ? err.message : '未知のエラーが発生しました',
         code: 'FETCH_ERROR',
