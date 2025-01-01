@@ -95,9 +95,7 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
         {/* 関連情報セクション */}
         {poi.information && (
           <div className="border-t pt-2">
-            <div className="text-sm text-gray-800 leading-normal">
-              {formatInformation(poi.information)}
-            </div>
+            <div className="space-y-2">{formatInformation(poi.information)}</div>
           </div>
         )}
 
