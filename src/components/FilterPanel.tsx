@@ -23,16 +23,16 @@ const FilterPanel = React.memo(({ areaCounts, areaVisibility, onAreaToggle }: Fi
 
   return (
     <nav
-      className="p-4 bg-white rounded shadow max-h-[calc(100vh-5rem)] overflow-y-auto"
+      className="absolute top-4 right-4 z-[9999] bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-4 max-h-[calc(100vh-2rem)] overflow-y-auto w-64"
       role="navigation"
       aria-label="エリアフィルター"
     >
       <fieldset>
-        <legend className="sr-only">表示するエリアの選択</legend>
+        <legend className="font-semibold mb-2 text-gray-700">表示するエリアの選択</legend>
         {memoizedAreas.map(({ area, name, count, isVisible }) => (
           <label
             key={area}
-            className="flex items-center space-x-2 cursor-pointer mb-2 hover:bg-gray-50 p-2 rounded"
+            className="flex items-center space-x-2 cursor-pointer mb-2 hover:bg-white/90 p-2 rounded transition-colors"
           >
             <span
               className="inline-block w-4 h-4 rounded-full border border-white"
@@ -46,10 +46,10 @@ const FilterPanel = React.memo(({ areaCounts, areaVisibility, onAreaToggle }: Fi
               type="checkbox"
               checked={isVisible}
               onChange={(e) => onAreaToggle(area, e.target.checked)}
-              className="ml-2"
+              className="hidden"
               aria-label={`${name}を表示 (${count}件)`}
             />
-            <span>
+            <span className="text-gray-800">
               {name} ({count})
             </span>
           </label>

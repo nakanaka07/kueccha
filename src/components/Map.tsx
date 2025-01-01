@@ -81,7 +81,11 @@ const Map = React.memo(({ pois }: MapProps) => {
   }
 
   return (
-    <div style={{ width: '100%', height: '100vh' }} role="region" aria-label="地図">
+    <div
+      style={{ width: '100%', height: '100vh', position: 'relative' }}
+      role="region"
+      aria-label="地図"
+    >
       <GoogleMap
         center={CONFIG.maps.defaultCenter}
         zoom={CONFIG.maps.defaultZoom}

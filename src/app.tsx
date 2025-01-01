@@ -64,16 +64,14 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div
-        className="relative w-full h-screen overflow-hidden flex"
-        role="application"
-        aria-label="地図アプリケーション"
-      >
+      <div className="w-full h-screen relative overflow-hidden">
         <Suspense fallback={<LoadingFallback isLoading={isLoading} />}>
-          <div className="w-full lg:w-3/4 xl:w-4/5">
-            <Map pois={filteredPois} />
-          </div>
-          <div className="w-full lg:w-1/4 xl:w-1/5 bg-white p-4">
+          <div className="w-full h-full relative">
+            {/* position: absoluteのコンテナ */}
+            <div className="absolute inset-0">
+              <Map pois={filteredPois} />
+            </div>
+            {/* オーバーレイとして配置 */}
             <FilterPanel
               areaCounts={areaCounts}
               areaVisibility={areaVisibility}
