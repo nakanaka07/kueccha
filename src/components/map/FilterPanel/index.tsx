@@ -3,55 +3,72 @@ import type { FilterPanelProps, AreaType } from '../../../types';
 import { AREAS } from '../../../constants';
 import { CONFIG } from '../../../config';
 
-const FilterPanel = React.memo(({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelProps) => {
-  const memoizedAreas = useMemo(
-    () =>
-      Object.entries(AREAS).map(([area, name]) => ({
-        area: area as AreaType,
-        name,
-        count: areaCounts[area as AreaType] ?? 0,
-        isVisible: areaVisibility[area as AreaType] ?? true,
-      })),
-    [areaCounts, areaVisibility],
-  );
+const FilterPanel = React.memo(
+  ({ areaCounts, areaVisibility, onAreaToggle, className }: FilterPanelProps) => {
+    const memoizedAreas = useMemo(
+      () =>
+        Object.entries(AREAS).map(([area, name]) => ({
+          area: area as AreaType,
+          name,
+          count: areaCounts[area as AreaType] ?? 0,
+          isVisible: areaVisibility[area as AreaType] ?? true,
+        })),
+      [areaCounts, areaVisibility],
+    );
 
-  return (
-    <nav
-      className="absolute top-4 right-4 z-[9999] bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-4 max-h-[calc(100vh-2rem)] overflow-y-auto w-64"
-      role="navigation"
-      aria-label="エリアフィルター"
-    >
-      <fieldset>
-        <legend className="font-semibold mb-2 text-gray-700">表示するエリアの選択</legend>
-        {memoizedAreas.map(({ area, name, count, isVisible }) => (
-          <label
-            key={area}
-            className="flex items-center space-x-2 cursor-pointer mb-2 hover:bg-white/90 p-2 rounded transition-colors"
+    return (
+      <div className={`gmnoprint ${className}`} role="region" aria-label="エリアフィルター">
+        <div
+          className="bg-white rounded shadow-lg"
+          style={{
+            minWidth: '200px',
+            maxWidth: '300px',
+            backgroundColor: '#fff',
+            border: '1px solid #ccc',
+          }}
+        >
+          <div
+            className="px-4 py-2 bg-[#fff] border-b border-gray-200 text-sm font-roboto rounded-t"
+            style={{
+              backgroundColor: '#fff',
+              color: '#000',
+            }}
           >
-            <span
-              className="inline-block w-4 h-4 rounded-full border border-white"
-              style={{
-                backgroundColor: CONFIG.markers.colors[area] || CONFIG.markers.colors.DEFAULT,
-                opacity: isVisible ? 1 : 0.5,
-              }}
-              aria-hidden="true"
-            />
-            <input
-              type="checkbox"
-              checked={isVisible}
-              onChange={(e) => onAreaToggle(area, e.target.checked)}
-              className="hidden"
-              aria-label={`${name}を表示 (${count}件)`}
-            />
-            <span className="text-gray-800">
-              {name} ({count})
-            </span>
-          </label>
-        ))}
-      </fieldset>
-    </nav>
-  );
-});
+            表示するエリア
+          </div>
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+            {memoizedAreas.map(({ area, name, count, isVisible }) => (
+              <label
+                key={area}
+                className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={isVisible}
+                  onChange={(e) => onAreaToggle(area, e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  aria-label={`${name}を表示 (${count}件)`}
+                />
+                <div className="flex items-center flex-1 ml-3">
+                  <span
+                    className="inline-block w-3 h-3 rounded-full"
+                    style={{
+                      backgroundColor: CONFIG.markers.colors[area] || CONFIG.markers.colors.DEFAULT,
+                      opacity: isVisible ? 1 : 0.3,
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm text-gray-700 ml-2">{name}</span>
+                  <span className="text-xs text-gray-500 ml-auto">({count})</span>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
 
 FilterPanel.displayName = 'FilterPanel';
 

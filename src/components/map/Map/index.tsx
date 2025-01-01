@@ -10,28 +10,52 @@ const Map = React.memo(({ pois }: MapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
+  // useLoadScriptの結果を待ってから初期化
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: CONFIG.maps.apiKey,
-    mapIds: [CONFIG.maps.mapId],
-    language: CONFIG.maps.language,
-    version: CONFIG.maps.version,
+    mapIds: [CONFIG.maps.mapId], // ここは正しい
     libraries: CONFIG.maps.libraries,
   });
+
+  // mapTypeIdの状態管理は、Googleライブラリがロードされた後に初期化
+  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
 
   const mapOptions = useMemo(
     () => ({
       ...CONFIG.maps.options,
-      disableDefaultUI: CONFIG.maps.style.disableDefaultUI,
-      clickableIcons: CONFIG.maps.style.clickableIcons,
-      mapId: CONFIG.maps.mapId,
+      mapTypeId: mapType,
+      mapTypeControl: true,
+      mapTypeControlOptions: isLoaded
+        ? {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_RIGHT,
+            mapTypeIds: [
+              'roadmap', // 通常の地図
+              'satellite', // 航空写真
+              'hybrid', // 航空写真+道路名
+              'terrain', // 地形図
+            ],
+          }
+        : undefined,
     }),
-    [],
+    [mapType, isLoaded],
   );
 
+  // マップタイプが変更されたときのハンドラー
+  const handleMapTypeChanged = useCallback(() => {
+    if (map) {
+      setMapType(map.getMapTypeId() as google.maps.MapTypeId);
+    }
+  }, [map]);
+
   // マップのインスタンスを保存
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-  }, []);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMap(map);
+      map.addListener('maptypeid_changed', handleMapTypeChanged);
+    },
+    [handleMapTypeChanged],
+  );
 
   // マーカーが更新されたときにマップを再描画
   useEffect(() => {
@@ -55,10 +79,10 @@ const Map = React.memo(({ pois }: MapProps) => {
   }, []);
 
   if (loadError) {
+    console.error('Maps API loading error:', loadError);
     return (
       <div role="alert" className="p-4 bg-red-100 text-red-700 rounded">
-        <h2 className="font-bold mb-2">{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h2>
-        <p>{ERROR_MESSAGES.MAP.LOAD_FAILED}</p>
+        <h2 className="font-bold mb-2">{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
         <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
       </div>
     );
@@ -80,11 +104,14 @@ const Map = React.memo(({ pois }: MapProps) => {
       aria-label="地図"
     >
       <GoogleMap
+        mapContainerStyle={CONFIG.maps.style}
         center={CONFIG.maps.defaultCenter}
         zoom={CONFIG.maps.defaultZoom}
-        options={mapOptions}
+        options={{
+          ...mapOptions,
+          mapId: CONFIG.maps.mapId, // ここにmapIdを追加
+        }}
         onClick={handleMapClick}
-        mapContainerStyle={{ width: '100%', height: '100%' }}
         onLoad={onLoad}
       >
         {map &&
