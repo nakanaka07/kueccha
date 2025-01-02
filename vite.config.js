@@ -1,13 +1,21 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import replace from '@rollup/plugin-replace';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    base: '/kueccha/',
-    plugins: [react(), tsconfigPaths()],
+    base: mode === 'production' ? '/kueccha/' : '/', // 環境に応じてベースパスを設定
+    plugins: [
+      react(),
+      tsconfigPaths(),
+      replace({
+        'process.env.BASE_URL': JSON.stringify(mode === 'production' ? '/kueccha/' : '/'),
+        preventAssignment: true,
+      }),
+    ],
     resolve: {
       alias: {
         '@': '/src',
