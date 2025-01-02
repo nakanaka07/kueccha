@@ -17,18 +17,9 @@ export const validateConfig = (config: Config) => {
   }
 };
 
-export const logConfigInDevelopment = (config: Config) => {
+export const logConfigInDevelopment = (_config: Config) => {
   if (import.meta.env.MODE !== 'development') return;
 
-  Object.entries({
-    'Maps API Key': config.maps.apiKey,
-    'Map ID': config.maps.mapId,
-    'Sheets API Key': config.sheets.apiKey,
-    'Spreadsheet ID': config.sheets.spreadsheetId,
-  }).forEach(([key, value]) => {
-    if (value) {
-      const preview = '******' + String(value).slice(-7);
-      console.log(`${key} loaded: ${preview}`);
-    }
-  });
+  console.log('Configuration loaded successfully.');
+  // 機密情報をコンソールに表示しない
 };
