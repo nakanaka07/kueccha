@@ -48,4 +48,16 @@ export default defineConfig({
       sourcemap: false,
     },
   },
+  define: {
+    'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(
+      process.env.VITE_GOOGLE_MAPS_API_KEY,
+    ),
+    'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(process.env.VITE_GOOGLE_MAPS_MAP_ID),
+    'import.meta.env.VITE_GOOGLE_SHEETS_API_KEY': JSON.stringify(
+      process.env.VITE_GOOGLE_SHEETS_API_KEY,
+    ),
+    'import.meta.env.VITE_GOOGLE_SPREADSHEET_ID': JSON.stringify(
+      process.env.VITE_GOOGLE_SPREADSHEET_ID,
+    ),
+  },
 });
