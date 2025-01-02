@@ -20,7 +20,6 @@ const tsConfig = {
     '@typescript-eslint': tsPlugin,
   },
   rules: {
-    // TypeScriptの基本的なルールのみを設定
     '@typescript-eslint/no-unused-vars': [
       'error',
       {
@@ -29,7 +28,6 @@ const tsConfig = {
       },
     ],
     '@typescript-eslint/no-explicit-any': 'warn',
-    // 必要に応じて他のルールを追加
   },
 };
 

@@ -1,4 +1,5 @@
 import { LoadScriptProps } from '@react-google-maps/api';
+
 export type LatLngLiteral = {
   lat: number;
   lng: number;

@@ -25,62 +25,47 @@ export const formatInformation = (text: string | null) => {
   try {
     const content = splitContentByType(text);
 
+    const createElement = (type: 'text' | 'url', content: string, index: number) => {
+      const isUrl = type === 'url';
+      return React.createElement(
+        'div',
+        {
+          key: `${type}-${index}`,
+          className: 'grid grid-cols-[6rem_1fr] items-baseline',
+        },
+        [
+          React.createElement(
+            'span',
+            {
+              className: 'text-sm font-semibold text-gray-600',
+            },
+            isUrl ? 'URL:' : '説明:',
+          ),
+          isUrl
+            ? React.createElement(
+                'a',
+                {
+                  href: content,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  className: 'text-sm text-blue-600 hover:underline block',
+                },
+                content,
+              )
+            : React.createElement(
+                'span',
+                {
+                  className: 'text-sm',
+                },
+                content.trim(),
+              ),
+        ],
+      );
+    };
+
     return React.createElement('div', { className: 'space-y-2' }, [
-      // テキストの表示
-      ...content.text.map((line, index) =>
-        React.createElement(
-          'div',
-          {
-            key: `text-${index}`,
-            className: 'grid grid-cols-[6rem_1fr] items-baseline',
-          },
-          [
-            React.createElement(
-              'span',
-              {
-                className: 'text-sm font-semibold text-gray-600',
-              },
-              '説明:',
-            ),
-            React.createElement(
-              'span',
-              {
-                className: 'text-sm',
-              },
-              line.trim(),
-            ),
-          ],
-        ),
-      ),
-      // URLリンクの表示
-      ...content.urls.map((url, index) =>
-        React.createElement(
-          'div',
-          {
-            key: `url-${index}`,
-            className: 'grid grid-cols-[6rem_1fr] items-baseline',
-          },
-          [
-            React.createElement(
-              'span',
-              {
-                className: 'text-sm font-semibold text-gray-600',
-              },
-              'URL:',
-            ),
-            React.createElement(
-              'a',
-              {
-                href: url,
-                target: '_blank',
-                rel: 'noopener noreferrer',
-                className: 'text-sm text-blue-600 hover:underline block',
-              },
-              url,
-            ),
-          ],
-        ),
-      ),
+      ...content.text.map((line, index) => createElement('text', line, index)),
+      ...content.urls.map((url, index) => createElement('url', url, index)),
     ]);
   } catch (error) {
     console.error('Error formatting information:', error);

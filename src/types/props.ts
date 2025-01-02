@@ -1,9 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 import type { Poi, AreaType } from './poi';
 
 export interface BaseProps {
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export interface MapProps extends BaseProps {

@@ -1,63 +1,57 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-console.log('Vite configuration starting...');
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
 
-export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
-  resolve: {
-    alias: {
-      '@': '/src',
-    },
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          maps: [
-            '@react-google-maps/api',
-            '@googlemaps/js-api-loader',
-            '@react-google-maps/marker-clusterer',
-            '@react-google-maps/infobox',
-            '@googlemaps/markerclusterer',
-          ],
-        },
-        assetFileNames: 'assets/[name]-[hash][extname]',
-        chunkFileNames: 'js/[name]-[hash].js',
-        entryFileNames: 'js/[name]-[hash].js',
+  return {
+    plugins: [react(), tsconfigPaths()],
+    resolve: {
+      alias: {
+        '@': '/src',
       },
     },
-    target: 'es2022',
-  },
-  optimizeDeps: {
-    include: [
-      '@googlemaps/js-api-loader',
-      '@react-google-maps/api',
-      '@react-google-maps/marker-clusterer',
-      '@react-google-maps/infobox',
-      '@googlemaps/markerclusterer',
-    ],
-    esbuild: {
-      logOverride: { 'this-is-undefined-in-esm': 'silent' },
+    build: {
+      outDir: 'dist',
+      sourcemap: mode === 'development',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            maps: [
+              '@react-google-maps/api',
+              '@googlemaps/js-api-loader',
+              '@react-google-maps/marker-clusterer',
+              '@react-google-maps/infobox',
+              '@googlemaps/markerclusterer',
+            ],
+          },
+          assetFileNames: 'assets/[name]-[hash][extname]',
+          chunkFileNames: 'js/[name]-[hash].js',
+          entryFileNames: 'js/[name]-[hash].js',
+        },
+      },
+      target: 'es2022',
     },
-    esbuildOptions: {
-      sourcemap: false,
+    optimizeDeps: {
+      include: [
+        '@googlemaps/js-api-loader',
+        '@react-google-maps/api',
+        '@react-google-maps/marker-clusterer',
+        '@react-google-maps/infobox',
+        '@googlemaps/markerclusterer',
+      ],
+      esbuildOptions: {
+        logOverride: { 'this-is-undefined-in-esm': 'silent' },
+        sourcemap: false,
+      },
     },
-  },
-  define: {
-    'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(
-      process.env.VITE_GOOGLE_MAPS_API_KEY,
-    ),
-    'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(process.env.VITE_GOOGLE_MAPS_MAP_ID),
-    'import.meta.env.VITE_GOOGLE_SHEETS_API_KEY': JSON.stringify(
-      process.env.VITE_GOOGLE_SHEETS_API_KEY,
-    ),
-    'import.meta.env.VITE_GOOGLE_SPREADSHEET_ID': JSON.stringify(
-      process.env.VITE_GOOGLE_SPREADSHEET_ID,
-    ),
-  },
+    define: {
+      'process.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
+      'process.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(env.VITE_GOOGLE_MAPS_MAP_ID),
+      'process.env.VITE_GOOGLE_SHEETS_API_KEY': JSON.stringify(env.VITE_GOOGLE_SHEETS_API_KEY),
+      'process.env.VITE_GOOGLE_SPREADSHEET_ID': JSON.stringify(env.VITE_GOOGLE_SPREADSHEET_ID),
+    },
+  };
 });

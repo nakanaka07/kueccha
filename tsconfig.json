@@ -1,26 +1,26 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "allowJs": false,
-    "skipLibCheck": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "incremental": true,
+    "target": "ES2022", // 最新のES2022をターゲットに
+    "module": "ES2022", // ES2022モジュールを使用
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリ
+    "allowJs": false, // JavaScriptファイルを許可しない
+    "skipLibCheck": true, // ライブラリの型チェックをスキップしてビルド速度を向上
+    "esModuleInterop": true, // ESモジュールとの互換性を有効に
+    "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
+    "strict": true, // 厳格な型チェックを有効に
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
+    "moduleResolution": "node", // Node.jsのモジュール解決を使用
+    "resolveJsonModule": true, // JSONモジュールの解決を有効に
+    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
+    "noEmit": true, // 出力ファイルを生成しない
+    "jsx": "react-jsx", // React JSXを使用
+    "incremental": true, // 増分ビルドを有効に
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"] // エイリアスの設定
     },
-    "types": ["@types/react", "@types/google.maps", "node"]
+    "types": ["@types/react", "@types/google.maps", "node"] // 使用する型定義
   },
-  "include": ["./src", "*.config.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["./src", "*.config.ts"], // インクルードするファイル
+  "exclude": ["node_modules", "dist"] // 除外するファイル
 }

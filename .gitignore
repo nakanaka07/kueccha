@@ -45,7 +45,7 @@ node_modules/
 # Vite build output
 dist
 
-# yarn v2
+# Yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml

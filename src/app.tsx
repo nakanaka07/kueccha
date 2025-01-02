@@ -1,15 +1,14 @@
 import React, { useState, useMemo, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType } from './types';
-import { AREAS } from './constants';
+import { AREAS, ERROR_MESSAGES } from './constants';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { LoadingFallback } from './components/common/LoadingFallback/index';
+import { LoadingFallback } from './components/common/LoadingFallback';
 import { Map } from './components/map/Map';
 import { FilterPanel } from './components/map/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
-import { ERROR_MESSAGES } from './constants/messages';
 
-// 定数の分離と型付け
+// 初期表示設定
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
     ...acc,
@@ -25,7 +24,7 @@ const App: React.FC = () => {
   const { filteredPois, areaCounts } = useMemo(() => {
     if (!pois?.length) return { filteredPois: [], areaCounts: {} as Record<AreaType, number> };
 
-    // シンプルなフィルタリング
+    // 表示エリアのフィルタリング
     const visibleAreas = Object.entries(areaVisibility)
       .filter(([, isVisible]) => isVisible)
       .map(([area]) => area as AreaType);

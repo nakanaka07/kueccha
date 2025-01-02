@@ -10,14 +10,12 @@ const Map = React.memo(({ pois }: MapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
-  // useLoadScriptの結果を待ってから初期化
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: CONFIG.maps.apiKey,
-    mapIds: [CONFIG.maps.mapId], // ここは正しい
+    mapIds: [CONFIG.maps.mapId],
     libraries: CONFIG.maps.libraries,
   });
 
-  // mapTypeIdの状態管理は、Googleライブラリがロードされた後に初期化
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
 
   const mapOptions = useMemo(
@@ -29,26 +27,19 @@ const Map = React.memo(({ pois }: MapProps) => {
         ? {
             style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
             position: google.maps.ControlPosition.TOP_RIGHT,
-            mapTypeIds: [
-              'roadmap', // 通常の地図
-              'satellite', // 航空写真
-              'hybrid', // 航空写真+道路名
-              'terrain', // 地形図
-            ],
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
           }
         : undefined,
     }),
     [mapType, isLoaded],
   );
 
-  // マップタイプが変更されたときのハンドラー
   const handleMapTypeChanged = useCallback(() => {
     if (map) {
       setMapType(map.getMapTypeId() as google.maps.MapTypeId);
     }
   }, [map]);
 
-  // マップのインスタンスを保存
   const onLoad = useCallback(
     (map: google.maps.Map) => {
       setMap(map);
@@ -57,7 +48,6 @@ const Map = React.memo(({ pois }: MapProps) => {
     [handleMapTypeChanged],
   );
 
-  // マーカーが更新されたときにマップを再描画
   useEffect(() => {
     if (map && pois.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -98,30 +88,18 @@ const Map = React.memo(({ pois }: MapProps) => {
   }
 
   return (
-    <div
-      style={{ width: '100%', height: '100vh', position: 'relative' }}
-      role="region"
-      aria-label="地図"
-    >
+    <div style={{ width: '100%', height: '100vh', position: 'relative' }} role="region" aria-label="地図">
       <GoogleMap
         mapContainerStyle={CONFIG.maps.style}
         center={CONFIG.maps.defaultCenter}
         zoom={CONFIG.maps.defaultZoom}
-        options={{
-          ...mapOptions,
-          mapId: CONFIG.maps.mapId, // ここにmapIdを追加
-        }}
+        options={mapOptions}
         onClick={handleMapClick}
         onLoad={onLoad}
       >
         {map &&
           pois.map((poi) => (
-            <Marker
-              key={poi.id}
-              poi={poi}
-              onClick={handleMarkerClick}
-              map={map} // mapインスタンスを渡す
-            />
+            <Marker key={poi.id} poi={poi} onClick={handleMarkerClick} map={map} />
           ))}
         {selectedPoi && <InfoWindow poi={selectedPoi} onCloseClick={handleInfoWindowClose} />}
       </GoogleMap>
