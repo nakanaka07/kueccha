@@ -43,7 +43,7 @@ node_modules/
 .env.local
 
 # Vite build output
-dist
+# dist
 
 # Yarn v2
 .yarn/cache
