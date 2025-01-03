@@ -18,10 +18,14 @@ const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
 );
 
 const App: React.FC = () => {
+  // シートデータを取得するカスタムフックを使用
   const { pois, isLoading, error, refetch } = useSheetData();
+  // エリアの表示状態を管理するステート
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
 
+  // 表示するPOIをフィルタリング
   const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
+  // 各エリアのPOI数をカウント
   const areaCounts = filteredPois.reduce(
     (acc, poi) => ({
       ...acc,
@@ -30,17 +34,13 @@ const App: React.FC = () => {
     {} as Record<AreaType, number>,
   );
 
+  // エラーメッセージを表示
   if (error) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen">
-        <div className="text-red-500 p-4 rounded bg-red-100">
+      <div>
+        <div>
           <p>{error.message}</p>
-          <button
-            onClick={refetch}
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            再試行
-          </button>
+          <button onClick={refetch}>再試行</button>
         </div>
       </div>
     );
@@ -48,23 +48,23 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="w-full h-screen relative overflow-hidden">
+      <div>
         {isLoading ? (
+          // ローディング中のフォールバックを表示
           <LoadingFallback isLoading={isLoading} />
         ) : (
-          <div className="w-full h-full relative">
-            {/* position: absoluteのコンテナ */}
-            <div className="absolute inset-0">
-              <Map pois={filteredPois} />
-            </div>
+          <div>
+            <Map pois={filteredPois} />
             {/* オーバーレイとして配置 */}
-            <FilterPanel
-              areaCounts={areaCounts}
-              areaVisibility={areaVisibility}
-              onAreaToggle={(area, visible) =>
-                setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
-              }
-            />
+            <div>
+              <FilterPanel
+                areaCounts={areaCounts}
+                areaVisibility={areaVisibility}
+                onAreaToggle={(area, visible) =>
+                  setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
+                }
+              />
+            </div>
           </div>
         )}
       </div>
@@ -72,6 +72,7 @@ const App: React.FC = () => {
   );
 };
 
+// アプリケーションのエントリーポイント
 const container = document.getElementById('app');
 if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 

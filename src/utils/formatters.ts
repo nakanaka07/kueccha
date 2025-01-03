@@ -31,16 +31,9 @@ export const formatInformation = (text: string | null) => {
         'div',
         {
           key: `${type}-${index}`,
-          className: 'grid grid-cols-[6rem_1fr] items-baseline',
         },
         [
-          React.createElement(
-            'span',
-            {
-              className: 'text-sm font-semibold text-gray-600',
-            },
-            isUrl ? 'URL:' : '説明:',
-          ),
+          React.createElement('span', {}, isUrl ? 'URL:' : '説明:'),
           isUrl
             ? React.createElement(
                 'a',
@@ -48,22 +41,15 @@ export const formatInformation = (text: string | null) => {
                   href: content,
                   target: '_blank',
                   rel: 'noopener noreferrer',
-                  className: 'text-sm text-blue-600 hover:underline block',
                 },
                 content,
               )
-            : React.createElement(
-                'span',
-                {
-                  className: 'text-sm',
-                },
-                content.trim(),
-              ),
+            : React.createElement('span', {}, content.trim()),
         ],
       );
     };
 
-    return React.createElement('div', { className: 'space-y-2' }, [
+    return React.createElement('div', {}, [
       ...content.text.map((line, index) => createElement('text', line, index)),
       ...content.urls.map((url, index) => createElement('url', url, index)),
     ]);

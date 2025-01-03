@@ -6,18 +6,24 @@ import { Marker } from '../Marker';
 import { InfoWindow } from '../InfoWindow';
 import { ERROR_MESSAGES } from '../../../constants/messages';
 
+// Mapコンポーネント
 const Map = ({ pois }: MapProps) => {
+  // Google Mapインスタンスを保持するステート
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  // 選択されたPOIを保持するステート
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
+  // Google Maps APIのスクリプトをロードするフック
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: CONFIG.maps.apiKey,
     mapIds: [CONFIG.maps.mapId],
     libraries: CONFIG.maps.libraries,
   });
 
+  // 現在のマップタイプを保持するステート
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
 
+  // マップオプションの設定
   const mapOptions = {
     ...CONFIG.maps.options,
     mapTypeId: mapType,
@@ -31,12 +37,14 @@ const Map = ({ pois }: MapProps) => {
       : undefined,
   };
 
+  // マップタイプが変更されたときのハンドラー
   const handleMapTypeChanged = useCallback(() => {
     if (map) {
       setMapType(map.getMapTypeId() as google.maps.MapTypeId);
     }
   }, [map]);
 
+  // マップがロードされたときのハンドラー
   const onLoad = useCallback(
     (map: google.maps.Map) => {
       setMap(map);
@@ -45,6 +53,7 @@ const Map = ({ pois }: MapProps) => {
     [handleMapTypeChanged],
   );
 
+  // POIの位置に基づいてマップの境界を設定
   useEffect(() => {
     if (map && pois.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -53,45 +62,46 @@ const Map = ({ pois }: MapProps) => {
     }
   }, [map, pois]);
 
+  // マーカーがクリックされたときのハンドラー
   const handleMarkerClick = useCallback((poi: Poi) => {
     setSelectedPoi(poi);
   }, []);
 
+  // マップがクリックされたときのハンドラー
   const handleMapClick = useCallback(() => {
     setSelectedPoi(null);
   }, []);
 
+  // InfoWindowが閉じられたときのハンドラー
   const handleInfoWindowClose = useCallback(() => {
     setSelectedPoi(null);
   }, []);
 
+  // Google Maps APIのロードエラーを処理
   if (loadError) {
     console.error('Maps API loading error:', loadError);
     return (
-      <div role="alert" className="p-4 bg-red-100 text-red-700 rounded">
-        <h2 className="font-bold mb-2">{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
+      <div role="alert">
+        <h2>{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
         <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
       </div>
     );
   }
 
+  // Google Maps APIがロード中の状態を処理
   if (!isLoaded) {
     return (
-      <div role="status" className="p-4 flex items-center justify-center">
-        <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
+      <div role="status">
+        <div />
         <span>{ERROR_MESSAGES.LOADING.MAP}</span>
       </div>
     );
   }
 
+  // マップとマーカー、InfoWindowをレンダリング
   return (
-    <div
-      style={{ width: '100%', height: '100vh', position: 'relative' }}
-      role="region"
-      aria-label="地図"
-    >
+    <div role="region" aria-label="地図">
       <GoogleMap
-        mapContainerStyle={CONFIG.maps.style}
         center={CONFIG.maps.defaultCenter}
         zoom={CONFIG.maps.defaultZoom}
         options={{
@@ -111,6 +121,7 @@ const Map = ({ pois }: MapProps) => {
   );
 };
 
+// コンポーネントの表示名を設定
 Map.displayName = 'Map';
 
 export { Map };
