@@ -1,4 +1,3 @@
-import recommended from 'eslint-plugin-eslint-plugin/configs/recommended';
 import prettierPlugin from 'eslint-plugin-prettier';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
@@ -52,15 +51,9 @@ export default [
   {
     files: ['**/*.{js,cjs,mjs}'],
     languageOptions: {
-      globals: {
-        window: true,
-        document: true,
-        navigator: true,
-      },
       ecmaVersion: 'latest',
       sourceType: 'module',
     },
-    ...recommended,
   },
   tsConfig,
 ];

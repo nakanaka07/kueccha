@@ -1,4 +1,4 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType } from './types';
 import { AREAS, ERROR_MESSAGES } from './constants';
@@ -21,26 +21,14 @@ const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
 
-  const { filteredPois, areaCounts } = useMemo(() => {
-    if (!pois?.length) return { filteredPois: [], areaCounts: {} as Record<AreaType, number> };
-
-    // 表示エリアのフィルタリング
-    const visibleAreas = Object.entries(areaVisibility)
-      .filter(([, isVisible]) => isVisible)
-      .map(([area]) => area as AreaType);
-
-    const filtered = pois.filter((poi) => visibleAreas.includes(poi.area));
-
-    const counts = filtered.reduce(
-      (acc, poi) => ({
-        ...acc,
-        [poi.area]: (acc[poi.area] || 0) + 1,
-      }),
-      {} as Record<AreaType, number>,
-    );
-
-    return { filteredPois: filtered, areaCounts: counts };
-  }, [pois, areaVisibility]);
+  const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
+  const areaCounts = filteredPois.reduce(
+    (acc, poi) => ({
+      ...acc,
+      [poi.area]: (acc[poi.area] || 0) + 1,
+    }),
+    {} as Record<AreaType, number>,
+  );
 
   if (error) {
     return (
@@ -61,7 +49,9 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="w-full h-screen relative overflow-hidden">
-        <Suspense fallback={<LoadingFallback isLoading={isLoading} />}>
+        {isLoading ? (
+          <LoadingFallback isLoading={isLoading} />
+        ) : (
           <div className="w-full h-full relative">
             {/* position: absoluteのコンテナ */}
             <div className="absolute inset-0">
@@ -76,7 +66,7 @@ const App: React.FC = () => {
               }
             />
           </div>
-        </Suspense>
+        )}
       </div>
     </ErrorBoundary>
   );

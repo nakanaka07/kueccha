@@ -1,36 +1,23 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import type { InfoWindowProps, Poi } from '../../../types';
 import { AREAS, BUSINESS_HOURS } from '../../../constants';
 import { formatInformation } from '../../../utils/formatters';
 
-const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
-  const position = useMemo(
-    () => ({
-      lat: poi.location.lat,
-      lng: poi.location.lng,
-    }),
-    [poi.location],
-  );
+const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
+  const position = {
+    lat: poi.location.lat,
+    lng: poi.location.lng,
+  };
 
-  const businessHours = useMemo(
-    () =>
-      BUSINESS_HOURS.map(({ day, key }) => ({
-        day,
-        hours: poi[key as keyof Poi],
-      })).filter(({ hours }) => hours),
-    [poi],
-  );
+  const businessHours = BUSINESS_HOURS.map(({ day, key }) => ({
+    day,
+    hours: poi[key as keyof Poi],
+  })).filter(({ hours }) => hours);
 
-  const encodedAddress = useMemo(
-    () => (poi.address ? encodeURIComponent(poi.address) : ''),
-    [poi.address],
-  );
+  const encodedAddress = poi.address ? encodeURIComponent(poi.address) : '';
 
-  const mapUrl = useMemo(
-    () => `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`,
-    [encodedAddress],
-  );
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 
   return (
     <GoogleInfoWindow position={position} onCloseClick={onCloseClick}>
@@ -115,7 +102,7 @@ const InfoWindow = React.memo(({ poi, onCloseClick }: InfoWindowProps) => {
       </div>
     </GoogleInfoWindow>
   );
-});
+};
 
 InfoWindow.displayName = 'InfoWindow';
 

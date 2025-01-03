@@ -4,8 +4,6 @@
     "target": "ES2022", // 最新のES2022をターゲットに
     "module": "ES2022", // ES2022モジュールを使用
     "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリ
-    "allowJs": false, // JavaScriptファイルを許可しない
-    "skipLibCheck": true, // ライブラリの型チェックをスキップしてビルド速度を向上
     "esModuleInterop": true, // ESモジュールとの互換性を有効に
     "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
     "strict": true, // 厳格な型チェックを有効に
@@ -18,8 +16,7 @@
     "incremental": true, // 増分ビルドを有効に
     "paths": {
       "@/*": ["./src/*"] // エイリアスの設定
-    },
-    "types": ["@types/react", "@types/google.maps", "node"] // 使用する型定義
+    }
   },
   "include": ["./src", "*.config.ts"], // インクルードするファイル
   "exclude": ["node_modules", "dist"] // 除外するファイル

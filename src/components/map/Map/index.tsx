@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { CONFIG } from '../../../config';
 import type { MapProps, Poi } from '../../../types';
@@ -6,7 +6,7 @@ import { Marker } from '../Marker';
 import { InfoWindow } from '../InfoWindow';
 import { ERROR_MESSAGES } from '../../../constants/messages';
 
-const Map = React.memo(({ pois }: MapProps) => {
+const Map = ({ pois }: MapProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
@@ -18,21 +18,18 @@ const Map = React.memo(({ pois }: MapProps) => {
 
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
 
-  const mapOptions = useMemo(
-    () => ({
-      ...CONFIG.maps.options,
-      mapTypeId: mapType,
-      mapTypeControl: true,
-      mapTypeControlOptions: isLoaded
-        ? {
-            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            position: google.maps.ControlPosition.TOP_RIGHT,
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-          }
-        : undefined,
-    }),
-    [mapType, isLoaded],
-  );
+  const mapOptions = {
+    ...CONFIG.maps.options,
+    mapTypeId: mapType,
+    mapTypeControl: true,
+    mapTypeControlOptions: isLoaded
+      ? {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_RIGHT,
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+        }
+      : undefined,
+  };
 
   const handleMapTypeChanged = useCallback(() => {
     if (map) {
@@ -112,7 +109,7 @@ const Map = React.memo(({ pois }: MapProps) => {
       </GoogleMap>
     </div>
   );
-});
+};
 
 Map.displayName = 'Map';
 

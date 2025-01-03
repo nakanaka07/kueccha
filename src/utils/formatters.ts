@@ -1,26 +1,26 @@
 import React from 'react';
 
-const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const splitContentByType = (text: string) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const lines = text.split('\n');
-
-  return {
-    text: lines.filter((line) => !line.match(urlRegex)),
-    urls: lines.filter((line) => line.match(urlRegex)).filter(isValidUrl),
-  };
-};
-
 export const formatInformation = (text: string | null) => {
   if (!text?.trim()) return null;
+
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const splitContentByType = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const lines = text.split('\n');
+
+    return {
+      text: lines.filter((line) => !line.match(urlRegex)),
+      urls: lines.filter((line) => line.match(urlRegex)).filter(isValidUrl),
+    };
+  };
 
   try {
     const content = splitContentByType(text);

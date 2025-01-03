@@ -38,14 +38,11 @@
     "@googlemaps/js-api-loader": "^1.16.8",
     "@googlemaps/markerclusterer": "^2.5.3",
     "@react-google-maps/api": "^2.20.5",
-    "@react-google-maps/infobox": "^2.20.0",
-    "@react-google-maps/marker-clusterer": "^2.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@rollup/plugin-replace": "^6.0.2",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^22.10.3",
     "@types/react": "^19.0.2",

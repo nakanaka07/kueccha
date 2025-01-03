@@ -2,7 +2,7 @@ import React from 'react';
 import type { LoadingFallbackProps } from '../../../types';
 import { ERROR_MESSAGES } from '../../../constants/messages';
 
-const LoadingFallback = React.memo(({ isLoading, className = '', style }: LoadingFallbackProps) => {
+const LoadingFallback = ({ isLoading, className = '', style }: LoadingFallbackProps) => {
   if (!isLoading) return null;
 
   return (
@@ -16,7 +16,7 @@ const LoadingFallback = React.memo(({ isLoading, className = '', style }: Loadin
       </div>
     </div>
   );
-});
+};
 
 LoadingFallback.displayName = 'LoadingFallback';
 
