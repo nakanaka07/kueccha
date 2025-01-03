@@ -1,6 +1,8 @@
 import React from 'react';
 import type { FilterPanelProps, AreaType } from '../../../types';
 import { AREAS } from '../../../constants';
+import { markerConfig } from '../../../config/maps';
+import './FilterPanel.css'; // スタイルシートをインポート
 
 // FilterPanelコンポーネント
 const FilterPanel = ({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelProps) => {
@@ -10,24 +12,31 @@ const FilterPanel = ({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelPr
     name,
     count: areaCounts[area as AreaType] ?? 0,
     isVisible: areaVisibility[area as AreaType] ?? true,
+    color: markerConfig.colors[area as AreaType], // マーカーカラーを取得
   }));
 
   return (
-    <div role="region" aria-label="エリアフィルター">
+    <div role="region" aria-label="エリアフィルター" className="filter-panel">
       <div>
         <div>表示するエリア</div>
         <div>
-          {areas.map(({ area, name, count, isVisible }) => (
-            <label key={area}>
+          {areas.map(({ area, name, count, isVisible, color }) => (
+            <label key={area} className="filter-item">
               <input
                 type="checkbox"
                 checked={isVisible}
                 onChange={(e) => onAreaToggle(area, e.target.checked)}
                 aria-label={`${name}を表示 (${count}件)`}
               />
-              <div>
-                <span aria-hidden="true" />
-                <span>{name}</span>
+              <div className="filter-details">
+                <span
+                  className="marker-color"
+                  style={{ backgroundColor: color }}
+                  aria-hidden="true"
+                />
+                <span className="area-name" data-fullname={name}>
+                  {name}
+                </span>
                 <span>({count})</span>
               </div>
             </label>

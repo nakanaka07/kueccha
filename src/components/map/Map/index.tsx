@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-import { CONFIG } from '../../../config';
+import { mapsConfig } from '../../../config/maps';
 import type { MapProps, Poi } from '../../../types';
 import { Marker } from '../Marker';
 import { InfoWindow } from '../InfoWindow';
@@ -15,9 +15,9 @@ const Map = ({ pois }: MapProps) => {
 
   // Google Maps APIのスクリプトをロードするフック
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: CONFIG.maps.apiKey,
-    mapIds: [CONFIG.maps.mapId],
-    libraries: CONFIG.maps.libraries,
+    googleMapsApiKey: mapsConfig.apiKey,
+    mapIds: [mapsConfig.mapId],
+    libraries: mapsConfig.libraries,
   });
 
   // 現在のマップタイプを保持するステート
@@ -25,7 +25,7 @@ const Map = ({ pois }: MapProps) => {
 
   // マップオプションの設定
   const mapOptions = {
-    ...CONFIG.maps.options,
+    ...mapsConfig.options,
     mapTypeId: mapType,
     mapTypeControl: true,
     mapTypeControlOptions: isLoaded
@@ -100,13 +100,13 @@ const Map = ({ pois }: MapProps) => {
 
   // マップとマーカー、InfoWindowをレンダリング
   return (
-    <div role="region" aria-label="地図">
+    <div role="region" aria-label="地図" style={mapsConfig.style}>
       <GoogleMap
-        center={CONFIG.maps.defaultCenter}
-        zoom={CONFIG.maps.defaultZoom}
+        center={mapsConfig.defaultCenter}
+        zoom={mapsConfig.defaultZoom}
         options={{
           ...mapOptions,
-          mapId: CONFIG.maps.mapId, // ここにmapIdを追加
+          mapId: mapsConfig.mapId,
         }}
         onClick={handleMapClick}
         onLoad={onLoad}

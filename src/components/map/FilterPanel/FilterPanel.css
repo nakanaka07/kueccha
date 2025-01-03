@@ -1,0 +1,47 @@
+.filter-panel {
+  padding: 10px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.filter-details {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.marker-color {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.filter-details span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-details .area-name {
+  max-width: 80px; /* 「おすすめ」に合わせた幅 */
+  position: relative;
+}
+
+.filter-details .area-name:hover::after {
+  content: attr(data-fullname);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  white-space: nowrap;
+  background-color: #333;
+  color: #fff;
+  padding: 5px;
+  border-radius: 3px;
+  z-index: 10;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}

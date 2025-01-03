@@ -48,15 +48,13 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div>
+      <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
         {isLoading ? (
           // ローディング中のフォールバックを表示
           <LoadingFallback isLoading={isLoading} />
         ) : (
-          <div>
-            <Map pois={filteredPois} />
-            {/* オーバーレイとして配置 */}
-            <div>
+          <>
+            <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
               <FilterPanel
                 areaCounts={areaCounts}
                 areaVisibility={areaVisibility}
@@ -65,7 +63,8 @@ const App: React.FC = () => {
                 }
               />
             </div>
-          </div>
+            <Map pois={filteredPois} />
+          </>
         )}
       </div>
     </ErrorBoundary>
