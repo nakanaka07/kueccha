@@ -39,7 +39,10 @@ jobs:
           VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.SPREADSHEET_ID }}
           EOL
 
-      - name: Clear pnpm cache
+      - name: Ensure pnpm store directory exists
+        run: mkdir -p /home/runner/setup-pnpm/node_modules/.bin/store/v3/files
+
+      - name: Prune pnpm store
         run: pnpm store prune
 
       - name: Install dependencies
