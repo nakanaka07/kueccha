@@ -19,10 +19,6 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
     hours: poi[key as keyof Poi],
   })).filter(({ hours }) => hours);
 
-  // 住所をエンコードしてGoogleマップのURLを生成
-  const encodedAddress = poi.address ? encodeURIComponent(poi.address) : '';
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-
   return (
     <GoogleInfoWindow position={position} onCloseClick={onCloseClick}>
       <div className="info-window">
@@ -64,14 +60,7 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
                         {value}
                       </a>
                     ) : isAddress ? (
-                      <a
-                        href={mapUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="info-link"
-                      >
-                        {value}
-                      </a>
+                      <span className="info-value">{value}</span>
                     ) : (
                       <span className="info-value">{value}</span>
                     )}
@@ -89,9 +78,9 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
         )}
 
         {/* Googleマップボタン */}
-        {poi.address && (
+        {poi.view && (
           <div className="info-section">
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="info-button">
+            <a href={poi.view} target="_blank" rel="noopener noreferrer" className="info-button">
               Googleマップで見る
             </a>
           </div>
