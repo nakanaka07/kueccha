@@ -5,6 +5,7 @@ import type { Config } from './types';
 
 export { type Config } from './types';
 
+// CONFIGオブジェクトの定義
 export const CONFIG: Config = {
   maps: mapsConfig,
   sheets: sheetsConfig,

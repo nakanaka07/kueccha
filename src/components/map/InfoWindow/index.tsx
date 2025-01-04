@@ -3,38 +3,42 @@ import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import type { InfoWindowProps, Poi } from '../../../types';
 import { AREAS, BUSINESS_HOURS } from '../../../constants';
 import { formatInformation } from '../../../utils/formatters';
+import './InfoWindow.css'; // スタイルシートをインポート
 
+// InfoWindowコンポーネント
 const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
+  // POIの位置情報を設定
   const position = {
     lat: poi.location.lat,
     lng: poi.location.lng,
   };
 
+  // 営業時間を取得
   const businessHours = BUSINESS_HOURS.map(({ day, key }) => ({
     day,
     hours: poi[key as keyof Poi],
   })).filter(({ hours }) => hours);
 
+  // 住所をエンコードしてGoogleマップのURLを生成
   const encodedAddress = poi.address ? encodeURIComponent(poi.address) : '';
-
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 
   return (
     <GoogleInfoWindow position={position} onCloseClick={onCloseClick}>
-      <div>
+      <div className="info-window">
         {/* ヘッダー */}
-        <div>
+        <div className="info-header">
           <h2 id="poi-name">{poi.name}</h2>
         </div>
 
         {/* 営業時間セクション */}
         {businessHours.length > 0 && (
-          <div>
-            <div>
+          <div className="info-section">
+            <div className="info-business-hours">
               {businessHours.map(({ day, hours }) => (
-                <div key={day}>
-                  <span>{day}:</span>
-                  <span>{typeof hours === 'string' ? hours : ''}</span>
+                <div key={day} className="info-business-hour">
+                  <span className="info-day">{day}:</span>
+                  <span className="info-hours">{typeof hours === 'string' ? hours : ''}</span>
                 </div>
               ))}
             </div>
@@ -42,8 +46,8 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
         )}
 
         {/* 基本情報セクション */}
-        <div>
-          <div>
+        <div className="info-section">
+          <div className="info-basic">
             {[
               { label: 'カテゴリー', value: poi.category },
               { label: 'ジャンル', value: poi.genre },
@@ -53,16 +57,23 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
             ].map(
               ({ label, value, isPhone, isAddress }) =>
                 value && (
-                  <div key={label}>
-                    <span>{label}:</span>
+                  <div key={label} className="info-item">
+                    <span className="info-label">{label}:</span>
                     {isPhone ? (
-                      <a href={`tel:${value}`}>{value}</a>
+                      <a href={`tel:${value}`} className="info-link">
+                        {value}
+                      </a>
                     ) : isAddress ? (
-                      <a href={mapUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={mapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="info-link"
+                      >
                         {value}
                       </a>
                     ) : (
-                      <span>{value}</span>
+                      <span className="info-value">{value}</span>
                     )}
                   </div>
                 ),
@@ -72,15 +83,15 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
 
         {/* 関連情報セクション */}
         {poi.information && (
-          <div>
-            <div>{formatInformation(poi.information)}</div>
+          <div className="info-section">
+            <div className="info-related">{formatInformation(poi.information)}</div>
           </div>
         )}
 
         {/* Googleマップボタン */}
         {poi.address && (
-          <div>
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer">
+          <div className="info-section">
+            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="info-button">
               Googleマップで見る
             </a>
           </div>
@@ -90,6 +101,7 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
   );
 };
 
+// コンポーネントの表示名を設定
 InfoWindow.displayName = 'InfoWindow';
 
 export { InfoWindow };

@@ -5,6 +5,7 @@ import type { MapProps, Poi } from '../../../types';
 import { Marker } from '../Marker';
 import { InfoWindow } from '../InfoWindow';
 import { ERROR_MESSAGES } from '../../../constants/messages';
+import './Map.css'; // スタイルシートをインポート
 
 // Mapコンポーネント
 const Map = ({ pois }: MapProps) => {
@@ -100,7 +101,7 @@ const Map = ({ pois }: MapProps) => {
 
   // マップとマーカー、InfoWindowをレンダリング
   return (
-    <div role="region" aria-label="地図" style={mapsConfig.style}>
+    <div role="region" aria-label="地図" className="map-container">
       <GoogleMap
         center={mapsConfig.defaultCenter}
         zoom={mapsConfig.defaultZoom}

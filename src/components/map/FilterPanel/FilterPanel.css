@@ -1,5 +1,8 @@
 .filter-panel {
   padding: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .filter-item {
@@ -44,4 +47,13 @@
   border-radius: 3px;
   z-index: 10;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  transform: translateY(5px); /* ツールチップの位置を微調整 */
+  visibility: visible;
+  opacity: 1;
+}
+
+.filter-details .area-name::after {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
 }

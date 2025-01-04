@@ -1,0 +1,64 @@
+.info-window {
+  font-family: Arial, sans-serif;
+  max-width: 300px;
+}
+
+.info-header {
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.info-section {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.info-section:last-child {
+  border-bottom: none;
+}
+
+.info-business-hours,
+.info-basic,
+.info-related {
+  margin-bottom: 10px;
+}
+
+.info-business-hour,
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.info-label {
+  font-weight: bold;
+}
+
+.info-link {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.info-link:hover {
+  text-decoration: underline;
+}
+
+.info-button {
+  display: block;
+  text-align: center;
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.info-button:hover {
+  background-color: #0056b3;
+}

@@ -1,0 +1,33 @@
+/* 全体のコンテナ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+/* フィルターパネルのコンテナ */
+.filter-panel-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* マップのコンテナ */
+.map-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* マップ自体のスタイル */
+.map-container > div {
+  width: 100%;
+  height: 100%;
+}

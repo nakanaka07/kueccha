@@ -2,12 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import type { MarkerProps } from '../../../types';
 import { MARKER_COLORS } from '../../../constants';
 
+// Markerコンポーネント
 const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
   useEffect(() => {
     if (!map || !window.google?.maps) return;
 
+    // ピンのスタイルを設定
     const pin = new google.maps.marker.PinElement({
       glyph: '',
       background: MARKER_COLORS[poi.area] || MARKER_COLORS.DEFAULT,
@@ -15,6 +17,7 @@ const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
       scale: 1.0,
     });
 
+    // マーカーを作成
     const marker = new google.maps.marker.AdvancedMarkerElement({
       position: poi.location,
       map,
@@ -22,9 +25,11 @@ const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
       content: pin.element,
     });
 
+    // マーカークリック時のハンドラーを設定
     marker.addListener('click', () => onClick(poi));
     markerRef.current = marker;
 
+    // クリーンアップ関数
     return () => {
       if (markerRef.current) {
         markerRef.current.map = null;

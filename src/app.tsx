@@ -7,6 +7,7 @@ import { LoadingFallback } from './components/common/LoadingFallback';
 import { Map } from './components/map/Map';
 import { FilterPanel } from './components/map/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
+import './App.css'; // スタイルシートをインポート
 
 // 初期表示設定
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
@@ -48,13 +49,13 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+      <div className="app-container">
         {isLoading ? (
           // ローディング中のフォールバックを表示
           <LoadingFallback isLoading={isLoading} />
         ) : (
           <>
-            <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
+            <div className="filter-panel-container">
               <FilterPanel
                 areaCounts={areaCounts}
                 areaVisibility={areaVisibility}
@@ -63,7 +64,9 @@ const App: React.FC = () => {
                 }
               />
             </div>
-            <Map pois={filteredPois} />
+            <div className="map-container">
+              <Map pois={filteredPois} />
+            </div>
           </>
         )}
       </div>
