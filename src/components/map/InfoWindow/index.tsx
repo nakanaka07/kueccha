@@ -1,9 +1,9 @@
 import React from 'react';
 import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
-import type { InfoWindowProps, Poi } from '../../../types';
-import { AREAS, BUSINESS_HOURS } from '../../../constants';
+import type { InfoWindowProps } from '../../../types';
+import { AREAS } from '../../../constants';
 import { formatInformation } from '../../../utils/formatters';
-import './InfoWindow.css'; // スタイルシートをインポート
+import '../../../App.css'; // スタイルシートをインポート
 
 // InfoWindowコンポーネント
 const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
@@ -13,33 +13,21 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
     lng: poi.location.lng,
   };
 
-  // 営業時間を取得
-  const businessHours = BUSINESS_HOURS.map(({ day, key }) => ({
-    day,
-    hours: poi[key as keyof Poi],
-  })).filter(({ hours }) => hours);
-
   return (
     <GoogleInfoWindow position={position} onCloseClick={onCloseClick}>
       <div className="info-window">
+        <button onClick={onCloseClick}>閉じる</button>
+        <h2>{poi.name}</h2>
+        <p>{poi.description}</p>
+        <ul>
+          {poi.businessHours?.map((hour: string, index: number) => (
+            <li key={index}>{hour}</li> // 各子要素に一意のkeyプロパティを追加
+          ))}
+        </ul>
         {/* ヘッダー */}
         <div className="info-header">
           <h2 id="poi-name">{poi.name}</h2>
         </div>
-
-        {/* 営業時間セクション */}
-        {businessHours.length > 0 && (
-          <div className="info-section">
-            <div className="info-business-hours">
-              {businessHours.map(({ day, hours }) => (
-                <div key={day} className="info-business-hour">
-                  <span className="info-day">{day}:</span>
-                  <span className="info-hours">{typeof hours === 'string' ? hours : ''}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* 基本情報セクション */}
         <div className="info-section">

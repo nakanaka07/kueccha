@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { AreaType } from './types';
+import type { AreaType, Poi } from './types'; // インポート先を修正
 import { AREAS, ERROR_MESSAGES } from './constants';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingFallback } from './components/common/LoadingFallback';
 import { Map } from './components/map/Map';
 import { FilterPanel } from './components/map/FilterPanel';
-import { useSheetData } from './hooks/useSheetData';
+import { useSheetData } from './hooks/useSheetData'; // 名前付きインポートに修正
 import './App.css'; // スタイルシートをインポート
 
 // 初期表示設定
@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
   // エリアの表示状態を管理するステート
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
+  // 選択されたPOIを保持するステート
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   // 表示するPOIをフィルタリング
   const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
@@ -59,13 +61,14 @@ const App: React.FC = () => {
               <FilterPanel
                 areaCounts={areaCounts}
                 areaVisibility={areaVisibility}
-                onAreaToggle={(area, visible) =>
+                onAreaToggle={(area: AreaType, visible: boolean) =>
                   setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
                 }
+                onAreaClick={() => setSelectedPoi(null)} // エリアをクリックしたときにInfoWindowを閉じる
               />
             </div>
             <div className="map-container">
-              <Map pois={filteredPois} />
+              <Map pois={filteredPois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
             </div>
           </>
         )}

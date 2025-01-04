@@ -1,11 +1,17 @@
 import React from 'react';
-import type { FilterPanelProps, AreaType } from '../../../types';
+import type { FilterPanelProps } from '../../../types';
+import { AreaType } from '../../../types';
 import { AREAS } from '../../../constants';
-import { markerConfig } from '../../../config/maps';
-import './FilterPanel.css'; // スタイルシートをインポート
+import { markerConfig } from '../../../config';
+import '../../../App.css'; // スタイルシートをインポート
 
 // FilterPanelコンポーネント
-const FilterPanel = ({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelProps) => {
+const FilterPanel = ({
+  areaCounts,
+  areaVisibility,
+  onAreaToggle,
+  onAreaClick,
+}: FilterPanelProps) => {
   // エリア情報を取得し、表示用のオブジェクトに変換
   const areas = Object.entries(AREAS).map(([area, name]) => ({
     area: area as AreaType,
@@ -21,7 +27,7 @@ const FilterPanel = ({ areaCounts, areaVisibility, onAreaToggle }: FilterPanelPr
         <div>表示するエリア</div>
         <div>
           {areas.map(({ area, name, count, isVisible, color }) => (
-            <label key={area} className="filter-item">
+            <label key={area} className="filter-item" onClick={onAreaClick}>
               <input
                 type="checkbox"
                 checked={isVisible}

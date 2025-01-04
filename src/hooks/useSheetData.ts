@@ -28,14 +28,12 @@ export function useSheetData() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
-  // 設定の検証
   const validateConfig = useCallback(() => {
     if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
       throw new Error(ERROR_MESSAGES.CONFIG.MISSING);
     }
   }, []);
 
-  // エリアデータをフェッチする関数
   const fetchAreaData = useCallback(async (area: string, retryCount = 0): Promise<Poi[]> => {
     const areaName = AREAS[area as AreaType];
     const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AY?key=${CONFIG.sheets.apiKey}`;
@@ -87,7 +85,6 @@ export function useSheetData() {
     }
   }, []);
 
-  // データをフェッチする関数
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
@@ -116,14 +113,12 @@ export function useSheetData() {
     }
   }, [isLoading, isFetched, fetchAreaData, validateConfig]);
 
-  // コンポーネントのマウント時にデータをフェッチ
   useEffect(() => {
     if (!isFetched) {
       fetchData();
     }
   }, [fetchData, isFetched]);
 
-  // データを再フェッチする関数
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);

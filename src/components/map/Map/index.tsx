@@ -1,18 +1,21 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-import { mapsConfig } from '../../../config/maps';
+import { mapsConfig } from '../../../config';
 import type { MapProps, Poi } from '../../../types';
 import { Marker } from '../Marker';
 import { InfoWindow } from '../InfoWindow';
-import { ERROR_MESSAGES } from '../../../constants/messages';
-import './Map.css'; // スタイルシートをインポート
+import { ERROR_MESSAGES } from '../../../constants';
+import '../../../App.css'; // スタイルシートをインポート
+
+interface MapComponentProps extends MapProps {
+  selectedPoi: Poi | null;
+  setSelectedPoi: (poi: Poi | null) => void;
+}
 
 // Mapコンポーネント
-const Map = ({ pois }: MapProps) => {
+const Map = ({ pois, selectedPoi, setSelectedPoi }: MapComponentProps) => {
   // Google Mapインスタンスを保持するステート
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  // 選択されたPOIを保持するステート
-  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   // Google Maps APIのスクリプトをロードするフック
   const { isLoaded, loadError } = useLoadScript({
@@ -64,19 +67,22 @@ const Map = ({ pois }: MapProps) => {
   }, [map, pois]);
 
   // マーカーがクリックされたときのハンドラー
-  const handleMarkerClick = useCallback((poi: Poi) => {
-    setSelectedPoi(poi);
-  }, []);
+  const handleMarkerClick = useCallback(
+    (poi: Poi) => {
+      setSelectedPoi(poi);
+    },
+    [setSelectedPoi],
+  );
 
   // マップがクリックされたときのハンドラー
   const handleMapClick = useCallback(() => {
     setSelectedPoi(null);
-  }, []);
+  }, [setSelectedPoi]);
 
   // InfoWindowが閉じられたときのハンドラー
   const handleInfoWindowClose = useCallback(() => {
     setSelectedPoi(null);
-  }, []);
+  }, [setSelectedPoi]);
 
   // Google Maps APIのロードエラーを処理
   if (loadError) {

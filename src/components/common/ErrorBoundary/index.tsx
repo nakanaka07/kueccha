@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo } from 'react';
 import type { ErrorBoundaryProps } from '../../../types';
-import { ERROR_MESSAGES } from '../../../constants/messages';
-import './ErrorBoundary.css'; // スタイルシートをインポート
+import { ERROR_MESSAGES } from '../../../constants';
+import '../../../App.css'; // スタイルシートをインポート
 
 // Stateインターフェースの定義
 interface State {

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { LoadingFallbackProps } from '../../../types';
-import { ERROR_MESSAGES } from '../../../constants/messages';
-import './LoadingFallback.css'; // スタイルシートをインポート
+import { ERROR_MESSAGES } from '../../../constants';
+import '../../../App.css'; // スタイルシートをインポート
 
 // LoadingFallbackコンポーネントの定義
 const LoadingFallback = ({ isLoading }: LoadingFallbackProps) => {
