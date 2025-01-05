@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022", // 最新のES2022をターゲットに
+    "module": "ES2022", // ES2022モジュールを使用
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリ
+    "esModuleInterop": true, // ESモジュールとの互換性を有効に
+    "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
+    "strict": true, // 厳格な型チェックを有効に
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
+    "moduleResolution": "node", // Node.jsのモジュール解決を使用
+    "resolveJsonModule": true, // JSONモジュールの解決を有効に
+    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
+    "noEmit": true, // 出力ファイルを生成しない
+    "jsx": "react-jsx", // React JSXを使用
+    "incremental": true, // 増分ビルドを有効に
+    "paths": {
+      "@/*": ["./src/*"] // エイリアスの設定
+    }
+  },
+  "include": ["./src", "*.config.ts"], // インクルードするファイル
+  "exclude": ["node_modules", "dist"] // 除外するファイル
+}
