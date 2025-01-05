@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType, Poi } from './types'; // インポート先を修正
 import { AREAS, ERROR_MESSAGES } from './constants';
@@ -25,6 +25,16 @@ const App: React.FC = () => {
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
   // 選択されたPOIを保持するステート
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 2000); // 2秒後にローディング完了
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   // 表示するPOIをフィルタリング
   const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
@@ -52,10 +62,8 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="app-container">
-        {isLoading ? (
-          // ローディング中のフォールバックを表示
-          <LoadingFallback isLoading={isLoading} />
-        ) : (
+        <LoadingFallback isLoading={!isLoaded} />
+        {isLoaded && (
           <>
             <div className="filter-panel-container">
               <FilterPanel
