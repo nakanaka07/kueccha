@@ -189,9 +189,11 @@
 .info-window {
   font-family: Arial, sans-serif;
   max-width: 250px;
-  position: absolute; /* 追加 */
-  left: 10px; /* 追加 */
-  top: 300px; /* 追加 */
+  position: absolute;
+  left: 10px;
+  top: 350px;
+  max-height: 400px; /* 高さを制限 */
+  overflow-y: auto; /* 縦方向のスクロールを有効にする */
 }
 
 .info-header {
