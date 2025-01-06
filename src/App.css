@@ -4,6 +4,7 @@
   flex-direction: column;
   height: 100vh;
   width: 100%;
+  font-family: 'Roboto', sans-serif; /* フォントを統一 */
 }
 
 /* フィルターパネルのコンテナ */
@@ -51,11 +52,13 @@
 .error-content h1 {
   font-size: 24px;
   margin-bottom: 10px;
+  color: #333;
 }
 
 .error-content p {
   font-size: 16px;
   margin-bottom: 20px;
+  color: #666;
 }
 
 .error-content button {
@@ -153,6 +156,37 @@
   margin-bottom: 8px;
 }
 
+/* チェックボックスのカスタマイズ */
+.filter-item input[type='checkbox'] {
+  display: none; /* デフォルトのチェックボックスを非表示にする */
+}
+
+.filter-item input[type='checkbox'] + .custom-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #007bff;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-item input[type='checkbox']:checked + .custom-checkbox {
+  background-color: #007bff;
+}
+
+.filter-item input[type='checkbox']:checked + .custom-checkbox::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 .filter-details {
   display: flex;
   align-items: center;
@@ -173,8 +207,8 @@
 }
 
 .filter-details .area-name {
-  max-width: 100px;
   position: relative;
+  cursor: pointer;
 }
 
 .filter-details .area-name:hover::after {
@@ -202,7 +236,7 @@
 
 /* InfoWindowのスタイル */
 .info-window {
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
   max-width: 250px;
   position: absolute;
   left: 10px;
