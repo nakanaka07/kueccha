@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
       return (
         // フォールバックUIが提供されている場合はそれを表示
         this.props.fallback || (
-          <div className="error-boundary">
+          <div className="error-boundary" role="alert" aria-live="assertive">
             <div className="error-content">
               <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
               <p>{this.state.error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}</p>

@@ -129,3 +129,27 @@ export interface ErrorBoundaryProps extends BaseProps {
   children: ReactNode;
   fallback?: ReactNode;
 }
+
+export const ERROR_MESSAGES = {
+  MAP: {
+    LOAD_FAILED:
+      'マップの読み込みに失敗しました。インターネット接続を確認し、ページを再読み込みしてください。',
+    RETRY_MESSAGE: 'しばらく経ってから再度お試しください。',
+  },
+  DATA: {
+    FETCH_FAILED: 'データの取得に失敗しました。インターネット接続を確認し、再試行してください。',
+    LOADING_FAILED: 'データの読み込みに失敗しました。ページを再読み込みしてください。',
+  },
+  CONFIG: {
+    MISSING: '必要な設定が不足しています。設定を確認してください。',
+    INVALID: '設定が正しくありません。設定を確認してください。',
+  },
+  SYSTEM: {
+    UNKNOWN: '予期せぬエラーが発生しました。ページを再読み込みしてください。',
+    CONTAINER_NOT_FOUND: 'コンテナ要素が見つかりません。ページの構造を確認してください。',
+  },
+  LOADING: {
+    MAP: 'マップを読み込んでいます...',
+    DATA: 'データを読み込んでいます...',
+  },
+} as const;

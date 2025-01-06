@@ -24,9 +24,11 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
   ];
 
   return (
-    <div className="info-window">
-      <button onClick={onCloseClick}>閉じる</button>
-      <h2>{poi.name}</h2>
+    <div className="info-window" role="dialog" aria-labelledby="info-window-title">
+      <button onClick={onCloseClick} aria-label="閉じる">
+        閉じる
+      </button>
+      <h2 id="info-window-title">{poi.name}</h2>
 
       <ul>
         {businessHours.map(

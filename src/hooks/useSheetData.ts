@@ -105,7 +105,10 @@ export function useSheetData() {
     } catch (err) {
       console.error(err);
       setError({
-        message: err instanceof Error ? err.message : '未知のエラーが発生しました',
+        message:
+          err instanceof Error
+            ? err.message
+            : 'データの取得に失敗しました。インターネット接続を確認し、再試行してください。',
         code: 'FETCH_ERROR',
       });
     } finally {

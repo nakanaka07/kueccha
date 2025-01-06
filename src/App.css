@@ -88,7 +88,7 @@
   background-repeat: no-repeat; /* 画像を繰り返さない */
   background-position: center; /* 画像を中央に配置 */
   z-index: 1000; /* 他の要素の上に表示 */
-  transition: opacity 1s ease-out; /* フェードアウトのトランジション */
+  transition: opacity 2s ease-out; /* フェードアウトのトランジション */
 }
 
 .loading-fallback.hidden {
@@ -116,6 +116,21 @@
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -288,4 +303,130 @@
   overflow: hidden; /* はみ出した部分を隠す */
   text-overflow: ellipsis; /* 省略記号を表示 */
   max-width: 200px; /* 必要に応じて最大幅を設定 */
+}
+
+/* メディアクエリを追加してレスポンシブデザインを強化 */
+@media (max-width: 768px) {
+  .filter-panel-container {
+    top: 10px;
+    left: 5px;
+    padding: 5px;
+  }
+
+  .filter-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-details {
+    margin-left: 0;
+  }
+
+  .info-window {
+    left: 5px;
+    top: 200px;
+    max-width: 90%;
+  }
+
+  .info-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-section h3 {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-panel-container {
+    top: 5px;
+    left: 2px;
+    padding: 2px;
+  }
+
+  .filter-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-details {
+    margin-left: 0;
+  }
+
+  .info-window {
+    left: 2px;
+    top: 150px;
+    max-width: 95%;
+  }
+
+  .info-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-section h3 {
+    margin-right: 0;
+  }
+}
+
+/* ツアー開始ボタンのスタイル */
+.tour-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+.tour-button:hover {
+  background-color: #0056b3;
+}
+
+/* フィードバックフォームのスタイル */
+.feedback-form-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedback-form h2 {
+  margin-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group textarea,
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.feedback-thank-you {
+  text-align: center;
 }

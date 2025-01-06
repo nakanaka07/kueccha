@@ -88,7 +88,7 @@ const Map = ({ pois, selectedPoi, setSelectedPoi }: MapComponentProps) => {
   if (loadError) {
     console.error('Maps API loading error:', loadError);
     return (
-      <div role="alert">
+      <div role="alert" aria-live="assertive">
         <h2>{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
         <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
       </div>
@@ -98,7 +98,7 @@ const Map = ({ pois, selectedPoi, setSelectedPoi }: MapComponentProps) => {
   // Google Maps APIがロード中の状態を処理
   if (!isLoaded) {
     return (
-      <div role="status">
+      <div role="status" aria-live="polite">
         <div />
         <span>{ERROR_MESSAGES.LOADING.MAP}</span>
       </div>

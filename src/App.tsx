@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AreaType, Poi } from './types';
 import { AREAS, ERROR_MESSAGES } from './constants';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingFallback } from './components/common/LoadingFallback';
-import { Map } from './components/map/Map';
-import { FilterPanel } from './components/map/FilterPanel';
 import { useSheetData } from './hooks/useSheetData';
+import UserGuide from './components/userGuide/UserGuide';
+import FeedbackForm from './components/feedback/FeedbackForm';
 import './App.css';
+
+const Map = lazy(() => import('./components/map/Map'));
+const FilterPanel = lazy(() => import('./components/map/FilterPanel'));
 
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
@@ -57,7 +60,7 @@ const App: React.FC = () => {
       <div className="app-container">
         <LoadingFallback isLoading={!isLoaded} />
         {isLoaded && (
-          <>
+          <Suspense fallback={<LoadingFallback isLoading={true} />}>
             <div className="filter-panel-container">
               <FilterPanel
                 areaCounts={areaCounts}
@@ -71,7 +74,9 @@ const App: React.FC = () => {
             <div className="map-container">
               <Map pois={filteredPois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
             </div>
-          </>
+            <UserGuide />
+            <FeedbackForm />
+          </Suspense>
         )}
       </div>
     </ErrorBoundary>

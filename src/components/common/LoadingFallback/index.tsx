@@ -21,9 +21,13 @@ const LoadingFallback = ({ isLoading }: LoadingFallbackProps) => {
 
   // ローディング中の場合の表示
   return (
-    <div className={`loading-fallback ${!isLoading ? 'hidden' : ''}`}>
+    <div
+      className={`loading-fallback ${!isLoading ? 'hidden' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="loading-content">
-        <div className="loading-spinner" />
+        <div className="loading-spinner" aria-hidden="true" />
         <p>{ERROR_MESSAGES.LOADING.DATA}</p>
       </div>
     </div>
