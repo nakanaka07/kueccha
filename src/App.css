@@ -392,8 +392,8 @@
 /* フィードバックフォームのスタイル */
 .feedback-form-container {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 60px;
+  left: 10px;
   background-color: #fff;
   padding: 20px;
   border-radius: 5px;
