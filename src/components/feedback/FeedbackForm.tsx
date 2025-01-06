@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import emailjs, { EmailJSResponseStatus } from 'emailjs-com';
+import emailjs, { EmailJSResponseStatus } from '@emailjs/browser';
 import '../../App.css';
 
 const FeedbackForm: React.FC = () => {

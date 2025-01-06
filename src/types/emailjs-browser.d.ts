@@ -1,4 +1,4 @@
-declare module 'emailjs-com' {
+declare module '@emailjs/browser' {
   export function send(
     serviceID: string,
     templateID: string,
