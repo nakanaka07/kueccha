@@ -13,8 +13,6 @@ const LoadingFallback = ({ isLoading }: LoadingFallbackProps) => {
         setIsVisible(false);
       }, 1000); // 1秒後にフェードアウト
       return () => clearTimeout(timer);
-    } else {
-      setIsVisible(true);
     }
   }, [isLoading]);
 

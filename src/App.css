@@ -280,3 +280,12 @@
     opacity: 1;
   }
 }
+
+/* URL表示やエリア表示のスタイル */
+.info-section p,
+.info-section a {
+  white-space: nowrap; /* テキストを1行にする */
+  overflow: hidden; /* はみ出した部分を隠す */
+  text-overflow: ellipsis; /* 省略記号を表示 */
+  max-width: 200px; /* 必要に応じて最大幅を設定 */
+}

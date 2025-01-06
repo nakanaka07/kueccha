@@ -13,18 +13,18 @@ interface State {
 // ErrorBoundaryコンポーネントの定義
 export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   // 初期状態の設定
-  public state: State = {
+  state: State = {
     hasError: false,
   };
 
   // エラーが発生したときに状態を更新する静的メソッド
-  public static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): State {
     // エラーが発生したことを示すフラグを設定し、エラーオブジェクトを保存
     return { hasError: true, error };
   }
 
   // エラーがキャッチされたときに呼び出されるライフサイクルメソッド
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // エラー情報を状態に保存
     this.setState({ errorInfo });
   }
@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   };
 
   // レンダリングメソッド
-  public render() {
+  render() {
     // エラーが発生している場合の表示
     if (this.state.hasError) {
       return (

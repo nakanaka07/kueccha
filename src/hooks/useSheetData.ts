@@ -28,11 +28,11 @@ export function useSheetData() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
-  const validateConfig = useCallback(() => {
+  const validateConfig = () => {
     if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
       throw new Error(ERROR_MESSAGES.CONFIG.MISSING);
     }
-  }, []);
+  };
 
   const fetchAreaData = useCallback(async (area: string, retryCount = 0): Promise<Poi[]> => {
     const areaName = AREAS[area as AreaType];
@@ -111,7 +111,7 @@ export function useSheetData() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, isFetched, fetchAreaData, validateConfig]);
+  }, [isLoading, isFetched, fetchAreaData]);
 
   useEffect(() => {
     if (!isFetched) {

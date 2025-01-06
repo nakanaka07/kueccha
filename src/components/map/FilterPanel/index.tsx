@@ -3,28 +3,26 @@ import type { FilterPanelProps } from '../../../types';
 import { AreaType } from '../../../types';
 import { AREAS } from '../../../constants';
 import { markerConfig } from '../../../config';
-import '../../../App.css'; // スタイルシートをインポート
+import '../../../App.css';
 
-// FilterPanelコンポーネント
 const FilterPanel = ({
   areaCounts,
   areaVisibility,
   onAreaToggle,
   onAreaClick,
 }: FilterPanelProps) => {
-  // エリア情報を取得し、表示用のオブジェクトに変換
   const areas = Object.entries(AREAS).map(([area, name]) => ({
     area: area as AreaType,
     name,
     count: areaCounts[area as AreaType] ?? 0,
-    isVisible: areaVisibility[area as AreaType] ?? true,
-    color: markerConfig.colors[area as AreaType], // マーカーカラーを取得
+    isVisible: areaVisibility[area as AreaType],
+    color: markerConfig.colors[area as AreaType],
   }));
 
   return (
     <div role="region" aria-label="エリアフィルター" className="filter-panel">
       <div>
-        <div>表示するエリア</div>
+        <div>表示するエリア（表示数）</div>
         <div>
           {areas.map(({ area, name, count, isVisible, color }) => (
             <label key={area} className="filter-item" onClick={onAreaClick}>
@@ -53,7 +51,6 @@ const FilterPanel = ({
   );
 };
 
-// コンポーネントの表示名を設定
 FilterPanel.displayName = 'FilterPanel';
 
 export { FilterPanel };

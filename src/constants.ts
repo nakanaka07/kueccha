@@ -22,12 +22,12 @@ export const BUSINESS_HOURS = [
 export const MARKER_COLORS = {
   DEFAULT: '#000000',
   RECOMMEND: '#ff0000',
-  RYOTSU_AIKAWA: '#ff8000',
+  RYOTSU_AIKAWA: '#ffff00',
   KANAI_SAWADA_NIIBO_HATANO_MANO: '#ff8000',
-  AKADOMARI_HAMOCHI_OGI: '#ff8000',
+  AKADOMARI_HAMOCHI_OGI: '#00ff00',
   SNACK: '#ff80c0',
   PUBLIC_TOILET: '#00ffff',
-  PARKING: '#000000',
+  PARKING: '#808080',
 } as const;
 
 export const ERROR_MESSAGES = {

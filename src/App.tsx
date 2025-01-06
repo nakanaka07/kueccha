@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { AreaType, Poi } from './types'; // インポート先を修正
+import type { AreaType, Poi } from './types';
 import { AREAS, ERROR_MESSAGES } from './constants';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingFallback } from './components/common/LoadingFallback';
 import { Map } from './components/map/Map';
 import { FilterPanel } from './components/map/FilterPanel';
-import { useSheetData } from './hooks/useSheetData'; // 名前付きインポートに修正
-import './App.css'; // スタイルシートをインポート
+import { useSheetData } from './hooks/useSheetData';
+import './App.css';
 
-// 初期表示設定
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
     ...acc,
-    [area]: true, // すべてのエリアを表示
+    [area]: area !== 'SNACK' && area !== 'PUBLIC_TOILET' && area !== 'PARKING',
   }),
   {} as Record<AreaType, boolean>,
 );
 
 const App: React.FC = () => {
-  // シートデータを取得するカスタムフックを使用
   const { pois, isLoading, error, refetch } = useSheetData();
-  // エリアの表示状態を管理するステート
   const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
-  // 選択されたPOIを保持するステート
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -31,14 +27,12 @@ const App: React.FC = () => {
     if (!isLoading) {
       const timer = setTimeout(() => {
         setIsLoaded(true);
-      }, 2000); // 2秒後にローディング完了
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
 
-  // 表示するPOIをフィルタリング
   const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
-  // 各エリアのPOI数をカウント
   const areaCounts = filteredPois.reduce(
     (acc, poi) => ({
       ...acc,
@@ -47,7 +41,6 @@ const App: React.FC = () => {
     {} as Record<AreaType, number>,
   );
 
-  // エラーメッセージを表示
   if (error) {
     return (
       <div>
@@ -72,7 +65,7 @@ const App: React.FC = () => {
                 onAreaToggle={(area: AreaType, visible: boolean) =>
                   setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
                 }
-                onAreaClick={() => setSelectedPoi(null)} // エリアをクリックしたときにInfoWindowを閉じる
+                onAreaClick={() => setSelectedPoi(null)}
               />
             </div>
             <div className="map-container">
@@ -85,7 +78,6 @@ const App: React.FC = () => {
   );
 };
 
-// アプリケーションのエントリーポイント
 const container = document.getElementById('app');
 if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 

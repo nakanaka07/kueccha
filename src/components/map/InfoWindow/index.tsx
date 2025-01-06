@@ -30,9 +30,9 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
 
       <ul>
         {businessHours.map(
-          (hour, index) =>
+          (hour) =>
             hour.value && (
-              <li key={`${hour.day}-${index}`}>
+              <li key={hour.day}>
                 {hour.day} : {hour.value}
               </li>
             ),
