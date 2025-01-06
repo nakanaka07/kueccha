@@ -40,6 +40,9 @@ jobs:
           VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.MAPS_MAP_ID }}
           VITE_GOOGLE_SHEETS_API_KEY=${{ secrets.SHEETS_API_KEY }}
           VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.SPREADSHEET_ID }}
+          VITE_EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }}
           EOL
 
       - name: Clean pnpm cache

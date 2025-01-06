@@ -32,6 +32,7 @@ const Map = ({ pois, selectedPoi, setSelectedPoi }: MapComponentProps) => {
     ...mapsConfig.options,
     mapTypeId: mapType,
     mapTypeControl: true,
+    zoomControl: true, // ズームコントロールを有効にする
     mapTypeControlOptions: isLoaded
       ? {
           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,

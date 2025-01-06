@@ -22,7 +22,10 @@ const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
 
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
-  const [areaVisibility, setAreaVisibility] = useState(INITIAL_VISIBILITY);
+  const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(() => {
+    const savedVisibility = localStorage.getItem('areaVisibility');
+    return savedVisibility ? JSON.parse(savedVisibility) : INITIAL_VISIBILITY;
+  });
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -34,6 +37,10 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    localStorage.setItem('areaVisibility', JSON.stringify(areaVisibility));
+  }, [areaVisibility]);
 
   const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
   const areaCounts = filteredPois.reduce(

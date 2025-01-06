@@ -16,7 +16,8 @@
     "incremental": true, // 増分ビルドを有効に
     "paths": {
       "@/*": ["./src/*"] // エイリアスの設定
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["./src", "*.config.ts"], // インクルードするファイル
   "exclude": ["node_modules", "dist"] // 除外するファイル

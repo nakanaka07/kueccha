@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import emailjs, { EmailJSResponseStatus } from 'emailjs-com';
 import '../../App.css';
 
 const FeedbackForm: React.FC = () => {
@@ -8,9 +9,31 @@ const FeedbackForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // フィードバックの送信処理をここに追加
-    console.log('Feedback submitted:', { feedback, email });
-    setSubmitted(true);
+
+    const templateParams: Record<string, string> = {
+      feedback,
+      email,
+      to_email: 'int_survey01@outlook.jp',
+      from_name: 'yuichiro',
+      reply_to: email,
+    };
+
+    emailjs
+      .send(
+        process.env.VITE_EMAILJS_SERVICE_ID!,
+        process.env.VITE_EMAILJS_TEMPLATE_ID!,
+        templateParams,
+        process.env.VITE_EMAILJS_PUBLIC_KEY!,
+      )
+      .then(
+        (response: EmailJSResponseStatus) => {
+          console.log('SUCCESS!', response.status, response.text);
+          setSubmitted(true);
+        },
+        (err: EmailJSResponseStatus) => {
+          console.error('FAILED...', err);
+        },
+      );
   };
 
   return (

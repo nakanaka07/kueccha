@@ -31,6 +31,7 @@ const FilterPanel = ({
                 checked={isVisible}
                 onChange={(e) => onAreaToggle(area, e.target.checked)}
                 aria-label={`${name}を表示 (${count}件)`}
+                style={{ accentColor: color }} // チェックボックスの色を設定
               />
               <div className="filter-details">
                 <span

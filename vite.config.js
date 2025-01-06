@@ -36,6 +36,9 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(env.VITE_GOOGLE_MAPS_MAP_ID),
       'process.env.VITE_GOOGLE_SHEETS_API_KEY': JSON.stringify(env.VITE_GOOGLE_SHEETS_API_KEY),
       'process.env.VITE_GOOGLE_SPREADSHEET_ID': JSON.stringify(env.VITE_GOOGLE_SPREADSHEET_ID),
+      'process.env.VITE_EMAILJS_SERVICE_ID': JSON.stringify(env.VITE_EMAILJS_SERVICE_ID),
+      'process.env.VITE_EMAILJS_TEMPLATE_ID': JSON.stringify(env.VITE_EMAILJS_TEMPLATE_ID),
+      'process.env.VITE_EMAILJS_PUBLIC_KEY': JSON.stringify(env.VITE_EMAILJS_PUBLIC_KEY),
     },
   };
 });
