@@ -6,7 +6,6 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingFallback } from './components/common/LoadingFallback';
 import { useSheetData } from './hooks/useSheetData';
 import UserGuide from './components/userGuide/UserGuide';
-import FeedbackForm from './components/feedback/FeedbackForm';
 import './App.css';
 
 const Map = lazy(() => import('./components/map/Map'));
@@ -82,7 +81,6 @@ const App: React.FC = () => {
               <Map pois={filteredPois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
             </div>
             <UserGuide />
-            <FeedbackForm />
           </Suspense>
         )}
       </div>
