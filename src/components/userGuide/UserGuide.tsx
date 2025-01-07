@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Joyride, { CallBackProps, STATUS } from 'react-joyride';
+import FeedbackForm from '../feedback/FeedbackForm';
 import { tourSteps } from '../../tourSteps';
 
 const UserGuide: React.FC = () => {
   const [runTour, setRunTour] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status } = data;
@@ -15,7 +17,14 @@ const UserGuide: React.FC = () => {
 
   return (
     <>
-      <button onClick={() => setRunTour(true)}>ツアーを開始</button>
+      <div className="button-container">
+        <button onClick={() => setRunTour(true)} className="tour-button">
+          ツアーを開始
+        </button>
+        <button onClick={() => setShowFeedback(true)} className="feedback-button">
+          フィードバック
+        </button>
+      </div>
       <Joyride
         steps={tourSteps}
         run={runTour}
@@ -28,6 +37,7 @@ const UserGuide: React.FC = () => {
           },
         }}
       />
+      {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
     </>
   );
 };

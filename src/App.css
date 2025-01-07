@@ -427,12 +427,15 @@
 .feedback-form-container {
   position: fixed;
   bottom: 60px;
-  left: 300px;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: #fff;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 10000;
+  max-width: 400px;
+  width: 90%;
 }
 
 .feedback-form {
@@ -441,28 +444,104 @@
 }
 
 .feedback-form h2 {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 24px;
+  color: #333;
+  text-align: center;
 }
 
 .form-group {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
 }
 
 .form-group textarea,
 .form-group input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
+  padding: 10px;
+  border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  transition: border-color 0.3s;
+}
+
+.form-group textarea:focus,
+.form-group input:focus {
+  border-color: #007bff;
+  outline: none;
 }
 
 .feedback-thank-you {
   text-align: center;
+  font-size: 18px;
+  color: #007bff;
+}
+
+.feedback-form button {
+  padding: 10px 15px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.feedback-form button:hover {
+  background-color: #0056b3;
+}
+
+.feedback-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ボタンコンテナのスタイル */
+.button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10000;
+}
+
+.tour-button,
+.feedback-button {
+  padding: 5px 10px; /* ボタンを小さくする */
+  font-size: 14px; /* フォントサイズを小さくする */
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tour-button:hover,
+.feedback-button:hover {
+  background-color: #0056b3;
+}
+
+/* ボタンを左右に分けて配置 */
+.tour-button {
+  margin-right: 10px; /* 右側に配置 */
+}
+
+.feedback-button {
+  margin-left: 10px; /* 左側に配置 */
 }
 
 /* モーダルウィンドウのスタイル */

@@ -30,6 +30,7 @@ export interface MapConfig {
     mapTypeControl: boolean;
     streetViewControl: boolean;
     fullscreenControl: boolean;
+    styles: google.maps.MapTypeStyle[];
   };
 }
 

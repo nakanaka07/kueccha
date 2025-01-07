@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import emailjs, { EmailJSResponseStatus } from '@emailjs/browser';
 import '../../App.css';
 
-const FeedbackForm: React.FC = () => {
+interface FeedbackFormProps {
+  onClose: () => void;
+}
+
+const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const [feedback, setFeedback] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -38,6 +42,9 @@ const FeedbackForm: React.FC = () => {
 
   return (
     <div className="feedback-form-container">
+      <button onClick={onClose} className="feedback-close-button">
+        閉じる
+      </button>
       {submitted ? (
         <div className="feedback-thank-you">
           <p>フィードバックを送信しました。ありがとうございます！</p>
