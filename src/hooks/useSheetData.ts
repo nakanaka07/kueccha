@@ -1,25 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONFIG } from '../utils/config';
 import type { Poi, AreaType } from '../utils/types';
-import { AREAS, ERROR_MESSAGES } from '../utils/constants'; // 修正されたインポートパス
+import { AREAS, ERROR_MESSAGES } from '../utils/constants';
 
-// Google Maps型
 type LatLngLiteral = google.maps.LatLngLiteral;
 
-// エラー型の定義
 interface FetchError {
   message: string;
   code: string;
 }
 
-// APIフェッチの設定
 const API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
 } as const;
 
-// ユーティリティ関数
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function useSheetData() {

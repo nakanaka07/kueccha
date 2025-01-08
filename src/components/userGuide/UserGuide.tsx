@@ -16,7 +16,7 @@ const UserGuide: React.FC = () => {
 
   return (
     <div className="userguide-container">
-      <button className="tour-button" onClick={() => setRunTour(true)}>
+      <button className="common-button" onClick={() => setRunTour(true)}>
         ツアーを開始
       </button>
       <Joyride

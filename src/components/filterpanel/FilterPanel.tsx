@@ -12,8 +12,13 @@ const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   {} as Record<AreaType, boolean>,
 );
 
-const FilterPanel = ({ pois, onAreaClick, setSelectedPoi }: FilterPanelProps) => {
-  const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(() => {
+const FilterPanel: React.FC<FilterPanelProps> = ({
+  pois,
+  onAreaClick,
+  setSelectedPoi,
+  setAreaVisibility,
+}) => {
+  const [areaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(() => {
     const savedVisibility = localStorage.getItem('areaVisibility');
     return savedVisibility ? JSON.parse(savedVisibility) : INITIAL_VISIBILITY;
   });
@@ -21,7 +26,8 @@ const FilterPanel = ({ pois, onAreaClick, setSelectedPoi }: FilterPanelProps) =>
 
   useEffect(() => {
     localStorage.setItem('areaVisibility', JSON.stringify(areaVisibility));
-  }, [areaVisibility]);
+    setAreaVisibility(areaVisibility);
+  }, [areaVisibility, setAreaVisibility]);
 
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
@@ -41,7 +47,7 @@ const FilterPanel = ({ pois, onAreaClick, setSelectedPoi }: FilterPanelProps) =>
 
   return (
     <div className="filterpanel-container">
-      <button onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)} className="filter-button">
+      <button onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)} className="common-button">
         表示するエリア
       </button>
       {isFilterPanelOpen && (
@@ -55,7 +61,7 @@ const FilterPanel = ({ pois, onAreaClick, setSelectedPoi }: FilterPanelProps) =>
                     type="checkbox"
                     checked={isVisible}
                     onChange={(e) => {
-                      setAreaVisibility((prev) => ({ ...prev, [area]: e.target.checked }));
+                      setLocalAreaVisibility((prev) => ({ ...prev, [area]: e.target.checked }));
                       setSelectedPoi(null);
                     }}
                     aria-label={`${name}を表示 (${count}件)`}

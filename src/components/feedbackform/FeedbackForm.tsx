@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import emailjs, { EmailJSResponseStatus } from '@emailjs/browser';
 import './FeedbackForm.css';
 
-interface FeedbackFormProps {
-  onClose: () => void;
-}
-
-const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
+const FeedbackForm: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,14 +39,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
   return (
     <div className="feedbackform-container">
-      <button className="feedback-button" onClick={() => setShowFeedback(true)}>
+      <button
+        className={`common-button ${isFeedbackFormOpen ? 'active' : ''}`}
+        onClick={() => setIsFeedbackFormOpen(!isFeedbackFormOpen)}
+      >
         フィードバック
       </button>
-      {showFeedback && (
-        <div className="feedback-form-container">
-          <button onClick={onClose} className="feedback-close-button">
-            閉じる
-          </button>
+      {isFeedbackFormOpen && (
+        <div className="feedback-panel">
           {submitted ? (
             <div className="feedback-thank-you">
               <p>フィードバックを送信しました。ありがとうございます！</p>

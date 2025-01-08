@@ -107,18 +107,3 @@
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
-
-/* フィルターボタンのスタイル */
-.filter-button {
-  padding: 5px 10px; /* ボタンを小さくする */
-  font-size: 14px; /* フォントサイズを小さくする */
-  color: #fff;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.filter-button:hover {
-  background-color: #0056b3;
-}

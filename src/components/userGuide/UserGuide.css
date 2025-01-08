@@ -1,24 +1,12 @@
-/* ボタンコンテナのスタイル */
-.button-container {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  z-index: 10000;
-}
-
 /* UserGuideのスタイル */
 .userguide-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .tour-button {
-  padding: 5px 10px; /* ボタンを小さくする */
-  font-size: 14px; /* フォントサイズを小さくする */
+  padding: 5px 10px;
+  font-size: 14px;
   color: #fff;
   background-color: #007bff;
   border: none;
@@ -27,19 +15,5 @@
 }
 
 .tour-button:hover {
-  background-color: #0056b3;
-}
-
-.feedback-button {
-  padding: 5px 10px; /* ボタンを小さくする */
-  font-size: 14px; /* フォントサイズを小さくする */
-  color: #fff;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.feedback-button:hover {
   background-color: #0056b3;
 }

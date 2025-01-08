@@ -23,8 +23,25 @@
 /* ボタンコンテナのスタイル */
 .button-container {
   position: fixed;
+  bottom: 50px;
+  left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 50px; /* ボタン間の間隔を50pxに設定 */
   z-index: 10000;
+}
+
+/* 共通のボタンスタイル */
+.common-button {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.common-button:hover {
+  background-color: #0056b3;
 }

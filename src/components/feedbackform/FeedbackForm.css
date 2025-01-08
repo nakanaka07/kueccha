@@ -5,18 +5,17 @@
   gap: 10px;
 }
 
-.feedback-form-container {
-  position: fixed;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #fff;
+.feedback-panel {
+  position: absolute;
+  top: 30px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
   max-width: 400px;
-  width: 90%;
+  width: calc(100% - 20px);
 }
 
 .feedback-form {
@@ -80,12 +79,24 @@
   background-color: #0056b3;
 }
 
-.feedback-close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
+/* フィードバックボタンのスタイルを他のボタンと統一 */
+.feedback-button {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #007bff;
   border: none;
-  font-size: 16px;
+  border-radius: 5px;
   cursor: pointer;
+}
+
+.feedback-button:hover {
+  background-color: #0056b3;
+}
+
+/* ボタンがアクティブなときのスタイル */
+.common-button.active {
+  width: calc(100% - 20px);
+  height: 50px;
+  font-size: 16px;
 }

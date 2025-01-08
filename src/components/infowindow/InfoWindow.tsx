@@ -11,7 +11,7 @@ const isValidPhoneNumber = (phone: string) => {
 };
 
 // InfoWindowコンポーネント
-const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
+const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const businessHours = [
     { day: '月曜日', value: poi.monday },
     { day: '火曜日', value: poi.tuesday },
@@ -44,78 +44,50 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
 
         <div className="info-horizontal">
           {poi.description && (
-            <div
-              className="info-section"
-              key="description"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>補足</h3>
+            <div className="info-section" key="description">
+              <h3>補足</h3>
               <p>{poi.description}</p>
             </div>
           )}
 
           {poi.reservation && (
-            <div
-              className="info-section"
-              key="reservation"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>予約</h3>
+            <div className="info-section" key="reservation">
+              <h3>予約</h3>
               <p>{poi.reservation}</p>
             </div>
           )}
 
           {poi.payment && (
-            <div
-              className="info-section"
-              key="payment"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>支払</h3>
+            <div className="info-section" key="payment">
+              <h3>支払</h3>
               <p>{poi.payment}</p>
             </div>
           )}
 
           {poi.category && (
-            <div
-              className="info-section"
-              key="category"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>カテゴリー</h3>
+            <div className="info-section" key="category">
+              <h3>カテゴリー</h3>
               <p>{poi.category}</p>
             </div>
           )}
 
           {poi.genre && (
-            <div
-              className="info-section"
-              key="genre"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>ジャンル</h3>
+            <div className="info-section" key="genre">
+              <h3>ジャンル</h3>
               <p>{poi.genre}</p>
             </div>
           )}
 
           {poi.area && (
-            <div
-              className="info-section"
-              key="area"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>エリア</h3>
+            <div className="info-section" key="area">
+              <h3>エリア</h3>
               <p>{AREAS[poi.area]}</p>
             </div>
           )}
 
           {poi.phone && (
-            <div
-              className="info-section"
-              key="phone"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>問い合わせ</h3>
+            <div className="info-section" key="phone">
+              <h3>問い合わせ</h3>
               {isValidPhoneNumber(poi.phone) ? (
                 <a href={`tel:${poi.phone}`} className="info-link">
                   {poi.phone}
@@ -127,12 +99,8 @@ const InfoWindow = ({ poi, onCloseClick }: InfoWindowProps) => {
           )}
 
           {poi.address && (
-            <div
-              className="info-section"
-              key="address"
-              style={{ display: 'flex', alignItems: 'center' }}
-            >
-              <h3 style={{ marginRight: '10px' }}>所在地</h3>
+            <div className="info-section" key="address">
+              <h3>所在地</h3>
               <p>{poi.address}</p>
             </div>
           )}
