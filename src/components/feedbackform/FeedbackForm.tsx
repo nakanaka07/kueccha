@@ -39,14 +39,11 @@ const FeedbackForm: React.FC = () => {
 
   return (
     <div className="feedbackform-container">
-      <button
-        className={`common-button ${isFeedbackFormOpen ? 'active' : ''}`}
-        onClick={() => setIsFeedbackFormOpen(!isFeedbackFormOpen)}
-      >
+      <button onClick={() => setIsFeedbackFormOpen(!isFeedbackFormOpen)} className="common-button">
         フィードバック
       </button>
       {isFeedbackFormOpen && (
-        <div className="feedback-panel">
+        <div role="region" aria-label="フィードバックフォーム" className="feedback-panel">
           {submitted ? (
             <div className="feedback-thank-you">
               <p>フィードバックを送信しました。ありがとうございます！</p>

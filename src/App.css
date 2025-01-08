@@ -27,21 +27,34 @@
   left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 50px; /* ボタン間の間隔を50pxに設定 */
+  gap: 10px; /* ボタン間の間隔を10pxに設定 */
   z-index: 10000;
 }
 
 /* 共通のボタンスタイル */
 .common-button {
-  padding: 5px 10px;
-  font-size: 14px;
+  padding: 10px 15px;
+  font-size: 16px;
   color: #fff;
   background-color: #007bff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .common-button:hover {
   background-color: #0056b3;
+}
+
+/* 共通のパネルスタイル */
+.common-panel {
+  position: absolute;
+  top: 30px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

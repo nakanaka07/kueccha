@@ -51,8 +51,8 @@ const App: React.FC = () => {
                 setSelectedPoi={setSelectedPoi}
                 setAreaVisibility={setAreaVisibility}
               />
-              <UserGuide />
               <FeedbackForm />
+              <UserGuide />
             </div>
             <div className="map-container">
               <Map

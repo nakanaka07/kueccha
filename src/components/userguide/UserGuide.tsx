@@ -25,6 +25,15 @@ const UserGuide: React.FC = () => {
         continuous
         showSkipButton
         callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 10000,
+          },
+          overlay: {
+            backgroundColor: 'transparent', // オーバーレイを透明にする
+            display: 'none', // オーバーレイを非表示にする
+          },
+        }}
       />
     </div>
   );

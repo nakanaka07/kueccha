@@ -4,16 +4,27 @@
   flex-direction: column;
 }
 
-.tour-button {
-  padding: 5px 10px;
-  font-size: 14px;
+.common-button {
+  padding: 10px 15px;
+  font-size: 16px;
   color: #fff;
   background-color: #007bff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.tour-button:hover {
+.common-button:hover {
   background-color: #0056b3;
+}
+
+/* Joyrideのスタイルをオーバーライド */
+.react-joyride__overlay {
+  display: none !important; /* オーバーレイを非表示にする */
+}
+
+.joyride-tooltip {
+  margin-bottom: 0 !important; /* ツールチップのマージンを削除 */
+  padding-bottom: 0 !important; /* ツールチップのパディングを削除 */
 }
