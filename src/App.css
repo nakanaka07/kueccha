@@ -406,11 +406,8 @@
 
 /* ツアー開始ボタンのスタイル */
 .tour-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 5px 10px; /* ボタンを小さくする */
+  font-size: 14px; /* フォントサイズを小さくする */
   color: #fff;
   background-color: #007bff;
   border: none;
@@ -513,12 +510,14 @@
 .button-container {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  left: 20px;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 30px;
   z-index: 10000;
 }
 
+.filter-button,
 .tour-button,
 .feedback-button {
   padding: 5px 10px; /* ボタンを小さくする */
@@ -530,51 +529,8 @@
   cursor: pointer;
 }
 
+.filter-button:hover,
 .tour-button:hover,
 .feedback-button:hover {
   background-color: #0056b3;
-}
-
-/* ボタンを左右に分けて配置 */
-.tour-button {
-  margin-right: 10px; /* 右側に配置 */
-}
-
-.feedback-button {
-  margin-left: 10px; /* 左側に配置 */
-}
-
-/* モーダルウィンドウのスタイル */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  width: 100%;
-  max-height: 80%;
-  overflow-y: auto;
-}
-
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  right: 10px;
 }

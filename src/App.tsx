@@ -27,6 +27,7 @@ const App: React.FC = () => {
   });
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態
 
   useEffect(() => {
     if (!isLoading) {
@@ -67,20 +68,30 @@ const App: React.FC = () => {
         <LoadingFallback isLoading={!isLoaded} />
         {isLoaded && (
           <Suspense fallback={<LoadingFallback isLoading={true} />}>
-            <div className="filter-panel-container">
-              <FilterPanel
-                areaCounts={areaCounts}
-                areaVisibility={areaVisibility}
-                onAreaToggle={(area: AreaType, visible: boolean) =>
-                  setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
-                }
-                onAreaClick={() => setSelectedPoi(null)}
-              />
+            <div className="button-container">
+              <button
+                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                className="filter-button"
+              >
+                表示するエリア
+              </button>
+              <UserGuide />
             </div>
+            {isFilterPanelOpen && (
+              <div className="filter-panel-container">
+                <FilterPanel
+                  areaCounts={areaCounts}
+                  areaVisibility={areaVisibility}
+                  onAreaToggle={(area: AreaType, visible: boolean) =>
+                    setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
+                  }
+                  onAreaClick={() => setSelectedPoi(null)}
+                />
+              </div>
+            )}
             <div className="map-container">
               <Map pois={filteredPois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
             </div>
-            <UserGuide />
           </Suspense>
         )}
       </div>
