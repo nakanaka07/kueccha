@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-import { mapsConfig } from '../../../config';
-import type { MapProps, Poi } from '../../../types';
-import { Marker } from '../Marker';
-import { InfoWindow } from '../InfoWindow';
-import { ERROR_MESSAGES } from '../../../constants';
-import '../../../App.css'; // スタイルシートをインポート
+import { mapsConfig } from '../../utils/config';
+import type { MapProps, Poi } from '../../utils/types';
+import { Marker } from '../marker/Marker';
+import { InfoWindow } from '../infowindow/InfoWindow';
+import { ERROR_MESSAGES } from '../../utils/constants';
+import './Map.css'; // スタイルシートをインポート
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;

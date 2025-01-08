@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CONFIG } from '../config';
-import type { Poi, AreaType } from '../types';
-import { AREAS, ERROR_MESSAGES } from '../constants';
+import { CONFIG } from '../utils/config';
+import type { Poi, AreaType } from '../utils/types';
+import { AREAS, ERROR_MESSAGES } from '../utils/constants'; // 修正されたインポートパス
 
 // Google Maps型
 type LatLngLiteral = google.maps.LatLngLiteral;

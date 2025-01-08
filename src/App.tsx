@@ -1,33 +1,21 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { AreaType, Poi } from './types';
-import { AREAS, ERROR_MESSAGES } from './constants';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { LoadingFallback } from './components/common/LoadingFallback';
-import { useSheetData } from './hooks/useSheetData';
-import UserGuide from './components/userGuide/UserGuide';
+import type { Poi } from './utils/types';
+import { ERROR_MESSAGES } from './utils/constants';
+import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
+import { LoadingFallback } from './components/loadingfallback/LoadingFallback';
+import { useSheetData } from './hooks/UseSheetData';
+import UserGuide from './components/userguide/UserGuide';
+import FeedbackForm from './components/feedbackform/FeedbackForm';
 import './App.css';
 
 const Map = lazy(() => import('./components/map/Map'));
-const FilterPanel = lazy(() => import('./components/map/FilterPanel'));
-
-const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
-  (acc, area) => ({
-    ...acc,
-    [area]: area !== 'SNACK' && area !== 'PUBLIC_TOILET' && area !== 'PARKING',
-  }),
-  {} as Record<AreaType, boolean>,
-);
+const FilterPanel = lazy(() => import('./components/filterpanel/FilterPanel'));
 
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
-  const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(() => {
-    const savedVisibility = localStorage.getItem('areaVisibility');
-    return savedVisibility ? JSON.parse(savedVisibility) : INITIAL_VISIBILITY;
-  });
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態
 
   useEffect(() => {
     if (!isLoading) {
@@ -37,19 +25,6 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
-
-  useEffect(() => {
-    localStorage.setItem('areaVisibility', JSON.stringify(areaVisibility));
-  }, [areaVisibility]);
-
-  const filteredPois = pois?.filter((poi) => areaVisibility[poi.area]) || [];
-  const areaCounts = filteredPois.reduce(
-    (acc, poi) => ({
-      ...acc,
-      [poi.area]: (acc[poi.area] || 0) + 1,
-    }),
-    {} as Record<AreaType, number>,
-  );
 
   if (error) {
     return (
@@ -69,28 +44,16 @@ const App: React.FC = () => {
         {isLoaded && (
           <Suspense fallback={<LoadingFallback isLoading={true} />}>
             <div className="button-container">
-              <button
-                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-                className="filter-button"
-              >
-                表示するエリア
-              </button>
+              <FilterPanel
+                pois={pois}
+                onAreaClick={() => setSelectedPoi(null)}
+                setSelectedPoi={setSelectedPoi}
+              />
               <UserGuide />
+              <FeedbackForm onClose={() => {}} />
             </div>
-            {isFilterPanelOpen && (
-              <div className="filter-panel-container">
-                <FilterPanel
-                  areaCounts={areaCounts}
-                  areaVisibility={areaVisibility}
-                  onAreaToggle={(area: AreaType, visible: boolean) =>
-                    setAreaVisibility((prev) => ({ ...prev, [area]: visible }))
-                  }
-                  onAreaClick={() => setSelectedPoi(null)}
-                />
-              </div>
-            )}
             <div className="map-container">
-              <Map pois={filteredPois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
+              <Map pois={pois} selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
             </div>
           </Suspense>
         )}

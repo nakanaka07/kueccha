@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import type { MarkerProps } from '../../../types';
-import { MARKER_COLORS } from '../../../constants';
-import '../../../App.css'; // スタイルシートをインポート
+import type { MarkerProps } from '../../utils/types';
+import { MARKER_COLORS } from '../../utils/constants';
+import './Marker.css'; // スタイルシートをインポート
 
 // マーカーアイコンのURLを定義
 const markerIcons: Record<string, string> = {

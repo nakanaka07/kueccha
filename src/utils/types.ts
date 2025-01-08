@@ -114,10 +114,9 @@ export interface MarkerProps extends BaseProps {
 }
 
 export interface FilterPanelProps extends BaseProps {
-  areaCounts: Record<AreaType, number>;
-  areaVisibility: Record<AreaType, boolean>;
-  onAreaToggle: (area: AreaType, visible: boolean) => void;
+  pois: Poi[];
   onAreaClick: () => void;
+  setSelectedPoi: (poi: Poi | null) => void;
 }
 
 export interface LoadingFallbackProps extends BaseProps {

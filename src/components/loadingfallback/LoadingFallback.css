@@ -1,0 +1,51 @@
+/* LoadingFallbackのスタイル */
+.loading-fallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  background-image: url('/src/assets/images/row1.png'); /* 背景画像を設定 */
+  background-size: contain; /* 画像をコンテナに合わせて拡大縮小 */
+  background-repeat: no-repeat; /* 画像を繰り返さない */
+  background-position: center; /* 画像を中央に配置 */
+  z-index: 1000; /* 他の要素の上に表示 */
+  transition: opacity 2s ease-out; /* フェードアウトのトランジション */
+}
+
+.loading-fallback.hidden {
+  opacity: 0;
+  pointer-events: none; /* フェードアウト後にクリックを無効化 */
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content p {
+  font-size: 16px;
+  color: #333;
+}

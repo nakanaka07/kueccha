@@ -19,6 +19,6 @@
     },
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["./src", "*.config.ts"],
+  "include": ["./src", "*.config.ts", "src/components/feedbackform/FeedbackForm.tsx"],
   "exclude": ["node_modules", "dist"]
 }

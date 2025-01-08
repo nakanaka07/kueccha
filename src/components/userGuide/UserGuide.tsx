@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import Joyride, { CallBackProps, STATUS } from 'react-joyride';
-import FeedbackForm from '../feedback/FeedbackForm';
-import { tourSteps } from '../../tourSteps';
+import { tourSteps } from '../../utils/tourSteps';
+import './UserGuide.css';
 
 const UserGuide: React.FC = () => {
   const [runTour, setRunTour] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status } = data;
@@ -16,29 +15,18 @@ const UserGuide: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="button-container">
-        <button onClick={() => setRunTour(true)} className="tour-button">
-          ツアーを開始
-        </button>
-        <button onClick={() => setShowFeedback(true)} className="feedback-button">
-          フィードバック
-        </button>
-      </div>
+    <div className="userguide-container">
+      <button className="tour-button" onClick={() => setRunTour(true)}>
+        ツアーを開始
+      </button>
       <Joyride
         steps={tourSteps}
         run={runTour}
         continuous
         showSkipButton
         callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            zIndex: 10000,
-          },
-        }}
       />
-      {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
-    </>
+    </div>
   );
 };
 
