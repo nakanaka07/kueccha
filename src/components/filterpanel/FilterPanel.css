@@ -96,3 +96,28 @@
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .filter-panel {
+    padding: 15px;
+  }
+
+  .filter-item {
+    margin-bottom: 6px;
+  }
+
+  .filter-item input[type='checkbox'] + .custom-checkbox {
+    width: 14px;
+    height: 14px;
+  }
+
+  .filter-details {
+    margin-left: 6px;
+  }
+
+  .marker-color {
+    width: 14px;
+    height: 14px;
+  }
+}

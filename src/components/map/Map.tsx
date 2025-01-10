@@ -5,7 +5,6 @@ import type { MapProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 import { InfoWindow } from '../infowindow/InfoWindow';
 import { ERROR_MESSAGES } from '../../utils/constants';
-import './Map.css';
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
@@ -104,7 +103,9 @@ const Map: React.FC<MapComponentProps> = ({
         zoom={mapsConfig.defaultZoom}
         options={{
           ...mapOptions,
-          mapId: mapsConfig.mapId,
+          ...(mapsConfig.mapId
+            ? { mapId: mapsConfig.mapId }
+            : { styles: mapsConfig.options.styles }),
         }}
         onClick={handleMapClick}
         onLoad={onLoad}

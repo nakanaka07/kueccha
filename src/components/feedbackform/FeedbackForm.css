@@ -73,3 +73,29 @@
 .feedback-form button:hover {
   background-color: #0056b3;
 }
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .feedback-panel {
+    padding: 15px;
+  }
+
+  .feedback-form h2 {
+    font-size: 20px;
+  }
+
+  .form-group label {
+    font-size: 14px;
+  }
+
+  .form-group textarea,
+  .form-group input {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .feedback-form button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}

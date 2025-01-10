@@ -85,3 +85,23 @@
   text-overflow: ellipsis;
   max-width: 200px;
 }
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .info-window {
+    max-width: 200px;
+    top: 300px;
+  }
+
+  .info-header h2 {
+    font-size: 16px;
+  }
+
+  .info-section {
+    padding: 8px;
+  }
+
+  .info-horizontal .info-section {
+    flex: 1 1 100%;
+  }
+}

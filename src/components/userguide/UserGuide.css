@@ -28,3 +28,11 @@
   margin-bottom: 0 !important; /* ツールチップのマージンを削除 */
   padding-bottom: 0 !important; /* ツールチップのパディングを削除 */
 }
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .common-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}

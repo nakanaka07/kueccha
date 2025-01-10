@@ -5,12 +5,13 @@ import { ERROR_MESSAGES } from './utils/constants';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { LoadingFallback } from './components/loadingfallback/LoadingFallback';
 import { useSheetData } from './hooks/useSheetData';
-import UserGuide from './components/userguide/UserGuide';
-import FeedbackForm from './components/feedbackform/FeedbackForm';
 import './App.css';
 
 const Map = lazy(() => import('./components/map/Map'));
 const FilterPanel = lazy(() => import('./components/filterpanel/FilterPanel'));
+const FeedbackForm = lazy(() => import('./components/feedbackform/FeedbackForm'));
+const UserGuide = lazy(() => import('./components/userguide/UserGuide'));
+const HamburgerMenu = lazy(() => import('./components/hamburgermenu/HamburgerMenu'));
 
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch } = useSheetData();
@@ -19,6 +20,9 @@ const App: React.FC = () => {
   const [areaVisibility, setAreaVisibility] = useState<Record<AreaType, boolean>>(
     {} as Record<AreaType, boolean>,
   );
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
+  const [runTour, setRunTour] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -44,17 +48,12 @@ const App: React.FC = () => {
         <LoadingFallback isLoading={!isLoaded} />
         {isLoaded && (
           <Suspense fallback={<LoadingFallback isLoading={true} />}>
-            <div className="button-container">
-              <FilterPanel
-                pois={pois}
-                onAreaClick={() => setSelectedPoi(null)}
-                setSelectedPoi={setSelectedPoi}
-                setAreaVisibility={setAreaVisibility}
-              />
-              <FeedbackForm />
-              <UserGuide />
-            </div>
             <div className="map-container">
+              <HamburgerMenu
+                onAreaClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                onFeedbackClick={() => setIsFeedbackFormOpen(!isFeedbackFormOpen)}
+                onTourClick={() => setRunTour(true)}
+              />
               <Map
                 pois={pois}
                 selectedPoi={selectedPoi}
@@ -62,6 +61,16 @@ const App: React.FC = () => {
                 areaVisibility={areaVisibility}
               />
             </div>
+            {isFilterPanelOpen && (
+              <FilterPanel
+                pois={pois}
+                onAreaClick={() => setSelectedPoi(null)}
+                setSelectedPoi={setSelectedPoi}
+                setAreaVisibility={setAreaVisibility}
+              />
+            )}
+            {isFeedbackFormOpen && <FeedbackForm />}
+            <UserGuide runTour={runTour} setRunTour={setRunTour} />
           </Suspense>
         )}
       </div>

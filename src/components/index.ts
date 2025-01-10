@@ -6,3 +6,4 @@ export * from './map/Map';
 export * from './marker/Marker';
 export * from './userguide/UserGuide';
 export * from './feedbackform/FeedbackForm';
+export * from './hamburgermenu/HamburgerMenu';

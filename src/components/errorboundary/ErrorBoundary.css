@@ -40,3 +40,19 @@
 .error-content button:hover {
   background-color: #0056b3;
 }
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .error-content h1 {
+    font-size: 20px;
+  }
+
+  .error-content p {
+    font-size: 14px;
+  }
+
+  .error-content button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
