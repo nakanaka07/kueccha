@@ -14,7 +14,7 @@ export const mapsConfig: Config['maps'] = {
     width: '100%',
     height: '100%',
     disableDefaultUI: true,
-    clickableIcons: false,
+    clickableIcons: true,
   },
   options: {
     zoomControl: true,
