@@ -117,7 +117,7 @@ export interface FilterPanelProps extends BaseProps {
   setSelectedPoi: (poi: Poi | null) => void;
   setAreaVisibility: (visibility: Record<AreaType, boolean>) => void;
   isFilterPanelOpen: boolean;
-  onClose: () => void; // 追加
+  onCloseClick: () => void; // onCloseClickを追加
 }
 
 export interface LoadingFallbackProps extends BaseProps {

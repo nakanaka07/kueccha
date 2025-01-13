@@ -6,11 +6,13 @@ import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
 import { ERROR_MESSAGES } from '../../utils/constants';
 
+// Mapコンポーネントのプロパティの型定義
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
   setSelectedPoi: (poi: Poi | null) => void;
   areaVisibility: Record<AreaType, boolean>;
-  onLoad: () => void; // 追加
+  onLoad: () => void; // マップがロードされた後に呼び出される関数
+  onCloseFilterPanel: () => void; // フィルターパネルを閉じる関数
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -18,7 +20,8 @@ const Map: React.FC<MapComponentProps> = ({
   selectedPoi,
   setSelectedPoi,
   areaVisibility,
-  onLoad, // 追加
+  onLoad, // マップがロードされた後に呼び出される関数
+  onCloseFilterPanel, // フィルターパネルを閉じる関数
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
@@ -30,6 +33,7 @@ const Map: React.FC<MapComponentProps> = ({
     'terrain',
   );
 
+  // マップのオプション設定
   const mapOptions = {
     ...mapsConfig.options,
     mapTypeId: mapType,
@@ -45,12 +49,14 @@ const Map: React.FC<MapComponentProps> = ({
     ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
   };
 
+  // マップタイプが変更されたときに呼び出される関数
   const handleMapTypeChanged = useCallback(() => {
     if (map) {
       setMapType(map.getMapTypeId() as google.maps.MapTypeId);
     }
   }, [map]);
 
+  // マップがロードされたときに呼び出される関数
   const onLoadMap = useCallback(
     (map: google.maps.Map) => {
       setMap(map);
@@ -60,6 +66,7 @@ const Map: React.FC<MapComponentProps> = ({
     [handleMapTypeChanged, onLoad],
   );
 
+  // POI（ポイントオブインタレスト）に基づいてマップの境界を設定する
   useEffect(() => {
     if (map && pois.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -68,6 +75,7 @@ const Map: React.FC<MapComponentProps> = ({
     }
   }, [map, pois]);
 
+  // マーカーがクリックされたときに呼び出される関数
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
       setSelectedPoi(poi);
@@ -75,14 +83,18 @@ const Map: React.FC<MapComponentProps> = ({
     [setSelectedPoi],
   );
 
+  // マップがクリックされたときに呼び出される関数
   const handleMapClick = useCallback(() => {
     setSelectedPoi(null);
-  }, [setSelectedPoi]);
+    onCloseFilterPanel(); // フィルターパネルを閉じる
+  }, [setSelectedPoi, onCloseFilterPanel]);
 
+  // インフォウィンドウが閉じられたときに呼び出される関数
   const handleInfoWindowClose = useCallback(() => {
     setSelectedPoi(null);
   }, [setSelectedPoi]);
 
+  // マップのロードエラーを処理する
   if (loadError) {
     console.error('Maps API loading error:', loadError);
     return (
@@ -93,6 +105,7 @@ const Map: React.FC<MapComponentProps> = ({
     );
   }
 
+  // マップがロードされていない場合は何も表示しない
   if (!isLoaded) {
     return null;
   }

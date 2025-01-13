@@ -19,7 +19,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setSelectedPoi,
   setAreaVisibility,
   isFilterPanelOpen,
-  onClose,
+  onCloseClick, // プロパティを追加
 }) => {
   const [areaVisibility, setLocalAreaVisibility] = useState<
     Record<AreaType, boolean>
@@ -57,8 +57,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           aria-label="エリアフィルター"
           className="filter-panel"
         >
-          <button className="close-button" onClick={onClose}>
-            閉じる
+          <button className="close-button" onClick={onCloseClick}>
+            ×
           </button>
           <div>
             <div>表示するエリア（表示数）</div>

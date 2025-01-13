@@ -50,7 +50,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           setSelectedPoi={setSelectedPoi}
           setAreaVisibility={setAreaVisibility}
           isFilterPanelOpen={isFilterPanelOpen}
-          onClose={handleCloseFilterPanel}
+          onCloseClick={handleCloseFilterPanel} // onCloseClickを設定
         />
       )}
     </div>

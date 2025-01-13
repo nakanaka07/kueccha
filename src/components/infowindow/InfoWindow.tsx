@@ -57,6 +57,41 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
           </div>
         )}
 
+        {poi.reservation && (
+          <div className="info-section" key="reservation">
+            <h3>予約</h3>
+            <p>{poi.reservation}</p>
+          </div>
+        )}
+
+        {poi.payment && (
+          <div className="info-section" key="payment">
+            <h3>支払</h3>
+            <p>{poi.payment}</p>
+          </div>
+        )}
+
+        {poi.category && (
+          <div className="info-section" key="category">
+            <h3>カテゴリー</h3>
+            <p>{poi.category}</p>
+          </div>
+        )}
+
+        {poi.genre && (
+          <div className="info-section" key="genre">
+            <h3>ジャンル</h3>
+            <p>{poi.genre}</p>
+          </div>
+        )}
+
+        {poi.area && (
+          <div className="info-section" key="area">
+            <h3>エリア</h3>
+            <p>{AREAS[poi.area]}</p>
+          </div>
+        )}
+
         {poi.phone && (
           <div className="info-section" key="phone">
             <h3>問い合わせ</h3>
@@ -96,41 +131,6 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
             >
               Google マップで見る
             </a>
-          </div>
-        )}
-
-        {poi.reservation && (
-          <div className="info-section" key="reservation">
-            <h3>予約</h3>
-            <p>{poi.reservation}</p>
-          </div>
-        )}
-
-        {poi.payment && (
-          <div className="info-section" key="payment">
-            <h3>支払</h3>
-            <p>{poi.payment}</p>
-          </div>
-        )}
-
-        {poi.category && (
-          <div className="info-section" key="category">
-            <h3>カテゴリー</h3>
-            <p>{poi.category}</p>
-          </div>
-        )}
-
-        {poi.genre && (
-          <div className="info-section" key="genre">
-            <h3>ジャンル</h3>
-            <p>{poi.genre}</p>
-          </div>
-        )}
-
-        {poi.area && (
-          <div className="info-section" key="area">
-            <h3>エリア</h3>
-            <p>{AREAS[poi.area]}</p>
           </div>
         )}
       </div>

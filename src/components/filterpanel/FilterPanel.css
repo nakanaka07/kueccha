@@ -19,19 +19,24 @@
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: relative; /* 追加 */
+  position: relative;
 }
 
 /* Closeボタンのスタイル */
-
 .close-button {
-  position: absolute; /* 追加 */
-  top: 20px; /* 追加 */
-  right: 20px; /* 追加 */
-  background: none; /* 追加 */
-  border: none; /* 追加 */
-  font-size: 16px; /* 追加 */
-  cursor: pointer; /* 追加 */
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #007bff;
 }
 
 .filter-item {

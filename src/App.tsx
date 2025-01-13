@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [areaVisibility, setAreaVisibility] =
     useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -34,6 +35,14 @@ const App: React.FC = () => {
     }
   }, [isLoaded, isMapLoaded]);
 
+  const handleOpenFilterPanel = () => {
+    setIsFilterPanelOpen(true);
+  };
+
+  const handleCloseFilterPanel = () => {
+    setIsFilterPanelOpen(false);
+  };
+
   return (
     <ErrorBoundary>
       <div className="app-container">
@@ -46,6 +55,7 @@ const App: React.FC = () => {
               pois={pois}
               setSelectedPoi={setSelectedPoi}
               setAreaVisibility={setAreaVisibility}
+              onOpenFilterPanel={handleOpenFilterPanel}
             />
             <div className="map-container">
               <Map
@@ -56,7 +66,17 @@ const App: React.FC = () => {
                 onLoad={() => {
                   setIsMapLoaded(true);
                 }}
+                onCloseFilterPanel={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
               />
+              {isFilterPanelOpen && (
+                <FilterPanel
+                  pois={pois}
+                  setSelectedPoi={setSelectedPoi}
+                  setAreaVisibility={setAreaVisibility}
+                  isFilterPanelOpen={isFilterPanelOpen}
+                  onCloseClick={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
+                />
+              )}
             </div>
           </Suspense>
         )}
