@@ -1,0 +1,56 @@
+.app-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* 他の要素が上に表示されるようにする */
+}
+
+.map-container > div {
+  width: 100%;
+  height: 100%;
+}
+
+.common-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.common-button:hover {
+  background-color: #0056b3;
+}
+
+/* 初期レンダリングのバックグラウンドイメージ */
+.initial-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/src/utils/images/row1.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent; /* 背景色を透明に設定 */
+  z-index: 1000;
+  transition: opacity 3s ease-out; /* フェードアウトのトランジションを3秒に設定 */
+}
+
+.initial-background.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
