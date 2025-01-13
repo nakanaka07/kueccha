@@ -1,10 +1,10 @@
-import prettierPlugin from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
-import reactPlugin from 'eslint-plugin-react';
-import tsConfigs from '@typescript-eslint/eslint-plugin';
-import reactConfigs from 'eslint-plugin-react';
+const prettierPlugin = require('eslint-plugin-prettier');
+const prettierConfig = require('eslint-config-prettier');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const tsParser = require('@typescript-eslint/parser');
+const reactPlugin = require('eslint-plugin-react');
+const tsConfigs = require('@typescript-eslint/eslint-plugin');
+const reactConfigs = require('eslint-plugin-react');
 
 module.exports = {
   // TypeScriptパーサーの設定

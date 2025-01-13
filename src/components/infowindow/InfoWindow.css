@@ -7,17 +7,36 @@
   top: 350px;
   max-height: 500px;
   overflow-y: auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .info-header {
   background-color: #f8f8f8;
   padding: 10px;
   border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .info-header h2 {
   margin: 0;
   font-size: 18px;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.modal-close-button:hover {
+  color: #007bff;
 }
 
 .info-section {
@@ -61,6 +80,8 @@
   background-color: #007bff;
   color: #fff;
   text-decoration: none;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 .info-button:hover {

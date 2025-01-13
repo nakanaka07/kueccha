@@ -3,7 +3,7 @@ import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { mapsConfig } from '../../utils/config';
 import type { MapProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
-import { InfoWindow } from '../infowindow/InfoWindow';
+import InfoWindow from '../infowindow/InfoWindow';
 import { ERROR_MESSAGES } from '../../utils/constants';
 
 interface MapComponentProps extends MapProps {
