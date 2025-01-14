@@ -1,3 +1,4 @@
+/* アプリ全体のコンテナ */
 .app-container {
   position: relative;
   width: 100%;
@@ -6,6 +7,7 @@
   background-color: #f8f9fa;
 }
 
+/* マップコンテナ */
 .map-container {
   position: absolute;
   top: 0;
@@ -20,6 +22,7 @@
   height: 100%;
 }
 
+/* 共通ボタンスタイル */
 .common-button {
   background-color: #007bff;
   color: #fff;

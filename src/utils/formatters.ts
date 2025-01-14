@@ -12,6 +12,11 @@ export const formatInformation = (text: string | null) => {
     }
   };
 
+  /**
+   * テキストをURLとその他のテキストに分離する関数
+   * @param text 分離するテキスト
+   * @returns URLとその他のテキストを含むオブジェクト
+   */
   const splitContentByType = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const lines = text.split('\n');

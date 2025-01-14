@@ -15,6 +15,7 @@ interface MapComponentProps extends MapProps {
   onCloseFilterPanel: () => void; // フィルターパネルを閉じる関数
 }
 
+// Mapコンポーネントの定義
 const Map: React.FC<MapComponentProps> = ({
   pois,
   selectedPoi,
@@ -29,9 +30,7 @@ const Map: React.FC<MapComponentProps> = ({
     mapIds: [mapsConfig.mapId],
     libraries: mapsConfig.libraries,
   });
-  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
-    'terrain',
-  );
+  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('satellite');
 
   // マップのオプション設定
   const mapOptions = {
@@ -60,6 +59,7 @@ const Map: React.FC<MapComponentProps> = ({
   const onLoadMap = useCallback(
     (map: google.maps.Map) => {
       setMap(map);
+      map.setMapTypeId('satellite'); // マップがロードされたときに'satellite'に設定
       map.addListener('maptypeid_changed', handleMapTypeChanged);
       onLoad(); // マップがロードされた後に呼び出す
     },
