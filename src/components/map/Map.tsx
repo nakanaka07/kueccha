@@ -85,9 +85,8 @@ const Map: React.FC<MapComponentProps> = ({
 
   // マップがクリックされたときに呼び出される関数
   const handleMapClick = useCallback(() => {
-    setSelectedPoi(null);
     onCloseFilterPanel(); // フィルターパネルを閉じる
-  }, [setSelectedPoi, onCloseFilterPanel]);
+  }, [onCloseFilterPanel]);
 
   // インフォウィンドウが閉じられたときに呼び出される関数
   const handleInfoWindowClose = useCallback(() => {

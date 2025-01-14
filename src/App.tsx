@@ -1,10 +1,10 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import LoadingFallback from './components/loadingfallback/LoadingFallback';
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
 import Map from './components/map/Map';
-import FilterPanel, { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // FilterPanelをインポート
+import FilterPanel, { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi, AreaType } from './utils/types';
 import { useSheetData } from './hooks/useSheetData';
@@ -35,13 +35,17 @@ const App: React.FC = () => {
     }
   }, [isLoaded, isMapLoaded]);
 
-  const handleOpenFilterPanel = () => {
+  const handleOpenFilterPanel = useCallback(() => {
     setIsFilterPanelOpen(true);
-  };
+  }, []);
 
-  const handleCloseFilterPanel = () => {
+  const handleCloseFilterPanel = useCallback(() => {
     setIsFilterPanelOpen(false);
-  };
+  }, []);
+
+  const handleMapLoad = useCallback(() => {
+    setIsMapLoaded(true);
+  }, []);
 
   return (
     <ErrorBoundary>
@@ -63,10 +67,8 @@ const App: React.FC = () => {
                 selectedPoi={selectedPoi}
                 setSelectedPoi={setSelectedPoi}
                 areaVisibility={areaVisibility}
-                onLoad={() => {
-                  setIsMapLoaded(true);
-                }}
-                onCloseFilterPanel={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
+                onLoad={handleMapLoad}
+                onCloseFilterPanel={handleCloseFilterPanel}
               />
               {isFilterPanelOpen && (
                 <FilterPanel
@@ -74,7 +76,7 @@ const App: React.FC = () => {
                   setSelectedPoi={setSelectedPoi}
                   setAreaVisibility={setAreaVisibility}
                   isFilterPanelOpen={isFilterPanelOpen}
-                  onCloseClick={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
+                  onCloseClick={handleCloseFilterPanel}
                 />
               )}
             </div>

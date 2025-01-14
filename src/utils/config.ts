@@ -26,7 +26,7 @@ export const mapsConfig: Config['maps'] = {
     mapTypeControl: true,
     streetViewControl: true,
     fullscreenControl: true,
-    styles: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ? undefined : [], // mapIdがある場合はstylesをundefinedに設定
+    styles: undefined, // mapIdがある場合はstylesをundefinedに設定
   },
 };
 
