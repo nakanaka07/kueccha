@@ -4,7 +4,7 @@ import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import LoadingFallback from './components/loadingfallback/LoadingFallback';
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
 import Map from './components/map/Map';
-import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
+import FilterPanel, { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // FilterPanelをインポート
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi, AreaType } from './utils/types';
 import { useSheetData } from './hooks/useSheetData';

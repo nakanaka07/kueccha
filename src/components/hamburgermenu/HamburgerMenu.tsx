@@ -5,15 +5,12 @@ import type { Poi, AreaType } from '../../utils/types';
 
 interface HamburgerMenuProps {
   pois: Poi[];
-  setSelectedPoi: (poi: Poi | null) => void;
-  setAreaVisibility: (visibility: Record<AreaType, boolean>) => void;
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
+  onOpenFilterPanel: () => void; // 追加
 }
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
-  pois,
-  setSelectedPoi,
-  setAreaVisibility,
-}) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, setAreaVisibility, onOpenFilterPanel }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
