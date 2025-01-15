@@ -4,7 +4,9 @@ import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import LoadingFallback from './components/loadingfallback/LoadingFallback';
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
 import Map from './components/map/Map';
-import FilterPanel, { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
+import FilterPanel, {
+  INITIAL_VISIBILITY,
+} from './components/filterpanel/FilterPanel';
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi, AreaType } from './utils/types';
 import { useSheetData } from './hooks/useSheetData';
@@ -35,11 +37,17 @@ const App: React.FC = () => {
     }
   }, [isLoaded, isMapLoaded]);
 
+  // ページの再読み込み時にselectedPoiを初期化する
+  useEffect(() => {
+    setSelectedPoi(null);
+  }, []);
+
   const handleOpenFilterPanel = useCallback(() => {
     setIsFilterPanelOpen(true);
   }, []);
 
   const handleCloseFilterPanel = useCallback(() => {
+    console.log('Closing filter panel'); // デバッグメッセージを追加
     setIsFilterPanelOpen(false);
   }, []);
 
@@ -50,11 +58,15 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="app-container">
-        <div className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`} />
+        <div
+          className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
+        />
         {!isLoaded ? (
           <LoadingFallback isLoading={true} isLoaded={isLoaded} />
         ) : (
-          <Suspense fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}>
+          <Suspense
+            fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}
+          >
             <HamburgerMenu
               pois={pois}
               setSelectedPoi={setSelectedPoi}

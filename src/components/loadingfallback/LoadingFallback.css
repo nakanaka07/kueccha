@@ -22,7 +22,7 @@
 /* ローディングコンテンツのスタイル */
 .loading-content {
   text-align: center;
-  margin-top: 300px; /* ここでマージンを追加して下に下げる */
+  margin-top: 500px; /* ここでマージンを追加して下に下げる */
 }
 
 /* ローディングスピナーのスタイル */
