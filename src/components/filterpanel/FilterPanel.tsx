@@ -19,7 +19,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setSelectedPoi,
   setAreaVisibility,
   isFilterPanelOpen,
-  onCloseClick, // プロパティを追加
+  onCloseClick,
 }) => {
   const [areaVisibility, setLocalAreaVisibility] = useState<
     Record<AreaType, boolean>

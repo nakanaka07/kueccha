@@ -7,7 +7,7 @@ interface HamburgerMenuProps {
   pois: Poi[];
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
-  onOpenFilterPanel: () => void; // 追加
+  onOpenFilterPanel: () => void;
 }
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, setAreaVisibility, onOpenFilterPanel }) => {
@@ -20,7 +20,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, set
 
   const handleAreaClick = () => {
     setIsFilterPanelOpen(!isFilterPanelOpen);
-    setIsOpen(false); // メニューを閉じる
+    setIsOpen(false);
   };
 
   const handleCloseFilterPanel = () => {
@@ -47,7 +47,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, set
           setSelectedPoi={setSelectedPoi}
           setAreaVisibility={setAreaVisibility}
           isFilterPanelOpen={isFilterPanelOpen}
-          onCloseClick={handleCloseFilterPanel} // onCloseClickを設定
+          onCloseClick={handleCloseFilterPanel}
         />
       )}
     </div>

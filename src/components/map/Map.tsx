@@ -30,7 +30,9 @@ const Map: React.FC<MapComponentProps> = ({
     mapIds: [mapsConfig.mapId],
     libraries: mapsConfig.libraries,
   });
-  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('satellite');
+  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
+    'terrain',
+  );
 
   // マップのオプション設定
   const mapOptions = {
@@ -59,7 +61,7 @@ const Map: React.FC<MapComponentProps> = ({
   const onLoadMap = useCallback(
     (map: google.maps.Map) => {
       setMap(map);
-      map.setMapTypeId('satellite'); // マップがロードされたときに'satellite'に設定
+      map.setMapTypeId('terrain'); // マップがロードされたときに'satellite'に設定
       map.addListener('maptypeid_changed', handleMapTypeChanged);
       onLoad(); // マップがロードされた後に呼び出す
     },

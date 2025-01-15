@@ -2,7 +2,7 @@
   position: absolute;
   top: 10px;
   left: 120px;
-  z-index: 1000; /* マップの上に表示するためにz-indexを設定 */
+  z-index: 1000;
 }
 
 .hamburger-icon {
@@ -30,7 +30,7 @@
   left: 55px;
   background-color: white;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1001; /* ハンバーガーメニューの上に表示するためにz-indexを設定 */
+  z-index: 1001;
   width: 200px;
   border-radius: 5px;
 }

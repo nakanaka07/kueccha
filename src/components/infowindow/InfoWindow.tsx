@@ -1,8 +1,8 @@
-import React from 'react';
-import type { InfoWindowProps } from '../../utils/types';
-import { AREAS } from '../../utils/constants';
-import { formatInformation } from '../../utils/formatters';
-import './InfoWindow.css';
+import React from 'react'; // Reactライブラリをインポート
+import type { InfoWindowProps } from '../../utils/types'; // InfoWindowProps型をインポート
+import { AREAS } from '../../utils/constants'; // AREAS定数をインポーネット
+import { formatInformation } from '../../utils/formatters'; // formatInformation関数をインポート
+import './InfoWindow.css'; // InfoWindowコンポーネントのスタイルをインポート
 
 // 有効な電話番号かどうかをチェックする関数
 const isValidPhoneNumber = (phone: string) => {
