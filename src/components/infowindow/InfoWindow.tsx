@@ -1,4 +1,4 @@
-import React from 'react'; // Reactライブラリをインポート
+import React, { useEffect, useRef } from 'react'; // Reactライブラリとフックをインポート
 import type { InfoWindowProps } from '../../utils/types'; // InfoWindowProps型をインポート
 import { AREAS } from '../../utils/constants'; // AREAS定数をインポーネット
 import { formatInformation } from '../../utils/formatters'; // formatInformation関数をインポート
@@ -12,6 +12,25 @@ const isValidPhoneNumber = (phone: string) => {
 
 // InfoWindowコンポーネント
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
+  const infoWindowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (infoWindowRef.current) {
+        const windowHeight = window.innerHeight;
+        const maxHeight = windowHeight - 150; // 上下のマージンを考慮
+        infoWindowRef.current.style.maxHeight = `${maxHeight}px`;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 初期設定
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const businessHours = [
     { day: '月曜日', value: poi.monday },
     { day: '火曜日', value: poi.tuesday },
@@ -24,7 +43,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   ];
 
   return (
-    <div className="info-window">
+    <div className="info-window" ref={infoWindowRef}>
       <div className="info-header">
         <h2 id="info-window-title">{poi.name}</h2>
         <button

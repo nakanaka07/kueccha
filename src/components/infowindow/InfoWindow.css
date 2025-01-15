@@ -1,131 +1,130 @@
 /* InfoWindowのスタイル */
 .info-window {
-  font-family: 'Roboto', sans-serif;
-  max-width: 250px;
-  position: absolute;
-  left: 10px;
-  top: 350px;
-  max-height: 500px;
-  overflow-y: auto;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow-x: hidden;
+  font-family: 'Roboto', sans-serif; /* フォントファミリーを設定 */
+  max-width: 250px; /* 最大幅を設定 */
+  position: absolute; /* 絶対位置を設定 */
+  left: 10px; /* 左からの位置を設定 */
+  bottom: 50px; /* 下からの位置を設定 */
+  background-color: #fff; /* 背景色を白に設定 */
+  border-radius: 8px; /* 角を丸くする */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* ボックスシャドウを設定 */
+  overflow: hidden; /* オーバーフローを隠す */
+}
+
+.info-content {
+  max-height: calc(100vh - 150px); /* ビューポートの高さからマージンを引いた高さを設定 */
+  overflow-y: auto; /* 縦方向のスクロールを有効にする */
+  overflow-x: hidden; /* 横方向のスクロールを無効にする */
+  box-sizing: border-box; /* パディングを含むボックスサイズを設定 */
 }
 
 .info-header {
-  background-color: #f8f8f8;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background-color: #f8f8f8; /* 背景色を設定 */
+  padding: 10px; /* 内側の余白を設定 */
+  border-bottom: 1px solid #ddd; /* 下部にボーダーを設定 */
+  display: flex; /* フレックスボックスを使用 */
+  justify-content: space-between; /* 要素間のスペースを均等にする */
+  align-items: center; /* 要素を中央に揃える */
 }
 
 .info-header h2 {
-  margin: 0;
-  font-size: 18px;
+  margin: 0; /* マージンをリセット */
+  font-size: 18px; /* フォントサイズを設定 */
 }
 
 .modal-close-button {
-  background: none;
-  border: none;
-  font-size: 30px;
-  cursor: pointer;
-  color: #333;
-  transition: color 0.3s ease;
+  background: none; /* 背景をなしに設定 */
+  border: none; /* ボーダーをなしに設定 */
+  font-size: 30px; /* フォントサイズを設定 */
+  cursor: pointer; /* カーソルをポインターに設定 */
+  color: #333; /* 文字色を設定 */
+  transition: color 0.3s ease; /* 色の変化にトランジションを設定 */
 }
 
 .modal-close-button:hover {
-  color: #007bff;
+  color: #007bff; /* ホバー時の文字色を設定 */
 }
 
 .info-section {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 10px; /* 内側の余白を設定 */
+  border-bottom: 1px solid #ddd; /* 下部にボーダーを設定 */
 }
 
 .info-section:last-child {
-  border-bottom: none;
+  border-bottom: none; /* 最後の要素のボーダーをなしに設定 */
 }
 
 .info-business-hours,
 .info-basic,
 .info-related {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* 下部のマージンを設定 */
 }
 
 .info-business-hour,
 .info-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
+  display: flex; /* フレックスボックスを使用 */
+  justify-content: space-between; /* 要素間のスペースを均等にする */
+  margin-bottom: 5px; /* 下部のマージンを設定 */
 }
 
 .info-label {
-  font-weight: bold;
+  font-weight: bold; /* フォントの太さを設定 */
 }
 
 .info-link {
-  color: #007bff;
-  text-decoration: none;
+  color: #007bff; /* 文字色を設定 */
+  text-decoration: none; /* テキストの装飾をなしに設定 */
 }
 
 .info-link:hover {
-  text-decoration: underline;
+  text-decoration: underline; /* ホバー時のテキスト装飾を下線に設定 */
 }
 
 .info-button {
-  display: block;
-  text-align: center;
-  background-color: #007bff;
-  color: #fff;
-  text-decoration: none;
-  padding: 10px;
-  border-radius: 5px;
+  display: block; /* ブロック要素に設定 */
+  text-align: center; /* テキストを中央揃えに設定 */
+  background-color: #007bff; /* 背景色を設定 */
+  color: #fff; /* 文字色を設定 */
+  text-decoration: none; /* テキストの装飾をなしに設定 */
+  padding: 10px; /* 内側の余白を設定 */
+  border-radius: 5px; /* 角を丸くする */
 }
 
 .info-button:hover {
-  background-color: #0056b3;
+  background-color: #0056b3; /* ホバー時の背景色を設定 */
 }
 
 /* 横並びにするためのスタイル */
 .info-horizontal {
-  display: flex;
-  flex-wrap: wrap;
+  display: flex; /* フレックスボックスを使用 */
+  flex-wrap: wrap; /* 要素を折り返す */
 }
 
 .info-horizontal .info-section {
-  flex: 1 1 45%;
+  flex: 1 1 45%; /* フレックスアイテムのサイズを設定 */
 }
 
 /* URL表示やエリア表示のスタイル */
 .info-section p,
 .info-section a {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
-
-.info-content {
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: hidden; /* 横スクロールを無効にする */
+  white-space: nowrap; /* テキストを折り返さない */
+  overflow: hidden; /* オーバーフローを隠す */
+  text-overflow: ellipsis; /* テキストが溢れた場合に省略記号を表示 */
+  max-width: 200px; /* 最大幅を設定 */
 }
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .info-window {
-    max-width: 200px;
-    top: 300px;
+    max-width: 200px; /* 最大幅を設定 */
+    top: 300px; /* 上からの位置を設定 */
   }
 
   .info-header h2 {
-    font-size: 16px;
+    font-size: 16px; /* フォントサイズを設定 */
   }
 
   .info-section {
-    padding: 8px;
+    padding: 8px; /* 内側の余白を設定 */
   }
 }
