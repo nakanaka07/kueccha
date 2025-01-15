@@ -108,6 +108,12 @@
   max-width: 200px;
 }
 
+.info-content {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden; /* 横スクロールを無効にする */
+}
+
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .info-window {

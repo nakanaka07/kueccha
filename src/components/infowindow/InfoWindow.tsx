@@ -36,108 +36,110 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
         </button>
       </div>
 
-      <div className="info-section">
-        <ul>
-          {businessHours.map(
-            (hour, index) =>
-              hour.value && (
-                <li key={`${hour.day}-${index}`}>
-                  {hour.day} : {hour.value}
-                </li>
-              ),
-          )}
-        </ul>
-      </div>
+      <div className="info-content">
+        <div className="info-section">
+          <ul>
+            {businessHours.map(
+              (hour, index) =>
+                hour.value && (
+                  <li key={`${hour.day}-${index}`}>
+                    {hour.day} : {hour.value}
+                  </li>
+                ),
+            )}
+          </ul>
+        </div>
 
-      <div className="info-horizontal">
-        {[
-          {
-            key: 'description',
-            condition: poi.description,
-            title: '補足',
-            content: <p>{poi.description}</p>
-          },
-          {
-            key: 'reservation',
-            condition: poi.reservation,
-            title: '予約',
-            content: <p>{poi.reservation}</p>
-          },
-          {
-            key: 'payment',
-            condition: poi.payment,
-            title: '支払',
-            content: <p>{poi.payment}</p>
-          },
-          {
-            key: 'category',
-            condition: poi.category,
-            title: 'カテゴリー',
-            content: <p>{poi.category}</p>
-          },
-          {
-            key: 'genre',
-            condition: poi.genre,
-            title: 'ジャンル',
-            content: <p>{poi.genre}</p>
-          },
-          {
-            key: 'area',
-            condition: poi.area,
-            title: 'エリア',
-            content: <p>{AREAS[poi.area]}</p>
-          },
-          {
-            key: 'phone',
-            condition: poi.phone,
-            title: '問い合わせ',
-            content: poi.phone && isValidPhoneNumber(poi.phone) ? (
-              <a href={`tel:${poi.phone}`} className="info-link">
-                {poi.phone}
-              </a>
-            ) : (
-              <span>{poi.phone}</span>
-            )
-          },
-          {
-            key: 'address',
-            condition: poi.address,
-            title: '所在地',
-            content: <p>{poi.address}</p>
-          },
-          {
-            key: 'information',
-            condition: poi.information,
-            title: '関連情報',
-            content: (
-              <div className="info-related">
-                {poi.information ? formatInformation(poi.information) : null}
+        <div className="info-horizontal">
+          {[
+            {
+              key: 'description',
+              condition: poi.description,
+              title: '補足',
+              content: <p>{poi.description}</p>
+            },
+            {
+              key: 'reservation',
+              condition: poi.reservation,
+              title: '予約',
+              content: <p>{poi.reservation}</p>
+            },
+            {
+              key: 'payment',
+              condition: poi.payment,
+              title: '支払',
+              content: <p>{poi.payment}</p>
+            },
+            {
+              key: 'category',
+              condition: poi.category,
+              title: 'カテゴリー',
+              content: <p>{poi.category}</p>
+            },
+            {
+              key: 'genre',
+              condition: poi.genre,
+              title: 'ジャンル',
+              content: <p>{poi.genre}</p>
+            },
+            {
+              key: 'area',
+              condition: poi.area,
+              title: 'エリア',
+              content: <p>{AREAS[poi.area]}</p>
+            },
+            {
+              key: 'phone',
+              condition: poi.phone,
+              title: '問い合わせ',
+              content: poi.phone && isValidPhoneNumber(poi.phone) ? (
+                <a href={`tel:${poi.phone}`} className="info-link">
+                  {poi.phone}
+                </a>
+              ) : (
+                <span>{poi.phone}</span>
+              )
+            },
+            {
+              key: 'address',
+              condition: poi.address,
+              title: '所在地',
+              content: <p>{poi.address}</p>
+            },
+            {
+              key: 'information',
+              condition: poi.information,
+              title: '関連情報',
+              content: (
+                <div className="info-related">
+                  {poi.information ? formatInformation(poi.information) : null}
+                </div>
+              )
+            },
+            {
+              key: 'view',
+              condition: poi.view,
+              title: '',
+              content: (
+                <a
+                  href={poi.view}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="info-button"
+                >
+                  Google マップで見る
+                </a>
+              )
+            }
+          ].map((item, index) =>
+            item.condition ? (
+              <div className="info-section" key={`${item.key}-${index}`}>
+                {item.title && <h3>{item.title}</h3>}
+                {item.content}
               </div>
-            )
-          },
-          {
-            key: 'view',
-            condition: poi.view,
-            title: '',
-            content: (
-              <a
-                href={poi.view}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="info-button"
-              >
-                Google マップで見る
-              </a>
-            )
-          }
-        ].map((item, index) =>
-          item.condition ? (
-            <div className="info-section" key={`${item.key}-${index}`}>
-              {item.title && <h3>{item.title}</h3>}
-              {item.content}
-            </div>
-          ) : null
-        )}
+            ) : null
+          )}
+        </div>
       </div>
     </div>
   );
