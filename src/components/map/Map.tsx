@@ -83,7 +83,7 @@ const Map: React.FC<MapComponentProps> = ({
         map.fitBounds(bounds); // 境界にフィット
         map.panToBounds(bounds); // 境界内にパニング
       } else {
-        setIsInitialRender(false); // 初回レンダリングを解除
+        setIsInitialRender(false);
       }
     }
   }, [map, pois, areaVisibility, isInitialRender]);

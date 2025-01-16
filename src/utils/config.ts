@@ -6,7 +6,7 @@ export const mapsConfig: Config['maps'] = {
   apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
   defaultCenter: { lat: 38.0, lng: 138.5 },
-  defaultZoom: 5,
+  defaultZoom: 10,
   libraries: [
     'places',
     'geometry',
