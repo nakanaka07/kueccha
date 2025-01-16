@@ -24,16 +24,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onCloseClick, // フィルターパネルを閉じる関数
 }) => {
   // エリアの表示状態を管理するローカルステート
-  const [areaVisibility, setLocalAreaVisibility] = useState<
-    Record<AreaType, boolean>
-  >(() => {
-    const savedVisibility = localStorage.getItem('areaVisibility'); // ローカルストレージから表示状態を取得
-    return savedVisibility ? JSON.parse(savedVisibility) : INITIAL_VISIBILITY; // 保存された表示状態があれば使用、なければ初期状態
-  });
+  const [areaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
 
-  // エリアの表示状態が変更されたときにローカルストレージに保存し、親コンポーネントに通知
+  // エリアの表示状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
-    localStorage.setItem('areaVisibility', JSON.stringify(areaVisibility)); // ローカルストレージに保存
     setAreaVisibility(areaVisibility); // 親コンポーネントに通知
   }, [areaVisibility, setAreaVisibility]);
 
