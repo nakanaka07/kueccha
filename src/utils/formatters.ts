@@ -1,11 +1,11 @@
 import React from 'react';
 
 export const formatInformation = (text: string | null) => {
-  if (!text?.trim()) return null;
+  if (!text?.trim()) return null; // テキストが空またはnullの場合はnullを返す
 
   const isValidUrl = (url: string): boolean => {
     try {
-      new URL(url);
+      new URL(url); // URLが有効かどうかをチェック
       return true;
     } catch {
       return false;
@@ -18,26 +18,26 @@ export const formatInformation = (text: string | null) => {
    * @returns URLとその他のテキストを含むオブジェクト
    */
   const splitContentByType = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const lines = text.split('\n');
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // URLを検出する正規表現
+    const lines = text.split('\n'); // テキストを行ごとに分割
 
     return {
-      text: lines.filter((line) => !line.match(urlRegex)),
-      urls: lines.filter((line) => line.match(urlRegex)).filter(isValidUrl),
+      text: lines.filter((line) => !line.match(urlRegex)), // URLでない行をフィルタ
+      urls: lines.filter((line) => line.match(urlRegex)).filter(isValidUrl), // 有効なURLをフィルタ
     };
   };
 
   try {
-    const content = splitContentByType(text);
+    const content = splitContentByType(text); // テキストをURLとその他のテキストに分離
 
     const createElement = (
       type: 'text' | 'url',
       content: string,
       index: number,
     ) => {
-      const isUrl = type === 'url';
+      const isUrl = type === 'url'; // タイプがURLかどうかをチェック
       return React.createElement('div', { key: `${type}-${index}` }, [
-        React.createElement('span', {}, isUrl ? 'URL:' : '説明:'),
+        React.createElement('span', {}, isUrl ? 'URL:' : '説明:'), // タイプに応じたラベルを作成
         isUrl
           ? React.createElement(
               'a',
@@ -47,17 +47,17 @@ export const formatInformation = (text: string | null) => {
                 rel: 'noopener noreferrer',
               },
               content,
-            )
-          : React.createElement('span', {}, content.trim()),
+            ) // URLの場合はリンクを作成
+          : React.createElement('span', {}, content.trim()), // テキストの場合はスパンを作成
       ]);
     };
 
     return React.createElement('div', {}, [
-      ...content.text.map((line, index) => createElement('text', line, index)),
-      ...content.urls.map((url, index) => createElement('url', url, index)),
+      ...content.text.map((line, index) => createElement('text', line, index)), // テキストを要素に変換
+      ...content.urls.map((url, index) => createElement('url', url, index)), // URLを要素に変換
     ]);
   } catch (error) {
-    console.error('Error formatting information:', error);
-    return null;
+    console.error('Error formatting information:', error); // エラーをコンソールに出力
+    return null; // エラーが発生した場合はnullを返す
   }
 };

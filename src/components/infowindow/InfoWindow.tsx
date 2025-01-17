@@ -6,28 +6,28 @@ import './InfoWindow.css'; // InfoWindowコンポーネントのスタイルを�
 
 // 有効な電話番号かどうかをチェックする関数
 const isValidPhoneNumber = (phone: string) => {
-  const phoneRegex = /^[0-9-+() ]+$/;
-  return phoneRegex.test(phone);
+  const phoneRegex = /^[0-9-+() ]+$/; // 電話番号の正規表現
+  return phoneRegex.test(phone); // 正規表現にマッチするかどうかを返す
 };
 
 // InfoWindowコンポーネント
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
-  const infoWindowRef = useRef<HTMLDivElement>(null);
+  const infoWindowRef = useRef<HTMLDivElement>(null); // InfoWindowの参照を作成
 
   useEffect(() => {
     const handleResize = () => {
       if (infoWindowRef.current) {
-        const windowHeight = window.innerHeight;
+        const windowHeight = window.innerHeight; // ウィンドウの高さを取得
         const maxHeight = windowHeight - 150; // 上下のマージンを考慮
-        infoWindowRef.current.style.maxHeight = `${maxHeight}px`;
+        infoWindowRef.current.style.maxHeight = `${maxHeight}px`; // 最大高さを設定
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize); // リサイズイベントを追加
     handleResize(); // 初期設定
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleResize); // リサイズイベントを削除
     };
   }, []);
 
@@ -40,12 +40,12 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     { day: '土曜日', value: poi.saturday },
     { day: '日曜日', value: poi.sunday },
     { day: '祝祭日', value: poi.holiday },
-  ];
+  ]; // 営業時間のリスト
 
   return (
     <div className="info-window" ref={infoWindowRef}>
       <div className="info-header">
-        <h2 id="info-window-title">{poi.name}</h2>
+        <h2 id="info-window-title">{poi.name}</h2> {/* POIの名前を表示 */}
         <button
           onClick={onCloseClick}
           aria-label="閉じる"
@@ -65,7 +65,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                     {hour.day} : {hour.value}
                   </li>
                 ),
-            )}
+            )} {/* 営業時間をリスト表示 */}
           </ul>
         </div>
 
@@ -157,7 +157,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                 {item.content}
               </div>
             ) : null
-          )}
+          )} {/* POIの詳細情報を表示 */}
         </div>
       </div>
     </div>

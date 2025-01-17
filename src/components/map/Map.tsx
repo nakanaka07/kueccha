@@ -112,8 +112,8 @@ const Map: React.FC<MapComponentProps> = ({
     console.error('Maps API loading error:', loadError); // エラーメッセージを表示
     return (
       <div role="alert" aria-live="assertive">
-        <h2>{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2> // エラーメッセージ
-        <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p> // リトライメッセージ
+        <h2>{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
+        <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
       </div>
     );
   }

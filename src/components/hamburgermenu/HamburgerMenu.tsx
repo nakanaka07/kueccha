@@ -1,28 +1,33 @@
-import React, { useState } from 'react';
-import './HamburgerMenu.css';
-import FilterPanel from '../filterpanel/FilterPanel';
-import type { Poi, AreaType } from '../../utils/types';
+import React, { useState } from 'react'; // ReactとuseStateフックをインポート
+import './HamburgerMenu.css'; // スタイルをインポート
+import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
+import type { Poi, AreaType } from '../../utils/types'; // 型定義をインポート
 
+// HamburgerMenuコンポーネントのプロパティの型定義
 interface HamburgerMenuProps {
-  pois: Poi[];
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
-  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
-  onOpenFilterPanel: () => void;
+  pois: Poi[]; // POIのリスト
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを選択する関数
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの表示状態を設定する関数
+  onOpenFilterPanel: () => void; // フィルターパネルを開く関数
 }
 
+// HamburgerMenuコンポーネントの定義
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, setAreaVisibility, onOpenFilterPanel }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するローカルステート
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するローカルステート
 
+  // メニューの開閉を切り替える関数
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  // エリア選択ボタンがクリックされたときにフィルターパネルの開閉を切り替える関数
   const handleAreaClick = () => {
     setIsFilterPanelOpen(!isFilterPanelOpen);
-    setIsOpen(false);
+    setIsOpen(false); // メニューを閉じる
   };
 
+  // フィルターパネルを閉じる関数
   const handleCloseFilterPanel = () => {
     setIsFilterPanelOpen(false);
   };
@@ -54,4 +59,4 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, set
   );
 };
 
-export default HamburgerMenu;
+export default HamburgerMenu; // HamburgerMenuコンポーネントをエクスポート

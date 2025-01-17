@@ -1,3 +1,4 @@
+// エリアの定数を定義
 export const AREAS = {
   RECOMMEND: 'おすすめ',
   RYOTSU_AIKAWA: '両津・相川地区',
@@ -8,6 +9,7 @@ export const AREAS = {
   PARKING: '駐車場',
 } as const;
 
+// 営業時間の定数を定義
 export const BUSINESS_HOURS = [
   { day: '月', key: 'monday' },
   { day: '火', key: 'tuesday' },
@@ -19,6 +21,7 @@ export const BUSINESS_HOURS = [
   { day: '祝', key: 'holiday' },
 ] as const;
 
+// マーカーの色の定数を定義
 export const MARKER_COLORS = {
   DEFAULT: '#000000',
   RECOMMEND: '#d7003a',
@@ -30,6 +33,7 @@ export const MARKER_COLORS = {
   PARKING: '#333333',
 } as const;
 
+// エラーメッセージの定数を定義
 export const ERROR_MESSAGES = {
   MAP: {
     LOAD_FAILED: 'マップの読み込みに失敗しました',

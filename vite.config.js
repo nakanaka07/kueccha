@@ -1,9 +1,9 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig, loadEnv } from 'vite'; // ViteのdefineConfigとloadEnvをインポート
+import react from '@vitejs/plugin-react'; // ViteのReactプラグインをインポート
+import tsconfigPaths from 'vite-tsconfig-paths'; // Viteのtsconfig-pathsプラグインをインポート
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), ''); // 環境変数をロード
 
   const envVariables = [
     'VITE_GOOGLE_MAPS_API_KEY',
@@ -13,28 +13,28 @@ export default defineConfig(({ mode }) => {
     'VITE_EMAILJS_SERVICE_ID',
     'VITE_EMAILJS_TEMPLATE_ID',
     'VITE_EMAILJS_PUBLIC_KEY',
-  ];
+  ]; // 使用する環境変数のリスト
 
   const defineEnv = envVariables.reduce((acc, key) => {
-    acc[`process.env.${key}`] = JSON.stringify(env[key]);
+    acc[`process.env.${key}`] = JSON.stringify(env[key]); // 環境変数を定義
     return acc;
   }, {});
 
   return {
-    base: mode === 'production' ? '/kueccha/' : '/',
-    plugins: [react(), tsconfigPaths()],
+    base: mode === 'production' ? '/kueccha/' : '/', // ベースURLを設定
+    plugins: [react(), tsconfigPaths()], // 使用するプラグインを設定
     resolve: {
       alias: {
-        '@': '/src',
+        '@': '/src', // エイリアスを設定
       },
     },
     build: {
-      outDir: 'dist',
-      sourcemap: false,
+      outDir: 'dist', // 出力ディレクトリを設定
+      sourcemap: false, // ソースマップを無効に設定
       rollupOptions: {
         onwarn(warning, warn) {
-          if (warning.code === 'SOURCEMAP_ERROR') return;
-          warn(warning);
+          if (warning.code === 'SOURCEMAP_ERROR') return; // ソースマップエラーを無視
+          warn(warning); // その他の警告を表示
         },
       },
     },
@@ -45,12 +45,12 @@ export default defineConfig(({ mode }) => {
         '@react-google-maps/marker-clusterer',
         '@react-google-maps/infobox',
         '@googlemaps/markerclusterer',
-      ],
+      ], // 最適化する依存関係を設定
       esbuildOptions: {
-        sourcemap: false,
-        logOverride: { 'this-is-undefined-in-esm': 'silent' },
+        sourcemap: false, // ソースマップを無効に設定
+        logOverride: { 'this-is-undefined-in-esm': 'silent' }, // ログをオーバーライド
       },
     },
-    define: defineEnv,
+    define: defineEnv, // 環境変数を定義
   };
 });

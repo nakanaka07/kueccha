@@ -1,58 +1,58 @@
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
-import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
-import LoadingFallback from './components/loadingfallback/LoadingFallback';
-import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
-import Map from './components/map/Map';
+import React, { useState, useEffect, useCallback, Suspense } from 'react'; // Reactとフックをインポート
+import { createRoot } from 'react-dom/client'; // ReactDOMのcreateRootをインポート
+import { ErrorBoundary } from './components/errorboundary/ErrorBoundary'; // ErrorBoundaryコンポーネントをインポート
+import LoadingFallback from './components/loadingfallback/LoadingFallback'; // LoadingFallbackコンポーネントをインポート
+import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // HamburgerMenuコンポーネントをインポート
+import Map from './components/map/Map'; // Mapコンポーネントをインポート
 import FilterPanel, {
   INITIAL_VISIBILITY,
-} from './components/filterpanel/FilterPanel';
-import { ERROR_MESSAGES } from './utils/constants';
-import type { Poi, AreaType } from './utils/types';
-import { useSheetData } from './hooks/useSheetData';
-import './App.css';
+} from './components/filterpanel/FilterPanel'; // FilterPanelコンポーネントと初期表示状態をインポート
+import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージをインポーネット
+import type { Poi, AreaType } from './utils/types'; // 型定義をインポート
+import { useSheetData } from './hooks/useSheetData'; // useSheetDataフックをインポート
+import './App.css'; // スタイルをインポート
 
 const App: React.FC = () => {
-  const { pois } = useSheetData();
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
+  const { pois } = useSheetData(); // POIデータを取得
+  const [isLoaded, setIsLoaded] = useState(false); // ローディング状態を管理するローカルステート
+  const [isMapLoaded, setIsMapLoaded] = useState(false); // マップのローディング状態を管理するローカルステート
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null); // 選択されたPOIを管理するローカルステート
   const [areaVisibility, setAreaVisibility] =
-    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY); // エリアの表示状態を管理するローカルステート
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するローカルステート
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoaded(true);
+      setIsLoaded(true); // ローディング完了状態を設定
     }, 2000);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
   }, []);
 
   useEffect(() => {
     if (isLoaded && isMapLoaded) {
-      const backgroundElement = document.querySelector('.initial-background');
+      const backgroundElement = document.querySelector('.initial-background'); // 初期背景要素を取得
       if (backgroundElement) {
-        backgroundElement.classList.add('hidden');
+        backgroundElement.classList.add('hidden'); // 初期背景を非表示にする
       }
     }
   }, [isLoaded, isMapLoaded]);
 
   // ページの再読み込み時にselectedPoiを初期化する
   useEffect(() => {
-    setSelectedPoi(null);
+    setSelectedPoi(null); // 選択されたPOIを初期化
   }, []);
 
   const handleOpenFilterPanel = useCallback(() => {
-    setIsFilterPanelOpen(true);
+    setIsFilterPanelOpen(true); // フィルターパネルを開く
   }, []);
 
   const handleCloseFilterPanel = useCallback(() => {
     console.log('Closing filter panel'); // デバッグメッセージを追加
-    setIsFilterPanelOpen(false);
+    setIsFilterPanelOpen(false); // フィルターパネルを閉じる
   }, []);
 
   const handleMapLoad = useCallback(() => {
-    setIsMapLoaded(true);
+    setIsMapLoaded(true); // マップのローディング完了状態を設定
   }, []);
 
   return (
@@ -62,10 +62,10 @@ const App: React.FC = () => {
           className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
         />
         {!isLoaded ? (
-          <LoadingFallback isLoading={true} isLoaded={isLoaded} />
+          <LoadingFallback isLoading={true} isLoaded={isLoaded} /> // ローディング中のフォールバックを表示
         ) : (
           <Suspense
-            fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}
+            fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />} // サスペンスフォールバックを設定
           >
             <HamburgerMenu
               pois={pois}
@@ -99,8 +99,8 @@ const App: React.FC = () => {
   );
 };
 
-const container = document.getElementById('app');
-if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
+const container = document.getElementById('app'); // コンテナ要素を取得
+if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND); // コンテナ要素が見つからない場合はエラーをスロー
 
-const root = createRoot(container);
-root.render(<App />);
+const root = createRoot(container); // ルートを作成
+root.render(<App />); // アプリケーションをレンダリング
