@@ -1,10 +1,7 @@
 const prettierPlugin = require('eslint-plugin-prettier');
-const prettierConfig = require('eslint-config-prettier');
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 const reactPlugin = require('eslint-plugin-react');
-const tsConfigs = require('@typescript-eslint/eslint-plugin');
-const reactConfigs = require('eslint-plugin-react');
 
 module.exports = [
   {
@@ -40,9 +37,9 @@ module.exports = [
     // ESLintのルールを設定
     rules: {
       // TypeScriptの推奨ルールを適用
-      ...tsConfigs.configs.recommended.rules,
+      ...tsPlugin.configs.recommended.rules,
       // Reactの推奨ルールを適用
-      ...reactConfigs.configs.recommended.rules,
+      ...reactPlugin.configs.recommended.rules,
       // Prettierのルールをエラーとして扱う
       'prettier/prettier': 'error',
       // 未使用の変数をエラーとして扱う
@@ -52,6 +49,6 @@ module.exports = [
       ],
     },
     // 特定のファイルを除外
-    ignores: ['.prettierrc.cjs', 'eslint.config.cjs', 'vite.config.js'],
+    ignores: ['.prettierrc.cjs', 'eslint.config.cjs', 'vite.config.js', 'dist/**'],
   },
 ];

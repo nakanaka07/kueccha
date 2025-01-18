@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "msedge",
-            "request": "launch",
-            "name": "Launch Edge against localhost",
-            "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}"
+            "type": "msedge", // デバッグするブラウザの種類
+            "request": "launch", // デバッグのリクエストタイプ
+            "name": "Launch Edge against localhost", // 設定の名前
+            "url": "http://localhost:5173", // デバッグするURL
+            "webRoot": "${workspaceFolder}" // ワークスペースのルートディレクトリ
         }
     ]
 }

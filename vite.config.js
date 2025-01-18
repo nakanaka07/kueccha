@@ -18,10 +18,10 @@ export default defineConfig(({ mode }) => {
   const defineEnv = envVariables.reduce((acc, key) => {
     acc[`process.env.${key}`] = JSON.stringify(env[key]); // 環境変数を定義
     return acc;
-  }, {});
+  }, {}); // 環境変数をオブジェクトに変換
 
   return {
-    base: mode === 'production' ? '/kueccha/' : '/', // ベースURLを設定
+    base: mode === 'production' ? '/kueccha/' : '/', // 本番環境では'/kueccha/'をベースURLに設定し、開発環境では'/'を使用
     plugins: [react(), tsconfigPaths()], // 使用するプラグインを設定
     resolve: {
       alias: {
@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
         '@react-google-maps/marker-clusterer',
         '@react-google-maps/infobox',
         '@googlemaps/markerclusterer',
-      ], // 最適化する依存関係を設定
+      ], // 最適化する依存関係を設定。これによりビルド時間が短縮される
       esbuildOptions: {
         sourcemap: false, // ソースマップを無効に設定
         logOverride: { 'this-is-undefined-in-esm': 'silent' }, // ログをオーバーライド
