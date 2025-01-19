@@ -4,12 +4,10 @@ import { ErrorBoundary } from './components/errorboundary/ErrorBoundary'; // Err
 import LoadingFallback from './components/loadingfallback/LoadingFallback'; // LoadingFallbackコンポーネントをインポート
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // HamburgerMenuコンポーネントをインポート
 import Map from './components/map/Map'; // Mapコンポーネントをインポート
-import FilterPanel, {
-  INITIAL_VISIBILITY,
-} from './components/filterpanel/FilterPanel'; // FilterPanelコンポーネントと初期表示状態をインポート
-import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージをインポーネット
+import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージをインポート
 import type { Poi, AreaType } from './utils/types'; // 型定義をインポート
 import { useSheetData } from './hooks/useSheetData'; // useSheetDataフックをインポート
+import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // INITIAL_VISIBILITYをインポート
 import './App.css'; // スタイルをインポート
 
 const App: React.FC = () => {
@@ -32,7 +30,9 @@ const App: React.FC = () => {
     if (isLoaded && isMapLoaded) {
       const backgroundElement = document.querySelector('.initial-background'); // 初期背景要素を取得
       if (backgroundElement) {
-        backgroundElement.classList.add('hidden'); // 初期背景を非表示にする
+        setTimeout(() => {
+          backgroundElement.classList.add('hidden'); // 初期背景を非表示にする
+        }, 2000); // 2秒待機してからフェードアウト
       }
     }
   }, [isLoaded, isMapLoaded]);
@@ -61,6 +61,16 @@ const App: React.FC = () => {
         <div
           className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
         />
+        <div className="map-container">
+          <Map
+            pois={pois}
+            selectedPoi={selectedPoi}
+            setSelectedPoi={setSelectedPoi}
+            areaVisibility={areaVisibility}
+            onLoad={handleMapLoad}
+            onCloseFilterPanel={handleCloseFilterPanel} // 追加
+          />
+        </div>
         {!isLoaded ? (
           <LoadingFallback isLoading={true} isLoaded={isLoaded} /> // ローディング中のフォールバックを表示
         ) : (
@@ -71,27 +81,8 @@ const App: React.FC = () => {
               pois={pois}
               setSelectedPoi={setSelectedPoi}
               setAreaVisibility={setAreaVisibility}
-              onOpenFilterPanel={handleOpenFilterPanel}
+              onOpenFilterPanel={handleOpenFilterPanel} // 追加
             />
-            <div className="map-container">
-              <Map
-                pois={pois}
-                selectedPoi={selectedPoi}
-                setSelectedPoi={setSelectedPoi}
-                areaVisibility={areaVisibility}
-                onLoad={handleMapLoad}
-                onCloseFilterPanel={handleCloseFilterPanel}
-              />
-              {isFilterPanelOpen && (
-                <FilterPanel
-                  pois={pois}
-                  setSelectedPoi={setSelectedPoi}
-                  setAreaVisibility={setAreaVisibility}
-                  isFilterPanelOpen={isFilterPanelOpen}
-                  onCloseClick={handleCloseFilterPanel}
-                />
-              )}
-            </div>
           </Suspense>
         )}
       </div>
