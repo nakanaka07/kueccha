@@ -4,12 +4,16 @@
   flex-direction: column; /* 縦方向に配置 */
   gap: 10px; /* 要素間の間隔を設定 */
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; /* トランジションを設定 */
-  transform: translateX(-100%); /* 初期状態で左に隠す */
+  transform: translateX(0); /* 初期状態で左に隠す */
   opacity: 0; /* 初期状態で透明にする */
+  position: absolute; /* 絶対位置を設定 */
+  top: 50px; /* 上からの位置を設定 */
+  left: 55px; /* 左からの位置を設定 */
+  height: calc(100% - 50px); /* 高さを100%から50px引いた値に設定 */
+  z-index: 1000; /* Zインデックスを設定 */
 }
 
 .filterpanel-container.open {
-  transform: translateX(0); /* 表示状態にする */
   opacity: 1; /* 不透明にする */
 }
 

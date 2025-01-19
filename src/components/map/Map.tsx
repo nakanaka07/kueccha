@@ -4,15 +4,19 @@ import { mapsConfig } from '../../utils/config'; // マップの設定をイン�
 import type { MapProps, Poi, AreaType } from '../../utils/types'; // 型定義をインポート
 import { Marker } from '../marker/Marker'; // マーカーコンポーネントをインポート
 import InfoWindow from '../infowindow/InfoWindow'; // インフォウィンドウコンポーネントをインポート
+import HamburgerMenu from '../hamburgermenu/HamburgerMenu'; // HamburgerMenuコンポーネントをインポート
 import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージをインポート
 
 // Mapコンポーネントのプロパティの型定義
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null; // 選択されたPOI
-  setSelectedPoi: (poi: Poi | null) => void; // POIを選択する関数
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを選択する関数
   areaVisibility: Record<AreaType, boolean>; // エリアの表示状態
   onLoad: () => void; // マップがロードされた後に呼び出される関数
   onCloseFilterPanel: () => void; // フィルターパネルを閉じる関数
+  isFilterPanelOpen: boolean; // フィルターパネルが開いているかどうかの状態
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの表示状態を設定する関数
+  handleOpenFilterPanel: () => void; // フィルターパネルを開く関数
 }
 
 // Mapコンポーネントの定義
@@ -23,6 +27,9 @@ const Map: React.FC<MapComponentProps> = ({
   areaVisibility, // エリアの表示状態
   onLoad, // マップがロードされた後に呼び出される関数
   onCloseFilterPanel, // フィルターパネルを閉じる関数
+  isFilterPanelOpen, // フィルターパネルが開いているかどうかの状態
+  setAreaVisibility, // エリアの表示状態を設定する関数
+  handleOpenFilterPanel, // フィルターパネルを開く関数
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null); // マップの状態を管理
   const { isLoaded, loadError } = useLoadScript({
@@ -99,8 +106,10 @@ const Map: React.FC<MapComponentProps> = ({
   // マップがクリックされたときに呼び出される関数
   const handleMapClick = useCallback(() => {
     console.log('Map clicked'); // デバッグメッセージを追加
-    onCloseFilterPanel(); // フィルターパネルを閉じる
-  }, [onCloseFilterPanel]);
+    if (isFilterPanelOpen) {
+      onCloseFilterPanel(); // フィルターパネルが開いている場合に閉じる
+    }
+  }, [isFilterPanelOpen, onCloseFilterPanel]);
 
   // インフォウィンドウが閉じられたときに呼び出される関数
   const handleInfoWindowClose = useCallback(() => {
@@ -147,6 +156,14 @@ const Map: React.FC<MapComponentProps> = ({
           <InfoWindow poi={selectedPoi} onCloseClick={handleInfoWindowClose} /> // インフォウィンドウ
         )}
       </GoogleMap>
+      <div className="hamburger-menu-container">
+        <HamburgerMenu
+          pois={pois} // POIデータを渡す
+          setSelectedPoi={setSelectedPoi} // POIを選択する関数を渡す
+          setAreaVisibility={setAreaVisibility} // エリアの表示状態を設定する関数を渡す
+          onOpenFilterPanel={handleOpenFilterPanel} // フィルターパネルを開く関数を渡す
+        />
+      </div>
     </div>
   );
 };

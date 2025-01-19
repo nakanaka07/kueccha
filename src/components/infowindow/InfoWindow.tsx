@@ -31,6 +31,21 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     };
   }, []);
 
+  // インフォウィンドウ外のクリックを検出してウィンドウを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
+        onCloseClick(); // インフォウィンドウを閉じる
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside); // クリックイベントリスナーを追加
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside); // クリーンアップ
+    };
+  }, [onCloseClick]);
+
   const businessHours = [
     { day: '月曜日', value: poi.monday },
     { day: '火曜日', value: poi.tuesday },

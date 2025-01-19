@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Reactとフックをインポート
+import React, { useState, useEffect, useRef } from 'react'; // Reactとフックをインポート
 import type { AreaType, FilterPanelProps } from '../../utils/types'; // 型定義をインポート
 import { AREAS } from '../../utils/constants'; // エリア定数をインポート
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
@@ -25,11 +25,31 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   // エリアの表示状態を管理するローカルステート
   const [areaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
+  const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を作成
 
   // エリアの表示状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
     setAreaVisibility(areaVisibility); // 親コンポーネントに通知
   }, [areaVisibility, setAreaVisibility]);
+
+  // フィルターパネル外のクリックを検出してパネルを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        onCloseClick(); // フィルターパネルを閉じる
+      }
+    };
+
+    if (isFilterPanelOpen) {
+      document.addEventListener('mousedown', handleClickOutside); // クリックイベントリスナーを追加
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside); // クリックイベントリスナーを削除
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside); // クリーンアップ
+    };
+  }, [isFilterPanelOpen, onCloseClick]);
 
   // 各エリアのPOIの数を計算
   const areaCounts = pois.reduce(
@@ -50,7 +70,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   }));
 
   return (
-    <div className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}>
+    <div ref={panelRef} className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}>
       {isFilterPanelOpen && ( // フィルターパネルが開いている場合に表示
         <div
           role="region"

@@ -47,13 +47,15 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, set
         </ul>
       </nav>
       {isFilterPanelOpen && (
-        <FilterPanel
-          pois={pois}
-          setSelectedPoi={setSelectedPoi}
-          setAreaVisibility={setAreaVisibility}
-          isFilterPanelOpen={isFilterPanelOpen}
-          onCloseClick={handleCloseFilterPanel}
-        />
+        <div className="filter-panel-wrapper">
+          <FilterPanel
+            pois={pois}
+            setSelectedPoi={setSelectedPoi}
+            setAreaVisibility={setAreaVisibility}
+            isFilterPanelOpen={isFilterPanelOpen}
+            onCloseClick={handleCloseFilterPanel}
+          />
+        </div>
       )}
     </div>
   );
