@@ -13,8 +13,6 @@ interface MapComponentProps extends MapProps {
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを選択する関数
   areaVisibility: Record<AreaType, boolean>; // エリアの表示状態
   onLoad: () => void; // マップがロードされた後に呼び出される関数
-  onCloseFilterPanel: () => void; // フィルターパネルを閉じる関数
-  isFilterPanelOpen: boolean; // フィルターパネルが開いているかどうかの状態
   setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの表示状態を設定する関数
   handleOpenFilterPanel: () => void; // フィルターパネルを開く関数
 }
@@ -26,8 +24,6 @@ const Map: React.FC<MapComponentProps> = ({
   setSelectedPoi, // POIを選択する関数
   areaVisibility, // エリアの表示状態
   onLoad, // マップがロードされた後に呼び出される関数
-  onCloseFilterPanel, // フィルターパネルを閉じる関数
-  isFilterPanelOpen, // フィルターパネルが開いているかどうかの状態
   setAreaVisibility, // エリアの表示状態を設定する関数
   handleOpenFilterPanel, // フィルターパネルを開く関数
 }) => {
@@ -86,7 +82,6 @@ const Map: React.FC<MapComponentProps> = ({
         }
       });
       if (!isInitialRender) {
-        console.log('Fitting bounds:', bounds); // デバッグメッセージ
         map.fitBounds(bounds); // 境界にフィット
         map.panToBounds(bounds); // 境界内にパニング
       } else {
@@ -102,14 +97,6 @@ const Map: React.FC<MapComponentProps> = ({
     },
     [setSelectedPoi],
   );
-
-  // マップがクリックされたときに呼び出される関数
-  const handleMapClick = useCallback(() => {
-    console.log('Map clicked'); // デバッグメッセージを追加
-    if (isFilterPanelOpen) {
-      onCloseFilterPanel(); // フィルターパネルが開いている場合に閉じる
-    }
-  }, [isFilterPanelOpen, onCloseFilterPanel]);
 
   // インフォウィンドウが閉じられたときに呼び出される関数
   const handleInfoWindowClose = useCallback(() => {
@@ -138,7 +125,6 @@ const Map: React.FC<MapComponentProps> = ({
         center={mapsConfig.defaultCenter} // マップの中心
         zoom={mapsConfig.defaultZoom} // ズームレベル
         options={mapOptions} // マップオプション
-        onClick={handleMapClick} // マップクリック時の処理
         onLoad={onLoadMap} // マップロード時の処理
       >
         {map &&

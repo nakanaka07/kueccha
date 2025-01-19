@@ -16,17 +16,14 @@ const App: React.FC = () => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null); // 選択されたPOIを管理するローカルステート
   const [areaVisibility, setAreaVisibility] =
     useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY); // エリアの表示状態を管理するローカルステート
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するローカルステート
 
-  // コンポーネントのマウント時にローディング完了状態を設定
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true); // ローディング完了状態を設定
-    }, 3000); // 3秒後にローディング完了
+    }, 2000);
     return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
   }, []);
 
-  // ローディング完了時に初期背景を非表示にする
   useEffect(() => {
     if (isLoaded && isMapLoaded) {
       const backgroundElement = document.querySelector('.initial-background'); // 初期背景要素を取得
@@ -43,19 +40,12 @@ const App: React.FC = () => {
     setSelectedPoi(null); // 選択されたPOIを初期化
   }, []);
 
-  // フィルターパネルを開く関数
-  const handleOpenFilterPanel = useCallback(() => {
-    setIsFilterPanelOpen(true); // フィルターパネルを開く
-  }, []);
-
-  // フィルターパネルを閉じる関数
-  const handleCloseFilterPanel = useCallback(() => {
-    setIsFilterPanelOpen(false); // フィルターパネルを閉じる
-  }, []);
-
-  // マップのローディング完了時に呼び出される関数
   const handleMapLoad = useCallback(() => {
     setIsMapLoaded(true); // マップのローディング完了状態を設定
+  }, []);
+
+  const handleOpenFilterPanel = useCallback(() => {
+    // フィルターパネルを開く処理をここに追加
   }, []);
 
   return (
@@ -71,8 +61,6 @@ const App: React.FC = () => {
             setSelectedPoi={setSelectedPoi} // POIを選択する関数を渡す
             areaVisibility={areaVisibility} // エリアの表示状態を渡す
             onLoad={handleMapLoad} // マップのローディング完了時に呼び出される関数を渡す
-            onCloseFilterPanel={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
-            isFilterPanelOpen={isFilterPanelOpen} // フィルターパネルが開いているかどうかの状態を渡す
             setAreaVisibility={setAreaVisibility} // エリアの表示状態を設定する関数を渡す
             handleOpenFilterPanel={handleOpenFilterPanel} // フィルターパネルを開く関数を渡す
           />
