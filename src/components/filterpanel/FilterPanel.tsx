@@ -81,7 +81,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             ×
           </button>
           <div>
-            <div>表示するエリア（表示数）</div>
+            <div>表示エリア（表示数）</div>
             <div>
               {areas.map(({ area, name, count, isVisible, color }) => ( // 各エリアのフィルタ項目を表示
                 <label key={area} className="filter-item">
