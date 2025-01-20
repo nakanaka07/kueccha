@@ -50,6 +50,15 @@
   border-bottom: 1px solid #ddd; /* 下部にボーダーを設定 */
 }
 
+.info-section ul {
+    padding-left: 0;
+    /* 左のパディングをリセット */
+    margin: 0;
+    /* マージンをリセット */
+    list-style-type: none;
+    /* リストスタイルをなしに設定 */
+}
+
 .info-section:last-child {
   border-bottom: none; /* 最後の要素のボーダーをなしに設定 */
 }
@@ -68,8 +77,16 @@
 }
 
 .info-business-hour {
-  text-align: right;
-  /* 右寄せに設定 */
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-business-day {
+  white-space: nowrap; /* 文字を改行しないように設定 */
+}
+
+.info-business-value {
+  text-align: right; /* 右寄せに設定 */
 }
 
 .info-label {
@@ -122,7 +139,7 @@
 @media (max-width: 768px) {
   .info-window {
     max-width: 200px; /* 最大幅を設定 */
-    top: 300px; /* 上からの位置を設定 */
+    top: 330px; /* 上からの位置を設定 */
   }
 
   .info-header h2 {
