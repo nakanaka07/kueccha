@@ -22,7 +22,10 @@
 /* ローディングコンテンツのスタイル */
 .loading-content {
   text-align: center; /* テキストを中央揃えに設定 */
-  margin-top: 500px; /* ここでマージンを追加して下に下げる */
+  display: flex; /* フレックスボックスを使用 */
+  flex-direction: column; /* 縦方向に配置 */
+  align-items: center; /* 中央揃え */
+  margin-top: 400px; /* 上部のマージンを追加 */
 }
 
 /* ローディングスピナーのスタイル */
@@ -53,6 +56,10 @@
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
+  .loading-content {
+    margin-top: 200px; /* 上部のマージンを追加 */
+  }
+
   .loading-spinner {
     width: 30px; /* 幅を設定 */
     height: 30px; /* 高さを設定 */
