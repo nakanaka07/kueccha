@@ -1,0 +1,16 @@
+/* Markerのスタイル */
+.blinking {
+  animation: blinkingAnimation 1s infinite; /* 点滅アニメーションを設定 */
+}
+
+@keyframes blinkingAnimation {
+  0% {
+    opacity: 1; /* 初期状態で不透明に設定 */
+  }
+  50% {
+    opacity: 0.5; /* 中間状態で半透明に設定 */
+  }
+  100% {
+    opacity: 1; /* 最終状態で不透明に設定 */
+  }
+}
