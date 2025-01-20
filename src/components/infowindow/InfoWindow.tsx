@@ -76,7 +76,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
             {businessHours.map(
               (hour, index) =>
                 hour.value && (
-                  <li key={`${hour.day}-${index}`}>
+                  <li key={`${hour.day}-${index}`} className="info-business-hour">
                     {hour.day} : {hour.value}
                   </li>
                 ),

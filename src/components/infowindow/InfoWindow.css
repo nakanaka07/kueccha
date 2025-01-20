@@ -67,6 +67,11 @@
   margin-bottom: 5px; /* 下部のマージンを設定 */
 }
 
+.info-business-hour {
+  text-align: right;
+  /* 右寄せに設定 */
+}
+
 .info-label {
   font-weight: bold; /* フォントの太さを設定 */
 }
