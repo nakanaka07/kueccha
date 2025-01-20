@@ -25,7 +25,7 @@
   display: flex; /* フレックスボックスを使用 */
   flex-direction: column; /* 縦方向に配置 */
   align-items: center; /* 中央揃え */
-  margin-top: 400px; /* 上部のマージンを追加 */
+  margin-top: 600px; /* 上部のマージンを追加 */
 }
 
 /* ローディングスピナーのスタイル */
@@ -57,7 +57,7 @@
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .loading-content {
-    margin-top: 200px; /* 上部のマージンを追加 */
+    margin-top: 300px; /* 上部のマージンを追加 */
   }
 
   .loading-spinner {
