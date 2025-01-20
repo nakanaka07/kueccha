@@ -58,7 +58,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   ]; // 営業時間のリスト
 
   return (
-    <div className="info-window" ref={infoWindowRef}>
+    <div className="info-window" ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
       <div className="info-header">
         <h2 id="info-window-title">{poi.name}</h2> {/* POIの名前を表示 */}
         <button

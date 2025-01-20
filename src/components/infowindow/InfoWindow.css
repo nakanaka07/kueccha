@@ -9,6 +9,7 @@
   border-radius: 8px; /* 角を丸くする */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* ボックスシャドウを設定 */
   overflow: hidden; /* オーバーフローを隠す */
+  z-index: 1000; /* z-indexを設定 */
 }
 
 .info-content {
@@ -51,16 +52,12 @@
 }
 
 .info-section ul {
-    padding-left: 0;
-    /* 左のパディングをリセット */
-    margin: 0;
-    /* マージンをリセット */
-    list-style-type: none;
-    /* リストスタイルをなしに設定 */
-}
-
-.info-section:last-child {
-  border-bottom: none; /* 最後の要素のボーダーをなしに設定 */
+  padding-left: 0;
+  /* 左のパディングをリセット */
+  margin: 0;
+  /* マージンをリセット */
+  list-style-type: none;
+  /* リストスタイルをなしに設定 */
 }
 
 .info-business-hours,
@@ -82,6 +79,7 @@
 }
 
 .info-business-day {
+  text-align: left;
   white-space: nowrap; /* 文字を改行しないように設定 */
 }
 
