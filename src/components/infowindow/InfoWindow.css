@@ -12,7 +12,7 @@
 }
 
 .info-content {
-  max-height: calc(100vh - 400px); /* ビューポートの高さからマージンを引いた高さを設定 */
+  max-height: calc(100vh - 500px); /* ビューポートの高さからマージンを引いた高さを設定 */
   overflow-y: auto; /* 縦方向のスクロールを有効にする */
   overflow-x: hidden; /* 横方向のスクロールを無効にする */
   box-sizing: border-box; /* パディングを含むボックスサイズを設定 */
