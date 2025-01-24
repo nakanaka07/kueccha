@@ -18,7 +18,7 @@
       "@/*": ["./src/*"] // エイリアスの設定
     },
     "typeRoots": ["./node_modules/@types"] // 型定義ファイルのルート
-      },
+  },
   "include": ["./src", "*.config.ts", "./src/utils/types.ts"], // インクルードするファイル（プロジェクトに含めるファイル）
   "exclude": ["node_modules", "dist"] // 除外するファイル（プロジェクトから除外するファイル）
 }

@@ -5,50 +5,36 @@ const reactPlugin = require('eslint-plugin-react');
 
 module.exports = [
   {
-    // TypeScriptパーサーの設定
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        // ECMAScriptのバージョンを設定
-        ecmaVersion: 'latest',
-        // モジュールシステムを設定
-        sourceType: 'module',
-        // JSXのサポートを有効にする
+        ecmaVersion: 'latest', // ECMAScriptのバージョンを設定
+        sourceType: 'module', // モジュールシステムを設定
         ecmaFeatures: {
-          jsx: true,
+          jsx: true, // JSXのサポートを有効にする
         },
-        // TypeScriptのプロジェクト設定ファイルを指定
-        project: './tsconfig.json',
+        project: './tsconfig.json', // TypeScriptのプロジェクト設定ファイルを指定
       },
     },
-    // 使用するプラグインを設定
     plugins: {
       '@typescript-eslint': tsPlugin,
       prettier: prettierPlugin,
       react: reactPlugin,
     },
-    // Reactの設定
     settings: {
       react: {
-        // Reactのバージョンを自動検出
-        version: 'detect',
+        version: 'detect', // Reactのバージョンを自動検出
       },
     },
-    // ESLintのルールを設定
     rules: {
-      // TypeScriptの推奨ルールを適用
-      ...tsPlugin.configs.recommended.rules,
-      // Reactの推奨ルールを適用
-      ...reactPlugin.configs.recommended.rules,
-      // Prettierのルールをエラーとして扱う
-      'prettier/prettier': 'error',
-      // 未使用の変数をエラーとして扱う
+      ...tsPlugin.configs.recommended.rules, // TypeScriptの推奨ルールを適用
+      ...reactPlugin.configs.recommended.rules, // Reactの推奨ルールを適用
+      'prettier/prettier': 'error', // Prettierのルールをエラーとして扱う
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_' },
-      ],
+      ], // 未使用の変数をエラーとして扱う
     },
-    // 特定のファイルを除外
-    ignores: ['.prettierrc.cjs', 'eslint.config.cjs', 'vite.config.js', 'dist/**'],
+    ignores: ['.prettierrc.cjs', 'eslint.config.cjs', 'vite.config.js', 'dist/**'], // 特定のファイルを除外
   },
 ];
