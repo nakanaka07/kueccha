@@ -34,7 +34,7 @@ const Map: React.FC<MapComponentProps> = ({
     libraries: mapsConfig.libraries, // 使用するライブラリ
   });
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
-    'terrain', // 初期マップタイプ
+    'roadmap', // 初期マップタイプを'roadmap'に設定
   );
   const [isInitialRender, setIsInitialRender] = useState(true); // 初回レンダリングかどうか
 
@@ -65,7 +65,7 @@ const Map: React.FC<MapComponentProps> = ({
   const onLoadMap = useCallback(
     (map: google.maps.Map) => {
       setMap(map); // マップを設定
-      map.setMapTypeId('terrain'); // マップタイプを'terrain'に設定
+      map.setMapTypeId('roadmap'); // マップタイプを'roadmap'に設定
       map.addListener('maptypeid_changed', handleMapTypeChanged); // マップタイプ変更リスナーを追加
       onLoad(); // マップがロードされた後に呼び出す
     },
