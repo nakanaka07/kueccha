@@ -38,6 +38,10 @@ export function useSheetData() {
       try {
         const response = await fetch(url); // データをフェッチ
         if (!response.ok) {
+          if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
+            await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1)); // リトライ間隔を待機
+            return fetchAreaData(area, retryCount + 1); // リトライ
+          }
           throw new Error(`HTTP error! status: ${response.status}`); // HTTPエラーの場合はエラーをスロー
         }
         const data = await response.json(); // レスポンスをJSONとしてパース
@@ -126,6 +130,19 @@ export function useSheetData() {
       fetchData(); // データをフェッチ
     }
   }, [fetchData, isFetched]);
+
+  // ステップ4: idの重複をチェック
+  useEffect(() => {
+    const checkForDuplicateIds = (pois: Poi[]) => {
+      const ids = pois.map((poi) => poi.id);
+      const uniqueIds = new Set(ids);
+      if (ids.length !== uniqueIds.size) {
+        console.error('Duplicate IDs found in POIs:', ids);
+      }
+    };
+
+    checkForDuplicateIds(pois); // idの重複をチェック
+  }, [pois]);
 
   const refetch = useCallback(() => {
     setIsFetched(false); // フェッチ済み状態をリセット

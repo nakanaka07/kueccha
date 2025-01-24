@@ -73,21 +73,16 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       <div className="info-content">
         <div className="info-section">
           <ul>
-            {businessHours.map(
-              (hour, index) =>
-                hour.value && (
-                  <li key={`${hour.day}-${index}`} className="info-business-hour">
-                    <span className="info-business-day">{hour.day}</span>
-                    <span className="info-business-value">{hour.value}</span>
-                  </li>
-                ),
-            )} {/* 営業時間をリスト表示 */}
+            {businessHours.map((hour, index) => (
+              <li key={index}>
+                {hour.day}: {hour.value}
+              </li>
+            ))}
           </ul>
         </div>
 
         <div className="info-horizontal">
-          {[
-            {
+          {[{
               key: 'description',
               condition: poi.description,
               title: '補足',
@@ -166,9 +161,9 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                 </a>
               )
             }
-          ].map((item, index) =>
+          ].map((item) =>
             item.condition ? (
-              <div className="info-section" key={`${item.key}-${index}`}>
+              <div className="info-section" key={item.key}>
                 {item.title && <h3>{item.title}</h3>}
                 {item.content}
               </div>
