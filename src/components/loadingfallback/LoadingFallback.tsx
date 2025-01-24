@@ -1,37 +1,37 @@
-import React, { useEffect, useState } from 'react'; // Reactとフックをインポート
-import type { LoadingFallbackProps } from '../../utils/types'; // 型定義をインポート
-import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージをインポート
-import './LoadingFallback.css'; // スタイルをインポート
+import React, { useEffect, useState } from 'react';
+import type { LoadingFallbackProps } from '../../utils/types';
+import { ERROR_MESSAGES } from '../../utils/constants';
+import './LoadingFallback.css';
 
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({ isLoading, isLoaded }) => {
-  const [isVisible, setIsVisible] = useState(isLoading); // ローディング状態を管理するローカルステート
+  const [isVisible, setIsVisible] = useState(isLoading);
 
   useEffect(() => {
     if (isLoaded) {
       const timer = setTimeout(() => {
-        setIsVisible(false); // ローディングが完了したら非表示にする
-      }, 5000);
-      return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
+        setIsVisible(false);
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [isLoaded]); // isLoadedが変更されたときに実行
+  }, [isLoaded]);
 
-  if (!isVisible) return null; // 非表示の場合は何もレンダリングしない
+  if (!isVisible) return null;
 
   return (
     <div
-      className={`loading-fallback ${isLoaded ? 'hidden' : ''}`} // ローディングが完了したらhiddenクラスを追加
+      className={`loading-fallback ${isLoaded ? 'hidden' : ''}`}
       role="status"
       aria-live="polite"
     >
       <div className="loading-content">
-        <div className="loading-spinner" aria-hidden="true" /> {/* ローディングスピナー */}
-        <p>{ERROR_MESSAGES.LOADING.DATA}</p> {/* ローディングメッセージ */}
+        <div className="loading-spinner" aria-hidden="true" />
+        <p>{ERROR_MESSAGES.LOADING.DATA}</p>
       </div>
     </div>
   );
 };
 
-LoadingFallback.displayName = 'LoadingFallback'; // コンポーネントの表示名を設定
+LoadingFallback.displayName = 'LoadingFallback';
 
 export { LoadingFallback };
 export default LoadingFallback;

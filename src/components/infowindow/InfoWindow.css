@@ -52,12 +52,9 @@
 }
 
 .info-section ul {
-  padding-left: 0;
-  /* 左のパディングをリセット */
-  margin: 0;
-  /* マージンをリセット */
-  list-style-type: none;
-  /* リストスタイルをなしに設定 */
+  padding-left: 0; /* 左のパディングをリセット */
+  margin: 0; /* マージンをリセット */
+  list-style-type: none; /* リストスタイルをなしに設定 */
 }
 
 .info-business-hours,

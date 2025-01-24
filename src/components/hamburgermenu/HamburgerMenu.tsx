@@ -1,33 +1,33 @@
-import React, { useState } from 'react'; // ReactとuseStateフックをインポート
-import './HamburgerMenu.css'; // スタイルをインポート
-import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
-import type { Poi, AreaType } from '../../utils/types'; // 型定義をインポート
+import React, { useState } from 'react';
+import './HamburgerMenu.css';
+import FilterPanel from '../filterpanel/FilterPanel';
+import type { Poi, AreaType } from '../../utils/types';
 
-// HamburgerMenuコンポーネントのプロパティの型定義
 interface HamburgerMenuProps {
-  pois: Poi[]; // POIのリスト
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを選択する関数
-  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの表示状態を設定する関数
-  onOpenFilterPanel: () => void; // フィルターパネルを開く関数
+  pois: Poi[];
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
+  onOpenFilterPanel: () => void;
 }
 
-// HamburgerMenuコンポーネントの定義
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, setAreaVisibility, onOpenFilterPanel }) => {
-  const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するローカルステート
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するローカルステート
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+  pois,
+  setSelectedPoi,
+  setAreaVisibility,
+  onOpenFilterPanel,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
-  // メニューの開閉を切り替える関数
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  // エリア選択ボタンがクリックされたときにフィルターパネルの開閉を切り替える関数
   const handleAreaClick = () => {
     setIsFilterPanelOpen(!isFilterPanelOpen);
-    setIsOpen(false); // メニューを閉じる
+    setIsOpen(false);
   };
 
-  // フィルターパネルを閉じる関数
   const handleCloseFilterPanel = () => {
     setIsFilterPanelOpen(false);
   };
@@ -61,4 +61,4 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, setSelectedPoi, set
   );
 };
 
-export default HamburgerMenu; // HamburgerMenuコンポーネントをエクスポート
+export default HamburgerMenu;
