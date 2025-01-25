@@ -70,7 +70,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           aria-label="エリアフィルター"
           className="filter-panel"
         >
-          <button className="close-button" onClick={onCloseClick}>
+          <button
+            className="close-button"
+            onClick={onCloseClick}
+            title="閉じます。"
+          >
             ×
           </button>
           <div>

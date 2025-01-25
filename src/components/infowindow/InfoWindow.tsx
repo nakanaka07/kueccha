@@ -62,6 +62,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
           onClick={onCloseClick}
           aria-label="閉じる"
           className="modal-close-button"
+          title="閉じます。"
         >
           ×
         </button>
