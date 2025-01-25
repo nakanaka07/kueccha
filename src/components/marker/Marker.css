@@ -14,3 +14,9 @@
     opacity: 1; /* 最終状態で不透明に設定 */
   }
 }
+
+.selected-marker {
+  border: 3px solid red; /* 縁を太くして赤色に設定 */
+  border-radius: 50%; /* 角を丸くする */
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* ボックスシャドウを設定 */
+}

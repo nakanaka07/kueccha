@@ -14,7 +14,7 @@ const markerIcons: Record<string, string> = {
   DEFAULT: '/path/to/default-icon.png',
 };
 
-const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
+const Marker = React.memo(({ poi, onClick, map, isSelected }: MarkerProps & { isSelected: boolean }) => {
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
   useEffect(() => {
@@ -59,10 +59,14 @@ const Marker = React.memo(({ poi, onClick, map }: MarkerProps) => {
   }, [map, poi, onClick]);
 
   useEffect(() => {
-    if (poi.area === 'RECOMMEND' && markerRef.current && markerRef.current.content instanceof HTMLElement) {
-      markerRef.current.content.classList.add('blinking');
+    if (markerRef.current && markerRef.current.content instanceof HTMLElement) {
+      if (isSelected) {
+        markerRef.current.content.classList.add('selected-marker');
+      } else {
+        markerRef.current.content.classList.remove('selected-marker');
+      }
     }
-  }, [poi]);
+  }, [isSelected]);
 
   return null;
 });

@@ -34,6 +34,7 @@ const Map: React.FC<MapComponentProps> = ({
   });
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
   const [isInitialRender, setIsInitialRender] = useState(true);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const mapOptions = {
     ...mapsConfig.options,
@@ -92,12 +93,14 @@ const Map: React.FC<MapComponentProps> = ({
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
       setSelectedPoi(poi);
+      setSelectedMarkerId(poi.id); // マーカーのIDを設定
     },
     [setSelectedPoi],
   );
 
   const handleInfoWindowClose = useCallback(() => {
     setSelectedPoi(null);
+    setSelectedMarkerId(null); // マーカーの選択を解除
   }, [setSelectedPoi]);
 
   if (loadError) {
@@ -131,6 +134,7 @@ const Map: React.FC<MapComponentProps> = ({
                 poi={poi}
                 onClick={handleMarkerClick}
                 map={map}
+                isSelected={selectedMarkerId === poi.id} // 選択状態を渡す
               />
             ))}
         {selectedPoi && (
