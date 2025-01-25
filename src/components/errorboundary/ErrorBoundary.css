@@ -43,16 +43,4 @@
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
-  .error-content h1 {
-    font-size: 20px; /* フォントサイズを設定 */
-  }
-
-  .error-content p {
-    font-size: 14px; /* フォントサイズを設定 */
-  }
-
-  .error-content button {
-    padding: 8px 16px; /* 内側の余白を設定 */
-    font-size: 14px; /* フォントサイズを設定 */
-  }
 }

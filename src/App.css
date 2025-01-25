@@ -44,19 +44,4 @@
 
 /* メディアクエリを追加してレスポンシブデザインを強化 */
 @media (max-width: 768px) {
-  .app-container {
-    height: auto;
-    width: 100%;
-  }
-
-  .map-container {
-    position: relative;
-    height: 100vh;
-    width: 100%;
-  }
-
-  .map-container > div {
-    width: 100%;
-    height: 100%;
-  }
 }
