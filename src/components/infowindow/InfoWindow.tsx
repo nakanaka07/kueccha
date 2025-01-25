@@ -31,7 +31,10 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
+      if (
+        infoWindowRef.current &&
+        !infoWindowRef.current.contains(event.target as Node)
+      ) {
         onCloseClick();
       }
     };
@@ -55,7 +58,11 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   ];
 
   return (
-    <div className="info-window" ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="info-window"
+      ref={infoWindowRef}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="info-header">
         <h2 id="info-window-title">{poi.name}</h2>
         <button
@@ -73,66 +80,69 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
           <ul>
             {businessHours.map((hour, index) => (
               <li key={index}>
-                {hour.day}: {hour.value}
+                <span className="day">{hour.day}</span>{' '}
+                <span className="value">{hour.value}</span>
               </li>
             ))}
           </ul>
         </div>
 
         <div className="info-horizontal">
-          {[{
+          {[
+            {
               key: 'description',
               condition: poi.description,
               title: '補足',
-              content: <p>{poi.description}</p>
+              content: <p>{poi.description}</p>,
             },
             {
               key: 'reservation',
               condition: poi.reservation,
               title: '予約',
-              content: <p>{poi.reservation}</p>
+              content: <p>{poi.reservation}</p>,
             },
             {
               key: 'payment',
               condition: poi.payment,
               title: '支払',
-              content: <p>{poi.payment}</p>
+              content: <p>{poi.payment}</p>,
             },
             {
               key: 'category',
               condition: poi.category,
               title: 'カテゴリー',
-              content: <p>{poi.category}</p>
+              content: <p>{poi.category}</p>,
             },
             {
               key: 'genre',
               condition: poi.genre,
               title: 'ジャンル',
-              content: <p>{poi.genre}</p>
+              content: <p>{poi.genre}</p>,
             },
             {
               key: 'area',
               condition: poi.area,
               title: 'エリア',
-              content: <p>{AREAS[poi.area]}</p>
+              content: <p>{AREAS[poi.area]}</p>,
             },
             {
               key: 'phone',
               condition: poi.phone,
               title: '問い合わせ',
-              content: poi.phone && isValidPhoneNumber(poi.phone) ? (
-                <a href={`tel:${poi.phone}`} className="info-link">
-                  {poi.phone}
-                </a>
-              ) : (
-                <span>{poi.phone}</span>
-              )
+              content:
+                poi.phone && isValidPhoneNumber(poi.phone) ? (
+                  <a href={`tel:${poi.phone}`} className="info-link">
+                    {poi.phone}
+                  </a>
+                ) : (
+                  <span>{poi.phone}</span>
+                ),
             },
             {
               key: 'address',
               condition: poi.address,
               title: '所在地',
-              content: <p>{poi.address}</p>
+              content: <p>{poi.address}</p>,
             },
             {
               key: 'information',
@@ -142,7 +152,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                 <div className="info-related">
                   {poi.information ? formatInformation(poi.information) : null}
                 </div>
-              )
+              ),
             },
             {
               key: 'view',
@@ -157,15 +167,15 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                 >
                   Google マップで見る
                 </a>
-              )
-            }
+              ),
+            },
           ].map((item) =>
             item.condition ? (
               <div className="info-section" key={item.key}>
                 {item.title && <h3>{item.title}</h3>}
                 {item.content}
               </div>
-            ) : null
+            ) : null,
           )}
         </div>
       </div>

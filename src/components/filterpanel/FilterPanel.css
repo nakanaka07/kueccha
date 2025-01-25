@@ -7,8 +7,8 @@
   transform: translateX(-100%); /* 初期状態で左に隠す */
   opacity: 0; /* 初期状態で透明にする */
   position: fixed; /* 固定位置を設定 */
-  top: 0; /* 上に寄せる */
-  left: 0; /* 左に寄せる */
+  top: 60px; /* 上に寄せる */
+  left: 10px; /* 左に寄せる */
   height: auto; /* 高さを自動に設定 */
   z-index: 1000; /* Zインデックスを設定 */
 }

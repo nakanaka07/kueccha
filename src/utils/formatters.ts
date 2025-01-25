@@ -22,6 +22,11 @@ export const formatInformation = (text: string | null) => {
     };
   };
 
+  const truncateUrl = (url: string, maxLength: number) => {
+    if (url.length <= maxLength) return url;
+    return `${url.slice(0, maxLength)}...`;
+  };
+
   try {
     const content = splitContentByType(text);
 
@@ -31,7 +36,7 @@ export const formatInformation = (text: string | null) => {
       index: number,
     ) => {
       const isUrl = type === 'url';
-      const elementKey = `${type}-${index}-${content}`; // 一意のキーを生成
+      const elementKey = `${type}-${index}-${content}`;
 
       return React.createElement('div', { key: elementKey }, [
         React.createElement(
@@ -47,8 +52,9 @@ export const formatInformation = (text: string | null) => {
                 href: content,
                 target: '_blank',
                 rel: 'noopener noreferrer',
+                title: content,
               },
-              content,
+              truncateUrl(content, 30),
             )
           : React.createElement('span', { key: `${elementKey}-text` }, content.trim()),
       ]);

@@ -1,7 +1,7 @@
 /* InfoWindowのスタイル */
 .info-window {
   font-family: 'Roboto', sans-serif; /* フォントファミリーを設定 */
-  max-width: 250px; /* 最大幅を設定 */
+  max-width: 300px; /* 最大幅を設定 */
   position: absolute; /* 絶対位置を設定 */
   left: 10px; /* 左からの位置を設定 */
   bottom: 50px; /* 下からの位置を設定 */
@@ -13,7 +13,7 @@
 }
 
 .info-content {
-  max-height: calc(100vh - 450px); /* ビューポートの高さからマージンを引いた高さを設定 */
+  max-height: calc(100vh - 500px); /* ビューポートの高さからマージンを引いた高さを設定 */
   overflow-y: auto; /* 縦方向のスクロールを有効にする */
   overflow-x: hidden; /* 横方向のスクロールを無効にする */
   box-sizing: border-box; /* パディングを含むボックスサイズを設定 */
@@ -57,35 +57,23 @@
   list-style-type: none; /* リストスタイルをなしに設定 */
 }
 
-.info-business-hours,
-.info-basic,
-.info-related {
-  margin-bottom: 10px; /* 下部のマージンを設定 */
-}
-
-.info-business-hour,
-.info-item {
+.info-section li {
   display: flex; /* フレックスボックスを使用 */
   justify-content: space-between; /* 要素間のスペースを均等にする */
-  margin-bottom: 5px; /* 下部のマージンを設定 */
+  padding: 5px 0; /* 上下のパディングを設定 */
+  border-bottom: 1px solid #eee; /* 下部に薄いボーダーを設定 */
 }
 
-.info-business-hour {
-  display: flex;
-  justify-content: space-between;
+.info-section li:last-child {
+  border-bottom: none; /* 最後のリストアイテムのボーダーをなしに設定 */
 }
 
-.info-business-day {
-  text-align: left;
-  white-space: nowrap; /* 文字を改行しないように設定 */
-}
-
-.info-business-value {
-  text-align: right; /* 右寄せに設定 */
-}
-
-.info-label {
+.info-section li .day {
   font-weight: bold; /* フォントの太さを設定 */
+}
+
+.info-section li .value {
+  font-weight: normal; /* フォントの太さを設定 */
 }
 
 .info-link {
@@ -118,16 +106,7 @@
 }
 
 .info-horizontal .info-section {
-  flex: 1 1 45%; /* フレックスアイテムのサイズを設定 */
-}
-
-/* URL表示やエリア表示のスタイル */
-.info-section p,
-.info-section a {
-  white-space: nowrap; /* テキストを折り返さない */
-  overflow: hidden; /* オーバーフローを隠す */
-  text-overflow: ellipsis; /* テキストが溢れた場合に省略記号を表示 */
-  max-width: 200px; /* 最大幅を設定 */
+  flex: 1 1 50%; /* フレックスアイテムのサイズを設定 */
 }
 
 /* レスポンシブデザイン */
