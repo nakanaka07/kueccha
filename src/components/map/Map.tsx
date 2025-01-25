@@ -5,8 +5,8 @@ import type { MapProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
 import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
-import { ERROR_MESSAGES, AREAS } from '../../utils/constants';
-import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel'; // INITIAL_VISIBILITY をインポート
+import { ERROR_MESSAGES } from '../../utils/constants';
+import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
 import resetNorthIcon from '../../utils/images/ano_icon01.png';
 
 interface MapComponentProps extends MapProps {
