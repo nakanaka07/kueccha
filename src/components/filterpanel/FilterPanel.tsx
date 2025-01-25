@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 import { AREAS } from '../../utils/constants';
 import { markerConfig } from '../../utils/config';
@@ -20,13 +20,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setAreaVisibility,
   isFilterPanelOpen,
   onCloseClick,
+  localAreaVisibility,
+  setLocalAreaVisibility,
 }) => {
-  const [areaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setAreaVisibility(areaVisibility);
-  }, [areaVisibility, setAreaVisibility]);
+    setAreaVisibility(localAreaVisibility);
+  }, [localAreaVisibility, setAreaVisibility]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,7 +59,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     area: area as AreaType,
     name,
     count: areaCounts[area as AreaType] ?? 0,
-    isVisible: areaVisibility[area as AreaType],
+    isVisible: localAreaVisibility[area as AreaType],
     color: markerConfig.colors[area as AreaType],
   }));
 
@@ -86,7 +87,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                     type="checkbox"
                     checked={isVisible}
                     onChange={(e) => {
-                      setLocalAreaVisibility((prev) => ({
+                      setLocalAreaVisibility((prev: Record<AreaType, boolean>) => ({
                         ...prev,
                         [area]: e.target.checked,
                       }));

@@ -76,16 +76,20 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       </div>
 
       <div className="info-content">
-        <div className="info-section">
-          <ul>
-            {businessHours.map((hour, index) => (
-              <li key={index}>
-                <span className="day">{hour.day}</span>{' '}
-                <span className="value">{hour.value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {businessHours.some(hour => hour.value) && (
+          <div className="info-section">
+            <ul>
+              {businessHours.map((hour, index) =>
+                hour.value ? (
+                  <li key={index}>
+                    <span className="day">{hour.day}</span>{' '}
+                    <span className="value">{hour.value}</span>
+                  </li>
+                ) : null
+              )}
+            </ul>
+          </div>
+        )}
 
         <div className="info-horizontal">
           {[

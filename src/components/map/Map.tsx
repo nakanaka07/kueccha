@@ -5,7 +5,8 @@ import type { MapProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
 import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
-import { ERROR_MESSAGES } from '../../utils/constants';
+import { ERROR_MESSAGES, AREAS } from '../../utils/constants';
+import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel'; // INITIAL_VISIBILITY をインポート
 import resetNorthIcon from '../../utils/images/ano_icon01.png';
 
 interface MapComponentProps extends MapProps {
@@ -14,7 +15,6 @@ interface MapComponentProps extends MapProps {
   areaVisibility: Record<AreaType, boolean>;
   onLoad: () => void;
   setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
-  handleOpenFilterPanel: () => void;
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -24,7 +24,6 @@ const Map: React.FC<MapComponentProps> = ({
   areaVisibility,
   onLoad,
   setAreaVisibility,
-  handleOpenFilterPanel,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
@@ -35,6 +34,7 @@ const Map: React.FC<MapComponentProps> = ({
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+  const [localAreaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
 
   const mapOptions = {
     ...mapsConfig.options,
@@ -150,7 +150,8 @@ const Map: React.FC<MapComponentProps> = ({
           pois={pois}
           setSelectedPoi={setSelectedPoi}
           setAreaVisibility={setAreaVisibility}
-          onOpenFilterPanel={handleOpenFilterPanel}
+          localAreaVisibility={localAreaVisibility}
+          setLocalAreaVisibility={setLocalAreaVisibility}
         />
       </div>
       <button

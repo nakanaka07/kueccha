@@ -7,14 +7,16 @@ interface HamburgerMenuProps {
   pois: Poi[];
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
-  onOpenFilterPanel: () => void;
+  localAreaVisibility: Record<AreaType, boolean>;
+  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
 }
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   pois,
   setSelectedPoi,
   setAreaVisibility,
-  onOpenFilterPanel,
+  localAreaVisibility,
+  setLocalAreaVisibility,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
@@ -54,6 +56,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             setAreaVisibility={setAreaVisibility}
             isFilterPanelOpen={isFilterPanelOpen}
             onCloseClick={handleCloseFilterPanel}
+            localAreaVisibility={localAreaVisibility}
+            setLocalAreaVisibility={setLocalAreaVisibility}
           />
         </div>
       )}
