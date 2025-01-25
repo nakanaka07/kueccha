@@ -104,7 +104,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                       style={{ backgroundColor: color }}
                       aria-hidden="true"
                     />
-                    <span className="area-name" data-fullname={name}>
+                    <span className="area-name" data-fullname={name} title={name}>
                       {name}
                     </span>
                     <span>({count})</span>

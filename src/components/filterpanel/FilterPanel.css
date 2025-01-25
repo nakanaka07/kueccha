@@ -11,6 +11,7 @@
   left: 10px; /* 左に寄せる */
   height: auto; /* 高さを自動に設定 */
   z-index: 1000; /* Zインデックスを設定 */
+  width: 250px; /* 横幅を300pxに設定 */
 }
 
 .filterpanel-container.open {
@@ -103,6 +104,10 @@
 .filter-details .area-name {
   position: relative; /* 相対位置を設定 */
   cursor: pointer; /* カーソルをポインタに設定 */
+  white-space: nowrap; /* ホワイトスペースを設定 */
+  overflow: hidden; /* オーバーフローを隠す */
+  text-overflow: ellipsis; /* テキストオーバーフローを省略記号に設定 */
+  max-width: 100px; /* 最大幅を設定してはみ出しを防ぐ */
 }
 
 .filter-details .area-name:hover::after {
