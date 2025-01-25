@@ -1,8 +1,8 @@
 .hamburger-menu {
-  position: absolute; /* 絶対位置を設定 */
+  position: fixed; /* 固定位置を設定 */
   top: 10px; /* 上からの位置を設定 */
-  left: 120px; /* 左からの位置を設定 */
-  z-index: 1000; /* Zインデックスを設定 */
+  left: 100px; /* 左からの位置を設定 */
+  z-index: 1001; /* Zインデックスを設定 */
 }
 
 .hamburger-icon {
@@ -65,24 +65,4 @@
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
-  .hamburger-menu {
-    left: 130px; /* 左からの位置を設定 */
-  }
-
-  .hamburger-icon {
-    width: 50px; /* 幅を設定 */
-    height: 45px; /* 高さを設定 */
-  }
-
-  .hamburger-icon .bar {
-    height: 2px; /* 高さを設定 */
-  }
-
-  .menu li {
-    padding: 10px 14px; /* 内側の余白を設定 */
-  }
-
-  .menu li button {
-    font-size: 14px; /* フォントサイズを設定 */
-  }
 }
