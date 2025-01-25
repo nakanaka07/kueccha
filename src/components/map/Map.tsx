@@ -159,7 +159,7 @@ const Map: React.FC<MapComponentProps> = ({
         }}
       >
         <img
-          src="kuechcha/src/utils/images/ano_icon01.png"
+          src="/kuechcha/src/utils/images/ano_icon01.png"
           alt="北向きにリセット"
           style={{ width: '40px', height: '40px' }}
         />
