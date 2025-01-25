@@ -6,6 +6,7 @@ import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
 import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
 import { ERROR_MESSAGES } from '../../utils/constants';
+import resetNorthIcon from '../../utils/images/ano_icon01.png';
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
@@ -159,7 +160,7 @@ const Map: React.FC<MapComponentProps> = ({
         }}
       >
         <img
-          src="../../../src/utils/images/ano_icon01.png"
+          src={resetNorthIcon}
           alt="北向きにリセット"
           style={{ width: '40px', height: '40px' }}
         />
