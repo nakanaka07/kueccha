@@ -153,7 +153,7 @@ const Map: React.FC<MapComponentProps> = ({
         style={{
           position: 'absolute',
           bottom: '200px',
-          right: '10px',
+          right: '5px',
           background: 'none',
           border: 'none',
         }}
@@ -161,7 +161,7 @@ const Map: React.FC<MapComponentProps> = ({
         <img
           src="src/utils/images/ano_icon01.png"
           alt="北向きにリセット"
-          style={{ width: '30px', height: '30px' }}
+          style={{ width: '40px', height: '40px' }}
         />
       </button>
     </div>
