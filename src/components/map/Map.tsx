@@ -65,6 +65,12 @@ const Map: React.FC<MapComponentProps> = ({
     [handleMapTypeChanged, onLoad],
   );
 
+  const resetNorth = useCallback(() => {
+    if (map) {
+      map.setHeading(0); // 地図の回転を北にリセット
+    }
+  }, [map]);
+
   useEffect(() => {
     if (map && pois.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -127,7 +133,11 @@ const Map: React.FC<MapComponentProps> = ({
               />
             ))}
         {selectedPoi && (
-          <InfoWindow key={selectedPoi.id} poi={selectedPoi} onCloseClick={handleInfoWindowClose} />
+          <InfoWindow
+            key={selectedPoi.id}
+            poi={selectedPoi}
+            onCloseClick={handleInfoWindowClose}
+          />
         )}
       </GoogleMap>
       <div className="hamburger-menu-container">
@@ -138,6 +148,22 @@ const Map: React.FC<MapComponentProps> = ({
           onOpenFilterPanel={handleOpenFilterPanel}
         />
       </div>
+      <button
+        onClick={resetNorth}
+        style={{
+          position: 'absolute',
+          bottom: '200px',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+        }}
+      >
+        <img
+          src="src/utils/images/ano_icon01.png"
+          alt="北向きにリセット"
+          style={{ width: '30px', height: '30px' }}
+        />
+      </button>
     </div>
   );
 };
