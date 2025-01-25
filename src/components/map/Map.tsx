@@ -158,6 +158,7 @@ const Map: React.FC<MapComponentProps> = ({
           background: 'none',
           border: 'none',
         }}
+        title="北向きにリセットします。"
       >
         <img
           src={resetNorthIcon}
