@@ -67,7 +67,7 @@ const Map: React.FC<MapComponentProps> = ({
 
   const resetNorth = useCallback(() => {
     if (map) {
-      map.setHeading(0); // 地図の回転を北にリセット
+      map.setHeading(0);
     }
   }, [map]);
 
@@ -159,7 +159,7 @@ const Map: React.FC<MapComponentProps> = ({
         }}
       >
         <img
-          src="src/utils/images/ano_icon01.png"
+          src="kuechcha/src/utils/images/ano_icon01.png"
           alt="北向きにリセット"
           style={{ width: '40px', height: '40px' }}
         />

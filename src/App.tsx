@@ -44,7 +44,6 @@ const App: React.FC = () => {
   }, []);
 
   const handleOpenFilterPanel = useCallback(() => {
-    // フィルターパネルを開く処理をここに追加
   }, []);
 
   return (
