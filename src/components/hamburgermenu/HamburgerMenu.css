@@ -19,7 +19,7 @@
 .hamburger-icon .bar {
   width: 100%; /* 幅を100%に設定 */
   height: 5px; /* 高さを設定 */
-  background-color: #f8f8f8; /* 背景色を設定 */
+  background-color: #333; /* 背景色を設定 */
   transition: all 0.3s; /* トランジションを設定 */
 }
 

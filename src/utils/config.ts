@@ -25,7 +25,7 @@ export const mapsConfig: Config['maps'] = {
     zoomControl: true, // ズームコントロールを有効にする
     mapTypeControl: true, // マップタイプコントロールを有効にする
     streetViewControl: true, // ストリートビューコントロールを有効にする
-    fullscreenControl: true, // フルスクリーンコントロールを有効にする
+    fullscreenControl: false, // フルスクリーンコントロールを無効にする
     styles: undefined, // mapIdがある場合はstylesをundefinedに設定
   },
 };

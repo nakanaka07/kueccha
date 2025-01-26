@@ -93,14 +93,14 @@ const Map: React.FC<MapComponentProps> = ({
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
       setSelectedPoi(poi);
-      setSelectedMarkerId(poi.id); // マーカーのIDを設定
+      setSelectedMarkerId(poi.id);
     },
     [setSelectedPoi],
   );
 
   const handleInfoWindowClose = useCallback(() => {
     setSelectedPoi(null);
-    setSelectedMarkerId(null); // マーカーの選択を解除
+    setSelectedMarkerId(null);
   }, [setSelectedPoi]);
 
   if (loadError) {
@@ -134,7 +134,7 @@ const Map: React.FC<MapComponentProps> = ({
                 poi={poi}
                 onClick={handleMarkerClick}
                 map={map}
-                isSelected={selectedMarkerId === poi.id} // 選択状態を渡す
+                isSelected={selectedMarkerId === poi.id}
               />
             ))}
         {selectedPoi && (
@@ -158,7 +158,7 @@ const Map: React.FC<MapComponentProps> = ({
         onClick={resetNorth}
         style={{
           position: 'absolute',
-          bottom: '200px',
+          top: '10px',
           right: '5px',
           background: 'none',
           border: 'none',
