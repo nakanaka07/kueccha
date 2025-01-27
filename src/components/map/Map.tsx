@@ -7,7 +7,7 @@ import InfoWindow from '../infowindow/InfoWindow';
 import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
 import { ERROR_MESSAGES } from '../../utils/constants';
 import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
-import resetNorthIcon from '../../utils/images/ano_icon01.png';
+import resetNorthIcon from '../../utils/images/ano_icon04.png';
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
@@ -168,7 +168,7 @@ const Map: React.FC<MapComponentProps> = ({
         <img
           src={resetNorthIcon}
           alt="北向きにリセット"
-          style={{ width: '40px', height: '40px' }}
+          style={{ width: '50px', height: '50px' }}
         />
       </button>
     </div>
