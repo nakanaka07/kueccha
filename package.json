@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Solution for the Kueccha challenge using React, Google Maps, and TypeScript.",
+  "description": "Solution for the kueccha challenge using React, Google Maps, and TypeScript.",
   "keywords": [
     "react",
     "google maps",
