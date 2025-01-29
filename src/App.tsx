@@ -17,7 +17,9 @@ const App: React.FC = () => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [areaVisibility, setAreaVisibility] =
     useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
-  const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(
+    null,
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,7 +50,9 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="app-container">
-        <div className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`} />
+        <div
+          className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
+        />
         <div className="map-container">
           <Map
             pois={pois}
@@ -67,12 +71,15 @@ const App: React.FC = () => {
           setAreaVisibility={setAreaVisibility}
           localAreaVisibility={areaVisibility}
           setLocalAreaVisibility={setAreaVisibility}
-          setCurrentLocation={setCurrentLocation}
+          currentLocation={currentLocation} // 追加
+          setCurrentLocation={setCurrentLocation} // 追加
         />
         {!isLoaded ? (
           <LoadingFallback isLoading={true} isLoaded={isLoaded} />
         ) : (
-          <Suspense fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}>
+          <Suspense
+            fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}
+          >
             {/* 他のコンポーネント */}
           </Suspense>
         )}

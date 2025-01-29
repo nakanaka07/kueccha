@@ -14,9 +14,13 @@ interface MapComponentProps extends MapProps {
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   areaVisibility: Record<AreaType, boolean>;
   onLoad: () => void;
-  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
+  setAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
   currentLocation: LatLngLiteral | null;
-  setCurrentLocation: React.Dispatch<React.SetStateAction<LatLngLiteral | null>>; // 追加
+  setCurrentLocation: React.Dispatch<
+    React.SetStateAction<LatLngLiteral | null>
+  >; // 追加
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -35,10 +39,13 @@ const Map: React.FC<MapComponentProps> = ({
     mapIds: [mapsConfig.mapId],
     libraries: mapsConfig.libraries,
   });
-  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
+  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
+    'roadmap',
+  );
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
-  const [localAreaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
+  const [localAreaVisibility, setLocalAreaVisibility] =
+    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
 
   const mapOptions = {
     ...mapsConfig.options,
@@ -113,6 +120,10 @@ const Map: React.FC<MapComponentProps> = ({
         position: currentLocation,
         map,
         title: '現在地',
+        icon: {
+          url: 'path/to/current-location-icon.png', // アイコンのパスを指定
+          scaledSize: new google.maps.Size(30, 30), // アイコンのサイズを指定
+        },
       });
       return () => {
         marker.setMap(null);
@@ -120,10 +131,13 @@ const Map: React.FC<MapComponentProps> = ({
     }
   }, [map, currentLocation]);
 
-  const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
-    setMap(mapInstance);
-    onLoad();
-  }, [onLoad]);
+  const handleMapLoad = useCallback(
+    (mapInstance: google.maps.Map) => {
+      setMap(mapInstance);
+      onLoad();
+    },
+    [onLoad],
+  );
 
   if (loadError) {
     console.error('Maps API loading error:', loadError);
@@ -174,7 +188,8 @@ const Map: React.FC<MapComponentProps> = ({
           setAreaVisibility={setAreaVisibility}
           localAreaVisibility={localAreaVisibility}
           setLocalAreaVisibility={setLocalAreaVisibility}
-          setCurrentLocation={setCurrentLocation}
+          currentLocation={currentLocation} // 追加
+          setCurrentLocation={setCurrentLocation} // 追加
         />
       </div>
       <button

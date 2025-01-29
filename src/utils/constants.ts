@@ -7,6 +7,7 @@ export const AREAS = {
   SNACK: 'スナック',
   PUBLIC_TOILET: '公共トイレ',
   PARKING: '駐車場',
+  CURRENT_LOCATION: '現在地', // 現在地エリアを追加
 } as const;
 
 // 営業時間の定数を定義
@@ -31,6 +32,7 @@ export const MARKER_COLORS = {
   SNACK: '#65318e',
   PUBLIC_TOILET: '#2792c3',
   PARKING: '#333333',
+  CURRENT_LOCATION: '#ff0000', // 現在地のマーカー色を追加
 } as const;
 
 // エラーメッセージの定数を定義

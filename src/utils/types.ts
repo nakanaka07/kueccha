@@ -131,7 +131,13 @@ export interface FilterPanelProps extends BaseProps {
   isFilterPanelOpen: boolean;
   onCloseClick: () => void;
   localAreaVisibility: Record<AreaType, boolean>;
-  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>;
+  setLocalAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
+  currentLocation: LatLngLiteral | null;
+  setCurrentLocation: React.Dispatch<
+    React.SetStateAction<LatLngLiteral | null>
+  >;
 }
 
 // ローディングフォールバックのプロパティを表すインターフェース

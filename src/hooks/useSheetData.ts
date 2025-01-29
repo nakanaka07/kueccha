@@ -97,7 +97,7 @@ export function useSheetData() {
     try {
       validateConfig(); // 設定を検証
       const normalAreas = Object.keys(AREAS).filter(
-        (area) => area !== 'RECOMMEND',
+        (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
       ); // 通常のエリアをフィルタ
       const normalPoisArrays = await Promise.all(
         normalAreas.map((area) => fetchAreaData(area)),
