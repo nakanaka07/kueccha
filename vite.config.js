@@ -4,7 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import fs from 'fs';
 import path from 'path';
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   const envVariables = [
@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => {
     acc[`process.env.${key}`] = JSON.stringify(env[key]);
     return acc;
   }, {});
+
+  const isDev = command === 'serve';
 
   return {
     base: mode === 'production' ? '/kueccha/' : '/',
@@ -55,10 +57,12 @@ export default defineConfig(({ mode }) => {
     },
     define: defineEnv,
     server: {
-      https: {
-        key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
-        cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
-      },
+      https: isDev
+        ? {
+            key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
+            cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
+          }
+        : false,
     },
   };
 });
