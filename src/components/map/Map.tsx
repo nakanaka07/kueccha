@@ -121,7 +121,7 @@ const Map: React.FC<MapComponentProps> = ({
         map,
         title: '現在地',
         icon: {
-          url: 'path/to/current-location-icon.png', // アイコンのパスを指定
+          url: '../../utils/images/shi_icon01.png', // アイコンのパスを指定
           scaledSize: new google.maps.Size(30, 30), // アイコンのサイズを指定
         },
       });

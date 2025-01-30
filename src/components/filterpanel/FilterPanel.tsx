@@ -86,7 +86,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   );
 
   const areas = Object.entries(AREAS)
-    .filter(([area]) => area !== 'CURRENT_LOCATION') // CURRENT_LOCATIONを除外
+    .filter(([area]) => area !== 'CURRENT_LOCATION')
     .map(([area, name]) => ({
       area: area as AreaType,
       name,
@@ -110,9 +110,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         },
         (error) => {
           console.error('Error getting current location:', error);
-          alert(
-            `Error getting current location: ${error.message || '位置情報の取得に失敗しました'}`,
-          );
+          let errorMessage = '位置情報の取得に失敗しました';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = '位置情報の取得が許可されていません';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = '位置情報が利用できません';
+              break;
+            case error.TIMEOUT:
+              errorMessage = '位置情報の取得がタイムアウトしました';
+              break;
+            default:
+              errorMessage = '未知のエラーが発生しました';
+              break;
+          }
+          alert(`Error getting current location: ${errorMessage}`);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, // タイムアウトを10秒に設定
+          maximumAge: 0,
         },
       );
     } else {
@@ -125,10 +143,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   return (
-    <div
-      ref={panelRef}
-      className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}
-    >
+    <div>
       {isFilterPanelOpen && (
         <div
           role="region"
@@ -219,4 +234,3 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 };
 
 export default FilterPanel;
-
