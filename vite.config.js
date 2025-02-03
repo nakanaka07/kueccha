@@ -56,11 +56,13 @@ export default defineConfig(({ mode, command }) => {
       },
     },
     define: defineEnv,
-    server: {
-      https: {
-        key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
-        cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
-      },
-    },
+    server: isDev
+      ? {
+          https: {
+            key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
+            cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
+          },
+        }
+      : {},
   };
 });
