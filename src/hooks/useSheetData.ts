@@ -131,7 +131,7 @@ export function useSheetData() {
     }
   }, [fetchData, isFetched]);
 
-  // ステップ4: idの重複をチェック
+  // idの重複をチェック
   useEffect(() => {
     const checkForDuplicateIds = (pois: Poi[]) => {
       const ids = pois.map((poi) => poi.id);

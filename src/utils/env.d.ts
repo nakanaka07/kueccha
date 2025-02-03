@@ -1,4 +1,4 @@
-/// <reference types="vite/client" />
+/// <reference types="vite/client" /> // Viteのクライアント型定義を参照
 
 // 環境変数の型定義
 interface ImportMetaEnv {
