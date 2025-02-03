@@ -83,21 +83,38 @@ const Map: React.FC<MapComponentProps> = ({
   }, [map]);
 
   useEffect(() => {
-    if (map && pois.length > 0) {
+    if (map) {
       const bounds = new google.maps.LatLngBounds(); // マップの境界を設定
+
+      // POIの位置を境界に追加
       pois.forEach((poi) => {
         if (areaVisibility[poi.area]) {
-          bounds.extend(poi.location); // POIの位置を境界に追加
+          bounds.extend(poi.location);
         }
       });
-      if (!isInitialRender) {
-        map.fitBounds(bounds); // マップを境界にフィット
-        map.panToBounds(bounds); // マップを境界にパン
+
+      // 現在地が設定されている場合、境界に追加
+      if (currentLocation) {
+        bounds.extend(currentLocation);
+      }
+
+      // フィルターパネルがすべてオフの場合、デフォルトの中心座標を設定
+      const allFiltersOff = Object.values(areaVisibility).every(
+        (visible) => !visible,
+      );
+      if (allFiltersOff) {
+        map.setCenter(mapsConfig.defaultCenter);
+        map.setZoom(mapsConfig.defaultZoom);
       } else {
-        setIsInitialRender(false); // 初期レンダリングを終了
+        if (!isInitialRender) {
+          map.fitBounds(bounds); // マップを境界にフィット
+          map.panToBounds(bounds); // マップを境界にパン
+        } else {
+          setIsInitialRender(false); // 初期レンダリングを終了
+        }
       }
     }
-  }, [map, pois, areaVisibility, isInitialRender]);
+  }, [map, pois, areaVisibility, isInitialRender, currentLocation]);
 
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
@@ -121,12 +138,22 @@ const Map: React.FC<MapComponentProps> = ({
         scale: 1.2, // スケールを設定
       });
 
+      // スタイルに z-index を追加
+      pin.element.style.zIndex = '1000';
+
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position: currentLocation, // 現在の位置を設定
         map, // マップを設定
         title: '現在地', // タイトルを設定
         content: pin.element, // コンテンツを設定
       });
+
+      // カスタムプロパティとしてIDを設定
+      (marker as any).id = 'current-location-marker';
+
+      // 現在地にズーム
+      map.setCenter(currentLocation);
+      map.setZoom(15);
 
       return () => {
         marker.map = null; // マーカーをマップから削除
