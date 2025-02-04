@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022", // 最新のECMAScriptターゲット
+    "module": "ES2022", // 最新のモジュールシステム
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリ
+    "esModuleInterop": true, // ESモジュールとの互換性を有効にする
+    "allowSyntheticDefaultImports": true, // デフォルトインポートを許可
+    "strict": true, // 厳格な型チェックを有効にする（noImplicitAny, noImplicitThis, alwaysStrictなどを含む）
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
+    "moduleResolution": "node", // Node.jsのモジュール解決を使用
+    "resolveJsonModule": true, // JSONモジュールの解決を有効にする
+    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
+    "noEmit": true, // コンパイル結果を出力しない（型チェックのみを行う）
+    "jsx": "react-jsx", // React JSXサポートを有効にする
+    "incremental": true, // 増分コンパイルを有効にする（コンパイル時間を短縮）
+    "paths": {
+      "@/*": ["./src/*"] // エイリアスの設定
+    },
+    "typeRoots": ["./node_modules/@types"] // 型定義ファイルのルート
+  },
+  "include": ["./src", "*.config.ts", "./src/utils/types.ts"], // インクルードするファイル（プロジェクトに含めるファイル）
+  "exclude": ["node_modules", "dist"] // 除外するファイル（プロジェクトから除外するファイル）
+}

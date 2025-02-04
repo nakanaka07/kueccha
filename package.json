@@ -1,0 +1,66 @@
+{
+  "name": "sadodekueccha",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Solution for the sadodekueccha challenge using React, Google Maps, and TypeScript.",
+  "keywords": [
+    "react",
+    "google maps",
+    "typescript",
+    "kueccha"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nakanaka07/kueccha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nakanaka07/kueccha/issues"
+  },
+  "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
+  "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "@googlemaps/markerclusterer": "^2.5.3",
+    "@react-google-maps/api": "^2.20.5",
+    "@react-google-maps/infobox": "^2.20.0",
+    "@react-google-maps/marker-clusterer": "^2.20.0",
+    "lru-cache": "^11.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-no-for-of-loops": "^1.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-react": "^7.37.4",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "contributors": [
+    {
+      "name": "Yuichiro Nakaguchi",
+      "email": "nakaguchi07@gmail.com",
+      "url": "https://github.com/nakanaka07"
+    }
+  ]
+}

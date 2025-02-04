@@ -1,0 +1,68 @@
+.hamburger-menu {
+  position: fixed; /* 固定位置を設定 */
+  top: 10px; /* 上からの位置を設定 */
+  left: 100px; /* 左からの位置を設定 */
+  z-index: 1001; /* Zインデックスを設定 */
+}
+
+.hamburger-icon {
+  display: flex; /* フレックスボックスを使用 */
+  flex-direction: column; /* 縦方向に配置 */
+  justify-content: space-around; /* 要素間のスペースを均等にする */
+  width: 50px; /* 幅を設定 */
+  height: 45px; /* 高さを設定 */
+  background: transparent; /* 背景を透明に設定 */
+  border: none; /* ボーダーをなしに設定 */
+  cursor: pointer; /* カーソルをポインタに設定 */
+}
+
+.hamburger-icon .bar {
+  width: 100%; /* 幅を100%に設定 */
+  height: 5px; /* 高さを設定 */
+  background-color: #333; /* 背景色を設定 */
+  transition: all 0.3s; /* トランジションを設定 */
+}
+
+.menu {
+  display: none; /* 初期状態で非表示に設定 */
+  position: absolute; /* 絶対位置を設定 */
+  top: 0; /* 上からの位置を設定 */
+  left: 55px; /* 左からの位置を設定 */
+  background-color: white; /* 背景色を設定 */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* ボックスシャドウを設定 */
+  z-index: 1001; /* Zインデックスを設定 */
+  width: 200px; /* 幅を設定 */
+  border-radius: 5px; /* 角を丸くする */
+}
+
+.menu.open {
+  display: block; /* 表示状態に設定 */
+}
+
+.menu ul {
+  list-style: none; /* リストスタイルをなしに設定 */
+  padding: 0; /* パディングをなしに設定 */
+  margin: 0; /* マージンをなしに設定 */
+}
+
+.menu li {
+  padding: 12px 10px; /* 内側の余白を設定 */
+}
+
+.menu li button {
+  background: none; /* 背景をなしに設定 */
+  border: none; /* ボーダーをなしに設定 */
+  color: #333; /* 文字色を設定 */
+  cursor: pointer; /* カーソルをポインタに設定 */
+  font-size: 16px; /* フォントサイズを設定 */
+  width: 100%; /* 幅を100%に設定 */
+  text-align: center; /* テキストを中央揃えに設定 */
+}
+
+.menu li button:hover {
+  background-color: #f1f1f1; /* ホバー時の背景色を設定 */
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+}
