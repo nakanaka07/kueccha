@@ -102,7 +102,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
           setCurrentLocation({ lat: latitude, lng: longitude }); // 現在の位置を設定
           setLocalAreaVisibility((prev) => ({
             ...prev,
@@ -146,88 +145,69 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   return (
     <div>
       {isFilterPanelOpen && (
-        <div
-          role="region"
-          aria-label="エリアフィルター"
-          className="filter-panel"
-          ref={panelRef} // フィルターパネルの参照を設定
-        >
-          <button
-            className="close-button"
-            onClick={onCloseClick} // 閉じるボタンのクリックハンドラを設定
-            title="閉じます。"
-          >
+        <div ref={panelRef} className="filter-panel">
+          <button onClick={onCloseClick} className="close-button">
             ×
           </button>
-          <div>
-            <div>表示エリア（表示数）</div>
-            <div>
-              {areas.map(({ area, name, count, isVisible, color }) => (
-                <label key={area} className="filter-item">
-                  <input
-                    type="checkbox"
-                    checked={isVisible}
-                    onChange={(e) => {
-                      setLocalAreaVisibility(
-                        (prev: Record<AreaType, boolean>) => ({
-                          ...prev,
-                          [area]: e.target.checked,
-                        }),
-                      ); // エリアの表示状態を更新
-                      setSelectedPoi(null); // 選択されたPOIをリセット
-                    }}
-                    aria-label={`${name}を表示 (${count}件)`} // アクセシビリティのためのラベルを設定
-                  />
-                  <span
-                    className="custom-checkbox"
-                    style={{ borderColor: color }} // カスタムチェックボックスの色を設定
-                  ></span>
-                  <div className="filter-details">
-                    <span
-                      className="marker-color"
-                      style={{ backgroundColor: color }} // マーカーの色を設定
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="area-name"
-                      data-fullname={name}
-                      title={name}
-                    >
-                      {name}
-                    </span>
-                    <span>({count})</span>
-                  </div>
-                </label>
-              ))}
-              <label className="filter-item">
+          <h2>表示エリア</h2>
+          <div className="filter-list">
+            {areas.map(({ area, name, count, isVisible, color }) => (
+              <label key={area} className="filter-item">
                 <input
                   type="checkbox"
-                  checked={localAreaVisibility.CURRENT_LOCATION}
-                  onChange={handleCurrentLocationChange} // 現在地の表示状態を更新
-                  aria-label="現在地を表示" // アクセシビリティのためのラベルを設定
+                  checked={isVisible}
+                  onChange={() =>
+                    setLocalAreaVisibility((prev) => ({
+                      ...prev,
+                      [area]: !prev[area],
+                    }))
+                  }
                 />
                 <span
                   className="custom-checkbox"
-                  style={{ borderColor: markerConfig.colors.CURRENT_LOCATION }} // カスタムチェックボックスの色を設定
+                  style={{ borderColor: color }}
                 ></span>
                 <div className="filter-details">
                   <span
                     className="marker-color"
-                    style={{
-                      backgroundColor: markerConfig.colors.CURRENT_LOCATION,
-                    }} // マーカーの色を設定
+                    style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
-                  <span
-                    className="area-name"
-                    data-fullname="現在地"
-                    title="現在地"
-                  >
-                    現在地
+                  <span className="area-name" data-fullname={name} title={name}>
+                    {name}
                   </span>
+                  <span>({count})</span>
                 </div>
               </label>
-            </div>
+            ))}
+            <label className="filter-item">
+              <input
+                type="checkbox"
+                checked={localAreaVisibility.CURRENT_LOCATION}
+                onChange={handleCurrentLocationChange} // 現在地の表示状態を更新
+                aria-label="現在地を表示" // アクセシビリティのためのラベルを設定
+              />
+              <span
+                className="custom-checkbox"
+                style={{ borderColor: markerConfig.colors.CURRENT_LOCATION }} // カスタムチェックボックスの色を設定
+              ></span>
+              <div className="filter-details">
+                <span
+                  className="marker-color"
+                  style={{
+                    backgroundColor: markerConfig.colors.CURRENT_LOCATION,
+                  }} // マーカーの色を設定
+                  aria-hidden="true"
+                />
+                <span
+                  className="area-name"
+                  data-fullname="現在地"
+                  title="現在地"
+                >
+                  現在地
+                </span>
+              </div>
+            </label>
           </div>
         </div>
       )}

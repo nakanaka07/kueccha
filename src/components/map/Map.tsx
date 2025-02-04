@@ -8,6 +8,7 @@ import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
 import { ERROR_MESSAGES } from '../../utils/constants';
 import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
+import currentLocationIcon from '../../utils/images/ano_icon02.png'; // 現在地取得ボタンのアイコンを追加
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
@@ -81,6 +82,42 @@ const Map: React.FC<MapComponentProps> = ({
       map.setHeading(0);
     }
   }, [map]);
+
+  const handleGetCurrentLocation = useCallback(() => {
+    if (currentLocation) {
+      // 現在地が既に表示されている場合は非表示にする
+      setCurrentLocation(null);
+      setLocalAreaVisibility((prev) => ({
+        ...prev,
+        CURRENT_LOCATION: false,
+      }));
+    } else {
+      // 現在地を取得して表示する
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrentLocation({ lat: latitude, lng: longitude });
+            setLocalAreaVisibility((prev) => ({
+              ...prev,
+              CURRENT_LOCATION: true,
+            }));
+          },
+          (error) => {
+            console.error('Error getting current location:', error);
+            alert('現在地の取得に失敗しました。');
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          },
+        );
+      } else {
+        alert('このブラウザは現在地取得に対応していません。');
+      }
+    }
+  }, [currentLocation, setCurrentLocation, setLocalAreaVisibility]);
 
   useEffect(() => {
     if (map) {
@@ -202,6 +239,23 @@ const Map: React.FC<MapComponentProps> = ({
         <img
           src={resetNorthIcon}
           alt="北向きにリセット"
+          style={{ width: '50px', height: '50px' }}
+        />
+      </button>
+      <button
+        onClick={handleGetCurrentLocation}
+        style={{
+          position: 'absolute',
+          top: '70px',
+          right: '5px',
+          background: 'none',
+          border: 'none',
+        }}
+        title="現在地を取得します。"
+      >
+        <img
+          src={currentLocationIcon}
+          alt="現在地を取得"
           style={{ width: '50px', height: '50px' }}
         />
       </button>
