@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import type { MarkerProps } from '../../utils/types';
-import { MARKER_COLORS } from '../../utils/constants';
 import './Marker.css';
 
 // マーカーアイコンのパスを定義
@@ -13,7 +12,7 @@ const markerIcons: Record<string, string> = {
   PUBLIC_TOILET: '/src/utils/images/shi_icon01.png',
   PARKING: '/src/utils/images/shi_icon01.png',
   CURRENT_LOCATION: '/src/utils/images/ano_icon02.png', // 現在地マーカーアイコンのパスを追加
-  DEFAULT: '/src/utils/images/ano_icon01.png',
+  DEFAULT: '/src/utils/images/row2.png', // デフォルトのアイコン画像を追加
 };
 
 const Marker = React.memo(
@@ -32,6 +31,7 @@ const Marker = React.memo(
 
       const iconUrl = markerIcons[poi.area] || markerIcons.DEFAULT;
 
+      // カスタムアイコンを設定
       const iconElement = document.createElement('div');
       iconElement.style.backgroundImage = `url(${iconUrl})`;
       iconElement.style.backgroundSize = 'contain';
@@ -42,23 +42,21 @@ const Marker = React.memo(
         position: poi.location,
         map,
         title: poi.name,
-        content: iconElement, // カスタムアイコンを設定
+        content: iconElement,
         zIndex:
           poi.area === 'CURRENT_LOCATION'
             ? 2000
             : poi.area === 'RECOMMEND'
               ? 1000
-              : 1, // 現在地マーカーのzIndexを高く設定
+              : 1,
       });
 
       marker.addListener('click', () => onClick(poi));
       markerRef.current = marker;
 
-      if (
-        (poi.area === 'RECOMMEND' || poi.area === 'CURRENT_LOCATION') &&
-        marker.content instanceof HTMLElement
-      ) {
-        marker.content.classList.add('blinking');
+      // 'RECOMMEND' または 'CURRENT_LOCATION' の場合に 'blinking' クラスを追加
+      if (poi.area === 'RECOMMEND' || poi.area === 'CURRENT_LOCATION') {
+        iconElement.classList.add('blinking');
       }
 
       return () => {
