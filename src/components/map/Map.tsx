@@ -1,26 +1,26 @@
-import React, { useState, useCallback, useEffect } from 'react'; // Reactと必要なフックをインポート
-import { GoogleMap, useLoadScript } from '@react-google-maps/api'; // Google Mapsコンポーネントとフックをインポート
-import { mapsConfig } from '../../utils/config'; // 設定をインポート
-import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート
-import { Marker } from '../marker/Marker'; // Markerコンポーネントをインポート
-import InfoWindow from '../infowindow/InfoWindow'; // InfoWindowコンポーネントをインポート
-import HamburgerMenu from '../hamburgermenu/HamburgerMenu'; // HamburgerMenuコンポーネントをインポート
-import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージ定数をインポート
-import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel'; // 初期表示設定をインポート
-import resetNorthIcon from '../../utils/images/ano_icon04.png'; // リセットアイコンをインポート
+import React, { useState, useCallback, useEffect } from 'react';
+import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import { mapsConfig } from '../../utils/config';
+import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
+import { Marker } from '../marker/Marker';
+import InfoWindow from '../infowindow/InfoWindow';
+import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
+import { ERROR_MESSAGES } from '../../utils/constants';
+import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
+import resetNorthIcon from '../../utils/images/ano_icon04.png';
 
 interface MapComponentProps extends MapProps {
-  selectedPoi: Poi | null; // 選択されたPOI
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを設定する関数
-  areaVisibility: Record<AreaType, boolean>; // エリアの表示状態
-  onLoad: () => void; // マップロード時のコールバック
+  selectedPoi: Poi | null;
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  areaVisibility: Record<AreaType, boolean>;
+  onLoad: () => void;
   setAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // エリア表示状態を設定する関数
-  currentLocation: LatLngLiteral | null; // 現在の位置
+  >;
+  currentLocation: LatLngLiteral | null;
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
+  >;
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -33,72 +33,69 @@ const Map: React.FC<MapComponentProps> = ({
   currentLocation,
   setCurrentLocation,
 }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null); // マップオブジェクトを管理するステート
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: mapsConfig.apiKey, // Google Maps APIキー
-    mapIds: [mapsConfig.mapId], // マップID
-    libraries: mapsConfig.libraries, // 使用するライブラリ
+    googleMapsApiKey: mapsConfig.apiKey,
+    mapIds: [mapsConfig.mapId],
+    libraries: mapsConfig.libraries,
   });
   const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
     'roadmap',
-  ); // マップタイプを管理するステート
-  const [isInitialRender, setIsInitialRender] = useState(true); // 初期レンダリングかどうかを管理するステート
-  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null); // 選択されたマーカーIDを管理するステート
+  );
+  const [isInitialRender, setIsInitialRender] = useState(true);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [localAreaVisibility, setLocalAreaVisibility] =
-    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY); // ローカルエリアの表示状態を管理するステート
+    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
 
   const mapOptions = {
-    ...mapsConfig.options, // マップのオプションを設定
-    mapTypeId: mapType, // マップタイプを設定
-    mapTypeControl: true, // マップタイプコントロールを有効にする
-    zoomControl: true, // ズームコントロールを有効にする
+    ...mapsConfig.options,
+    mapTypeId: mapType,
+    mapTypeControl: true,
+    zoomControl: true,
     mapTypeControlOptions: isLoaded
       ? {
-          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU, // ドロップダウンメニューを設定
-          position: google.maps.ControlPosition.TOP_LEFT, // コントロールの位置を設定
-          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 使用するマップタイプを設定
+          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
         }
       : undefined,
-    ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}), // マップIDがある場合は設定
+    ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
   };
 
   const handleMapTypeChanged = useCallback(() => {
     if (map) {
-      setMapType(map.getMapTypeId() as google.maps.MapTypeId); // マップタイプが変更されたときにステートを更新
+      setMapType(map.getMapTypeId() as google.maps.MapTypeId);
     }
   }, [map]);
 
   const handleMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
-      setMap(mapInstance); // マップインスタンスをステートに設定
-      onLoad(); // マップロード時のコールバックを実行
+      setMap(mapInstance);
+      onLoad();
     },
     [onLoad],
   );
 
   const resetNorth = useCallback(() => {
     if (map) {
-      map.setHeading(0); // マップの向きを北にリセット
+      map.setHeading(0);
     }
   }, [map]);
 
   useEffect(() => {
     if (map) {
-      const bounds = new google.maps.LatLngBounds(); // マップの境界を設定
+      const bounds = new google.maps.LatLngBounds();
 
-      // POIの位置を境界に追加
       pois.forEach((poi) => {
         if (areaVisibility[poi.area]) {
           bounds.extend(poi.location);
         }
       });
 
-      // 現在地が設定されている場合、境界に追加
       if (currentLocation) {
         bounds.extend(currentLocation);
       }
 
-      // フィルターパネルがすべてオフの場合、デフォルトの中心座標を設定
       const allFiltersOff = Object.values(areaVisibility).every(
         (visible) => !visible,
       );
@@ -107,10 +104,10 @@ const Map: React.FC<MapComponentProps> = ({
         map.setZoom(mapsConfig.defaultZoom);
       } else {
         if (!isInitialRender) {
-          map.fitBounds(bounds); // マップを境界にフィット
-          map.panToBounds(bounds); // マップを境界にパン
+          map.fitBounds(bounds);
+          map.panToBounds(bounds);
         } else {
-          setIsInitialRender(false); // 初期レンダリングを終了
+          setIsInitialRender(false);
         }
       }
     }
@@ -118,124 +115,101 @@ const Map: React.FC<MapComponentProps> = ({
 
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
-      setSelectedPoi(poi); // 選択されたPOIをステートに設定
-      setSelectedMarkerId(poi.id); // 選択されたマーカーIDをステートに設定
+      setSelectedPoi(poi);
+      setSelectedMarkerId(poi.id);
     },
     [setSelectedPoi],
   );
 
   const handleInfoWindowClose = useCallback(() => {
-    setSelectedPoi(null); // 選択されたPOIをリセット
-    setSelectedMarkerId(null); // 選択されたマーカーIDをリセット
+    setSelectedPoi(null);
+    setSelectedMarkerId(null);
   }, [setSelectedPoi]);
 
-  useEffect(() => {
-    if (map && currentLocation && window.google?.maps) {
-      const pin = new google.maps.marker.PinElement({
-        glyph: '', // グリフを設定
-        background: '#4285F4', // Googleブルー
-        borderColor: '#ffffff', // 枠線の色を設定
-        scale: 1.2, // スケールを設定
-      });
-
-      // スタイルに z-index を追加
-      pin.element.style.zIndex = '1000';
-
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        position: currentLocation, // 現在の位置を設定
-        map, // マップを設定
-        title: '現在地', // タイトルを設定
-        content: pin.element, // コンテンツを設定
-      });
-
-      // カスタムプロパティとしてIDを設定
-      (marker as any).id = 'current-location-marker';
-
-      // 現在地にズーム
-      map.setCenter(currentLocation);
-      map.setZoom(15);
-
-      return () => {
-        marker.map = null; // マーカーをマップから削除
-      };
-    }
-  }, [map, currentLocation]);
-
   if (loadError) {
-    console.error('Maps API loading error:', loadError); // ロードエラーをコンソールに出力
-    return (
-      <div role="alert" aria-live="assertive">
-        <h2>{ERROR_MESSAGES.MAP.LOAD_FAILED}</h2>
-        <p>{ERROR_MESSAGES.MAP.RETRY_MESSAGE}</p>
-      </div>
-    );
+    return <div>{ERROR_MESSAGES.MAP.LOAD_FAILED}</div>;
   }
 
   if (!isLoaded) {
-    return <div>{ERROR_MESSAGES.LOADING.MAP}</div>; // ロード中のメッセージを表示
+    return <div>Loading...</div>;
   }
 
   return (
     <div role="region" aria-label="地図" className="map-container">
       <GoogleMap
-        center={mapsConfig.defaultCenter} // デフォルトの中心座標を設定
-        zoom={mapsConfig.defaultZoom} // デフォルトのズームレベルを設定
-        options={mapOptions} // マップのオプションを設定
-        onLoad={handleMapLoad} // マップロード時のコールバックを設定
+        center={mapsConfig.defaultCenter}
+        zoom={mapsConfig.defaultZoom}
+        options={mapOptions}
+        onLoad={handleMapLoad}
       >
         {map &&
           pois
-            .filter((poi) => areaVisibility[poi.area]) // 表示するエリアのPOIをフィルタ
+            .filter((poi) => areaVisibility[poi.area])
             .map((poi) => (
               <Marker
-                key={poi.id} // マーカーのキーを設定
-                poi={poi} // POIを渡す
-                onClick={handleMarkerClick} // クリック時のハンドラを設定
-                map={map} // マップを渡す
-                isSelected={selectedMarkerId === poi.id} // 選択状態を渡す
+                key={poi.id}
+                poi={poi}
+                onClick={handleMarkerClick}
+                map={map}
+                isSelected={selectedMarkerId === poi.id}
               />
             ))}
+        {map && currentLocation && (
+          <Marker
+            key="current-location-marker"
+            poi={{
+              id: 'current-location',
+              name: '現在地',
+              location: currentLocation,
+              area: 'CURRENT_LOCATION',
+              category: '現在地',
+            }}
+            onClick={() => {}}
+            map={map}
+            isSelected={false}
+          />
+        )}
         {selectedPoi && (
           <InfoWindow
-            key={selectedPoi.id} // InfoWindowのキーを設定
-            poi={selectedPoi} // POIを渡す
-            onCloseClick={handleInfoWindowClose} // 閉じるクリック時のハンドラを設定
+            key={selectedPoi.id}
+            poi={selectedPoi}
+            onCloseClick={handleInfoWindowClose}
           />
         )}
       </GoogleMap>
       <div className="hamburger-menu-container">
         <HamburgerMenu
-          pois={pois} // POIを渡す
-          setSelectedPoi={setSelectedPoi} // POIを設定する関数を渡す
-          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-          localAreaVisibility={localAreaVisibility} // ローカルエリアの表示状態を渡す
-          setLocalAreaVisibility={setLocalAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
-          currentLocation={currentLocation} // 現在の位置を渡す
-          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+          pois={pois}
+          setSelectedPoi={setSelectedPoi}
+          setAreaVisibility={setAreaVisibility}
+          localAreaVisibility={localAreaVisibility}
+          setLocalAreaVisibility={setLocalAreaVisibility}
+          currentLocation={currentLocation}
+          setCurrentLocation={setCurrentLocation}
         />
       </div>
       <button
-        onClick={resetNorth} // クリック時のハンドラを設定
+        onClick={resetNorth}
         style={{
-          position: 'absolute', // 絶対位置を設定
-          top: '10px', // 上端を10pxに設定
-          right: '5px', // 右端を5pxに設定
-          background: 'none', // 背景をなしに設定
-          border: 'none', // 枠線をなしに設定
+          position: 'absolute',
+          top: '10px',
+          right: '5px',
+          background: 'none',
+          border: 'none',
         }}
-        title="北向きにリセットします。" // ボタンのタイトルを設定
+        title="北向きにリセットします。"
       >
         <img
-          src={resetNorthIcon} // アイコンのソースを設定
-          alt="北向きにリセット" // 代替テキストを設定
-          style={{ width: '50px', height: '50px' }} // アイコンのサイズを設定
+          src={resetNorthIcon}
+          alt="北向きにリセット"
+          style={{ width: '50px', height: '50px' }}
         />
       </button>
     </div>
   );
 };
 
-Map.displayName = 'Map'; // コンポーネントの表示名を設定
+Map.displayName = 'Map';
 
-export { Map }; // Mapコンポーネントをエクスポート
-export default Map; // デフォルトエクスポート
+export { Map };
+export default Map;
