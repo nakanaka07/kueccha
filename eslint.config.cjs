@@ -1,12 +1,12 @@
-const prettierPlugin = require('eslint-plugin-prettier');
-const tsPlugin = require('@typescript-eslint/eslint-plugin');
-const tsParser = require('@typescript-eslint/parser');
-const reactPlugin = require('eslint-plugin-react');
+const prettierPlugin = require('eslint-plugin-prettier'); // Prettierプラグインをインポート
+const tsPlugin = require('@typescript-eslint/eslint-plugin'); // TypeScript ESLintプラグインをインポート
+const tsParser = require('@typescript-eslint/parser'); // TypeScriptパーサーをインポート
+const reactPlugin = require('eslint-plugin-react'); // Reactプラグインをインポート
 
 module.exports = [
   {
     languageOptions: {
-      parser: tsParser,
+      parser: tsParser, // TypeScriptパーサーを設定
       parserOptions: {
         ecmaVersion: 'latest', // ECMAScriptのバージョンを設定
         sourceType: 'module', // モジュールシステムを設定
@@ -17,9 +17,9 @@ module.exports = [
       },
     },
     plugins: {
-      '@typescript-eslint': tsPlugin,
-      prettier: prettierPlugin,
-      react: reactPlugin,
+      '@typescript-eslint': tsPlugin, // TypeScript ESLintプラグインを設定
+      prettier: prettierPlugin, // Prettierプラグインを設定
+      react: reactPlugin, // Reactプラグインを設定
     },
     settings: {
       react: {
@@ -36,12 +36,12 @@ module.exports = [
       ], // 未使用の変数をエラーとして扱う
     },
     ignores: [
-      '.prettierrc.cjs',
-      'eslint.config.cjs',
-      'vite.config.js',
-      'dist/**',
-      '.vscode/**',
-      'node_modules/**',
+      '.prettierrc.cjs', // Prettier設定ファイルを除外
+      'eslint.config.cjs', // ESLint設定ファイルを除外
+      'vite.config.js', // Vite設定ファイルを除外
+      'dist/**', // 出力ディレクトリを除外
+      '.vscode/**', // VSCode設定ディレクトリを除外
+      'node_modules/**', // node_modulesディレクトリを除外
     ], // 特定のファイルを除外
   },
 ];

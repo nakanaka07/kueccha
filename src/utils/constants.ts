@@ -59,6 +59,7 @@ export const ERROR_MESSAGES = {
   },
 } as const;
 
+// マーカーの設定を定義
 export const markerConfig = {
   colors: {
     PARKING: '#333333', // 駐車場のマーカー色

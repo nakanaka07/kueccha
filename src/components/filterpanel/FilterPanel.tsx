@@ -4,6 +4,7 @@ import { AREAS } from '../../utils/constants'; // エリア定数をインポー
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
 import './FilterPanel.css'; // スタイルシートをインポート
 
+// 初期表示設定を定義
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
     ...acc,
@@ -14,10 +15,11 @@ const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
       area !== 'CURRENT_LOCATION',
   }),
   {} as Record<AreaType, boolean>,
-); // 初期表示設定を定義
+);
 
 export { INITIAL_VISIBILITY };
 
+// FilterPanelコンポーネントのプロパティの型定義
 interface FilterPanelProps {
   pois: Poi[]; // POIの配列
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを設定する関数
@@ -36,6 +38,7 @@ interface FilterPanelProps {
   >; // 現在の位置を設定する関数
 }
 
+// FilterPanelコンポーネントの定義
 const FilterPanel: React.FC<FilterPanelProps> = ({
   pois,
   setSelectedPoi,
@@ -49,42 +52,47 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を保持するためのref
 
+  // ローカルエリアの表示状態を設定
   useEffect(() => {
-    setAreaVisibility(localAreaVisibility); // ローカルエリアの表示状態を設定
+    setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
 
+  // フィルターパネルの外側がクリックされた場合に閉じる
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
       if (
         panelRef.current &&
         !panelRef.current.contains(event.target as Node)
       ) {
-        onCloseClick(); // フィルターパネルの外側がクリックされた場合に閉じる
+        onCloseClick();
       }
     },
     [onCloseClick],
   );
 
+  // フィルターパネルの開閉状態に応じてマウスダウンイベントリスナーを追加/削除
   useEffect(() => {
     if (isFilterPanelOpen) {
-      document.addEventListener('mousedown', handleClickOutside); // マウスダウンイベントリスナーを追加
+      document.addEventListener('mousedown', handleClickOutside);
     } else {
-      document.removeEventListener('mousedown', handleClickOutside); // マウスダウンイベントリスナーを削除
+      document.removeEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside); // クリーンアップ関数でマウスダウンイベントリスナーを削除
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isFilterPanelOpen, handleClickOutside]);
 
+  // 各エリアのPOI数をカウント
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
       ...acc,
       [poi.area]: (acc[poi.area] || 0) + 1,
     }),
     {} as Record<AreaType, number>,
-  ); // 各エリアのPOI数をカウント
+  );
 
+  // エリア情報をマッピング
   const areas = Object.entries(AREAS)
     .filter(([area]) => area !== 'CURRENT_LOCATION')
     .map(([area, name]) => ({
@@ -93,8 +101,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       count: areaCounts[area as AreaType] ?? 0,
       isVisible: localAreaVisibility[area as AreaType],
       color: markerConfig.colors[area as AreaType],
-    })); // エリア情報をマッピング
+    }));
 
+  // 現在地の表示状態を更新
   const handleCurrentLocationChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -102,11 +111,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setCurrentLocation({ lat: latitude, lng: longitude }); // 現在の位置を設定
+          setCurrentLocation({ lat: latitude, lng: longitude });
           setLocalAreaVisibility((prev) => ({
             ...prev,
             CURRENT_LOCATION: true,
-          })); // 現在地の表示状態を設定
+          }));
         },
         (error) => {
           console.error('Error getting current location:', error);
@@ -134,11 +143,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         },
       );
     } else {
-      setCurrentLocation(null); // 現在の位置をリセット
+      setCurrentLocation(null);
       setLocalAreaVisibility((prev) => ({
         ...prev,
         CURRENT_LOCATION: false,
-      })); // 現在地の表示状態をリセット
+      }));
     }
   };
 
@@ -184,19 +193,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               <input
                 type="checkbox"
                 checked={localAreaVisibility.CURRENT_LOCATION}
-                onChange={handleCurrentLocationChange} // 現在地の表示状態を更新
-                aria-label="現在地を表示" // アクセシビリティのためのラベルを設定
+                onChange={handleCurrentLocationChange}
+                aria-label="現在地を表示"
               />
               <span
                 className="custom-checkbox"
-                style={{ borderColor: markerConfig.colors.CURRENT_LOCATION }} // カスタムチェックボックスの色を設定
+                style={{ borderColor: markerConfig.colors.CURRENT_LOCATION }}
               ></span>
               <div className="filter-details">
                 <span
                   className="marker-color"
                   style={{
                     backgroundColor: markerConfig.colors.CURRENT_LOCATION,
-                  }} // マーカーの色を設定
+                  }}
                   aria-hidden="true"
                 />
                 <span

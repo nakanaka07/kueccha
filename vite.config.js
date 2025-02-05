@@ -1,13 +1,15 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import fs from 'fs';
-import path from 'path';
+import { defineConfig, loadEnv } from 'vite'; // Viteの設定と環境変数の読み込みをインポート
+import react from '@vitejs/plugin-react'; // Reactプラグインをインポート
+import tsconfigPaths from 'vite-tsconfig-paths'; // TypeScriptのパス解決プラグインをインポート
+import fs from 'fs'; // ファイルシステムモジュールをインポート
+import path from 'path'; // パスモジュールをインポート
 
 export default defineConfig(({ mode, command }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  // Viteの設定をエクスポート
+  const env = loadEnv(mode, process.cwd(), ''); // 環境変数を読み込む
 
   const envVariables = [
+    // 使用する環境変数のリスト
     'VITE_GOOGLE_MAPS_API_KEY',
     'VITE_GOOGLE_MAPS_MAP_ID',
     'VITE_GOOGLE_SHEETS_API_KEY',
@@ -18,25 +20,27 @@ export default defineConfig(({ mode, command }) => {
   ];
 
   const defineEnv = envVariables.reduce((acc, key) => {
+    // 環境変数を定義するオブジェクトを作成
     acc[`process.env.${key}`] = JSON.stringify(env[key]);
     return acc;
   }, {});
 
-  const isDev = command === 'serve';
+  const isDev = command === 'serve'; // 開発モードかどうかを判定
 
   return {
-    base: mode === 'production' ? '/kueccha/' : '/',
-    plugins: [react(), tsconfigPaths()],
+    base: mode === 'production' ? '/kueccha/' : '/', // ベースURLを設定
+    plugins: [react(), tsconfigPaths()], // 使用するプラグインを設定
     resolve: {
       alias: {
-        '@': '/src',
+        '@': '/src', // エイリアスを設定
       },
     },
     build: {
-      outDir: 'dist',
-      sourcemap: false,
+      outDir: 'dist', // 出力ディレクトリを設定
+      sourcemap: false, // ソースマップを無効化
       rollupOptions: {
         onwarn(warning, warn) {
+          // 警告をカスタマイズ
           if (warning.code === 'SOURCEMAP_ERROR') return;
           warn(warning);
         },
@@ -44,6 +48,7 @@ export default defineConfig(({ mode, command }) => {
     },
     optimizeDeps: {
       include: [
+        // 依存関係に含めるパッケージを設定
         '@googlemaps/js-api-loader',
         '@react-google-maps/api',
         '@react-google-maps/marker-clusterer',
@@ -51,18 +56,18 @@ export default defineConfig(({ mode, command }) => {
         '@googlemaps/markerclusterer',
       ],
       esbuildOptions: {
-        sourcemap: false,
-        logOverride: { 'this-is-undefined-in-esm': 'silent' },
+        sourcemap: false, // ソースマップを無効化
+        logOverride: { 'this-is-undefined-in-esm': 'silent' }, // ログのオーバーライド設定
       },
     },
-    define: defineEnv,
-    server: isDev
+    define: defineEnv, // 環境変数を定義
+    server: isDev // 開発モードの場合
       ? {
           https: {
-            key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
-            cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
+            key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')), // HTTPS用のキーを読み込む
+            cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')), // HTTPS用の証明書を読み込む
           },
         }
-      : {},
+      : {}, // 開発モードでない場合は空のオブジェクトを返す
   };
 });

@@ -49,17 +49,14 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      {' '}
       {/* エラーバウンダリでラップ */}
       <div className="app-container">
-        {' '}
         {/* アプリ全体のコンテナ */}
         <div
           className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
-        />{' '}
+        />
         {/* 初期背景 */}
         <div className="map-container">
-          {' '}
           {/* マップコンテナ */}
           <Map
             pois={pois} // POIデータを渡す
