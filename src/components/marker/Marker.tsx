@@ -9,7 +9,7 @@ import akadomariHamochiOgiIcon from '../../utils/images/shi_icon03.png'; // 赤�
 import snackIcon from '../../utils/images/shi_icon02.png'; // スナックのアイコンをインポート
 import publicToiletIcon from '../../utils/images/ano_icon01.png'; // 公共トイレのアイコンをインポート
 import parkingIcon from '../../utils/images/shi_icon01.png'; // 駐車場のアイコンをインポート
-import currentLocationIcon from '../../utils/images/ano_icon02.png'; // 現在地のアイコンをインポート
+import currentLocationIcon from '../../utils/images/shi_icon04.png'; // 現在地のアイコンをインポート
 import defaultIcon from '../../utils/images/row2.png'; // デフォルトのアイコンをインポート
 
 // マーカーアイコンのパスを定義

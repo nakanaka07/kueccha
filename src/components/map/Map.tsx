@@ -8,7 +8,7 @@ import HamburgerMenu from '../hamburgermenu/HamburgerMenu'; // ハンバーガ�
 import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージ定数をインポート
 import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel'; // 初期表示設定をインポート
 import resetNorthIcon from '../../utils/images/ano_icon04.png'; // 北向きリセットボタンのアイコンをインポート
-import currentLocationIcon from '../../utils/images/ano_icon02.png'; // 現在地取得ボタンのアイコンをインポート
+import currentLocationIcon from '../../utils/images/shi_icon04.png'; // 現在地取得ボタンのアイコンをインポート
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null; // 選択されたPOI
