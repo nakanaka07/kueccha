@@ -12,10 +12,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nakanaka07/kueccha.git"
+    "url": "git+https://github.com/nakanaka07/sadodekueccha.git"
   },
   "bugs": {
-    "url": "https://github.com/nakanaka07/kueccha/issues"
+    "url": "https://github.com/nakanaka07/sadodekueccha/issues"
   },
   "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
   "license": "ISC",
@@ -31,6 +31,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@googlemaps/markerclusterer": "^2.5.3",
     "@react-google-maps/api": "^2.20.5",

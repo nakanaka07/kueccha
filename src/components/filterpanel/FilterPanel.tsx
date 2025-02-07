@@ -152,7 +152,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   return (
-    <div>
+    <div className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}>
       {isFilterPanelOpen && (
         <div ref={panelRef} className="filter-panel">
           <button onClick={onCloseClick} className="close-button">

@@ -18,3 +18,6 @@ export * from './marker/Marker';
 
 // HamburgerMenuコンポーネントをエクスポート
 export * from './hamburgermenu/HamburgerMenu';
+
+// FeedbackFormコンポーネントをエクスポート
+export * from './feedback/FeedbackForm';

@@ -230,7 +230,7 @@ const Map: React.FC<MapComponentProps> = ({
         style={{
           position: 'absolute',
           top: '10px',
-          right: '5px',
+          right: '50px',
           background: 'none',
           border: 'none',
         }}
@@ -246,8 +246,8 @@ const Map: React.FC<MapComponentProps> = ({
         onClick={handleGetCurrentLocation}
         style={{
           position: 'absolute',
-          top: '70px',
-          right: '5px',
+          top: '10px',
+          right: '100px',
           background: 'none',
           border: 'none',
         }}

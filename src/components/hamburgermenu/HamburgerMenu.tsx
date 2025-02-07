@@ -1,6 +1,7 @@
 import React, { useState } from 'react'; // ReactとuseStateフックをインポート
 import './HamburgerMenu.css'; // スタイルシートをインポート
 import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
+import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネントをインポーネート
 import type { Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート
 
 interface HamburgerMenuProps {
@@ -30,6 +31,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するステート
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するステート
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false); // フィードバックフォームの開閉状態を管理するステート
 
   const toggleMenu = () => {
     setIsOpen(!isOpen); // メニューの開閉状態を切り替える
@@ -40,40 +42,56 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setIsOpen(false); // メニューを閉じる
   };
 
+  const handleFeedbackClick = () => {
+    setIsFeedbackFormOpen(!isFeedbackFormOpen); // フィードバックフォームの開閉状態を切り替える
+    setIsOpen(false); // メニューを閉じる
+  };
+
   const handleCloseFilterPanel = () => {
     setIsFilterPanelOpen(false); // フィルターパネルを閉じる
   };
 
+  const handleCloseFeedbackForm = () => {
+    setIsFeedbackFormOpen(false); // フィードバックフォームを閉じる
+  };
+
   return (
-    <div className="hamburger-menu">
-      <button className="hamburger-icon" onClick={toggleMenu}>
-        <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
-        <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
-        <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
-      </button>
-      <nav className={`menu ${isOpen ? 'open' : ''}`}>
-        <ul>
-          <li>
-            <button onClick={handleAreaClick}>表示するエリアを選択</button>{' '}
-            {/* エリア選択ボタン */}
-          </li>
-        </ul>
-      </nav>
-      {isFilterPanelOpen && (
-        <div className="filter-panel-wrapper">
-          <FilterPanel
-            pois={pois} // POIの配列を渡す
-            setSelectedPoi={setSelectedPoi} // POIを設定する関数を渡す
-            setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-            isFilterPanelOpen={isFilterPanelOpen} // フィルターパネルの開閉状態を渡す
-            onCloseClick={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
-            localAreaVisibility={localAreaVisibility} // ローカルエリアの表示状態を渡す
-            setLocalAreaVisibility={setLocalAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
-            currentLocation={currentLocation} // 現在の位置を渡す
-            setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
-          />
-        </div>
-      )}
+    <div>
+      <div className="hamburger-menu">
+        <button className="hamburger-icon" onClick={toggleMenu}>
+          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
+          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
+          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
+        </button>
+        <nav className={`menu ${isOpen ? 'open' : ''}`}>
+          <ul>
+            <li>
+              <button onClick={handleAreaClick}>表示するエリアを選択</button>{' '}
+              {/* エリア選択ボタン */}
+            </li>
+            <li>
+              <button onClick={handleFeedbackClick}>フィードバック</button>{' '}
+              {/* フィードバックボタン */}
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div
+        className={`filter-panel-wrapper ${isFilterPanelOpen ? 'open' : ''}`}
+      >
+        <FilterPanel
+          pois={pois} // POIの配列を渡す
+          setSelectedPoi={setSelectedPoi} // POIを設定する関数を渡す
+          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
+          isFilterPanelOpen={isFilterPanelOpen} // フィルターパネルの開閉状態を渡す
+          onCloseClick={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
+          localAreaVisibility={localAreaVisibility} // ローカルエリアの表示状態を渡す
+          setLocalAreaVisibility={setLocalAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
+          currentLocation={currentLocation} // 現在の位置を渡す
+          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+        />
+      </div>
+      {isFeedbackFormOpen && <FeedbackForm onClose={handleCloseFeedbackForm} />}
     </div>
   );
 };
