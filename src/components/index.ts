@@ -21,3 +21,6 @@ export * from './hamburgermenu/HamburgerMenu';
 
 // FeedbackFormコンポーネントをエクスポート
 export * from './feedback/FeedbackForm';
+
+// LocationWarningコンポーネントをエクスポート
+export * from './locationwarning/LocationWarning';

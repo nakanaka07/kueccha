@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react'; // Reactと必要なフック�
 import type { MarkerProps } from '../../utils/types'; // 型定義をインポート
 import './Marker.css'; // スタイルシートをインポート
 
-import recommendIcon from '../../utils/images/ano_icon03.png'; // おすすめエリアのアイコンをインポート
-import ryotsuAikawaIcon from '../../utils/images/shi_icon03.png'; // 両津・相川地区のアイコンをインポート
-import kanaiSawadaNiiboHatanoManoIcon from '../../utils/images/shi_icon03.png'; // 金井・佐和田・新穂・畑野・真野地区のアイコンをインポート
-import akadomariHamochiOgiIcon from '../../utils/images/shi_icon03.png'; // 赤泊・羽茂・小木地区のアイコンをインポート
+import recommendIcon from '../../utils/images/ano_icon_recommend.png'; // おすすめエリアのアイコンをインポート
+import ryotsuAikawaIcon from '../../utils/images/icon_map01.png'; // 両津・相川地区のアイコンをインポート
+import kanaiSawadaNiiboHatanoManoIcon from '../../utils/images/icon_map02.png'; // 金井・佐和田・新穂・畑野・真野地区のアイコンをインポート
+import akadomariHamochiOgiIcon from '../../utils/images/icon_map03.png'; // 赤泊・羽茂・小木地区のアイコンをインポート
 import snackIcon from '../../utils/images/shi_icon02.png'; // スナックのアイコンをインポート
 import publicToiletIcon from '../../utils/images/ano_icon01.png'; // 公共トイレのアイコンをインポート
 import parkingIcon from '../../utils/images/shi_icon01.png'; // 駐車場のアイコンをインポート
