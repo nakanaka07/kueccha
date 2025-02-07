@@ -12,7 +12,7 @@
   transform: translate(-50%, -50%);
   height: auto;
   z-index: 1000;
-  width: 80%;
+  width: 100%;
   max-width: 370px;
 }
 
@@ -29,7 +29,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-height: 80vh;
+  max-height: 100vh;
   /* 最大高さを設定して画面上部に広がらないようにする */
   overflow-y: auto;
   /* コンテンツが多い場合にスクロール可能にする */
@@ -73,6 +73,8 @@
   display: inline-block;
   position: relative;
   cursor: pointer;
+  flex-shrink: 0;
+  /* 追加: 幅を固定する */
 }
 
 .filter-item input[type='checkbox']:checked+.custom-checkbox {
@@ -117,6 +119,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
+  /* 通常画面では最大幅を300pxに設定 */
 }
 
 .filter-details .area-name:hover::after {
@@ -144,4 +147,8 @@
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
+  .filter-details .area-name {
+    max-width: 100px;
+    /* レスポンシブデザインでは最大幅を100pxに設定 */
+  }
 }
