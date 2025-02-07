@@ -2,7 +2,7 @@
 .location-warning {
     position: fixed;
     /* 固定位置に設定 */
-    bottom: 50%;
+    bottom: 10%;
     /* 画面の下から20pxの位置に設定 */
     left: 50%;
     /* 画面の左から50%の位置に設定 */
