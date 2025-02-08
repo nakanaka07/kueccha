@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; // ReactとuseStateフックをインポート
 import './HamburgerMenu.css'; // スタイルシートをインポート
 import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
-import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネントをインポーネート
+import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネート
 import type { Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート
 
 interface HamburgerMenuProps {
@@ -18,6 +18,7 @@ interface HamburgerMenuProps {
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
   >; // 現在の位置を設定する関数
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
 }
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -28,6 +29,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   setLocalAreaVisibility,
   currentLocation,
   setCurrentLocation,
+  setShowWarning, // 追加
 }) => {
   const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するステート
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するステート
@@ -89,6 +91,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           setLocalAreaVisibility={setLocalAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
           currentLocation={currentLocation} // 現在の位置を渡す
           setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+          setShowWarning={setShowWarning} // 追加
         />
       </div>
       {isFeedbackFormOpen && <FeedbackForm onClose={handleCloseFeedbackForm} />}

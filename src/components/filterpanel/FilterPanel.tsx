@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react'; // Reactと必要なフックをインポート
+import React, { useEffect, useRef } from 'react'; // Reactと必要なフックをインポート
 import type { AreaType, LatLngLiteral, Poi } from '../../utils/types'; // 型定義をインポート
 import { AREAS } from '../../utils/constants'; // エリア定数をインポート
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
@@ -21,21 +21,22 @@ export { INITIAL_VISIBILITY };
 
 // FilterPanelコンポーネントのプロパティの型定義
 interface FilterPanelProps {
-  pois: Poi[]; // POIの配列
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを設定する関数
+  pois: Poi[];
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   setAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // エリア表示状態を設定する関数
-  isFilterPanelOpen: boolean; // フィルターパネルの開閉状態
-  onCloseClick: () => void; // フィルターパネルを閉じる関数
-  localAreaVisibility: Record<AreaType, boolean>; // ローカルエリアの表示状態
+  >;
+  isFilterPanelOpen: boolean;
+  onCloseClick: () => void;
+  localAreaVisibility: Record<AreaType, boolean>;
   setLocalAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // ローカルエリア表示状態を設定する関数
-  currentLocation: LatLngLiteral | null; // 現在の位置
+  >;
+  currentLocation: LatLngLiteral | null;
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
+  >;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
 }
 
 // FilterPanelコンポーネントの定義
@@ -49,6 +50,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setLocalAreaVisibility,
   currentLocation,
   setCurrentLocation,
+  setShowWarning, // 追加
 }) => {
   const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を保持するためのref
 
@@ -56,32 +58,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   useEffect(() => {
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
-
-  // フィルターパネルの外側がクリックされた場合に閉じる
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(event.target as Node)
-      ) {
-        onCloseClick();
-      }
-    },
-    [onCloseClick],
-  );
-
-  // フィルターパネルの開閉状態に応じてマウスダウンイベントリスナーを追加/削除
-  useEffect(() => {
-    if (isFilterPanelOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isFilterPanelOpen, handleClickOutside]);
 
   // 各エリアのPOI数をカウント
   const areaCounts = pois.reduce(
@@ -116,6 +92,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             ...prev,
             CURRENT_LOCATION: true,
           }));
+          setShowWarning(true); // 現在地が取得されたときに警告メッセージを表示
         },
         (error) => {
           console.error('Error getting current location:', error);
@@ -148,6 +125,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         ...prev,
         CURRENT_LOCATION: false,
       }));
+      setShowWarning(false); // 現在地をオフにした際に警告メッセージを閉じる
     }
   };
 

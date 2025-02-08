@@ -151,4 +151,9 @@
     max-width: 100px;
     /* レスポンシブデザインでは最大幅を100pxに設定 */
   }
+
+  .filterpanel-container {
+    max-width: 200px;
+    left: 42%;
+  }
 }

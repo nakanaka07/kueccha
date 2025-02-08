@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, Suspense } from 'react'; // Reactと必要なフックをインポート
+import React, { useState, useEffect, useCallback } from 'react'; // Reactと必要なフックをインポート
 import { createRoot } from 'react-dom/client'; // React 18の新しいルートAPIをインポート
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary'; // エラーバウンダリコンポーネントをインポート
 import LoadingFallback from './components/loadingfallback/LoadingFallback'; // ローディングフォールバックコンポーネントをインポート
@@ -7,7 +7,7 @@ import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // ハン�
 import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージ定数をインポート
 import { useSheetData } from './hooks/useSheetData'; // カスタムフックをインポート
 import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // 初期表示設定をインポート
-import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポート
+import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポーネート
 import './App.css'; // スタイルシートをインポート
 
 const App: React.FC = () => {
@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(
     null,
   ); // 現在の位置を管理するステート
+  const [showWarning, setShowWarning] = useState(false); // 追加
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,26 +68,20 @@ const App: React.FC = () => {
             setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
             currentLocation={currentLocation} // 現在の位置を渡す
             setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+            showWarning={showWarning} // 追加
+            setShowWarning={setShowWarning} // 追加
           />
         </div>
         <HamburgerMenu
-          pois={pois} // POIデータを渡す
-          setSelectedPoi={setSelectedPoi} // POI選択を設定する関数を渡す
-          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-          localAreaVisibility={areaVisibility} // ローカルエリアの表示状態を渡す
-          setLocalAreaVisibility={setAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
-          currentLocation={currentLocation} // 現在の位置を渡す
-          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+          pois={pois}
+          setSelectedPoi={setSelectedPoi}
+          setAreaVisibility={setAreaVisibility}
+          localAreaVisibility={areaVisibility}
+          setLocalAreaVisibility={setAreaVisibility}
+          currentLocation={currentLocation}
+          setCurrentLocation={setCurrentLocation}
+          setShowWarning={setShowWarning} // 追加
         />
-        {!isLoaded ? (
-          <LoadingFallback isLoading={true} isLoaded={isLoaded} /> // ロード中のフォールバックを表示
-        ) : (
-          <Suspense
-            fallback={<LoadingFallback isLoading={true} isLoaded={isLoaded} />}
-          >
-            {/* 他のコンポーネント */}
-          </Suspense>
-        )}
       </div>
     </ErrorBoundary>
   );

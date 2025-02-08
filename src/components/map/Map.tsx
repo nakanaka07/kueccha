@@ -23,6 +23,8 @@ interface MapComponentProps extends MapProps {
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
   >;
+  showWarning: boolean; // 追加
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -34,6 +36,8 @@ const Map: React.FC<MapComponentProps> = ({
   setAreaVisibility,
   currentLocation,
   setCurrentLocation,
+  showWarning, // 追加
+  setShowWarning, // 追加
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
@@ -48,7 +52,6 @@ const Map: React.FC<MapComponentProps> = ({
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [localAreaVisibility, setLocalAreaVisibility] =
     useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
-  const [showWarning, setShowWarning] = useState(false); // 初期状態では警告メッセージを非表示
 
   const mapOptions = {
     ...mapsConfig.options,
@@ -92,6 +95,7 @@ const Map: React.FC<MapComponentProps> = ({
         ...prev,
         CURRENT_LOCATION: false,
       }));
+      setShowWarning(false); // 現在地をオフにした際に警告メッセージを閉じる
     } else {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -118,7 +122,12 @@ const Map: React.FC<MapComponentProps> = ({
         alert('このブラウザは現在地取得に対応していません。');
       }
     }
-  }, [currentLocation, setCurrentLocation, setLocalAreaVisibility]);
+  }, [
+    currentLocation,
+    setCurrentLocation,
+    setLocalAreaVisibility,
+    setShowWarning,
+  ]);
 
   useEffect(() => {
     if (map) {
@@ -224,6 +233,7 @@ const Map: React.FC<MapComponentProps> = ({
           setLocalAreaVisibility={setLocalAreaVisibility}
           currentLocation={currentLocation}
           setCurrentLocation={setCurrentLocation}
+          setShowWarning={setShowWarning} // 追加
         />
       </div>
       <button
