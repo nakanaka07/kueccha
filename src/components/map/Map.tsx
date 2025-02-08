@@ -23,8 +23,8 @@ interface MapComponentProps extends MapProps {
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
   >;
-  showWarning: boolean; // 追加
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
+  showWarning: boolean;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const Map: React.FC<MapComponentProps> = ({
@@ -67,12 +67,6 @@ const Map: React.FC<MapComponentProps> = ({
       : undefined,
     ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
   };
-
-  const handleMapTypeChanged = useCallback(() => {
-    if (map) {
-      setMapType(map.getMapTypeId() as google.maps.MapTypeId);
-    }
-  }, [map]);
 
   const handleMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {

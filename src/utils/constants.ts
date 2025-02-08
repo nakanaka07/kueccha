@@ -32,7 +32,7 @@ export const MARKER_COLORS = {
   SNACK: '#65318e', // スナックのマーカー色
   PUBLIC_TOILET: '#2792c3', // 公共トイレのマーカー色
   PARKING: '#333333', // 駐車場のマーカー色
-  CURRENT_LOCATION: '#4285F4', // 現在地のマーカー色を追加
+  CURRENT_LOCATION: '#42a30f', // 現在地のマーカー色を追加
 } as const;
 
 // エラーメッセージの定数を定義
@@ -58,11 +58,3 @@ export const ERROR_MESSAGES = {
     DATA: '読み込み中...', // データ読み込み中メッセージ
   },
 } as const;
-
-// マーカーの設定を定義
-export const markerConfig = {
-  colors: {
-    PARKING: '#333333', // 駐車場のマーカー色
-    CURRENT_LOCATION: '#ff0000', // 現在地のマーカー色を追加
-  },
-};

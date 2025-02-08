@@ -7,7 +7,7 @@ import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // ハン�
 import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージ定数をインポート
 import { useSheetData } from './hooks/useSheetData'; // カスタムフックをインポート
 import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // 初期表示設定をインポート
-import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポーネート
+import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポート
 import './App.css'; // スタイルシートをインポート
 
 const App: React.FC = () => {
@@ -20,12 +20,12 @@ const App: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(
     null,
   ); // 現在の位置を管理するステート
-  const [showWarning, setShowWarning] = useState(false); // 追加
+  const [showWarning, setShowWarning] = useState(false); // 警告表示状態を管理するステート
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoaded(true); // 2秒後にロード状態をtrueに設定
-    }, 2000);
+      setIsLoaded(true); // ロード状態をtrueに設定
+    } ,3000);
     return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
   }, []);
 
@@ -34,8 +34,8 @@ const App: React.FC = () => {
       const backgroundElement = document.querySelector('.initial-background'); // 初期背景要素を取得
       if (backgroundElement) {
         setTimeout(() => {
-          backgroundElement.classList.add('hidden'); // 2秒後に背景を非表示にするクラスを追加
-        }, 2000);
+          backgroundElement.classList.add('hidden'); // 背景を非表示にするクラスを追加
+        }, 5000);
       }
     }
   }, [isLoaded, isMapLoaded]); // isLoadedとisMapLoadedが変更されたときに実行
@@ -57,6 +57,11 @@ const App: React.FC = () => {
           className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
         />
         {/* 初期背景 */}
+        <LoadingFallback
+          isLoading={!isLoaded || !isMapLoaded}
+          isLoaded={isLoaded && isMapLoaded}
+        />
+        {/* ローディングフォールバック */}
         <div className="map-container">
           {/* マップコンテナ */}
           <Map
@@ -68,19 +73,19 @@ const App: React.FC = () => {
             setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
             currentLocation={currentLocation} // 現在の位置を渡す
             setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
-            showWarning={showWarning} // 追加
-            setShowWarning={setShowWarning} // 追加
+            showWarning={showWarning} // 警告表示状態を渡す
+            setShowWarning={setShowWarning} // 警告表示状態を設定する関数を渡す
           />
         </div>
         <HamburgerMenu
-          pois={pois}
-          setSelectedPoi={setSelectedPoi}
-          setAreaVisibility={setAreaVisibility}
-          localAreaVisibility={areaVisibility}
-          setLocalAreaVisibility={setAreaVisibility}
-          currentLocation={currentLocation}
-          setCurrentLocation={setCurrentLocation}
-          setShowWarning={setShowWarning} // 追加
+          pois={pois} // POIデータを渡す
+          setSelectedPoi={setSelectedPoi} // POI選択を設定する関数を渡す
+          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
+          localAreaVisibility={areaVisibility} // ローカルエリアの表示状態を渡す
+          setLocalAreaVisibility={setAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
+          currentLocation={currentLocation} // 現在の位置を渡す
+          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
+          setShowWarning={setShowWarning} // 警告表示状態を設定する関数を渡す
         />
       </div>
     </ErrorBoundary>

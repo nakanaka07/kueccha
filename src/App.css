@@ -8,7 +8,7 @@
   /* 高さをビューポートの高さに設定 */
   overflow: hidden;
   /* オーバーフローを隠す */
-  background-color: #f8f9fa;
+  background-color: #90daee;
   /* 背景色を設定 */
 }
 
@@ -57,8 +57,9 @@
   /* 背景画像の位置を中央に設定 */
   z-index: 1000;
   /* z-indexを1000に設定 */
-  transition: opacity 1s ease-out;
+  transition: opacity 1s ease-in;
   /* 不透明度のトランジションを設定 */
+    background-color: #90daee;
 }
 
 .initial-background.hidden {
@@ -66,9 +67,4 @@
   /* 不透明度を0に設定 */
   pointer-events: none;
   /* ポインターイベントを無効に設定 */
-}
-
-/* メディアクエリを追加してレスポンシブデザインを強化 */
-@media (max-width: 768px) {
-  /* 768px以下の画面サイズに対するスタイルをここに追加 */
 }
