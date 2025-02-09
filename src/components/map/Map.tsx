@@ -4,7 +4,6 @@ import { mapsConfig } from '../../utils/config';
 import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
-import HamburgerMenu from '../hamburgermenu/HamburgerMenu';
 import LocationWarning from '../locationwarning/LocationWarning';
 import { ERROR_MESSAGES } from '../../utils/constants';
 import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
@@ -36,8 +35,8 @@ const Map: React.FC<MapComponentProps> = ({
   setAreaVisibility,
   currentLocation,
   setCurrentLocation,
-  showWarning, // 追加
-  setShowWarning, // 追加
+  showWarning,
+  setShowWarning,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
@@ -89,7 +88,7 @@ const Map: React.FC<MapComponentProps> = ({
         ...prev,
         CURRENT_LOCATION: false,
       }));
-      setShowWarning(false); // 現在地をオフにした際に警告メッセージを閉じる
+      setShowWarning(false);
     } else {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -100,7 +99,7 @@ const Map: React.FC<MapComponentProps> = ({
               ...prev,
               CURRENT_LOCATION: true,
             }));
-            setShowWarning(true); // 現在地が取得されたときに警告メッセージを表示
+            setShowWarning(true);
           },
           (error) => {
             console.error('Error getting current location:', error);
@@ -218,18 +217,6 @@ const Map: React.FC<MapComponentProps> = ({
           />
         )}
       </GoogleMap>
-      <div className="hamburger-menu-container">
-        <HamburgerMenu
-          pois={pois}
-          setSelectedPoi={setSelectedPoi}
-          setAreaVisibility={setAreaVisibility}
-          localAreaVisibility={localAreaVisibility}
-          setLocalAreaVisibility={setLocalAreaVisibility}
-          currentLocation={currentLocation}
-          setCurrentLocation={setCurrentLocation}
-          setShowWarning={setShowWarning} // 追加
-        />
-      </div>
       <button
         onClick={resetNorth}
         style={{

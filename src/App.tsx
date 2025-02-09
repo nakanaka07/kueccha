@@ -1,99 +1,114 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Reactと必要なフックをインポート
-import { createRoot } from 'react-dom/client'; // React 18の新しいルートAPIをインポート
-import { ErrorBoundary } from './components/errorboundary/ErrorBoundary'; // エラーバウンダリコンポーネントをインポート
-import LoadingFallback from './components/loadingfallback/LoadingFallback'; // ローディングフォールバックコンポーネントをインポート
-import Map from './components/map/Map'; // マップコンポーネントをインポート
-import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // ハンバーガーメニューコンポーネントをインポート
-import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージ定数をインポート
-import { useSheetData } from './hooks/useSheetData'; // カスタムフックをインポート
-import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // 初期表示設定をインポート
-import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポート
-import './App.css'; // スタイルシートをインポート
+import React, { useState, useEffect, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
+import LoadingFallback from './components/loadingfallback/LoadingFallback';
+import Map from './components/map/Map';
+import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
+import { ERROR_MESSAGES } from './utils/constants';
+import { useSheetData } from './hooks/useSheetData';
+import useSearch from './hooks/useSearch';
+import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
+import { Poi, AreaType, LatLngLiteral } from './utils/types';
+import './App.css';
 
 const App: React.FC = () => {
-  const { pois } = useSheetData(); // カスタムフックからPOIデータを取得
-  const [isLoaded, setIsLoaded] = useState(false); // ロード状態を管理するステート
-  const [isMapLoaded, setIsMapLoaded] = useState(false); // マップのロード状態を管理するステート
-  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null); // 選択されたPOIを管理するステート
+  const { pois, isLoading, error, refetch } = useSheetData();
+  const { searchResults, search } = useSearch(pois);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [areaVisibility, setAreaVisibility] =
-    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY); // エリアの表示状態を管理するステート
+    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
   const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(
     null,
-  ); // 現在の位置を管理するステート
-  const [showWarning, setShowWarning] = useState(false); // 警告表示状態を管理するステート
+  );
+  const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoaded(true); // ロード状態をtrueに設定
-    } ,3000);
-    return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
+      setIsLoaded(true);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (isLoaded && isMapLoaded) {
-      const backgroundElement = document.querySelector('.initial-background'); // 初期背景要素を取得
+      const backgroundElement = document.querySelector('.initial-background');
       if (backgroundElement) {
         setTimeout(() => {
-          backgroundElement.classList.add('hidden'); // 背景を非表示にするクラスを追加
+          backgroundElement.classList.add('hidden');
         }, 5000);
       }
     }
-  }, [isLoaded, isMapLoaded]); // isLoadedとisMapLoadedが変更されたときに実行
+  }, [isLoaded, isMapLoaded]);
 
   useEffect(() => {
-    setSelectedPoi(null); // コンポーネントのマウント時に選択されたPOIをリセット
+    setSelectedPoi(null);
   }, []);
 
   const handleMapLoad = useCallback(() => {
-    setIsMapLoaded(true); // マップがロードされたときに呼び出されるコールバック
+    setIsMapLoaded(true);
   }, []);
 
+  const handleSearchResultClick = (poi: Poi) => {
+    setSelectedPoi(poi);
+  };
+
+  const displayedPois = searchResults.length > 0 ? searchResults : pois;
+
   return (
-    <ErrorBoundary>
-      {/* エラーバウンダリでラップ */}
-      <div className="app-container">
-        {/* アプリ全体のコンテナ */}
-        <div
-          className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
-        />
-        {/* 初期背景 */}
-        <LoadingFallback
-          isLoading={!isLoaded || !isMapLoaded}
-          isLoaded={isLoaded && isMapLoaded}
-        />
-        {/* ローディングフォールバック */}
-        <div className="map-container">
-          {/* マップコンテナ */}
-          <Map
-            pois={pois} // POIデータを渡す
-            selectedPoi={selectedPoi} // 選択されたPOIを渡す
-            setSelectedPoi={setSelectedPoi} // POI選択を設定する関数を渡す
-            areaVisibility={areaVisibility} // エリアの表示状態を渡す
-            onLoad={handleMapLoad} // マップロード時のコールバックを渡す
-            setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-            currentLocation={currentLocation} // 現在の位置を渡す
-            setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
-            showWarning={showWarning} // 警告表示状態を渡す
-            setShowWarning={setShowWarning} // 警告表示状態を設定する関数を渡す
+    <div className="app">
+      <ErrorBoundary
+        fallback={
+          <LoadingFallback
+            isLoading={!isLoaded || !isMapLoaded}
+            isLoaded={isLoaded && isMapLoaded}
+          />
+        }
+      >
+        <div className="app-container">
+          <div
+            className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
+          />
+          <LoadingFallback
+            isLoading={!isLoaded || !isMapLoaded}
+            isLoaded={isLoaded && isMapLoaded}
+          />
+          <div className="map-container">
+            <Map
+              pois={displayedPois}
+              selectedPoi={selectedPoi}
+              setSelectedPoi={setSelectedPoi}
+              areaVisibility={areaVisibility}
+              onLoad={handleMapLoad}
+              setAreaVisibility={setAreaVisibility}
+              currentLocation={currentLocation}
+              setCurrentLocation={setCurrentLocation}
+              showWarning={showWarning}
+              setShowWarning={setShowWarning}
+            />
+          </div>
+          <HamburgerMenu
+            pois={displayedPois}
+            setSelectedPoi={setSelectedPoi}
+            setAreaVisibility={setAreaVisibility}
+            localAreaVisibility={areaVisibility}
+            setLocalAreaVisibility={setAreaVisibility}
+            currentLocation={currentLocation}
+            setCurrentLocation={setCurrentLocation}
+            setShowWarning={setShowWarning}
+            search={search}
+            searchResults={searchResults}
+            handleSearchResultClick={handleSearchResultClick}
           />
         </div>
-        <HamburgerMenu
-          pois={pois} // POIデータを渡す
-          setSelectedPoi={setSelectedPoi} // POI選択を設定する関数を渡す
-          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-          localAreaVisibility={areaVisibility} // ローカルエリアの表示状態を渡す
-          setLocalAreaVisibility={setAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
-          currentLocation={currentLocation} // 現在の位置を渡す
-          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
-          setShowWarning={setShowWarning} // 警告表示状態を設定する関数を渡す
-        />
-      </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </div>
   );
 };
 
-const container = document.getElementById('app'); // ルート要素を取得
-if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND); // ルート要素が見つからない場合はエラーをスロー
+const container = document.getElementById('app');
+if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 
-const root = createRoot(container); // ルートを作成
-root.render(<App />); // アプリをレンダリング
+const root = createRoot(container);
+root.render(<App />);

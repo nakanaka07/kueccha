@@ -1,7 +1,9 @@
-import React, { useState } from 'react'; // ReactとuseStateフックをインポート
+import React, { useState, useEffect, useRef } from 'react'; // useEffectとuseRefを追加
 import './HamburgerMenu.css'; // スタイルシートをインポート
 import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
 import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネート
+import SearchBar from '../searchbar/SearchBar'; // SearchBarをインポーネート
+import SearchResults from '../searchresults/SearchResults'; // SearchResultsをインポート
 import type { Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート
 
 interface HamburgerMenuProps {
@@ -19,6 +21,9 @@ interface HamburgerMenuProps {
     React.SetStateAction<LatLngLiteral | null>
   >; // 現在の位置を設定する関数
   setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
+  search: (query: string) => void; // 検索関数
+  searchResults: Poi[]; // 検索結果
+  handleSearchResultClick: (poi: Poi) => void; // 検索結果クリックハンドラー
 }
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -30,10 +35,15 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   currentLocation,
   setCurrentLocation,
   setShowWarning, // 追加
+  search,
+  searchResults,
+  handleSearchResultClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するステート
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するステート
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false); // フィードバックフォームの開閉状態を管理するステート
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(false); // 検索バーの表示状態を管理するステート
+  const menuRef = useRef<HTMLDivElement>(null); // メニューの参照を保持するためのref
 
   const toggleMenu = () => {
     setIsOpen(!isOpen); // メニューの開閉状態を切り替える
@@ -57,8 +67,25 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setIsFeedbackFormOpen(false); // フィードバックフォームを閉じる
   };
 
+  const toggleSearchBar = () => {
+    setIsSearchBarVisible(!isSearchBarVisible); // 検索バーの表示状態を切り替える
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div>
+    <div ref={menuRef}>
       <div className="hamburger-menu">
         <button className="hamburger-icon" onClick={toggleMenu}>
           <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
@@ -75,7 +102,20 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               <button onClick={handleFeedbackClick}>フィードバック</button>{' '}
               {/* フィードバックボタン */}
             </li>
+            <li>
+              <button onClick={toggleSearchBar}>検索</button>{' '}
+              {/* 「検索」ボタンの追加 */}
+            </li>
           </ul>
+          {isSearchBarVisible && (
+            <>
+              <SearchBar onSearch={search} />
+              <SearchResults
+                results={searchResults}
+                onResultClick={handleSearchResultClick}
+              />
+            </>
+          )}
         </nav>
       </div>
       <div
