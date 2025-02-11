@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { mapsConfig } from '../../utils/config';
 import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
+import SearchResults from '../searchresults/SearchResults';
 import { ERROR_MESSAGES } from '../../utils/constants';
 import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
@@ -166,6 +167,17 @@ const Map: React.FC<MapComponentProps> = ({
     setSelectedMarkerId(null);
   }, [setSelectedPoi]);
 
+  const handleSearchResultClick = useCallback(
+    (poi: Poi) => {
+      setSelectedPoi(poi);
+      setSelectedMarkerId(poi.id);
+      if (map) {
+        map.panTo(poi.location);
+      }
+    },
+    [setSelectedPoi, map],
+  );
+
   if (loadError) {
     return <div>{ERROR_MESSAGES.MAP.LOAD_FAILED}</div>;
   }
@@ -173,6 +185,8 @@ const Map: React.FC<MapComponentProps> = ({
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
+
+  const displayedPois = pois.filter((poi) => areaVisibility[poi.area]);
 
   return (
     <div role="region" aria-label="地図" className="map-container">
@@ -183,17 +197,15 @@ const Map: React.FC<MapComponentProps> = ({
         onLoad={handleMapLoad}
       >
         {map &&
-          pois
-            .filter((poi) => areaVisibility[poi.area])
-            .map((poi) => (
-              <Marker
-                key={poi.id}
-                poi={poi}
-                onClick={handleMarkerClick}
-                map={map}
-                isSelected={selectedMarkerId === poi.id}
-              />
-            ))}
+          displayedPois.map((poi) => (
+            <Marker
+              key={poi.id}
+              poi={poi}
+              onClick={handleMarkerClick}
+              map={map}
+              isSelected={selectedMarkerId === poi.id}
+            />
+          ))}
         {map && currentLocation && (
           <Marker
             key="current-location-marker"
@@ -252,6 +264,10 @@ const Map: React.FC<MapComponentProps> = ({
         />
       </button>
       {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
+      <SearchResults
+        results={displayedPois}
+        onResultClick={handleSearchResultClick}
+      />
     </div>
   );
 };

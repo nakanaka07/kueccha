@@ -97,20 +97,20 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
           {[
             {
               key: 'description',
-              condition: poi.description,
-              title: '補足',
-              content: <p>{poi.description}</p>,
+              condition: poi.holidayInfo,
+              title: '定休日について',
+              content: <p>{poi.holidayInfo}</p>,
             },
             {
               key: 'reservation',
-              condition: poi.reservation,
-              title: '予約',
-              content: <p>{poi.reservation}</p>,
+              condition: poi.parking,
+              title: '駐車場',
+              content: <p>{poi.parking}</p>,
             },
             {
               key: 'payment',
               condition: poi.payment,
-              title: '支払',
+              title: 'キャッシュレス',
               content: <p>{poi.payment}</p>,
             },
             {

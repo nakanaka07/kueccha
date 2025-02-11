@@ -62,23 +62,22 @@ export interface Poi {
   location: Location; // 位置情報
   area: AreaType; // エリアの種類
   category: string; // カテゴリ
-  description?: string; // 説明（オプショナル）
-  businessHours?: string[]; // 営業時間（オプショナル）
-  genre?: string; // ジャンル（オプショナル）
-  phone?: string; // 電話番号（オプショナル）
-  address?: string; // 住所（オプショナル）
-  information?: string; // 情報（オプショナル）
-  view?: string; // ビュー（オプショナル）
-  reservation?: string; // 予約（オプショナル）
-  payment?: string; // 支払い方法（オプショナル）
-  monday?: string; // 月曜日の営業時間（オプショナル）
-  tuesday?: string; // 火曜日の営業時間（オプショナル）
-  wednesday?: string; // 水曜日の営業時間（オプショナル）
-  thursday?: string; // 木曜日の営業時間（オプショナル）
-  friday?: string; // 金曜日の営業時間（オプショナル）
-  saturday?: string; // 土曜日の営業時間（オプショナル）
-  sunday?: string; // 日曜日の営業時間（オプショナル）
-  holiday?: string; // 祝日の営業時間（オプショナル）
+  genre: string; // ジャンル
+  monday: string; // 月曜日の営業時間
+  tuesday: string; // 火曜日の営業時間
+  wednesday: string; // 水曜日の営業時間
+  thursday: string; // 木曜日の営業時間
+  friday: string; // 金曜日の営業時間
+  saturday: string; // 土曜日の営業時間
+  sunday: string; // 日曜日の営業時間
+  holiday: string; // 祝祭日の営業時間
+  holidayInfo: string; // 定休日について
+  information: string; // 関連情報
+  view: string; // Google マップで見る
+  phone: string; // 問い合わせ
+  address: string; // 所在地
+  parking: string; // 駐車場情報
+  payment: string; // キャッシュレス
 }
 
 // APIレスポンスアイテムを表すインターフェース

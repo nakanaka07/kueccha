@@ -67,6 +67,15 @@ export default defineConfig(({ mode, command }) => {
             key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')), // HTTPS用のキーを読み込む
             cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')), // HTTPS用の証明書を読み込む
           },
+          headers: {
+            'Cache-Control': 'public, max-age=3600', // Cache-Controlヘッダーを追加
+          },
+          hmr: {
+            protocol: 'wss', // WebSocketのプロトコルを指定
+            host: 'localhost',
+            port: 5173,
+            clientPort: 5173, // クライアントポートを指定
+          },
         }
       : {}, // 開発モードでない場合は空のオブジェクトを返す
   };

@@ -87,7 +87,11 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   return (
     <div ref={menuRef}>
       <div className="hamburger-menu">
-        <button className="hamburger-icon" onClick={toggleMenu}>
+        <button
+          className="hamburger-icon"
+          onClick={toggleMenu}
+          title="メニューを開閉"
+        >
           <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
           <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
           <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
@@ -95,21 +99,27 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         <nav className={`menu ${isOpen ? 'open' : ''}`}>
           <ul>
             <li>
-              <button onClick={handleAreaClick}>表示するエリアを選択</button>{' '}
+              <button onClick={handleAreaClick} title="表示するエリアを選択">
+                表示するエリアを選択
+              </button>{' '}
               {/* エリア選択ボタン */}
             </li>
             <li>
-              <button onClick={handleFeedbackClick}>フィードバック</button>{' '}
+              <button onClick={handleFeedbackClick} title="フィードバック">
+                フィードバック
+              </button>{' '}
               {/* フィードバックボタン */}
             </li>
             <li>
-              <button onClick={toggleSearchBar}>検索</button>{' '}
+              <button onClick={toggleSearchBar} title="検索">
+                検索
+              </button>{' '}
               {/* 「検索」ボタンの追加 */}
             </li>
           </ul>
           {isSearchBarVisible && (
             <>
-              <SearchBar onSearch={search} />
+              <SearchBar onSearch={search} pois={pois} />
               <SearchResults
                 results={searchResults}
                 onResultClick={handleSearchResultClick}
