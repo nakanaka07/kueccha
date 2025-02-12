@@ -12,10 +12,10 @@ import currentLocationIcon from '../../utils/images/shi_icon04.png';
 import defaultIcon from '../../utils/images/row2.png';
 
 const markerIcons: Record<string, string> = {
-  RECOMMEND: recommendIcon,
   RYOTSU_AIKAWA: ryotsuAikawaIcon,
   KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
   AKADOMARI_HAMOCHI_OGI: akadomariHamochiOgiIcon,
+  RECOMMEND: recommendIcon,
   SNACK: snackIcon,
   PUBLIC_TOILET: publicToiletIcon,
   PARKING: parkingIcon,
@@ -29,7 +29,7 @@ const Marker = React.memo(
     onClick,
     map,
     isSelected,
-    zIndex, // zIndexプロパティを追加
+    zIndex,
   }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
     const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
       null,
@@ -51,7 +51,7 @@ const Marker = React.memo(
         map,
         title: poi.name,
         content: iconElement,
-        zIndex, // zIndexを設定
+        zIndex,
       });
 
       marker.addListener('click', () => onClick(poi));

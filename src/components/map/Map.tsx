@@ -230,7 +230,7 @@ const Map: React.FC<MapComponentProps> = ({
             onClick={() => {}}
             map={map}
             isSelected={false}
-            zIndex={999} // 現在地のマーカーを他のマーカーより前面に表示
+            zIndex={1000} // 現在地のマーカーを他のマーカーより前面に表示
           />
         )}
         {selectedPoi && (

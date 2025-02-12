@@ -1,13 +1,13 @@
 // エリアの定数を定義
 export const AREAS = {
-  RECOMMEND: 'おすすめ', // おすすめエリア
   RYOTSU_AIKAWA: '両津・相川地区', // 両津・相川地区
   KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区', // 金井・佐和田・新穂・畑野・真野地区
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区', // 赤泊・羽茂・小木地区
+  RECOMMEND: 'おすすめ', // おすすめエリア
   SNACK: 'スナック', // スナック
   PUBLIC_TOILET: '公共トイレ', // 公共トイレ
   PARKING: '駐車場', // 駐車場
-  CURRENT_LOCATION: '現在地', // 現在地エリアを追加
+  CURRENT_LOCATION: '現在地', // 現在地エリア
 } as const;
 
 // 営業時間の定数を定義
@@ -25,10 +25,10 @@ export const BUSINESS_HOURS = [
 // マーカーの色の定数を定義
 export const MARKER_COLORS = {
   DEFAULT: '#000000', // デフォルトのマーカー色
-  RECOMMEND: '#d7003a', // おすすめエリアのマーカー色
   RYOTSU_AIKAWA: '#d9a62e', // 両津・相川地区のマーカー色
   KANAI_SAWADA_NIIBO_HATANO_MANO: '#ec6800', // 金井・佐和田・新穂・畑野・真野地区のマーカー色
   AKADOMARI_HAMOCHI_OGI: '#007b43', // 赤泊・羽茂・小木地区のマーカー色
+  RECOMMEND: '#d7003a', // おすすめエリアのマーカー色
   SNACK: '#65318e', // スナックのマーカー色
   PUBLIC_TOILET: '#2792c3', // 公共トイレのマーカー色
   PARKING: '#333333', // 駐車場のマーカー色

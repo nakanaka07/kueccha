@@ -29,6 +29,6 @@
 .recommendation-marker {
   position: absolute;
   /* または position: fixed; */
-  z-index: 9999;
+  z-index: 100000;
   /* 他の要素よりも高い値を設定 */
 }

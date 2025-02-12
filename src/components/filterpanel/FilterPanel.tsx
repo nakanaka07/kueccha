@@ -36,7 +36,7 @@ interface FilterPanelProps {
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
   >;
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // FilterPanelコンポーネントの定義
@@ -50,7 +50,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setLocalAreaVisibility,
   currentLocation,
   setCurrentLocation,
-  setShowWarning, // 追加
+  setShowWarning,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を保持するためのref
 
