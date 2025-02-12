@@ -85,7 +85,7 @@ const Map: React.FC<MapComponentProps> = ({
   const handleGetCurrentLocation = useCallback(() => {
     if (currentLocation) {
       setCurrentLocation(null);
-      setLocalAreaVisibility((prev) => ({
+      setAreaVisibility((prev) => ({
         ...prev,
         CURRENT_LOCATION: false,
       }));
@@ -96,7 +96,7 @@ const Map: React.FC<MapComponentProps> = ({
           (position) => {
             const { latitude, longitude } = position.coords;
             setCurrentLocation({ lat: latitude, lng: longitude });
-            setLocalAreaVisibility((prev) => ({
+            setAreaVisibility((prev) => ({
               ...prev,
               CURRENT_LOCATION: true,
             }));
@@ -116,12 +116,7 @@ const Map: React.FC<MapComponentProps> = ({
         alert('このブラウザは現在地取得に対応していません。');
       }
     }
-  }, [
-    currentLocation,
-    setCurrentLocation,
-    setLocalAreaVisibility,
-    setShowWarning,
-  ]);
+  }, [currentLocation, setCurrentLocation, setAreaVisibility, setShowWarning]);
 
   useEffect(() => {
     if (map) {
@@ -144,10 +139,9 @@ const Map: React.FC<MapComponentProps> = ({
         map.setCenter(mapsConfig.defaultCenter);
         map.setZoom(mapsConfig.defaultZoom);
       } else {
-        if (!isInitialRender) {
-          map.fitBounds(bounds);
-          map.panToBounds(bounds);
-        } else {
+        map.fitBounds(bounds);
+        map.panToBounds(bounds);
+        if (isInitialRender) {
           setIsInitialRender(false);
         }
       }
@@ -204,6 +198,7 @@ const Map: React.FC<MapComponentProps> = ({
               onClick={handleMarkerClick}
               map={map}
               isSelected={selectedMarkerId === poi.id}
+              zIndex={selectedMarkerId === poi.id ? 1000 : undefined} // 選択されたマーカーを最前面に表示
             />
           ))}
         {map && currentLocation && (
@@ -215,10 +210,27 @@ const Map: React.FC<MapComponentProps> = ({
               location: currentLocation,
               area: 'CURRENT_LOCATION',
               category: '現在地',
+              genre: '', // 必要なプロパティを追加
+              monday: '', // 必要なプロパティを追加
+              tuesday: '', // 必要なプロパティを追加
+              wednesday: '', // 必要なプロパティを追加
+              thursday: '', // 必要なプロパティを追加
+              friday: '', // 必要なプロパティを追加
+              saturday: '', // 必要なプロパティを追加
+              sunday: '', // 必要なプロパティを追加
+              holiday: '', // 必要なプロパティを追加
+              holidayInfo: '', // 必要なプロパティを追加
+              information: '', // 必要なプロパティを追加
+              view: '', // 必要なプロパティを追加
+              phone: '', // 必要なプロパティを追加
+              address: '', // 必要なプロパティを追加
+              parking: '', // 必要なプロパティを追加
+              payment: '', // 必要なプロパティを追加
             }}
             onClick={() => {}}
             map={map}
             isSelected={false}
+            zIndex={999} // 現在地のマーカーを他のマーカーより前面に表示
           />
         )}
         {selectedPoi && (

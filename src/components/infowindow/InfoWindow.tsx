@@ -171,7 +171,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                   rel="noopener noreferrer"
                   className="info-button"
                 >
-                  Google マップで見る
+                  Google マップで写真を見る
                 </a>
               ),
             },
