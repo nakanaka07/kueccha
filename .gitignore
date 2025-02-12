@@ -60,3 +60,17 @@ dist
 localhost.crt
 localhost.key
 openssl.cnf
+
+# MacOS files
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Linux trash folder
+.Trash-*
+
+# Temporary files
+*.swp
+*.swo
+*~

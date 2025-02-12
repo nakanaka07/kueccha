@@ -32,8 +32,8 @@ module.exports = [
       'prettier/prettier': 'error', // Prettierのルールをエラーとして扱う
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_' },
-      ], // 未使用の変数をエラーとして扱う
+        { argsIgnorePattern: '^_' }, // 未使用の変数をエラーとして扱うが、'_'で始まる引数は無視
+      ],
     },
     ignores: [
       '.prettierrc.cjs', // Prettier設定ファイルを除外
