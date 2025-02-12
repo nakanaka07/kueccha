@@ -1,24 +1,28 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig", // スキーマのURL
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2022", // 最新のECMAScriptターゲット
-    "module": "ES2022", // 最新のモジュールシステム
-    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリ
-    "esModuleInterop": true, // ESモジュールとの互換性を有効にする
-    "allowSyntheticDefaultImports": true, // デフォルトインポートを許可
-    "strict": true, // 厳格な型チェックを有効にする（noImplicitAny, noImplicitThis, alwaysStrictなどを含む）
+    "target": "ES2022", // 出力するJavaScriptのバージョンを指定
+    "module": "ESNext", // 使用するモジュールシステムを指定
+    "moduleResolution": "Bundler", // モジュール解決の方法を指定
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリを指定
+    "esModuleInterop": true, // ESモジュールの互換性を有効にする
+    "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
+    "strict": true, // 厳格モードを有効にする
     "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
-    "moduleResolution": "node", // Node.jsのモジュール解決を使用
     "resolveJsonModule": true, // JSONモジュールの解決を有効にする
     "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
-    "noEmit": true, // コンパイル結果を出力しない（型チェックのみを行う）
-    "jsx": "react-jsx", // React JSXサポートを有効にする
-    "incremental": true, // 増分コンパイルを有効にする（コンパイル時間を短縮）
+    "jsx": "react-jsx", // JSXの変換方法を指定
+    "incremental": true, // 増分コンパイルを有効にする
+    "outDir": "./dist", // 出力ディレクトリを指定
     "paths": {
-      "@/*": ["./src/*"] // エイリアスの設定
+      "@/*": ["./src/*"] // エイリアスを設定
     },
-    "typeRoots": ["./node_modules/@types"] // 型定義ファイルのルート
+    "typeRoots": ["./node_modules/@types", "./types"] // 型定義ファイルのルートを指定
   },
-  "include": ["./src", "*.config.ts", "./src/utils/types.ts"], // インクルードするファイル（プロジェクトに含めるファイル）
-  "exclude": ["node_modules", "dist"] // 除外するファイル（プロジェクトから除外するファイル）
+  "include": ["./src", "*.config.ts", "./src/utils/types.ts", "server.ts"], // コンパイル対象のファイルを指定
+  "exclude": ["node_modules", "dist"], // コンパイル対象から除外するファイルを指定
+  "ts-node": {
+    "transpileOnly": true, // トランスパイルのみを行う
+    "esm": true // ESモジュールを有効にする
+  }
 }

@@ -39,6 +39,11 @@ export default defineConfig(({ mode, command }) => {
       outDir: 'dist', // 出力ディレクトリを設定
       sourcemap: false, // ソースマップを無効化
       rollupOptions: {
+        output: {
+          entryFileNames: 'assets/[name].[hash].js',
+          chunkFileNames: 'assets/[name].[hash].js',
+          assetFileNames: 'assets/[name].[hash].[ext]',
+        },
         onwarn(warning, warn) {
           // 警告をカスタマイズ
           if (warning.code === 'SOURCEMAP_ERROR') return;
