@@ -57,7 +57,10 @@ const Marker = React.memo(
       marker.addListener('click', () => onClick(poi));
       markerRef.current = marker;
 
-      if (poi.area === 'RECOMMEND' || poi.area === 'CURRENT_LOCATION') {
+      if (poi.area === 'RECOMMEND') {
+        iconElement.classList.add('recommendation-marker');
+        iconElement.classList.add('blinking');
+      } else if (poi.area === 'CURRENT_LOCATION') {
         iconElement.classList.add('blinking');
       }
 

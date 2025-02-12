@@ -25,3 +25,10 @@
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
   /* ボックスシャドウを設定 */
 }
+
+.recommendation-marker {
+  position: absolute;
+  /* または position: fixed; */
+  z-index: 9999;
+  /* 他の要素よりも高い値を設定 */
+}
