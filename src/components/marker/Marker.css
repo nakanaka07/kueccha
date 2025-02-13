@@ -1,0 +1,34 @@
+/* Markerのスタイル */
+.blinking {
+  animation: blinkingAnimation 1s infinite;
+}
+
+@keyframes blinkingAnimation {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.selected-marker {
+  border: 3px solid red;
+  /* 縁を太くして赤色に設定 */
+  border-radius: 50%;
+  /* 角を丸くする */
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  /* ボックスシャドウを設定 */
+}
+
+.recommendation-marker {
+  position: absolute;
+  /* または position: fixed; */
+  z-index: 100000;
+  /* 他の要素よりも高い値を設定 */
+}
