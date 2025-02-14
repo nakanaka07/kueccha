@@ -1,0 +1,170 @@
+/* InfoWindowのスタイル */
+.info-window {
+  font-family: 'Roboto', sans-serif;
+  /* フォントファミリーを設定 */
+  max-width: 300px;
+  /* 最大幅を設定 */
+  position: absolute;
+  /* 絶対位置を設定 */
+  left: 10px;
+  /* 左からの位置を設定 */
+  bottom: 50px;
+  /* 下からの位置を設定 */
+  background-color: #fff;
+  /* 背景色を白に設定 */
+  border-radius: 8px;
+  /* 角を丸くする */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* ボックスシャドウを設定 */
+  overflow: hidden;
+  /* オーバーフローを隠す */
+  z-index: 1002;
+  /* z-indexを設定 */
+  display: block;
+  /* 表示状態に設定 */
+}
+
+.info-content {
+  max-height: calc(100vh - 500px);
+  /* ビューポートの高さからマージンを引いた高さを設定 */
+  overflow-y: auto;
+  /* 縦方向のスクロールを有効にする */
+  overflow-x: hidden;
+  /* 横方向のスクロールを無効にする */
+  box-sizing: border-box;
+  /* パディングを含むボックスサイズを設定 */
+}
+
+.info-header {
+  background-color: #f8f8f8;
+  /* 背景色を設定 */
+  padding: 10px;
+  /* 内側の余白を設定 */
+  border-bottom: 1px solid #ddd;
+  /* 下部にボーダーを設定 */
+  display: flex;
+  /* フレックスボックスを使用 */
+  justify-content: space-between;
+  /* 要素間のスペースを均等にする */
+  align-items: center;
+  /* 要素を中央に揃える */
+}
+
+.info-header h2 {
+  margin: 0;
+  /* マージンをリセット */
+  font-size: 18px;
+  /* フォントサイズを設定 */
+}
+
+.modal-close-button {
+  background: none;
+  /* 背景をなしに設定 */
+  border: none;
+  /* ボーダーをなしに設定 */
+  font-size: 30px;
+  /* フォントサイズを設定 */
+  cursor: pointer;
+  /* カーソルをポインターに設定 */
+  color: #333;
+  /* 文字色を設定 */
+  transition: color 0.3s ease;
+  /* 色の変化にトランジションを設定 */
+}
+
+.modal-close-button:hover {
+  color: #555;
+  /* ホバー時の文字色を設定 */
+}
+
+.info-section {
+  padding: 10px;
+  /* 内側の余白を設定 */
+  border-bottom: 1px solid #ddd;
+  /* 下部にボーダーを設定 */
+}
+
+.info-section ul {
+  padding-left: 0;
+  /* 左のパディングをリセット */
+  margin: 0;
+  /* マージンをリセット */
+  list-style-type: none;
+  /* リストスタイルをなしに設定 */
+}
+
+.info-section li {
+  display: flex;
+  /* フレックスボックスを使用 */
+  justify-content: space-between;
+  /* 要素間のスペースを均等にする */
+  padding: 5px 0;
+  /* 上下のパディングを設定 */
+  border-bottom: 1px solid #eee;
+  /* 下部に薄いボーダーを設定 */
+}
+
+.info-section li:last-child {
+  border-bottom: none;
+  /* 最後のリストアイテムのボーダーをなしに設定 */
+}
+
+.info-section li .day {
+  font-weight: bold;
+  /* フォントの太さを設定 */
+}
+
+.info-section li .value {
+  font-weight: normal;
+  /* フォントの太さを設定 */
+}
+
+.info-link {
+  color: #007bff;
+  /* 文字色を設定 */
+  text-decoration: none;
+  /* テキストの装飾をなしに設定 */
+}
+
+.info-link:hover {
+  text-decoration: underline;
+  /* ホバー時のテキスト装飾を下線に設定 */
+}
+
+.info-button {
+  display: block;
+  /* ブロック要素に設定 */
+  text-align: center;
+  /* テキストを中央揃えに設定 */
+  background-color: #007bff;
+  /* 背景色を設定 */
+  color: #fff;
+  /* 文字色を設定 */
+  text-decoration: none;
+  /* テキストの装飾をなしに設定 */
+  padding: 10px;
+  /* 内側の余白を設定 */
+  border-radius: 5px;
+  /* 角を丸くする */
+}
+
+.info-button:hover {
+  background-color: #0056b3;
+  /* ホバー時の背景色を設定 */
+}
+
+/* 横並びにするためのスタイル */
+.info-horizontal {
+  display: flex;
+  /* フレックスボックスを使用 */
+  flex-wrap: wrap;
+  /* 要素を折り返す */
+}
+
+.info-horizontal .info-section {
+  flex: 1 1 50%;
+  /* フレックスアイテムのサイズを設定 */
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {}

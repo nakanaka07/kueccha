@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022", // 出力するJavaScriptのバージョンを指定
+    "module": "ESNext", // 使用するモジュールシステムを指定
+    "moduleResolution": "Bundler", // モジュール解決の方法を指定
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリを指定
+    "esModuleInterop": true, // ESモジュールの互換性を有効にする
+    "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
+    "strict": true, // 厳格モードを有効にする
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
+    "resolveJsonModule": true, // JSONモジュールの解決を有効にする
+    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
+    "jsx": "react-jsx", // JSXの変換方法を指定
+    "incremental": true, // 増分コンパイルを有効にする
+    "outDir": "./dist", // 出力ディレクトリを指定
+    "paths": {
+      "@/*": ["./src/*"] // エイリアスを設定
+    },
+    "typeRoots": ["./node_modules/@types", "./types"] // 型定義ファイルのルートを指定
+  },
+  "include": ["./src", "*.config.ts", "./src/utils/types.ts", "server.ts"], // コンパイル対象のファイルを指定
+  "exclude": ["node_modules", "dist"], // コンパイル対象から除外するファイルを指定
+  "ts-node": {
+    "transpileOnly": true, // トランスパイルのみを行う
+    "esm": true // ESモジュールを有効にする
+  }
+}
