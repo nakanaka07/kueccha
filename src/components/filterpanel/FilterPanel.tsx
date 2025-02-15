@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'; // Reactと必要なフックをインポート
-import type { AreaType, LatLngLiteral, Poi } from '../../utils/types'; // 型定義をインポート
-import { AREAS } from '../../utils/constants'; // エリア定数をインポート
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
+import { AREAS } from '../../utils/constants'; // エリア定数をインポート
+import type { AreaType, LatLngLiteral, Poi } from '../../utils/types'; // 型定義をインポート
 import './FilterPanel.css'; // スタイルシートをインポート
 
 // 初期表示設定を定義
@@ -42,13 +42,13 @@ interface FilterPanelProps {
 // FilterPanelコンポーネントの定義
 const FilterPanel: React.FC<FilterPanelProps> = ({
   pois,
-  setSelectedPoi,
+  setSelectedPoi: _setSelectedPoi,
   setAreaVisibility,
   isFilterPanelOpen,
   onCloseClick,
   localAreaVisibility,
   setLocalAreaVisibility,
-  currentLocation,
+  currentLocation: _currentLocation,
   setCurrentLocation,
   setShowWarning,
 }) => {

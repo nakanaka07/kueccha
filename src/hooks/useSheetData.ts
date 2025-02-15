@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONFIG } from '../utils/config';
-import type { Poi, AreaType } from '../utils/types';
 import { AREAS, ERROR_MESSAGES } from '../utils/constants';
-
-type LatLngLiteral = google.maps.LatLngLiteral;
+import type { Poi, AreaType } from '../utils/types';
 
 interface FetchError {
   message: string;
@@ -34,9 +32,9 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
 
 // フェッチ関数をリトライする関数
 const retryFetch = async (
-  fetchFunction: () => Promise<any>,
+  fetchFunction: () => Promise<unknown>,
   retryCount: number,
-): Promise<any> => {
+): Promise<unknown> => {
   try {
     return await fetchFunction();
   } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'; // useEffectとuseRefを追加
 import './HamburgerMenu.css'; // スタイルシートをインポート
-import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
 import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネート
+import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
 import SearchBar from '../searchbar/SearchBar'; // SearchBarをインポーネート
 import SearchResults from '../searchresults/SearchResults'; // SearchResultsをインポート
 import type { Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート

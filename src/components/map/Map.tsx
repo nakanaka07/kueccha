@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import React, { useEffect, useState, useCallback } from 'react';
 import { mapsConfig } from '../../utils/config';
-import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
-import { Marker } from '../marker/Marker';
-import InfoWindow from '../infowindow/InfoWindow';
-import LocationWarning from '../locationwarning/LocationWarning';
-import SearchResults from '../searchresults/SearchResults';
 import { ERROR_MESSAGES } from '../../utils/constants';
-import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
 import currentLocationIcon from '../../utils/images/shi_icon04.png';
+import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
+import InfoWindow from '../infowindow/InfoWindow';
+import LocationWarning from '../locationwarning/LocationWarning';
+import { Marker } from '../marker/Marker';
+import SearchResults from '../searchresults/SearchResults';
+import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
 
 interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
@@ -45,17 +45,16 @@ const Map: React.FC<MapComponentProps> = ({
     mapIds: [mapsConfig.mapId],
     libraries: mapsConfig.libraries,
   });
-  const [mapType, setMapType] = useState<google.maps.MapTypeId | string>(
+  const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>(
     'roadmap',
   );
   const [isInitialRender, setIsInitialRender] = useState(true);
-  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
-  const [localAreaVisibility, setLocalAreaVisibility] =
+  const [_localAreaVisibility, _setLocalAreaVisibility] =
     useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
 
   const mapOptions = {
     ...mapsConfig.options,
-    mapTypeId: mapType,
+    mapTypeId: _mapType,
     mapTypeControl: true,
     zoomControl: true,
     mapTypeControlOptions: isLoaded

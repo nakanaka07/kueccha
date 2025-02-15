@@ -1,5 +1,5 @@
-import { MARKER_COLORS } from './constants';
 import { LoadScriptProps } from '@react-google-maps/api';
+import { MARKER_COLORS } from './constants';
 import type { Config } from './types';
 
 export const mapsConfig: Config['maps'] = {

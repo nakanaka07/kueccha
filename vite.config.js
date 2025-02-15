@@ -1,8 +1,8 @@
-import { defineConfig, loadEnv } from 'vite'; // Viteの設定と環境変数の読み込みをインポート
-import react from '@vitejs/plugin-react'; // Reactプラグインをインポート
-import tsconfigPaths from 'vite-tsconfig-paths'; // TypeScriptのパス解決プラグインをインポート
 import fs from 'fs'; // ファイルシステムモジュールをインポート
 import path from 'path'; // パスモジュールをインポート
+import react from '@vitejs/plugin-react'; // Reactプラグインをインポート
+import { defineConfig, loadEnv } from 'vite'; // Viteの設定と環境変数の読み込みをインポート
+import tsconfigPaths from 'vite-tsconfig-paths'; // TypeScriptのパス解決プラグインをインポート
 
 export default defineConfig(({ mode, command }) => {
   // Viteの設定をエクスポート

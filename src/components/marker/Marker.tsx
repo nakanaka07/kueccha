@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-import type { MarkerProps, Poi } from '../../utils/types';
 import './Marker.css';
+import publicToiletIcon from '../../utils/images/ano_icon01.png';
 import recommendIcon from '../../utils/images/ano_icon_recommend.png';
 import ryotsuAikawaIcon from '../../utils/images/icon_map01.png';
 import kanaiSawadaNiiboHatanoManoIcon from '../../utils/images/icon_map02.png';
 import akadomariHamochiOgiIcon from '../../utils/images/icon_map03.png';
-import snackIcon from '../../utils/images/shi_icon02.png';
-import publicToiletIcon from '../../utils/images/ano_icon01.png';
-import parkingIcon from '../../utils/images/shi_icon01.png';
-import currentLocationIcon from '../../utils/images/shi_icon04.png';
 import defaultIcon from '../../utils/images/row2.png';
+import parkingIcon from '../../utils/images/shi_icon01.png';
+import snackIcon from '../../utils/images/shi_icon02.png';
+import currentLocationIcon from '../../utils/images/shi_icon04.png';
+import type { MarkerProps } from '../../utils/types';
 
 const markerIcons: Record<string, string> = {
   RYOTSU_AIKAWA: ryotsuAikawaIcon,

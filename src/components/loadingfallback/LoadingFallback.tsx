@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'; // Reactと必要なフックをインポート
-import type { LoadingFallbackProps } from '../../utils/types'; // LoadingFallbackProps型をインポート
 import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージ定数をインポート
+import type { LoadingFallbackProps } from '../../utils/types'; // LoadingFallbackProps型をインポート
 import './LoadingFallback.css'; // スタイルシートをインポート
 
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({

@@ -1,9 +1,9 @@
-import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import helmet from 'helmet';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
+import express, { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
 });
 
 // エラーハンドリングミドルウェア
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });

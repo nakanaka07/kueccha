@@ -1,47 +1,79 @@
-const prettierPlugin = require('eslint-plugin-prettier'); // Prettierプラグインをインポート
-const tsPlugin = require('@typescript-eslint/eslint-plugin'); // TypeScript ESLintプラグインをインポート
-const tsParser = require('@typescript-eslint/parser'); // TypeScriptパーサーをインポート
-const reactPlugin = require('eslint-plugin-react'); // Reactプラグインをインポート
+const prettierPlugin = require('eslint-plugin-prettier');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const tsParser = require('@typescript-eslint/parser');
+const reactPlugin = require('eslint-plugin-react');
+const importPlugin = require('eslint-plugin-import');
 
 module.exports = [
   {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    ignores: ['dist/**/*'],
     languageOptions: {
-      parser: tsParser, // TypeScriptパーサーを設定
+      parser: tsParser,
       parserOptions: {
-        ecmaVersion: 'latest', // ECMAScriptのバージョンを設定
-        sourceType: 'module', // モジュールシステムを設定
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         ecmaFeatures: {
-          jsx: true, // JSXのサポートを有効にする
+          jsx: true,
         },
-        project: './tsconfig.json', // TypeScriptのプロジェクト設定ファイルを指定
+        project: './tsconfig.json',
       },
     },
     plugins: {
-      '@typescript-eslint': tsPlugin, // TypeScript ESLintプラグインを設定
-      prettier: prettierPlugin, // Prettierプラグインを設定
-      react: reactPlugin, // Reactプラグインを設定
+      '@typescript-eslint': tsPlugin,
+      prettier: prettierPlugin,
+      react: reactPlugin,
+      import: importPlugin,
     },
     settings: {
       react: {
-        version: 'detect', // Reactのバージョンを自動検出
+        version: 'detect',
+      },
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
+        },
       },
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules, // TypeScriptの推奨ルールを適用
-      ...reactPlugin.configs.recommended.rules, // Reactの推奨ルールを適用
-      'prettier/prettier': 'error', // Prettierのルールをエラーとして扱う
+      ...tsPlugin.configs.recommended.rules,
+      ...reactPlugin.configs.recommended.rules,
+      'prettier/prettier': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_' }, // 未使用の変数をエラーとして扱うが、'_'で始まる引数は無視
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+      'import/order': [
+        'error',
+        {
+          'groups': [
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling'],
+            'index',
+            'object',
+            'type',
+          ],
+          'pathGroups': [
+            {
+              'pattern': '**/*.css',
+              'group': 'index',
+              'position': 'after'
+            }
+          ],
+          'pathGroupsExcludedImportTypes': ['css'],
+          'newlines-between': 'never',
+          'alphabetize': {
+            'order': 'asc',
+            'caseInsensitive': true,
+          },
+        },
       ],
     },
-    ignores: [
-      '.prettierrc.cjs', // Prettier設定ファイルを除外
-      'eslint.config.cjs', // ESLint設定ファイルを除外
-      'vite.config.js', // Vite設定ファイルを除外
-      'dist/**', // 出力ディレクトリを除外
-      '.vscode/**', // VSCode設定ディレクトリを除外
-      'node_modules/**', // node_modulesディレクトリを除外
-    ], // 特定のファイルを除外
   },
 ];

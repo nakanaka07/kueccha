@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Reactとフックをインポート
-import { createRoot } from 'react-dom/client'; // React 18の新しいルートAPIをインポート
-import { ErrorBoundary } from './components/errorboundary/ErrorBoundary'; // エラーバウンダリコンポーネントをインポート
-import LoadingFallback from './components/loadingfallback/LoadingFallback'; // ローディングフォールバックコンポーネントをインポート
-import Map from './components/map/Map'; // マップコンポーネントをインポート
-import HamburgerMenu from './components/hamburgermenu/HamburgerMenu'; // ハンバーガーメニューコンポーネントをインポート
-import { ERROR_MESSAGES } from './utils/constants'; // エラーメッセージの定数をインポート
-import { useSheetData } from './hooks/useSheetData'; // カスタムフックをインポート
-import useSearch from './hooks/useSearch'; // 検索用のカスタムフックをインポート
-import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel'; // 初期表示設定をインポート
-import { Poi, AreaType, LatLngLiteral } from './utils/types'; // 型定義をインポート
-import './App.css'; // スタイルシートをインポート
+import './App.css';
+import React, { useState, useEffect, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
+import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
+import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
+import LoadingFallback from './components/loadingfallback/LoadingFallback';
+import Map from './components/map/Map';
+import useSearch from './hooks/useSearch';
+import { useSheetData } from './hooks/useSheetData';
+import { ERROR_MESSAGES } from './utils/constants';
+import { Poi, AreaType, LatLngLiteral } from './utils/types';
 
 const App: React.FC = () => {
   // Appコンポーネントの定義
