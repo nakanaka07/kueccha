@@ -95,9 +95,10 @@
 }
 
 /* フィルターパネルが開いたときにハンバーガーメニューを非表示にする */
-.filter-panel-wrapper.open~.hamburger-menu {
+.filter-panel-wrapper.open ~ .hamburger-menu {
   display: none;
 }
 
 /* レスポンシブデザイン */
-@media (max-width: 768px) {}
+@media (max-width: 768px) {
+}

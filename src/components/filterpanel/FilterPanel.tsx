@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react'; // Reactと必要なフックをインポート
+import './FilterPanel.css'; // スタイルシートをインポート
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
 import { AREAS } from '../../utils/constants'; // エリア定数をインポート
 import type { AreaType, LatLngLiteral, Poi } from '../../utils/types'; // 型定義をインポート
-import './FilterPanel.css'; // スタイルシートをインポート
 
 // 初期表示設定を定義
 const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(

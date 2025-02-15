@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo } from 'react'; // Reactと必要なクラスをインポート
+import './ErrorBoundary.css'; // スタイルシートをインポート
 import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージ定数をインポート
 import type { ErrorBoundaryProps } from '../../utils/types'; // ErrorBoundaryProps型をインポート
-import './ErrorBoundary.css'; // スタイルシートをインポート
 
 interface State {
   hasError: boolean; // エラーが発生したかどうかを示すフラグ

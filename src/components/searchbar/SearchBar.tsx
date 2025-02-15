@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Poi } from '../../utils/types'; // Poi型をインポート
 import './SearchBar.css';
+import { Poi } from '../../utils/types'; // Poi型をインポート
 
 interface SearchBarProps {
   onSearch: (query: string) => void;

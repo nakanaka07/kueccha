@@ -20,7 +20,7 @@
     "typeRoots": ["./node_modules/@types", "./types"], // 型定義ファイルのルートを指定
     "skipLibCheck": true // ライブラリチェックをスキップ
   },
-  "include": ["src/**/*", "server.ts", "vite.config.js"],
+  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js"], // eslint.config.js を追加
   "exclude": ["dist"],
   "ts-node": {
     "transpileOnly": true, // トランスパイルのみを行う

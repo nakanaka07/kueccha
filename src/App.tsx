@@ -1,6 +1,6 @@
-import './App.css';
 import React, { useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
+import './App.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { INITIAL_VISIBILITY } from './components/filterpanel/FilterPanel';
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import type { Poi } from '../../utils/types';
 import './SearchResults.css';
+import type { Poi } from '../../utils/types';
 
 /**
  * 検索結果コンポーネントのプロパティ定義

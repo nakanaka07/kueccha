@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react'; // Reactと必要なフックをインポート
+import './InfoWindow.css'; // スタイルシートをインポート
 import { AREAS } from '../../utils/constants'; // エリア定数をインポート
 import { formatInformation } from '../../utils/formatters'; // 情報フォーマット関数をインポート
 import type { InfoWindowProps } from '../../utils/types'; // InfoWindowProps型をインポート
-import './InfoWindow.css'; // スタイルシートをインポート
 
 // 電話番号が有効かどうかをチェックする関数
 const isValidPhoneNumber = (phone: string) => {
