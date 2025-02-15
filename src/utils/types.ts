@@ -1,136 +1,121 @@
-import { LoadScriptProps } from '@react-google-maps/api'; // Google Maps APIのロードスクリプトプロパティをインポート
-import { AREAS, BUSINESS_HOURS } from './constants'; // 定数をインポート
+import { LoadScriptProps } from '@react-google-maps/api';
+import { AREAS, BUSINESS_HOURS } from './constants';
 
-// 緯度経度を表す型
-export type LatLngLiteral = {
-  lat: number; // 緯度
-  lng: number; // 経度
-};
+export type AreaType = keyof typeof AREAS;
 
-// 位置情報を表す型
-export type Location = LatLngLiteral; // 緯度経度型を位置情報型としてエイリアス
-
-// 地図のスタイルを表すインターフェース
-export interface MapStyle {
-  width: string; // 幅
-  height: string; // 高さ
-  disableDefaultUI: boolean; // デフォルトUIを無効にするかどうか
-  clickableIcons: boolean; // アイコンをクリック可能にするかどうか
+export interface BaseProps {
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-// 地図の設定を表すインターフェース
-export interface MapConfig {
-  apiKey: string; // APIキー
-  mapId: string; // マップID
-  defaultCenter: Location; // デフォルトの中心位置
-  defaultZoom: number; // デフォルトのズームレベル
-  libraries: LoadScriptProps['libraries']; // 使用するライブラリ
-  language: string; // 言語
-  version: string; // バージョン
-  style: MapStyle; // 地図のスタイル
-  options: {
-    zoomControl: boolean; // ズームコントロールを表示するかどうか
-    mapTypeControl: boolean; // マップタイプコントロールを表示するかどうか
-    streetViewControl: boolean; // ストリートビューコントロールを表示するかどうか
-    fullscreenControl: boolean; // フルスクリーンコントロールを表示するかどうか
-    styles?: google.maps.MapTypeStyle[]; // 地図のカスタムスタイル（オプショナル）
-  };
-}
+export type BusinessHourKey = (typeof BUSINESS_HOURS)[number]['key'];
 
-// 全体の設定を表すインターフェース
 export interface Config {
-  maps: MapConfig; // 地図の設定
+  maps: MapConfig;
   sheets: {
-    apiKey: string; // APIキー
-    spreadsheetId: string; // スプレッドシートID
+    apiKey: string;
+    spreadsheetId: string;
   };
   markers: {
-    colors: Record<string, string>; // マーカーの色
+    colors: Record<string, string>;
   };
 }
 
-// エリアの種類を表す型
-export type AreaType = keyof typeof AREAS; // AREAS定数のキーを型として使用
-
-// 営業時間のキーを表す型
-export type BusinessHourKey = (typeof BUSINESS_HOURS)[number]['key']; // BUSINESS_HOURS定数のキーを型として使用
-
-// POI（ポイント・オブ・インタレスト）を表すインターフェース
-export interface Poi {
-  id: string; // ID
-  name: string; // 名前
-  location: Location; // 位置情報
-  area: AreaType; // エリアの種類
-  category: string; // カテゴリ
-  genre: string; // ジャンル
-  monday?: string; // 月曜日の営業時間
-  tuesday?: string; // 火曜日の営業時間
-  wednesday?: string; // 水曜日の営業時間
-  thursday?: string; // 木曜日の営業時間
-  friday?: string; // 金曜日の営業時間
-  saturday?: string; // 土曜日の営業時間
-  sunday?: string; // 日曜日の営業時間
-  holiday?: string; // 祝祭日の営業時間
-  holidayInfo?: string; // 定休日について
-  information?: string; // 関連情報
-  view?: string; // Google マップで見る
-  phone?: string; // 問い合わせ
-  address?: string; // 所在地
-  parking?: string; // 駐車場情報
-  payment?: string; // キャッシュレス
+export interface ErrorBoundaryProps extends BaseProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-// 基本的なプロパティを表すインターフェース
-export interface BaseProps {
-  className?: string; // クラス名（オプショナル）
-  style?: React.CSSProperties; // スタイル（オプショナル）
-}
-
-// 地図のプロパティを表すインターフェース
-export interface MapProps extends BaseProps {
-  pois: Poi[]; // POIの配列
-}
-
-// インフォウィンドウのプロパティを表すインターフェース
-export interface InfoWindowProps extends BaseProps {
-  poi: Poi; // POI
-  onCloseClick: () => void; // 閉じるクリック時のハンドラ
-}
-
-// マーカーのプロパティを表すインターフェース
-export interface MarkerProps extends BaseProps {
-  poi: Poi; // POI
-  onClick: (poi: Poi) => void; // クリック時のハンドラ
-  map: google.maps.Map | null; // 地図オブジェクト
-}
-
-// フィルターパネルのプロパティを表すインターフェース
 export interface FilterPanelProps extends BaseProps {
-  pois: Poi[]; // POIの配列
-  setSelectedPoi: (poi: Poi | null) => void; // 選択されたPOIを設定する関数
-  setAreaVisibility: (visibility: Record<AreaType, boolean>) => void; // エリアの表示状態を設定する関数
-  isFilterPanelOpen: boolean; // フィルターパネルが開いているかどうか
-  onCloseClick: () => void; // 閉じるクリック時のハンドラ
-  localAreaVisibility: Record<AreaType, boolean>; // ローカルエリアの表示状態
+  pois: Poi[];
+  setSelectedPoi: (poi: Poi | null) => void;
+  setAreaVisibility: (visibility: Record<AreaType, boolean>) => void;
+  isFilterPanelOpen: boolean;
+  onCloseClick: () => void;
+  localAreaVisibility: Record<AreaType, boolean>;
   setLocalAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // ローカルエリアの表示状態を設定する関数
-  currentLocation: LatLngLiteral | null; // 現在の位置
+  >;
+  currentLocation: LatLngLiteral | null;
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
+  >;
 }
 
-// ローディングフォールバックのプロパティを表すインターフェース
+export interface InfoWindowProps extends BaseProps {
+  poi: Poi;
+  onCloseClick: () => void;
+}
+
+export type LatLngLiteral = {
+  lat: number;
+  lng: number;
+};
+
+export type Location = LatLngLiteral;
+
 export interface LoadingFallbackProps extends BaseProps {
-  isLoading: boolean; // ロード中かどうか
-  message?: string; // メッセージ（オプショナル）
-  spinnerClassName?: string; // スピナークラス名（オプショナル）
-  isLoaded: boolean; // ロードが完了したかどうか
+  isLoading: boolean;
+  message?: string;
+  spinnerClassName?: string;
+  isLoaded: boolean;
 }
 
-// エラーバウンダリのプロパティを表すインターフェース
-export interface ErrorBoundaryProps extends BaseProps {
-  children: React.ReactNode; // 子要素
-  fallback?: React.ReactNode; // フォールバック要素（オプショナル）
+export interface MapConfig {
+  apiKey: string;
+  mapId: string;
+  defaultCenter: Location;
+  defaultZoom: number;
+  libraries: LoadScriptProps['libraries'];
+  language: string;
+  version: string;
+  style: MapStyle;
+  options: {
+    zoomControl: boolean;
+    mapTypeControl: boolean;
+    streetViewControl: boolean;
+    fullscreenControl: boolean;
+    styles?: google.maps.MapTypeStyle[];
+  };
+}
+
+export interface MapProps extends BaseProps {
+  pois: Poi[];
+}
+
+export interface MapStyle {
+  width: string;
+  height: string;
+  disableDefaultUI: boolean;
+  clickableIcons: boolean;
+}
+
+export interface MarkerProps extends BaseProps {
+  poi: Poi;
+  onClick: (poi: Poi) => void;
+  map: google.maps.Map | null;
+}
+
+export interface Poi {
+  id: string;
+  name: string;
+  location: Location;
+  area: AreaType;
+  category: string;
+  genre: string;
+  monday?: string;
+  tuesday?: string;
+  wednesday?: string;
+  thursday?: string;
+  friday?: string;
+  saturday?: string;
+  sunday?: string;
+  holiday?: string;
+  holidayInfo?: string;
+  information?: string;
+  view?: string;
+  phone?: string;
+  address?: string;
+  parking?: string;
+  payment?: string;
 }

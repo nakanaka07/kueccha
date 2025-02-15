@@ -45,7 +45,7 @@ export const CONFIG: Config = {
   markers: markerConfig,
 };
 
-export const validateConfig = (config: Config) => {
+export const validateConfig = (config: Config): void => {
   const required = {
     'Google Maps API Key': config.maps.apiKey,
     'Google Maps Map ID': config.maps.mapId,
@@ -62,10 +62,10 @@ export const validateConfig = (config: Config) => {
   }
 };
 
-export const logConfigInDevelopment = (_config: Config) => {
+export const logConfigInDevelopment = (config: Config): void => {
   if (import.meta.env.MODE !== 'development') return;
 
-  console.log('Configuration loaded successfully.');
+  console.log('Configuration loaded successfully:', config);
 };
 
 validateConfig(CONFIG);
