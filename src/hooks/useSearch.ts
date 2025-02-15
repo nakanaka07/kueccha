@@ -1,10 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
 import type { Poi } from '../utils/types';
 
+const DEBOUNCE_DELAY = 300;
+
 const useSearch = (pois: Poi[]) => {
   const [searchResults, setSearchResults] = useState<Poi[]>([]);
   const [query, setQuery] = useState('');
-  const cache = useRef<{ [key: string]: Poi[] }>({});
+  const cache = useRef<Record<string, Poi[]>>({});
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const search = useCallback(
@@ -17,16 +19,11 @@ const useSearch = (pois: Poi[]) => {
 
       debounceTimeout.current = setTimeout(() => {
         if (query === 'clear') {
-          setSearchResults([]); // 検索結果を空にする
+          setSearchResults([]);
           return;
         }
 
-        if (query === 'all') {
-          setSearchResults(pois); // 全てのPOIを表示
-          return;
-        }
-
-        if (!query) {
+        if (query === 'all' || !query) {
           setSearchResults(pois);
           return;
         }
@@ -42,7 +39,7 @@ const useSearch = (pois: Poi[]) => {
 
         cache.current[query] = results;
         setSearchResults(results);
-      }, 300); // デバウンス時間を300msに設定
+      }, DEBOUNCE_DELAY);
     },
     [pois],
   );

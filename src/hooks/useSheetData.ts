@@ -81,8 +81,8 @@ export function useSheetData() {
   };
 
   const fetchAreaData = useCallback(
-    async (area: string, retryCount = 0): Promise<Poi[]> => {
-      const areaName = AREAS[area as AreaType];
+    async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
+      const areaName = AREAS[area];
       const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
 
       const fetchFunction = async (): Promise<Poi[]> => {
@@ -146,7 +146,7 @@ export function useSheetData() {
       validateConfig();
       const normalAreas = Object.keys(AREAS).filter(
         (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
-      );
+      ) as AreaType[];
       const normalPoisArrays = await Promise.all(
         normalAreas.map((area) => fetchAreaData(area)),
       );

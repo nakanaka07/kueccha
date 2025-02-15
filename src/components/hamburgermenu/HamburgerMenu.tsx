@@ -3,7 +3,7 @@ import './HamburgerMenu.css';
 import FeedbackForm from '../feedback/FeedbackForm';
 import FilterPanel from '../filterpanel/FilterPanel';
 import SearchBar from '../searchbar/SearchBar';
-import SearchResults from '../searchresults/SearchResults';
+import SearchResults from '../searchresults/SearchResults.module';
 import type { Poi, AreaType, LatLngLiteral } from '../../utils/types';
 
 interface HamburgerMenuProps {

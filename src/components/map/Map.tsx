@@ -8,7 +8,7 @@ import currentLocationIcon from '../../utils/images/shi_icon04.png';
 import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
 import { Marker } from '../marker/Marker';
-import SearchResults from '../searchresults/SearchResults';
+import SearchResults from '../searchresults/SearchResults.module';
 import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
 
 interface MapComponentProps extends MapProps {

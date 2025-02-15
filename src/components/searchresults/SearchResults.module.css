@@ -1,4 +1,4 @@
-.search-results {
+.searchResults {
   margin: 10px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -7,12 +7,12 @@
   overflow-y: auto;
 }
 
-.search-result-item {
+.searchResultItem {
   padding: 8px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
 }
 
-.search-result-item:hover {
+.searchResultItem:hover {
   background-color: #f0f0f0;
 }
