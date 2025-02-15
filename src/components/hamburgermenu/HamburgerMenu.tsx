@@ -1,29 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react'; // useEffectとuseRefを追加
-import './HamburgerMenu.css'; // スタイルシートをインポート
-import FeedbackForm from '../feedback/FeedbackForm'; // FeedbackFormコンポーネート
-import FilterPanel from '../filterpanel/FilterPanel'; // FilterPanelコンポーネントをインポート
-import SearchBar from '../searchbar/SearchBar'; // SearchBarをインポーネート
-import SearchResults from '../searchresults/SearchResults'; // SearchResultsをインポート
-import type { Poi, AreaType, LatLngLiteral } from '../../utils/types'; // 型定義をインポート
+import React, { useState, useEffect, useRef } from 'react';
+import './HamburgerMenu.css';
+import FeedbackForm from '../feedback/FeedbackForm';
+import FilterPanel from '../filterpanel/FilterPanel';
+import SearchBar from '../searchbar/SearchBar';
+import SearchResults from '../searchresults/SearchResults';
+import type { Poi, AreaType, LatLngLiteral } from '../../utils/types';
 
 interface HamburgerMenuProps {
-  pois: Poi[]; // POIの配列
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POIを設定する関数
+  pois: Poi[];
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   setAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // エリア表示状態を設定する関数
-  localAreaVisibility: Record<AreaType, boolean>; // ローカルエリアの表示状態
+  >;
+  localAreaVisibility: Record<AreaType, boolean>;
   setLocalAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
-  >; // ローカルエリア表示状態を設定する関数
-  currentLocation: LatLngLiteral | null; // 現在の位置
+  >;
+  currentLocation: LatLngLiteral | null;
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 追加
-  search: (query: string) => void; // 検索関数
-  searchResults: Poi[]; // 検索結果
-  handleSearchResultClick: (poi: Poi) => void; // 検索結果クリックハンドラー
+  >;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
+  search: (query: string) => void;
+  searchResults: Poi[];
+  handleSearchResultClick: (poi: Poi) => void;
 }
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -34,41 +34,41 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   setLocalAreaVisibility,
   currentLocation,
   setCurrentLocation,
-  setShowWarning, // 追加
+  setShowWarning,
   search,
   searchResults,
   handleSearchResultClick,
 }) => {
-  const [isOpen, setIsOpen] = useState(false); // メニューの開閉状態を管理するステート
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false); // フィルターパネルの開閉状態を管理するステート
-  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false); // フィードバックフォームの開閉状態を管理するステート
-  const [isSearchBarVisible, setIsSearchBarVisible] = useState(false); // 検索バーの表示状態を管理するステート
-  const menuRef = useRef<HTMLDivElement>(null); // メニューの参照を保持するためのref
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen); // メニューの開閉状態を切り替える
+    setIsOpen(!isOpen);
   };
 
   const handleAreaClick = () => {
-    setIsFilterPanelOpen(!isFilterPanelOpen); // フィルターパネルの開閉状態を切り替える
-    setIsOpen(false); // メニューを閉じる
+    setIsFilterPanelOpen(!isFilterPanelOpen);
+    setIsOpen(false);
   };
 
   const handleFeedbackClick = () => {
-    setIsFeedbackFormOpen(!isFeedbackFormOpen); // フィードバックフォームの開閉状態を切り替える
-    setIsOpen(false); // メニューを閉じる
+    setIsFeedbackFormOpen(!isFeedbackFormOpen);
+    setIsOpen(false);
   };
 
   const handleCloseFilterPanel = () => {
-    setIsFilterPanelOpen(false); // フィルターパネルを閉じる
+    setIsFilterPanelOpen(false);
   };
 
   const handleCloseFeedbackForm = () => {
-    setIsFeedbackFormOpen(false); // フィードバックフォームを閉じる
+    setIsFeedbackFormOpen(false);
   };
 
   const toggleSearchBar = () => {
-    setIsSearchBarVisible(!isSearchBarVisible); // 検索バーの表示状態を切り替える
+    setIsSearchBarVisible(!isSearchBarVisible);
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -92,29 +92,26 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           onClick={toggleMenu}
           title="メニューを開閉"
         >
-          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
-          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
-          <span className="bar"></span> {/* ハンバーガーアイコンのバー */}
+          <span className="bar"></span>
+          <span className="bar"></span>
+          <span className="bar"></span>
         </button>
         <nav className={`menu ${isOpen ? 'open' : ''}`}>
           <ul>
             <li>
               <button onClick={handleAreaClick} title="表示するエリアを選択">
                 表示するエリアを選択
-              </button>{' '}
-              {/* エリア選択ボタン */}
+              </button>
             </li>
             <li>
               <button onClick={handleFeedbackClick} title="フィードバック">
                 フィードバック
-              </button>{' '}
-              {/* フィードバックボタン */}
+              </button>
             </li>
             <li>
               <button onClick={toggleSearchBar} title="検索">
                 検索
-              </button>{' '}
-              {/* 「検索」ボタンの追加 */}
+              </button>
             </li>
           </ul>
           {isSearchBarVisible && (
@@ -132,16 +129,16 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         className={`filter-panel-wrapper ${isFilterPanelOpen ? 'open' : ''}`}
       >
         <FilterPanel
-          pois={pois} // POIの配列を渡す
-          setSelectedPoi={setSelectedPoi} // POIを設定する関数を渡す
-          setAreaVisibility={setAreaVisibility} // エリア表示状態を設定する関数を渡す
-          isFilterPanelOpen={isFilterPanelOpen} // フィルターパネルの開閉状態を渡す
-          onCloseClick={handleCloseFilterPanel} // フィルターパネルを閉じる関数を渡す
-          localAreaVisibility={localAreaVisibility} // ローカルエリアの表示状態を渡す
-          setLocalAreaVisibility={setLocalAreaVisibility} // ローカルエリア表示状態を設定する関数を渡す
-          currentLocation={currentLocation} // 現在の位置を渡す
-          setCurrentLocation={setCurrentLocation} // 現在の位置を設定する関数を渡す
-          setShowWarning={setShowWarning} // 追加
+          pois={pois}
+          setSelectedPoi={setSelectedPoi}
+          setAreaVisibility={setAreaVisibility}
+          isFilterPanelOpen={isFilterPanelOpen}
+          onCloseClick={handleCloseFilterPanel}
+          localAreaVisibility={localAreaVisibility}
+          setLocalAreaVisibility={setLocalAreaVisibility}
+          currentLocation={currentLocation}
+          setCurrentLocation={setCurrentLocation}
+          setShowWarning={setShowWarning}
         />
       </div>
       {isFeedbackFormOpen && <FeedbackForm onClose={handleCloseFeedbackForm} />}
@@ -149,4 +146,4 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   );
 };
 
-export default HamburgerMenu; // デフォルトエクスポート
+export default HamburgerMenu;

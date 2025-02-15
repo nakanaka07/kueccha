@@ -20,9 +20,7 @@
   /* 最大幅を360pxに設定 */
   border-radius: 8px;
   /* 角を丸くする */
-  transition:
-    transform 0.3s ease-in-out,
-    opacity 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   /* トランジションを設定 */
   text-align: center;
   /* テキストを中央揃えに設定 */
@@ -30,8 +28,6 @@
   /* ボックスサイズをボーダーとパディングを含むように設定 */
   opacity: 1;
   /* 不透明度を設定 */
-  max-height: 103px;
-  /* 最大高さを設定 */
 }
 
 /* LocationWarningが非表示になるときのスタイル */
@@ -46,7 +42,7 @@
 .close-button {
   position: absolute;
   /* 絶対位置に設定 */
-  top: 35px;
+  top: 10px;
   /* 上から10pxの位置に設定 */
   right: 10px;
   /* 右から10pxの位置に設定 */
@@ -54,7 +50,7 @@
   /* 背景をなしに設定 */
   border: none;
   /* ボーダーをなしに設定 */
-  font-size: 30px;
+  font-size: 20px;
   /* フォントサイズを20pxに設定 */
   cursor: pointer;
   /* カーソルをポインターに設定 */
@@ -71,21 +67,4 @@
   padding-right: 30px;
   /* 右側に余白を追加してボタンと重ならないようにする */
 }
-
-/* レスポンシブデザイン */
-@media (max-width: 768px) {
-  .location-warning {
-    padding: 15px;
-    /* パディングを調整 */
-  }
-
-  .close-button {
-    font-size: 18px;
-    /* フォントサイズを18pxに設定 */
-  }
-
-  .message {
-    font-size: 12px;
-    /* フォントサイズを12pxに設定 */
-  }
-}
+  

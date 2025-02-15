@@ -98,7 +98,3 @@
 .filter-panel-wrapper.open ~ .hamburger-menu {
   display: none;
 }
-
-/* レスポンシブデザイン */
-@media (max-width: 768px) {
-}

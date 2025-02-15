@@ -6,6 +6,7 @@ import type { LoadingFallbackProps } from '../../utils/types'; // LoadingFallbac
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   isLoading,
   isLoaded,
+  message = ERROR_MESSAGES.LOADING.DATA, // デフォルトメッセージを設定
 }) => {
   const [isVisible, setIsVisible] = useState(isLoading); // ローディングフォールバックの表示状態を管理するステート
 
@@ -31,8 +32,7 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
       <div className="loading-content">
         <div className="loading-spinner" aria-hidden="true" />{' '}
         {/* ローディングスピナーを表示 */}
-        <p>{ERROR_MESSAGES.LOADING.DATA}</p>{' '}
-        {/* ローディングメッセージを表示 */}
+        <p>{message}</p> {/* ローディングメッセージを表示 */}
       </div>
     </div>
   );

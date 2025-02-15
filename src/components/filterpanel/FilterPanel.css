@@ -147,15 +147,12 @@
   transition: opacity 0.2s ease-in-out;
 }
 
-/* レスポンシブデザイン */
-@media (max-width: 768px) {
-  .filter-details .area-name {
-    max-width: 100px;
-    /* レスポンシブデザインでは最大幅を100pxに設定 */
-  }
-
-  .filterpanel-container {
-    max-width: 200px;
-    left: 42%;
-  }
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 5px;
+  border: 1px solid red;
+  border-radius: 3px;
+  background-color: rgba(255, 0, 0, 0.1);
 }

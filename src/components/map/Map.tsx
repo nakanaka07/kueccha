@@ -1,10 +1,10 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import React, { useEffect, useState, useCallback } from 'react';
 import { mapsConfig } from '../../utils/config';
-import { ERROR_MESSAGES } from '../../utils/constants';
+import { ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
+import recommendIcon from '../../utils/images/ano_icon_recommend.png';
 import currentLocationIcon from '../../utils/images/shi_icon04.png';
-import { INITIAL_VISIBILITY } from '../filterpanel/FilterPanel';
 import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
 import { Marker } from '../marker/Marker';
@@ -49,8 +49,7 @@ const Map: React.FC<MapComponentProps> = ({
     'roadmap',
   );
   const [isInitialRender, setIsInitialRender] = useState(true);
-  const [_localAreaVisibility, _setLocalAreaVisibility] =
-    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const mapOptions = {
     ...mapsConfig.options,
@@ -116,6 +115,13 @@ const Map: React.FC<MapComponentProps> = ({
       }
     }
   }, [currentLocation, setCurrentLocation, setAreaVisibility, setShowWarning]);
+
+  const toggleRecommendations = useCallback(() => {
+    setAreaVisibility((prev) => ({
+      ...prev,
+      RECOMMEND: !prev.RECOMMEND,
+    }));
+  }, [setAreaVisibility]);
 
   useEffect(() => {
     if (map) {
@@ -197,39 +203,17 @@ const Map: React.FC<MapComponentProps> = ({
               onClick={handleMarkerClick}
               map={map}
               isSelected={selectedMarkerId === poi.id}
-              zIndex={selectedMarkerId === poi.id ? 1000 : undefined} // 選択されたマーカーを最前面に表示
+              zIndex={selectedMarkerId === poi.id ? 1000 : undefined}
             />
           ))}
         {map && currentLocation && (
           <Marker
             key="current-location-marker"
-            poi={{
-              id: 'current-location',
-              name: '現在地',
-              location: currentLocation,
-              area: 'CURRENT_LOCATION',
-              category: '現在地',
-              genre: '', // 必要なプロパティを追加
-              monday: '', // 必要なプロパティを追加
-              tuesday: '', // 必要なプロパティを追加
-              wednesday: '', // 必要なプロパティを追加
-              thursday: '', // 必要なプロパティを追加
-              friday: '', // 必要なプロパティを追加
-              saturday: '', // 必要なプロパティを追加
-              sunday: '', // 必要なプロパティを追加
-              holiday: '', // 必要なプロパティを追加
-              holidayInfo: '', // 必要なプロパティを追加
-              information: '', // 必要なプロパティを追加
-              view: '', // 必要なプロパティを追加
-              phone: '', // 必要なプロパティを追加
-              address: '', // 必要なプロパティを追加
-              parking: '', // 必要なプロパティを追加
-              payment: '', // 必要なプロパティを追加
-            }}
+            poi={{ ...CURRENT_LOCATION_POI, location: currentLocation }}
             onClick={() => {}}
             map={map}
             isSelected={false}
-            zIndex={1000} // 現在地のマーカーを他のマーカーより前面に表示
+            zIndex={1000}
           />
         )}
         {selectedPoi && (
@@ -271,6 +255,23 @@ const Map: React.FC<MapComponentProps> = ({
         <img
           src={currentLocationIcon}
           alt="現在地を取得"
+          style={{ width: '50px', height: '50px' }}
+        />
+      </button>
+      <button
+        onClick={toggleRecommendations}
+        style={{
+          position: 'absolute',
+          top: '15px',
+          right: '170px',
+          background: 'none',
+          border: 'none',
+        }}
+        title="おすすめエリアの表示を切り替えます。"
+      >
+        <img
+          src={recommendIcon}
+          alt="おすすめエリアの表示を切り替え"
           style={{ width: '50px', height: '50px' }}
         />
       </button>

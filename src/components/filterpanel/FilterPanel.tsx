@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'; // Reactと必要なフックをインポート
+import React, { useEffect, useRef, useState } from 'react'; // Reactと必要なフックをインポート
 import './FilterPanel.css'; // スタイルシートをインポート
 import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
 import { AREAS } from '../../utils/constants'; // エリア定数をインポート
@@ -9,6 +9,7 @@ const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
     ...acc,
     [area]:
+      area !== 'RECOMMEND' &&
       area !== 'SNACK' &&
       area !== 'PUBLIC_TOILET' &&
       area !== 'PARKING' &&
@@ -53,6 +54,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setShowWarning,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を保持するためのref
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // ローカルエリアの表示状態を設定
   useEffect(() => {
@@ -93,6 +95,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             CURRENT_LOCATION: true,
           }));
           setShowWarning(true); // 現在地が取得されたときに警告メッセージを表示
+          setLocationError(null);
         },
         (error) => {
           console.error('Error getting current location:', error);
@@ -111,7 +114,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               errorMessage = '未知のエラーが発生しました';
               break;
           }
-          alert(`Error getting current location: ${errorMessage}`);
+          setLocationError(errorMessage);
         },
         {
           enableHighAccuracy: true,
@@ -126,6 +129,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         CURRENT_LOCATION: false,
       }));
       setShowWarning(false); // 現在地をオフにした際に警告メッセージを閉じる
+      setLocationError(null);
     }
   };
 
@@ -196,6 +200,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </div>
             </label>
           </div>
+          {locationError && (
+            <div className="error-message" role="alert">
+              {locationError}
+            </div>
+          )}
         </div>
       )}
     </div>

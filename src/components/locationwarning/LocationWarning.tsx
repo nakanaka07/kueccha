@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './LocationWarning.css'; // スタイルシートをインポート
+import './LocationWarning.css';
 
 interface LocationWarningProps {
   onClose: () => void;

@@ -14,10 +14,8 @@ const API_CONFIG = {
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
 } as const;
 
-// 指定したミリ秒だけ待機する関数
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// エラーハンドリング関数
 const handleError = (error: unknown, retryCount: number): FetchError => {
   console.error(error);
   if (retryCount < API_CONFIG.MAX_RETRIES) {
@@ -30,7 +28,6 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
   };
 };
 
-// フェッチ関数をリトライする関数
 const retryFetch = async (
   fetchFunction: () => Promise<unknown>,
   retryCount: number,
@@ -46,27 +43,19 @@ const retryFetch = async (
   }
 };
 
-// WKT形式の文字列をパースして座標を取得する関数
 const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   try {
     const match = wkt.match(/POINT\s*\(([0-9.]+)\s+([0-9.]+)\)/);
     if (match) {
-      const lng = Number(match[1]); // 経度
-      const lat = Number(match[2]); // 緯度
+      const lng = Number(match[1]);
+      const lat = Number(match[2]);
 
-      // 座標の妥当性チェック
       if (isNaN(lat) || isNaN(lng)) {
         console.warn('Invalid coordinate values:', { lat, lng });
         return null;
       }
 
-      // 佐渡島周辺の座標範囲チェック
-      if (
-        lat < 37.5 ||
-        lat > 38.5 || // 佐渡島の緯度範囲
-        lng < 138.0 ||
-        lng > 138.6 // 佐渡島の経度範囲
-      ) {
+      if (lat < 37.5 || lat > 38.5 || lng < 138.0 || lng > 138.6) {
         console.warn('Coordinates outside Sado Island area:', { lat, lng });
         return null;
       }
@@ -85,20 +74,18 @@ export function useSheetData() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
-  // CONFIGの検証
   const validateConfig = () => {
     if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
       throw new Error(ERROR_MESSAGES.CONFIG.MISSING);
     }
   };
 
-  // 指定されたエリアのデータを取得
   const fetchAreaData = useCallback(
     async (area: string, retryCount = 0): Promise<Poi[]> => {
       const areaName = AREAS[area as AreaType];
       const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
 
-      const fetchFunction = async () => {
+      const fetchFunction = async (): Promise<Poi[]> => {
         const response = await fetch(url);
         if (!response.ok) {
           if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
@@ -110,7 +97,7 @@ export function useSheetData() {
         const data = await response.json();
 
         return (data.values?.slice(1) || [])
-          .filter((row: string[]) => row[1] && row[33]) // WKTとAG列（名称）が存在するものをフィルタリング
+          .filter((row: string[]) => row[1] && row[33])
           .map((row: string[]): Poi | null => {
             const coordinates = parseWKT(row[1]);
             if (!coordinates) {
@@ -118,38 +105,37 @@ export function useSheetData() {
             }
 
             return {
-              id: row[1], // WKTをIDとして使用
-              name: String(row[32]), // 名称
+              id: row[1],
+              name: String(row[32]),
               area: area as AreaType,
               location: coordinates,
-              genre: row[33], // ジャンル
-              category: row[34], // カテゴリー
-              parking: row[35], // 駐車場情報
-              payment: row[36], // キャッシュレス
-              monday: row[37], // 月曜
-              tuesday: row[38], // 火曜
-              wednesday: row[39], // 水曜
-              thursday: row[40], // 木曜
-              friday: row[41], // 金曜
-              saturday: row[42], // 土曜
-              sunday: row[43], // 日曜
-              holiday: row[44], // 祝祭
-              holidayInfo: row[45], // 定休日について
-              information: row[46], // 関連情報
-              view: row[47], // Google マップで見る
-              phone: row[48], // 問い合わせ
-              address: row[49], // 所在地
+              genre: row[33],
+              category: row[34],
+              parking: row[35],
+              payment: row[36],
+              monday: row[37],
+              tuesday: row[38],
+              wednesday: row[39],
+              thursday: row[40],
+              friday: row[41],
+              saturday: row[42],
+              sunday: row[43],
+              holiday: row[44],
+              holidayInfo: row[45],
+              information: row[46],
+              view: row[47],
+              phone: row[48],
+              address: row[49],
             };
           })
           .filter((poi: Poi | null): poi is Poi => poi !== null);
       };
 
-      return retryFetch(fetchFunction, retryCount);
+      return retryFetch(fetchFunction, retryCount) as Promise<Poi[]>;
     },
     [],
   );
 
-  // 全エリアのデータを取得
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
@@ -166,13 +152,11 @@ export function useSheetData() {
       );
       const recommendPois = await fetchAreaData('RECOMMEND');
 
-      // POIデータをマージして一意のIDを持つマップを作成
       const poisMap = new Map(
         normalPoisArrays.flat().map((poi) => [poi.id, poi]),
       );
       recommendPois.forEach((poi) => poisMap.set(poi.id, poi));
 
-      // マップから配列に変換して状態を更新
       setPois(Array.from(poisMap.values()));
       setIsFetched(true);
     } catch (err) {
@@ -183,14 +167,12 @@ export function useSheetData() {
     }
   }, [isLoading, isFetched, fetchAreaData]);
 
-  // コンポーネントのマウント時にデータを取得
   useEffect(() => {
     if (!isFetched) {
       fetchData();
     }
   }, [fetchData, isFetched]);
 
-  // データの再取得
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);

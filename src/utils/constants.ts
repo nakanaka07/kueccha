@@ -58,3 +58,28 @@ export const ERROR_MESSAGES = {
     DATA: '読み込み中...', // データ読み込み中メッセージ
   },
 } as const;
+
+import type { Poi } from './types';
+
+export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
+  id: 'current-location',
+  name: '現在地',
+  area: 'CURRENT_LOCATION',
+  category: '',
+  genre: '',
+  monday: '',
+  tuesday: '',
+  wednesday: '',
+  thursday: '',
+  friday: '',
+  saturday: '',
+  sunday: '',
+  holiday: '',
+  holidayInfo: '',
+  information: '',
+  view: '',
+  phone: '',
+  address: '',
+  parking: '',
+  payment: '',
+};
