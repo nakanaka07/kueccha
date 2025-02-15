@@ -1,11 +1,11 @@
 module.exports = {
-  singleQuote: true, // シングルクオートを使用
+  arrowParens: 'always', // 常に括弧を使用
+  bracketSpacing: true, // オブジェクトリテラルの括弧内にスペースを入れる
+  endOfLine: 'lf', // 改行コードをLFに統一
+  printWidth: 80, // 1行の最大文字数
   semi: true, // ステートメントの末尾にセミコロンを追加
-  trailingComma: 'all', // 可能な限り末尾のカンマを追加
-  printWidth: 80, // 1行の最大長を80文字に設定（可読性を向上）
-  tabWidth: 2, // タブ幅を2スペースに設定
-  useTabs: false, // スペースを使用してインデント
-  bracketSpacing: true, // オブジェクトリテラルの中括弧内にスペースを追加
-  arrowParens: 'always', // アロー関数の引数に常に括弧を追加
-  endOfLine: 'lf', // 改行コードをLFに統一（クロスプラットフォームの互換性を確保）
+  singleQuote: true, // シングルクォートを使用
+  tabWidth: 2, // インデントのスペース数
+  trailingComma: 'all', // 末尾のカンマを常に追加
+  useTabs: false, // スペースでインデント
 };

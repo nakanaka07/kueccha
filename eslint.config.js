@@ -6,78 +6,78 @@ import reactPlugin from 'eslint-plugin-react';
 
 export default [
   {
-    ignores: ['dist/**/*'], // distフォルダ内のファイルを無視
+    ignores: ['dist/**/*'],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'], // 対象ファイルのパターン
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     languageOptions: {
-      parser: tsParser, // TypeScriptパーサーを使用
+      parser: tsParser,
       parserOptions: {
-        ecmaVersion: 'latest', // 最新のECMAScriptバージョンを使用
-        sourceType: 'module', // モジュールとして解析
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         ecmaFeatures: {
-          jsx: true, // JSXをサポート
+          jsx: true,
         },
-        project: './tsconfig.json', // TypeScriptのプロジェクト設定ファイル
+        project: './tsconfig.json',
       },
     },
     plugins: {
-      '@typescript-eslint': tsPlugin, // TypeScript用のESLintプラグイン
-      prettier: prettierPlugin, // Prettierプラグイン
-      react: reactPlugin, // React用のESLintプラグイン
-      import: importPlugin, // インポート順序を管理するプラグイン
+      '@typescript-eslint': tsPlugin,
+      prettier: prettierPlugin,
+      react: reactPlugin,
+      import: importPlugin,
     },
     settings: {
       react: {
-        version: 'detect', // インストールされているReactのバージョンを自動検出
+        version: 'detect',
       },
       'import/resolver': {
         typescript: {
-          alwaysTryTypes: true, // 型定義ファイルも解決対象に含める
-          project: './tsconfig.json', // TypeScriptのプロジェクト設定ファイル
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
         },
       },
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules, // TypeScript用の推奨ルール
-      ...reactPlugin.configs.recommended.rules, // React用の推奨ルール
-      'prettier/prettier': 'error', // Prettierのフォーマットに従わない場合はエラー
+      ...tsPlugin.configs.recommended.rules,
+      ...reactPlugin.configs.recommended.rules,
+      'prettier/prettier': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          argsIgnorePattern: '^_', // 使用されていない変数のうち、名前がアンダースコアで始まるものは無視
-          varsIgnorePattern: '^_', // 使用されていない変数のうち、名前がアンダースコアで始まるものは無視
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
         },
       ],
       'import/order': [
         'error',
         {
           groups: [
-            'builtin', // 組み込みモジュール
-            'external', // 外部モジュール
-            'internal', // 内部モジュール
-            ['parent', 'sibling'], // 親・兄弟モジュール
-            'index', // インデックスモジュール
-            'object', // オブジェクトモジュール
-            'type', // 型定義モジュール
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling'],
+            'index',
+            'object',
+            'type',
           ],
           pathGroups: [
             {
-              pattern: '*.css', // CSSファイルのパターン
-              group: 'index', // インデックスグループに含める
-              position: 'after', // インデックスグループの後に配置
+              pattern: '*.css',
+              group: 'index',
+              position: 'after',
             },
           ],
-          pathGroupsExcludedImportTypes: ['css'], // CSSファイルのインポートを除外
-          'newlines-between': 'never', // インポートグループ間に空行を入れる
+          pathGroupsExcludedImportTypes: ['css'],
+          'newlines-between': 'never',
           alphabetize: {
-            order: 'asc', // アルファベット順にソート
-            caseInsensitive: true, // 大文字小文字を区別しない
+            order: 'asc',
+            caseInsensitive: true,
           },
-          warnOnUnassignedImports: true, // 未割り当てのインポートに警告を表示
+          warnOnUnassignedImports: true,
         },
       ],
-      'import/newline-after-import': 'error', // インポート文の後に空行を入れる
+      'import/newline-after-import': 'error',
     },
   },
 ];

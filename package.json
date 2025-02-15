@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Solution for the sadodekueccha challenge using React, Google Maps, and TypeScript.",
+  "description": "A solution for the Sadodekueccha challenge using React, Google Maps, and TypeScript.",
   "keywords": [
     "react",
     "google maps",
@@ -38,6 +38,7 @@
     "@react-google-maps/infobox": "^2.20.0",
     "@react-google-maps/marker-clusterer": "^2.20.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "lru-cache": "^11.0.2",

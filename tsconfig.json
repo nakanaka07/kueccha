@@ -1,29 +1,35 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ESNext", // 出力するJavaScriptのバージョンを指定
-    "module": "ESNext", // 使用するモジュールシステムを指定
-    "moduleResolution": "node", // モジュール解決の方法を指定
-    "lib": ["DOM", "DOM.Iterable", "ES2022"], // 使用するライブラリを指定
-    "esModuleInterop": true, // ESモジュールの互換性を有効にする
-    "allowSyntheticDefaultImports": true, // 合成デフォルトインポートを許可
-    "strict": true, // 厳格モードを有効にする
-    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を強制
-    "resolveJsonModule": true, // JSONモジュールの解決を有効にする
-    "isolatedModules": true, // 各ファイルを独立したモジュールとして扱う
-    "jsx": "react", // JSXの変換方法を指定
-    "incremental": true, // 増分コンパイルを有効にする
-    "outDir": "./dist", // 出力ディレクトリを指定
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "incremental": true,
+    "outDir": "./dist",
     "paths": {
-      "@/*": ["./src/*"] // エイリアスを設定
+      "@/*": ["./src/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./types"], // 型定義ファイルのルートを指定
-    "skipLibCheck": true // ライブラリチェックをスキップ
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js"], // eslint.config.js を追加
-  "exclude": ["dist"],
+  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js"],
+  "exclude": ["dist", "node_modules"],
   "ts-node": {
-    "transpileOnly": true, // トランスパイルのみを行う
-    "esm": true // ESモジュールを有効にする
+    "transpileOnly": true,
+    "esm": true
   }
 }

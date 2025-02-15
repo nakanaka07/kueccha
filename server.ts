@@ -1,20 +1,20 @@
-import path from 'path';
-import { dirname } from 'path';
+import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// セキュリティヘッダーの設定
 app.use(helmet());
 
-// CORS設定
 app.use(
   cors({
     origin: '*',
@@ -22,7 +22,6 @@ app.use(
   }),
 );
 
-// 静的ファイルの提供
 app.use(
   express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, filePath) => {
@@ -39,24 +38,20 @@ app.use(
   }),
 );
 
-// 不要なヘッダーの削除
 app.use((req, res, next) => {
-  res.removeHeader('X-Powered-By'); // Expressのデフォルトヘッダーを削除
+  res.removeHeader('X-Powered-By');
   next();
 });
 
-// ルートエンドポイント
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// エラーハンドリングミドルウェア
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
-// サーバーの起動
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
