@@ -81,3 +81,8 @@ export const formatInformation = (
     return null;
   }
 };
+
+export const isValidPhoneNumber = (phone: string) => {
+  const phoneRegex = /^[0-9-+() ]+$/;
+  return phoneRegex.test(phone);
+};

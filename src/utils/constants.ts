@@ -1,4 +1,13 @@
-import type { Poi } from './types';
+import publicToiletIcon from './images/ano_icon01.png';
+import recommendIcon from './images/ano_icon_recommend.png';
+import ryotsuAikawaIcon from './images/icon_map01.png';
+import kanaiSawadaNiiboHatanoManoIcon from './images/icon_map02.png';
+import akadomariHamochiOgiIcon from './images/icon_map03.png';
+import defaultIcon from './images/row2.png';
+import parkingIcon from './images/shi_icon01.png';
+import snackIcon from './images/shi_icon02.png';
+import currentLocationIcon from './images/shi_icon04.png';
+import type { AreaType, Poi, MenuItem } from './types';
 
 export const AREAS = {
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
@@ -55,27 +64,67 @@ export const ERROR_MESSAGES = {
     CONTAINER_NOT_FOUND: 'コンテナ要素が見つかりません',
     UNKNOWN: '予期せぬエラーが発生しました',
   },
+  FORM: {
+    EMPTY_MESSAGE: 'メッセージを入力してください。',
+    INVALID_EMAIL: '有効なメールアドレスを入力してください。',
+    SUBMISSION_FAILED: '送信に失敗しました。もう一度お試しください。',
+  },
 } as const;
 
 export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
   id: 'current-location',
   name: '現在地',
   area: 'CURRENT_LOCATION',
-  category: '',
-  genre: '',
-  monday: '',
-  tuesday: '',
-  wednesday: '',
-  thursday: '',
-  friday: '',
-  saturday: '',
-  sunday: '',
-  holiday: '',
-  holidayInfo: '',
-  information: '',
-  view: '',
-  phone: '',
-  address: '',
-  parking: '',
-  payment: '',
+  category: '現在地',
+  genre: '現在地',
+};
+
+export const MARKER_ICONS: Record<string, string> = {
+  RYOTSU_AIKAWA: ryotsuAikawaIcon,
+  KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
+  AKADOMARI_HAMOCHI_OGI: akadomariHamochiOgiIcon,
+  RECOMMEND: recommendIcon,
+  SNACK: snackIcon,
+  PUBLIC_TOILET: publicToiletIcon,
+  PARKING: parkingIcon,
+  CURRENT_LOCATION: currentLocationIcon,
+  DEFAULT: defaultIcon,
+};
+
+export const MENU_ITEMS: MenuItem[] = [
+  {
+    label: '表示するエリアを選択',
+    title: '表示するエリアを選択',
+    action: 'handleAreaClick',
+  },
+  {
+    label: 'フィードバック',
+    title: 'フィードバック',
+    action: 'handleFeedbackClick',
+  },
+  {
+    label: '検索',
+    title: '検索',
+    action: 'toggleSearchBar',
+  },
+];
+
+export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
+  AREAS,
+).reduce(
+  (acc, area) => ({
+    ...acc,
+    [area]:
+      area !== 'RECOMMEND' &&
+      area !== 'SNACK' &&
+      area !== 'PUBLIC_TOILET' &&
+      area !== 'PARKING' &&
+      area !== 'CURRENT_LOCATION',
+  }),
+  {} as Record<AreaType, boolean>,
+);
+
+export const markerConfig = {
+  colors: MARKER_COLORS,
+  icons: MARKER_ICONS,
 };

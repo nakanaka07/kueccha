@@ -1,17 +1,8 @@
 import emailjs from '@emailjs/browser';
 import React, { useState } from 'react';
 import './FeedbackForm.css';
-
-interface FeedbackFormProps {
-  onClose: () => void;
-}
-
-interface TemplateParams {
-  [key: string]: unknown;
-  name: string;
-  email: string;
-  message: string;
-}
+import { ERROR_MESSAGES } from '../../utils/constants';
+import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
 
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const [name, setName] = useState('');
@@ -23,12 +14,12 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
   const validateForm = () => {
     if (!message.trim()) {
-      setError('メッセージを入力してください。');
+      setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
       return false;
     }
 
     if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setError('有効なメールアドレスを入力してください。');
+      setError(ERROR_MESSAGES.FORM.INVALID_EMAIL);
       return false;
     }
 
@@ -60,7 +51,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setIsSubmitted(true);
       setError('');
     } catch (err) {
-      setError('送信に失敗しました。もう一度お試しください。');
+      setError(ERROR_MESSAGES.FORM.SUBMISSION_FAILED);
       console.error('Feedback submission error:', err);
     } finally {
       setIsLoading(false);

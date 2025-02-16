@@ -1,30 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import './HamburgerMenu.css';
+import { MENU_ITEMS } from '../../utils/constants';
 import FeedbackForm from '../feedback/FeedbackForm';
 import FilterPanel from '../filterpanel/FilterPanel';
 import SearchBar from '../searchbar/SearchBar';
 import SearchResults from '../searchresults/SearchResults.module';
-import type { Poi, AreaType, LatLngLiteral } from '../../utils/types';
-
-interface HamburgerMenuProps {
-  pois: Poi[];
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
-  setAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >;
-  localAreaVisibility: Record<AreaType, boolean>;
-  setLocalAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >;
-  currentLocation: LatLngLiteral | null;
-  setCurrentLocation: React.Dispatch<
-    React.SetStateAction<LatLngLiteral | null>
-  >;
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
-  search: (query: string) => void;
-  searchResults: Poi[];
-  handleSearchResultClick: (poi: Poi) => void;
-}
+import type { HamburgerMenuProps } from '../../utils/types';
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   pois,
@@ -49,40 +36,50 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const handleAreaClick = () => {
-    setIsFilterPanelOpen(!isFilterPanelOpen);
-    setIsOpen(false);
-  };
-
-  const handleFeedbackClick = () => {
-    setIsFeedbackFormOpen(!isFeedbackFormOpen);
-    setIsOpen(false);
-  };
-
-  const handleCloseFilterPanel = () => {
+  const handleCloseFilterPanel = useCallback(() => {
     setIsFilterPanelOpen(false);
-  };
+  }, []);
 
-  const handleCloseFeedbackForm = () => {
+  const handleCloseFeedbackForm = useCallback(() => {
     setIsFeedbackFormOpen(false);
+  }, []);
+
+  const menuActions = {
+    handleAreaClick: () => {
+      setIsFilterPanelOpen(true);
+      setIsOpen(false);
+    },
+    handleFeedbackClick: () => {
+      setIsFeedbackFormOpen(true);
+      setIsOpen(false);
+    },
+    toggleSearchBar: () => {
+      setIsSearchBarVisible(!isSearchBarVisible);
+      setIsOpen(false);
+    },
   };
 
-  const toggleSearchBar = () => {
-    setIsSearchBarVisible(!isSearchBarVisible);
-  };
-
-  const handleClickOutside = (event: MouseEvent) => {
+  const handleClickOutside = useCallback((event: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
       setIsOpen(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
+
+  const items = useMemo(
+    () =>
+      MENU_ITEMS.map((item) => ({
+        ...item,
+        onClick: menuActions[item.action as keyof typeof menuActions],
+      })),
+    [menuActions], // menuActions を依存配列に追加
+  );
 
   return (
     <div ref={menuRef}>
@@ -91,28 +88,27 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           className="hamburger-icon"
           onClick={toggleMenu}
           title="メニューを開閉"
+          aria-expanded={isOpen}
+          aria-controls="menu-content"
         >
           <span className="bar"></span>
           <span className="bar"></span>
           <span className="bar"></span>
+          <span className="sr-only">メニュー</span>
         </button>
-        <nav className={`menu ${isOpen ? 'open' : ''}`}>
+        <nav
+          className={`menu ${isOpen ? 'open' : ''}`}
+          id="menu-content"
+          aria-hidden={!isOpen}
+        >
           <ul>
-            <li>
-              <button onClick={handleAreaClick} title="表示するエリアを選択">
-                表示するエリアを選択
-              </button>
-            </li>
-            <li>
-              <button onClick={handleFeedbackClick} title="フィードバック">
-                フィードバック
-              </button>
-            </li>
-            <li>
-              <button onClick={toggleSearchBar} title="検索">
-                検索
-              </button>
-            </li>
+            {items.map((item, index) => (
+              <li key={index}>
+                <button onClick={item.onClick} title={item.title}>
+                  {item.label}
+                </button>
+              </li>
+            ))}
           </ul>
           {isSearchBarVisible && (
             <>

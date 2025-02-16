@@ -1,4 +1,5 @@
 import { LoadScriptProps } from '@react-google-maps/api';
+import { ErrorInfo } from 'react';
 import { AREAS, BUSINESS_HOURS } from './constants';
 
 export type AreaType = keyof typeof AREAS;
@@ -21,15 +22,23 @@ export interface Config {
   };
 }
 
-export interface ErrorBoundaryProps extends BaseProps {
+export interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
 
+export interface State {
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
+}
+
 export interface FilterPanelProps extends BaseProps {
   pois: Poi[];
-  setSelectedPoi: (poi: Poi | null) => void;
-  setAreaVisibility: (visibility: Record<AreaType, boolean>) => void;
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  setAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
   isFilterPanelOpen: boolean;
   onCloseClick: () => void;
   localAreaVisibility: Record<AreaType, boolean>;
@@ -40,6 +49,7 @@ export interface FilterPanelProps extends BaseProps {
   setCurrentLocation: React.Dispatch<
     React.SetStateAction<LatLngLiteral | null>
   >;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface InfoWindowProps extends BaseProps {
@@ -47,10 +57,10 @@ export interface InfoWindowProps extends BaseProps {
   onCloseClick: () => void;
 }
 
-export type LatLngLiteral = {
+export interface LatLngLiteral {
   lat: number;
   lng: number;
-};
+}
 
 export type Location = LatLngLiteral;
 
@@ -99,7 +109,7 @@ export interface MarkerProps extends BaseProps {
 export interface Poi {
   id: string;
   name: string;
-  location: Location;
+  location: LatLngLiteral;
   area: AreaType;
   category: string;
   genre: string;
@@ -118,4 +128,73 @@ export interface Poi {
   address?: string;
   parking?: string;
   payment?: string;
+  [key: string]: string | LatLngLiteral | AreaType | undefined;
+}
+
+export interface SearchBarProps {
+  onSearch: (query: string) => void;
+  pois: Poi[];
+}
+
+export interface MapComponentProps extends MapProps {
+  selectedPoi: Poi | null;
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  areaVisibility: Record<AreaType, boolean>;
+  onLoad: () => void;
+  setAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
+  currentLocation: LatLngLiteral | null;
+  setCurrentLocation: React.Dispatch<
+    React.SetStateAction<LatLngLiteral | null>
+  >;
+  showWarning: boolean;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export interface LocationWarningProps {
+  onClose: () => void;
+}
+
+export interface HamburgerMenuProps {
+  pois: Poi[];
+  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
+  setAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
+  localAreaVisibility: Record<AreaType, boolean>;
+  setLocalAreaVisibility: React.Dispatch<
+    React.SetStateAction<Record<AreaType, boolean>>
+  >;
+  currentLocation: LatLngLiteral | null;
+  setCurrentLocation: React.Dispatch<
+    React.SetStateAction<LatLngLiteral | null>
+  >;
+  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
+  search: (query: string) => void;
+  searchResults: Poi[];
+  handleSearchResultClick: (poi: Poi) => void;
+}
+
+export type MenuActionType = {
+  handleAreaClick: () => void;
+  handleFeedbackClick: () => void;
+  toggleSearchBar: () => void;
+};
+
+export interface MenuItem {
+  label: string;
+  title: string;
+  action: keyof MenuActionType;
+}
+
+export interface FeedbackFormProps {
+  onClose: () => void;
+}
+
+export interface TemplateParams {
+  [key: string]: unknown;
+  name: string;
+  email: string;
+  message: string;
 }

@@ -9,23 +9,7 @@ import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
 import { Marker } from '../marker/Marker';
 import SearchResults from '../searchresults/SearchResults.module';
-import type { MapProps, Poi, AreaType, LatLngLiteral } from '../../utils/types';
-
-interface MapComponentProps extends MapProps {
-  selectedPoi: Poi | null;
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
-  areaVisibility: Record<AreaType, boolean>;
-  onLoad: () => void;
-  setAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >;
-  currentLocation: LatLngLiteral | null;
-  setCurrentLocation: React.Dispatch<
-    React.SetStateAction<LatLngLiteral | null>
-  >;
-  showWarning: boolean;
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import type { MapComponentProps, Poi } from '../../utils/types';
 
 const Map: React.FC<MapComponentProps> = ({
   pois,

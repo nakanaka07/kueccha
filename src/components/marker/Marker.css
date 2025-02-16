@@ -1,8 +1,8 @@
-.blinking {
-  animation: blinkingAnimation 1s infinite;
+.marker-blinking {
+  animation: marker-blinking-animation 1s infinite;
 }
 
-@keyframes blinkingAnimation {
+@keyframes marker-blinking-animation {
   0% {
     opacity: 1;
   }
@@ -14,13 +14,13 @@
   }
 }
 
-.selected-marker {
+.marker-selected {
   border: 3px solid red;
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 }
 
-.recommendation-marker {
+.marker-recommendation {
   position: absolute;
   z-index: 100000;
   width: 50px;
@@ -29,5 +29,5 @@
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
   cursor: pointer;
-  animation: pulse 1s infinite;
+  animation: marker-pulse 1s infinite;
 }

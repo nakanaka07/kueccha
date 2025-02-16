@@ -1,46 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'; // Reactと必要なフックをインポート
-import './FilterPanel.css'; // スタイルシートをインポート
-import { markerConfig } from '../../utils/config'; // マーカー設定をインポート
-import { AREAS } from '../../utils/constants'; // エリア定数をインポート
-import type { AreaType, LatLngLiteral, Poi } from '../../utils/types'; // 型定義をインポート
+import React, { useEffect, useRef, useState } from 'react';
+import './FilterPanel.css';
+import { markerConfig, AREAS } from '../../utils/constants';
+import type { AreaType, FilterPanelProps } from '../../utils/types';
 
-// 初期表示設定を定義
-const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
-  (acc, area) => ({
-    ...acc,
-    [area]:
-      area !== 'RECOMMEND' &&
-      area !== 'SNACK' &&
-      area !== 'PUBLIC_TOILET' &&
-      area !== 'PARKING' &&
-      area !== 'CURRENT_LOCATION',
-  }),
-  {} as Record<AreaType, boolean>,
-);
-
-export { INITIAL_VISIBILITY };
-
-// FilterPanelコンポーネントのプロパティの型定義
-interface FilterPanelProps {
-  pois: Poi[];
-  setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
-  setAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >;
-  isFilterPanelOpen: boolean;
-  onCloseClick: () => void;
-  localAreaVisibility: Record<AreaType, boolean>;
-  setLocalAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >;
-  currentLocation: LatLngLiteral | null;
-  setCurrentLocation: React.Dispatch<
-    React.SetStateAction<LatLngLiteral | null>
-  >;
-  setShowWarning: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-// FilterPanelコンポーネントの定義
 const FilterPanel: React.FC<FilterPanelProps> = ({
   pois,
   setSelectedPoi: _setSelectedPoi,
@@ -53,15 +15,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setCurrentLocation,
   setShowWarning,
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null); // フィルターパネルの参照を保持するためのref
+  const panelRef = useRef<HTMLDivElement>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  // ローカルエリアの表示状態を設定
   useEffect(() => {
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
 
-  // 各エリアのPOI数をカウント
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
       ...acc,
@@ -70,7 +30,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     {} as Record<AreaType, number>,
   );
 
-  // エリア情報をマッピング
   const areas = Object.entries(AREAS)
     .filter(([area]) => area !== 'CURRENT_LOCATION')
     .map(([area, name]) => ({
@@ -81,7 +40,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       color: markerConfig.colors[area as AreaType],
     }));
 
-  // 現在地の表示状態を更新
   const handleCurrentLocationChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -94,7 +52,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             ...prev,
             CURRENT_LOCATION: true,
           }));
-          setShowWarning(true); // 現在地が取得されたときに警告メッセージを表示
+          setShowWarning(true);
           setLocationError(null);
         },
         (error) => {
@@ -118,7 +76,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, // タイムアウトを10秒に設定
+          timeout: 10000,
           maximumAge: 0,
         },
       );
@@ -128,7 +86,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         ...prev,
         CURRENT_LOCATION: false,
       }));
-      setShowWarning(false); // 現在地をオフにした際に警告メッセージを閉じる
+      setShowWarning(false);
       setLocationError(null);
     }
   };

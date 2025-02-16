@@ -23,6 +23,18 @@
   transition: all 0.3s;
 }
 
+.hamburger-icon[aria-expanded="true"] .bar:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-icon[aria-expanded="true"] .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-icon[aria-expanded="true"] .bar:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
 .menu {
   display: none;
   position: absolute;
@@ -94,7 +106,18 @@
   display: block;
 }
 
-/* フィルターパネルが開いたときにハンバーガーメニューを非表示にする */
 .filter-panel-wrapper.open ~ .hamburger-menu {
   display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

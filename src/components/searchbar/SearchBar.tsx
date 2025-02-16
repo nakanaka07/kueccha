@@ -1,15 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './SearchBar.css';
-import { Poi } from '../../utils/types'; // Poi型をインポート
-
-interface SearchBarProps {
-  onSearch: (query: string) => void;
-  pois: Poi[]; // POIの配列を受け取る
-}
+import { Poi, SearchBarProps } from '../../utils/types';
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Poi[]>([]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setQuery(e.target.value);
+    },
+    [],
+  );
+
+  const handleSearch = useCallback(() => {
+    onSearch(query);
+  }, [onSearch, query]);
+
+  const handleClear = useCallback(() => {
+    setQuery('');
+    setSuggestions([]);
+    onSearch('clear');
+  }, [onSearch]);
+
+  const handleShowAll = useCallback(() => {
+    setQuery('');
+    setSuggestions([]);
+    onSearch('all');
+  }, [onSearch]);
+
+  const handleSuggestionClick = useCallback(
+    (suggestion: Poi) => {
+      setQuery(suggestion.name);
+      setSuggestions([]);
+      onSearch(suggestion.name);
+    },
+    [onSearch],
+  );
 
   useEffect(() => {
     if (query) {
@@ -21,32 +48,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
       setSuggestions([]);
     }
   }, [query, pois]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
-  const handleSearch = () => {
-    onSearch(query);
-  };
-
-  const handleClear = () => {
-    setQuery('');
-    setSuggestions([]);
-    onSearch('clear'); // 'clear' という特別なクエリを渡す
-  };
-
-  const handleShowAll = () => {
-    setQuery('');
-    setSuggestions([]);
-    onSearch('all'); // 'all' という特別なクエリを渡して全てのPOIを表示
-  };
-
-  const handleSuggestionClick = (suggestion: Poi) => {
-    setQuery(suggestion.name);
-    setSuggestions([]);
-    onSearch(suggestion.name);
-  };
 
   return (
     <div className="search-bar">

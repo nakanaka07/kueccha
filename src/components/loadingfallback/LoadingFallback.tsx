@@ -1,44 +1,43 @@
-import React, { useEffect, useState } from 'react'; // Reactと必要なフックをインポート
-import './LoadingFallback.css'; // スタイルシートをインポート
-import { ERROR_MESSAGES } from '../../utils/constants'; // エラーメッセージ定数をインポート
-import type { LoadingFallbackProps } from '../../utils/types'; // LoadingFallbackProps型をインポート
+import React, { useEffect, useState } from 'react';
+import './LoadingFallback.css';
+import { ERROR_MESSAGES } from '../../utils/constants';
+import type { LoadingFallbackProps } from '../../utils/types';
 
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   isLoading,
   isLoaded,
-  message = ERROR_MESSAGES.LOADING.DATA, // デフォルトメッセージを設定
+  message = ERROR_MESSAGES.LOADING.DATA,
 }) => {
-  const [isVisible, setIsVisible] = useState(isLoading); // ローディングフォールバックの表示状態を管理するステート
+  const [isVisible, setIsVisible] = useState(isLoading);
 
   useEffect(() => {
     if (isLoaded) {
       const timer = setTimeout(() => {
-        setIsVisible(false); // ロード完了後2秒後に非表示に設定
+        setIsVisible(false);
       }, 2000);
-      return () => clearTimeout(timer); // クリーンアップ関数でタイマーをクリア
+      return () => clearTimeout(timer);
     } else {
-      setIsVisible(isLoading); // ロード中の場合は表示状態を更新
+      setIsVisible(isLoading);
     }
-  }, [isLoaded, isLoading]); // isLoadedとisLoadingが変更されたときに実行
+  }, [isLoaded, isLoading]);
 
-  if (!isVisible) return null; // 非表示の場合はnullを返す
+  if (!isVisible) return null;
 
   return (
     <div
-      className={`loading-fallback ${isLoaded ? 'hidden' : ''}`} // ロード完了後にhiddenクラスを追加
+      className={`loading-fallback ${isLoaded ? 'hidden' : ''}`}
       role="status"
       aria-live="polite"
     >
       <div className="loading-content">
-        <div className="loading-spinner" aria-hidden="true" />{' '}
-        {/* ローディングスピナーを表示 */}
-        <p>{message}</p> {/* ローディングメッセージを表示 */}
+        <div className="loading-spinner" aria-hidden="true" />
+        <p>{message}</p>
       </div>
     </div>
   );
 };
 
-LoadingFallback.displayName = 'LoadingFallback'; // コンポーネントの表示名を設定
+LoadingFallback.displayName = 'LoadingFallback';
 
-export { LoadingFallback }; // LoadingFallbackコンポーネントをエクスポート
-export default LoadingFallback; // デフォルトエクスポート
+export { LoadingFallback };
+export default LoadingFallback;

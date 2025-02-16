@@ -1,13 +1,7 @@
 import React, { Component, ErrorInfo } from 'react';
 import './ErrorBoundary.css';
 import { ERROR_MESSAGES } from '../../utils/constants';
-import type { ErrorBoundaryProps } from '../../utils/types';
-
-interface State {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
-}
+import type { ErrorBoundaryProps, State } from '../../utils/types';
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   state: State = {
@@ -20,6 +14,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
+
+    console.error('Error logged:', error, errorInfo);
   }
 
   private handleReset = () => {

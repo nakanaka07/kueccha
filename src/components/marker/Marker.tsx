@@ -1,27 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './Marker.css';
-import publicToiletIcon from '../../utils/images/ano_icon01.png';
-import recommendIcon from '../../utils/images/ano_icon_recommend.png';
-import ryotsuAikawaIcon from '../../utils/images/icon_map01.png';
-import kanaiSawadaNiiboHatanoManoIcon from '../../utils/images/icon_map02.png';
-import akadomariHamochiOgiIcon from '../../utils/images/icon_map03.png';
-import defaultIcon from '../../utils/images/row2.png';
-import parkingIcon from '../../utils/images/shi_icon01.png';
-import snackIcon from '../../utils/images/shi_icon02.png';
-import currentLocationIcon from '../../utils/images/shi_icon04.png';
-import type { MarkerProps } from '../../utils/types';
-
-const markerIcons: Record<string, string> = {
-  RYOTSU_AIKAWA: ryotsuAikawaIcon,
-  KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
-  AKADOMARI_HAMOCHI_OGI: akadomariHamochiOgiIcon,
-  RECOMMEND: recommendIcon,
-  SNACK: snackIcon,
-  PUBLIC_TOILET: publicToiletIcon,
-  PARKING: parkingIcon,
-  CURRENT_LOCATION: currentLocationIcon,
-  DEFAULT: defaultIcon,
-};
+import { MARKER_ICONS } from '../../utils/constants';
+import { MarkerProps } from '../../utils/types';
 
 const Marker = React.memo(
   ({
@@ -38,7 +18,7 @@ const Marker = React.memo(
     useEffect(() => {
       if (!map || !window.google?.maps) return;
 
-      const iconUrl = markerIcons[poi.area] || markerIcons.DEFAULT;
+      const iconUrl = MARKER_ICONS[poi.area] || MARKER_ICONS.DEFAULT;
 
       const iconElement = document.createElement('div');
       iconElement.style.backgroundImage = `url(${iconUrl})`;
@@ -58,10 +38,10 @@ const Marker = React.memo(
       markerRef.current = marker;
 
       if (poi.area === 'RECOMMEND') {
-        iconElement.classList.add('recommendation-marker');
-        iconElement.classList.add('blinking');
+        iconElement.classList.add('marker-recommendation');
+        iconElement.classList.add('marker-blinking');
       } else if (poi.area === 'CURRENT_LOCATION') {
-        iconElement.classList.add('blinking');
+        iconElement.classList.add('marker-blinking');
       }
 
       return () => {
@@ -78,9 +58,9 @@ const Marker = React.memo(
         markerRef.current.content instanceof HTMLElement
       ) {
         if (isSelected) {
-          markerRef.current.content.classList.add('selected-marker');
+          markerRef.current.content.classList.add('marker-selected');
         } else {
-          markerRef.current.content.classList.remove('selected-marker');
+          markerRef.current.content.classList.remove('marker-selected');
         }
       }
     }, [isSelected]);

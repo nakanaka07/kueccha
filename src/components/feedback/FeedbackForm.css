@@ -55,4 +55,6 @@
 
 .feedback-form-wrapper button[type='submit']:hover {
   background-color: #0056b3;
+  transform: scale(1.05);
+  transition: transform 0.2s, background-color 0.2s;
 }

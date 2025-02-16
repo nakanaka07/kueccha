@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './LocationWarning.css';
-
-interface LocationWarningProps {
-  onClose: () => void;
-}
+import type { LocationWarningProps } from '../../utils/types';
 
 const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -12,7 +9,7 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
     if (!isVisible) {
       const timer = setTimeout(() => {
         onClose();
-      }, 300); // アニメーションの時間に合わせて遅延させる
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isVisible, onClose]);

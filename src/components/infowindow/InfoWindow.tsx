@@ -1,13 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import './InfoWindow.css';
 import { AREAS } from '../../utils/constants';
-import { formatInformation } from '../../utils/formatters';
-import type { InfoWindowProps } from '../../utils/types';
+import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
+import type { InfoWindowProps, LatLngLiteral } from '../../utils/types'; // LatLngLiteral をインポート
 
-const isValidPhoneNumber = (phone: string) => {
-  const phoneRegex = /^[0-9-+() ]+$/;
-  return phoneRegex.test(phone);
-};
+const businessHours = [
+  { day: '月曜日', key: 'monday' },
+  { day: '火曜日', key: 'tuesday' },
+  { day: '水曜日', key: 'wednesday' },
+  { day: '木曜日', key: 'thursday' },
+  { day: '金曜日', key: 'friday' },
+  { day: '土曜日', key: 'saturday' },
+  { day: '日曜日', key: 'sunday' },
+  { day: '祝祭日', key: 'holiday' },
+];
 
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const infoWindowRef = useRef<HTMLDivElement>(null);
@@ -46,16 +52,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     };
   }, [onCloseClick]);
 
-  const businessHours = [
-    { day: '月曜日', value: poi.monday },
-    { day: '火曜日', value: poi.tuesday },
-    { day: '水曜日', value: poi.wednesday },
-    { day: '木曜日', value: poi.thursday },
-    { day: '金曜日', value: poi.friday },
-    { day: '土曜日', value: poi.saturday },
-    { day: '日曜日', value: poi.sunday },
-    { day: '祝祭日', value: poi.holiday },
-  ];
+  const formatLocation = (location: LatLngLiteral) => {
+    return `緯度: ${location.lat}, 経度: ${location.lng}`;
+  };
+
+  const formatValue = (value: string | LatLngLiteral | undefined): string => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value && 'lat' in value && 'lng' in value) {
+      return formatLocation(value);
+    }
+    return '';
+  };
 
   return (
     <div
@@ -76,22 +85,27 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       </div>
 
       <div className="info-content">
-        {businessHours.some((hour) => hour.value) && (
+        {businessHours.some((hour) => poi[hour.key]) && (
           <div className="info-section">
-            <ul>
-              {businessHours.map((hour, index) =>
-                hour.value ? (
-                  <li key={index}>
+            {businessHours.map(
+              (hour) =>
+                poi[hour.key] && (
+                  <div key={hour.key}>
                     <span className="day">{hour.day}</span>
-                    <span className="value">{hour.value}</span>
-                  </li>
-                ) : null,
-              )}
-            </ul>
+                    <span className="value">{formatValue(poi[hour.key])}</span>
+                  </div>
+                ),
+            )}
           </div>
         )}
 
         <div className="info-horizontal">
+          {poi.location && (
+            <div className="info-section">
+              <span className="day">位置</span>
+              <span className="value">{formatLocation(poi.location)}</span>
+            </div>
+          )}
           {[
             {
               key: 'description',
