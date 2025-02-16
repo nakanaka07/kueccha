@@ -7,28 +7,17 @@ import React, {
 } from 'react';
 import './HamburgerMenu.css';
 import { MENU_ITEMS } from '../../utils/constants';
-import FeedbackForm from '../feedback/FeedbackForm';
-import FilterPanel from '../filterpanel/FilterPanel';
 import SearchBar from '../searchbar/SearchBar';
 import SearchResults from '../searchresults/SearchResults.module';
 import type { HamburgerMenuProps } from '../../utils/types';
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   pois,
-  setSelectedPoi,
-  setAreaVisibility,
-  localAreaVisibility,
-  setLocalAreaVisibility,
-  currentLocation,
-  setCurrentLocation,
-  setShowWarning,
   search,
   searchResults,
   handleSearchResultClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -36,23 +25,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const handleCloseFilterPanel = useCallback(() => {
-    setIsFilterPanelOpen(false);
-  }, []);
-
-  const handleCloseFeedbackForm = useCallback(() => {
-    setIsFeedbackFormOpen(false);
-  }, []);
-
   const menuActions = {
-    handleAreaClick: () => {
-      setIsFilterPanelOpen(true);
-      setIsOpen(false);
-    },
-    handleFeedbackClick: () => {
-      setIsFeedbackFormOpen(true);
-      setIsOpen(false);
-    },
     toggleSearchBar: () => {
       setIsSearchBarVisible(!isSearchBarVisible);
       setIsOpen(false);
@@ -78,7 +51,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         ...item,
         onClick: menuActions[item.action as keyof typeof menuActions],
       })),
-    [menuActions], // menuActions を依存配列に追加
+    [menuActions],
   );
 
   return (
@@ -121,23 +94,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           )}
         </nav>
       </div>
-      <div
-        className={`filter-panel-wrapper ${isFilterPanelOpen ? 'open' : ''}`}
-      >
-        <FilterPanel
-          pois={pois}
-          setSelectedPoi={setSelectedPoi}
-          setAreaVisibility={setAreaVisibility}
-          isFilterPanelOpen={isFilterPanelOpen}
-          onCloseClick={handleCloseFilterPanel}
-          localAreaVisibility={localAreaVisibility}
-          setLocalAreaVisibility={setLocalAreaVisibility}
-          currentLocation={currentLocation}
-          setCurrentLocation={setCurrentLocation}
-          setShowWarning={setShowWarning}
-        />
-      </div>
-      {isFeedbackFormOpen && <FeedbackForm onClose={handleCloseFeedbackForm} />}
     </div>
   );
 };

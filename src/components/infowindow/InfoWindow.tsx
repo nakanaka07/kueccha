@@ -1,32 +1,34 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import './InfoWindow.css';
-import { AREAS } from '../../utils/constants';
+import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
-import type { InfoWindowProps, LatLngLiteral } from '../../utils/types'; // LatLngLiteral をインポート
-
-const businessHours = [
-  { day: '月曜日', key: 'monday' },
-  { day: '火曜日', key: 'tuesday' },
-  { day: '水曜日', key: 'wednesday' },
-  { day: '木曜日', key: 'thursday' },
-  { day: '金曜日', key: 'friday' },
-  { day: '土曜日', key: 'saturday' },
-  { day: '日曜日', key: 'sunday' },
-  { day: '祝祭日', key: 'holiday' },
-];
+import type {
+  InfoWindowProps,
+  LatLngLiteral,
+  BusinessHourKey,
+} from '../../utils/types';
 
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const infoWindowRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (infoWindowRef.current) {
-        const windowHeight = window.innerHeight;
-        const maxHeight = windowHeight - 150;
-        infoWindowRef.current.style.maxHeight = `${maxHeight}px`;
-      }
-    };
+  const handleResize = () => {
+    if (infoWindowRef.current) {
+      const windowHeight = window.innerHeight;
+      const maxHeight = windowHeight - 150;
+      infoWindowRef.current.style.maxHeight = `${maxHeight}px`;
+    }
+  };
 
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      infoWindowRef.current &&
+      !infoWindowRef.current.contains(event.target as Node)
+    ) {
+      onCloseClick();
+    }
+  };
+
+  useEffect(() => {
     window.addEventListener('resize', handleResize);
     handleResize();
 
@@ -36,15 +38,6 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        infoWindowRef.current &&
-        !infoWindowRef.current.contains(event.target as Node)
-      ) {
-        onCloseClick();
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
@@ -56,15 +49,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     return `緯度: ${location.lat}, 経度: ${location.lng}`;
   };
 
-  const formatValue = (value: string | LatLngLiteral | undefined): string => {
-    if (typeof value === 'string') {
-      return value;
-    }
-    if (value && 'lat' in value && 'lng' in value) {
-      return formatLocation(value);
-    }
-    return '';
-  };
+  const businessHoursContent = useMemo(
+    () =>
+      INFO_WINDOW_BUSINESS_HOURS.map(
+        (hour) =>
+          poi[hour.key as BusinessHourKey] && (
+            <div key={hour.key}>
+              <span className="day">{hour.day}</span>
+              <span className="value">{poi[hour.key as BusinessHourKey]}</span>
+            </div>
+          ),
+      ),
+    [poi],
+  );
 
   return (
     <div
@@ -85,25 +82,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       </div>
 
       <div className="info-content">
-        {businessHours.some((hour) => poi[hour.key]) && (
-          <div className="info-section">
-            {businessHours.map(
-              (hour) =>
-                poi[hour.key] && (
-                  <div key={hour.key}>
-                    <span className="day">{hour.day}</span>
-                    <span className="value">{formatValue(poi[hour.key])}</span>
-                  </div>
-                ),
-            )}
-          </div>
+        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
+          <div className="info-section">{businessHoursContent}</div>
         )}
 
         <div className="info-horizontal">
           {poi.location && (
             <div className="info-section">
               <span className="day">位置</span>
-              <span className="value">{formatLocation(poi.location)}</span>
+              <span className="value">
+                {typeof poi.location === 'string'
+                  ? poi.location
+                  : formatLocation(poi.location)}
+              </span>
             </div>
           )}
           {[

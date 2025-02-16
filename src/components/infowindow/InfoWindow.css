@@ -13,7 +13,7 @@
 }
 
 .info-content {
-  max-height: calc(100vh - 500px);
+  max-height: calc(100vh - 150px);
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;

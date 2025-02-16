@@ -193,7 +193,15 @@ const Map: React.FC<MapComponentProps> = ({
         {map && currentLocation && (
           <Marker
             key="current-location-marker"
-            poi={{ ...CURRENT_LOCATION_POI, location: currentLocation }}
+            poi={{
+              ...CURRENT_LOCATION_POI,
+              location: currentLocation,
+              id: 'current-location',
+              name: '現在地',
+              area: 'CURRENT_LOCATION',
+              category: '現在地',
+              genre: '現在地',
+            }}
             onClick={() => {}}
             map={map}
             isSelected={false}

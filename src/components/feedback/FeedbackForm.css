@@ -43,6 +43,12 @@
   font-size: 14px;
 }
 
+.feedback-form-wrapper input:focus,
+.feedback-form-wrapper textarea:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
 .feedback-form-wrapper button[type='submit'] {
   padding: 10px;
   background-color: #007bff;
@@ -57,4 +63,14 @@
   background-color: #0056b3;
   transform: scale(1.05);
   transition: transform 0.2s, background-color 0.2s;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 5px;
+  border: 1px solid red;
+  border-radius: 3px;
+  background-color: rgba(255, 0, 0, 0.1);
 }

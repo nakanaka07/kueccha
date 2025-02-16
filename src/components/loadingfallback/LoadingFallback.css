@@ -9,7 +9,7 @@
   height: 100%;
   background-color: rgba(255, 255, 255, 0.8);
   z-index: 1000;
-  transition: opacity 1s ease-in;
+  transition: opacity 1s ease-in, pointer-events 1s ease-in;
 }
 
 .loading-fallback.hidden {

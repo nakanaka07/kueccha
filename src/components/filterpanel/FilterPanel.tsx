@@ -95,7 +95,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     <div className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}>
       {isFilterPanelOpen && (
         <div ref={panelRef} className="filter-panel">
-          <button onClick={onCloseClick} className="close-button">
+          <button
+            onClick={onCloseClick}
+            className="close-button"
+            aria-label="閉じる"
+          >
             ×
           </button>
           <h2>表示エリア</h2>
@@ -111,6 +115,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                       [area]: !prev[area],
                     }))
                   }
+                  aria-label={`${name}を表示`}
                 />
                 <span
                   className="custom-checkbox"

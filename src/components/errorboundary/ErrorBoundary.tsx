@@ -15,7 +15,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
 
-    console.error('Error logged:', error, errorInfo);
+    console.error('Error logged:', {
+      error,
+      errorInfo,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   private handleReset = () => {

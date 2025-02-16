@@ -85,7 +85,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError('');
+              }}
+              aria-label="名前"
             />
           </label>
           <label htmlFor="email">
@@ -94,7 +98,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
+              aria-label="メール"
             />
           </label>
           <label htmlFor="message">
@@ -102,7 +110,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
             <textarea
               id="message"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setError('');
+              }}
+              aria-label="メッセージ"
             />
           </label>
           <button type="submit" disabled={isLoading}>
