@@ -44,7 +44,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setSelectedPoi(null);
-  }, []);
+  }, [pois]);
 
   const handleMapLoad = useCallback(() => {
     setIsMapLoaded(true);
@@ -57,7 +57,9 @@ const App: React.FC = () => {
   const displayedPois = searchResults.length > 0 ? searchResults : pois;
 
   if (error) {
-    return <div>エラーが発生しました: {error.message}</div>;
+    return (
+      <div className="error-message">エラーが発生しました: {error.message}</div>
+    );
   }
 
   if (isLoading) {
@@ -78,38 +80,43 @@ const App: React.FC = () => {
           <div
             className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
           />
-          <LoadingFallback
-            isLoading={!isLoaded || !isMapLoaded}
-            isLoaded={isLoaded && isMapLoaded}
-          />
-          <div className="map-container">
-            <Map
-              pois={displayedPois}
-              selectedPoi={selectedPoi}
-              setSelectedPoi={setSelectedPoi}
-              areaVisibility={areaVisibility}
-              onLoad={handleMapLoad}
-              setAreaVisibility={setAreaVisibility}
-              currentLocation={currentLocation}
-              setCurrentLocation={setCurrentLocation}
-              showWarning={showWarning}
-              setShowWarning={setShowWarning}
+          {!isLoaded || !isMapLoaded ? (
+            <LoadingFallback
+              isLoading={!isLoaded || !isMapLoaded}
+              isLoaded={isLoaded && isMapLoaded}
             />
-          </div>
-          <HamburgerMenu
-            pois={displayedPois}
-            setSelectedPoi={setSelectedPoi}
-            setAreaVisibility={setAreaVisibility}
-            localAreaVisibility={areaVisibility}
-            setLocalAreaVisibility={setAreaVisibility}
-            currentLocation={currentLocation}
-            setCurrentLocation={setCurrentLocation}
-            setShowWarning={setShowWarning}
-            search={search}
-            searchResults={searchResults}
-            handleSearchResultClick={handleSearchResultClick}
-          />
-          <button onClick={refetch}>データを更新</button>
+          ) : (
+            <>
+              <div className="map-container">
+                <Map
+                  pois={displayedPois}
+                  selectedPoi={selectedPoi}
+                  setSelectedPoi={setSelectedPoi}
+                  areaVisibility={areaVisibility}
+                  onLoad={handleMapLoad}
+                  setAreaVisibility={setAreaVisibility}
+                  currentLocation={currentLocation}
+                  setCurrentLocation={setCurrentLocation}
+                  showWarning={showWarning}
+                  setShowWarning={setShowWarning}
+                />
+              </div>
+              <HamburgerMenu
+                pois={displayedPois}
+                setSelectedPoi={setSelectedPoi}
+                setAreaVisibility={setAreaVisibility}
+                localAreaVisibility={areaVisibility}
+                setLocalAreaVisibility={setAreaVisibility}
+                currentLocation={currentLocation}
+                setCurrentLocation={setCurrentLocation}
+                setShowWarning={setShowWarning}
+                search={search}
+                searchResults={searchResults}
+                handleSearchResultClick={handleSearchResultClick}
+              />
+              <button onClick={refetch}>データを更新</button>
+            </>
+          )}
         </div>
       </ErrorBoundary>
     </div>
