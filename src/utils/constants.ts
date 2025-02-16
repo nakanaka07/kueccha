@@ -9,6 +9,7 @@ import snackIcon from './images/shi_icon02.png';
 import currentLocationIcon from './images/shi_icon04.png';
 import type { AreaType, Poi, MenuItem } from './types';
 
+// エリアの定数
 export const AREAS = {
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
   CURRENT_LOCATION: '現在地',
@@ -20,6 +21,7 @@ export const AREAS = {
   SNACK: 'スナック',
 } as const;
 
+// 営業時間の定数
 export const BUSINESS_HOURS = [
   { day: '月', key: 'monday' },
   { day: '火', key: 'tuesday' },
@@ -31,6 +33,7 @@ export const BUSINESS_HOURS = [
   { day: '祝', key: 'holiday' },
 ] as const;
 
+// 情報ウィンドウの営業時間の定数
 export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '月曜日', key: 'monday' },
   { day: '火曜日', key: 'tuesday' },
@@ -42,6 +45,7 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '祝祭日', key: 'holiday' },
 ] as const;
 
+// マーカーの色の定数
 export const MARKER_COLORS = {
   AKADOMARI_HAMOCHI_OGI: '#007b43',
   CURRENT_LOCATION: '#42a30f',
@@ -54,6 +58,7 @@ export const MARKER_COLORS = {
   SNACK: '#65318e',
 } as const;
 
+// エラーメッセージの定数
 export const ERROR_MESSAGES = {
   CONFIG: {
     INVALID: '設定が正しくありません',
@@ -82,6 +87,7 @@ export const ERROR_MESSAGES = {
   },
 } as const;
 
+// 現在地のPOIの定数
 export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
   id: 'current-location',
   name: '現在地',
@@ -90,6 +96,7 @@ export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
   genre: '現在地',
 };
 
+// マーカーのアイコンの定数
 export const MARKER_ICONS: Record<string, string> = {
   RYOTSU_AIKAWA: ryotsuAikawaIcon,
   KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
@@ -102,6 +109,7 @@ export const MARKER_ICONS: Record<string, string> = {
   DEFAULT: defaultIcon,
 };
 
+// メニューアイテムの定数
 export const MENU_ITEMS: MenuItem[] = [
   {
     label: '表示するエリアを選択',
@@ -120,6 +128,7 @@ export const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+// 初期表示の定数
 export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
   AREAS,
 ).reduce(
@@ -135,6 +144,7 @@ export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
   {} as Record<AreaType, boolean>,
 );
 
+// マーカーの設定の定数
 export const markerConfig = {
   colors: MARKER_COLORS,
   icons: MARKER_ICONS,

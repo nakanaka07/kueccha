@@ -1,10 +1,12 @@
 import React from 'react';
 
+// テキストをフォーマットしてReact要素を返す関数
 export const formatInformation = (
   text: string | null,
 ): React.ReactElement | null => {
   if (!text?.trim()) return null;
 
+  // URLが有効かどうかをチェックする関数
   const isValidUrl = (url: string): boolean => {
     try {
       new URL(url);
@@ -14,6 +16,7 @@ export const formatInformation = (
     }
   };
 
+  // テキストをURLとその他のテキストに分割する関数
   const splitContentByType = (
     text: string,
   ): { text: string[]; urls: string[] } => {
@@ -26,11 +29,13 @@ export const formatInformation = (
     };
   };
 
+  // URLを指定された長さに切り詰める関数
   const truncateUrl = (url: string, maxLength: number): string => {
     if (url.length <= maxLength) return url;
     return `${url.slice(0, maxLength)}...`;
   };
 
+  // テキストまたはURLのReact要素を作成する関数
   const createElement = (
     type: 'text' | 'url',
     content: string,
@@ -82,7 +87,8 @@ export const formatInformation = (
   }
 };
 
-export const isValidPhoneNumber = (phone: string) => {
+// 電話番号が有効かどうかをチェックする関数
+export const isValidPhoneNumber = (phone: string): boolean => {
   const phoneRegex = /^[0-9-+() ]+$/;
   return phoneRegex.test(phone);
 };
