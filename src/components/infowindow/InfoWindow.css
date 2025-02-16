@@ -1,0 +1,109 @@
+.info-window {
+  font-family: 'Roboto', sans-serif;
+  max-width: 300px;
+  position: absolute;
+  left: 10px;
+  bottom: 50px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 1002;
+  display: block;
+}
+
+.info-content {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.info-header {
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.modal-close-button:hover {
+  color: #555;
+}
+
+.info-section {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.info-section ul {
+  padding-left: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.info-section li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.info-section li:last-child {
+  border-bottom: none;
+}
+
+.info-section li .day {
+  font-weight: bold;
+}
+
+.info-section li .value {
+  font-weight: normal;
+}
+
+.info-link {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.info-link:hover {
+  text-decoration: underline;
+}
+
+.info-button {
+  display: block;
+  text-align: center;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.info-button:hover {
+  background-color: #0056b3;
+}
+
+.info-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.info-horizontal .info-section {
+  flex: 1 1 50%;
+}

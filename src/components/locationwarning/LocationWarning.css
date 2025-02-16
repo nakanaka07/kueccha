@@ -1,0 +1,38 @@
+.location-warning {
+  position: fixed;
+  bottom: 10%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-width: 370px;
+  border-radius: 8px;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  text-align: center;
+  box-sizing: border-box;
+  opacity: 1;
+}
+
+.location-warning.hidden {
+  opacity: 0;
+  transform: translate(-50%, 20px);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.message {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  padding-right: 30px;
+}
