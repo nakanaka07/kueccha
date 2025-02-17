@@ -48,6 +48,7 @@ const Marker = React.memo(
         if (markerRef.current) {
           markerRef.current.map = null;
           google.maps.event.clearInstanceListeners(markerRef.current);
+          markerRef.current = null;
         }
       };
     }, [map, poi, onClick, zIndex]);

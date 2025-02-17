@@ -35,9 +35,10 @@ const App: React.FC = () => {
     if (isLoaded && isMapLoaded) {
       const backgroundElement = document.querySelector('.initial-background');
       if (backgroundElement) {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           backgroundElement.classList.add('hidden');
-        }, 5000);
+        }, 1000);
+        return () => clearTimeout(timer);
       }
     }
   }, [isLoaded, isMapLoaded]);

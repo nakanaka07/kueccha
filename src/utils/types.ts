@@ -35,8 +35,8 @@ export interface ErrorBoundaryProps {
 // エラーバウンダリの状態型
 export interface State {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
 // フィルターパネルのプロパティ型

@@ -162,6 +162,7 @@ const Map: React.FC<MapComponentProps> = ({
   );
 
   if (loadError) {
+    console.error('Google Maps API load error:', loadError);
     return <div>{ERROR_MESSAGES.MAP.LOAD_FAILED}</div>;
   }
 

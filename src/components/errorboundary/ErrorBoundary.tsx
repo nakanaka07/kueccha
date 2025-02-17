@@ -6,10 +6,12 @@ import type { ErrorBoundaryProps, State } from '../../utils/types';
 export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   state: State = {
     hasError: false,
+    error: null,
+    errorInfo: null,
   };
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -23,7 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render() {

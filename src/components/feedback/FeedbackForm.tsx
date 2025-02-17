@@ -1,5 +1,5 @@
 import emailjs from '@emailjs/browser';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FeedbackForm.css';
 import { ERROR_MESSAGES } from '../../utils/constants';
 import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
@@ -57,6 +57,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isSubmitted) {
+      setName('');
+      setEmail('');
+      setMessage('');
+    }
+  }, [isSubmitted]);
 
   return (
     <div

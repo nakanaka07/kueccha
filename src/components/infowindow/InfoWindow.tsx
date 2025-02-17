@@ -43,7 +43,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [onCloseClick]);
+  }, [handleClickOutside]);
 
   const formatLocation = (location: LatLngLiteral) => {
     return `緯度: ${location.lat}, 経度: ${location.lng}`;
