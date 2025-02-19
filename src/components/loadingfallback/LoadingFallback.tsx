@@ -11,10 +11,12 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   const [isVisible, setIsVisible] = useState(isLoading);
 
   useEffect(() => {
+    console.log('LoadingFallback state:', { isLoading, isLoaded }); // ログ出力を追加
     let timer: NodeJS.Timeout;
     if (isLoaded) {
       timer = setTimeout(() => {
         setIsVisible(false);
+        console.log('LoadingFallback hidden'); // ログ出力を追加
       }, 2000);
     } else {
       setIsVisible(isLoading);

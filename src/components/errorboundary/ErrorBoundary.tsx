@@ -25,6 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   }
 
   private handleReset = () => {
+    console.log('Resetting error boundary state'); // ログ出力を追加
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
@@ -47,3 +48,5 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     return this.props.children;
   }
 }
+
+export default ErrorBoundary;

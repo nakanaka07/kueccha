@@ -13,6 +13,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 }) => {
   const handleResultClick = useCallback(
     (poi: Poi) => {
+      console.log('Result clicked:', poi); // ログ出力を追加
       onResultClick(poi);
     },
     [onResultClick],

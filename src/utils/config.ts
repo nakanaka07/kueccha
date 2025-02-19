@@ -19,15 +19,19 @@ export const mapsConfig: Config['maps'] = {
   style: {
     width: '100%',
     height: '100%',
-    disableDefaultUI: true,
-    clickableIcons: true,
   },
   options: {
+    mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
+    disableDefaultUI: false,
     zoomControl: true,
     mapTypeControl: true,
     streetViewControl: true,
     fullscreenControl: false,
-    styles: undefined,
+    clickableIcons: true,
+    mapTypeControlOptions: {
+      style: 2, // DROPDOWN_MENU
+      position: 1, // TOP_LEFT
+    },
   },
 };
 

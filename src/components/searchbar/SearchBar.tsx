@@ -8,22 +8,26 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      console.log('Input changed:', e.target.value); // ログ出力を追加
       setQuery(e.target.value);
     },
     [],
   );
 
   const handleSearch = useCallback(() => {
+    console.log('Search initiated with query:', query); // ログ出力を追加
     onSearch(query);
   }, [onSearch, query]);
 
   const handleClear = useCallback(() => {
+    console.log('Search cleared'); // ログ出力を追加
     setQuery('');
     setSuggestions([]);
     onSearch('clear');
   }, [onSearch]);
 
   const handleShowAll = useCallback(() => {
+    console.log('Show all POIs'); // ログ出力を追加
     setQuery('');
     setSuggestions([]);
     onSearch('all');
@@ -31,6 +35,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   const handleSuggestionClick = useCallback(
     (suggestion: Poi) => {
+      console.log('Suggestion clicked:', suggestion); // ログ出力を追加
       setQuery(suggestion.name);
       setSuggestions([]);
       onSearch(suggestion.name);
@@ -44,6 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
         poi.name.toLowerCase().includes(query.toLowerCase()),
       );
       setSuggestions(filteredSuggestions);
+      console.log('Suggestions updated:', filteredSuggestions); // ログ出力を追加
     } else {
       setSuggestions([]);
     }

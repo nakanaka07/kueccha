@@ -22,11 +22,13 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => {
+    console.log('Menu toggled:', !isOpen); // ログ出力を追加
     setIsOpen(!isOpen);
   };
 
   const menuActions = {
     toggleSearchBar: () => {
+      console.log('Search bar toggled:', !isSearchBarVisible); // ログ出力を追加
       setIsSearchBarVisible(!isSearchBarVisible);
       setIsOpen(false);
     },
@@ -34,6 +36,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      console.log('Clicked outside menu'); // ログ出力を追加
       setIsOpen(false);
     }
   }, []);

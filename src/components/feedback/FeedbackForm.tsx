@@ -15,11 +15,13 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const validateForm = () => {
     if (!message.trim()) {
       setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
+      console.log('Validation failed: empty message'); // ログ出力を追加
       return false;
     }
 
     if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setError(ERROR_MESSAGES.FORM.INVALID_EMAIL);
+      console.log('Validation failed: invalid email'); // ログ出力を追加
       return false;
     }
 
@@ -33,6 +35,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    console.log('Sending feedback...'); // ログ出力を追加
 
     try {
       const templateParams: TemplateParams = {
@@ -50,6 +53,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
       setIsSubmitted(true);
       setError('');
+      console.log('Feedback sent successfully'); // ログ出力を追加
     } catch (err) {
       setError(ERROR_MESSAGES.FORM.SUBMISSION_FAILED);
       console.error('Feedback submission error:', err);
@@ -63,6 +67,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setName('');
       setEmail('');
       setMessage('');
+      console.log('Form reset after submission'); // ログ出力を追加
     }
   }, [isSubmitted]);
 

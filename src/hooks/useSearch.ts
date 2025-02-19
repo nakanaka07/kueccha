@@ -11,6 +11,7 @@ const useSearch = (pois: Poi[]) => {
 
   const search = useCallback(
     (query: string) => {
+      console.log('Search query:', query); // ログ出力を追加
       setQuery(query);
 
       if (debounceTimeout.current) {
@@ -20,16 +21,19 @@ const useSearch = (pois: Poi[]) => {
       debounceTimeout.current = setTimeout(() => {
         if (query === 'clear') {
           setSearchResults([]);
+          console.log('Search results cleared'); // ログ出力を追加
           return;
         }
 
         if (query === 'all' || !query) {
           setSearchResults(pois);
+          console.log('Search results set to all POIs'); // ログ出力を追加
           return;
         }
 
         if (cache.current[query]) {
           setSearchResults(cache.current[query]);
+          console.log('Search results from cache:', cache.current[query]); // ログ出力を追加
           return;
         }
 
@@ -39,6 +43,7 @@ const useSearch = (pois: Poi[]) => {
 
         cache.current[query] = results;
         setSearchResults(results);
+        console.log('Search results:', results); // ログ出力を追加
       }, DEBOUNCE_DELAY);
     },
     [pois],

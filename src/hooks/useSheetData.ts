@@ -141,6 +141,7 @@ export function useSheetData() {
 
     setIsLoading(true);
     setError(null);
+    console.log('Fetching data...');
 
     try {
       validateConfig();
@@ -159,8 +160,9 @@ export function useSheetData() {
 
       setPois(Array.from(poisMap.values()));
       setIsFetched(true);
+      console.log('Data fetched successfully:', Array.from(poisMap.values()));
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching data:', err);
       setError(handleError(err, API_CONFIG.MAX_RETRIES));
     } finally {
       setIsLoading(false);

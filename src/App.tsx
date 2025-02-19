@@ -27,9 +27,18 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
-    }, 3000);
+    }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    console.log('App state:', {
+      isLoading,
+      isLoaded,
+      isMapLoaded,
+      poisLength: pois.length,
+    });
+  }, [isLoading, isLoaded, isMapLoaded, pois]);
 
   useEffect(() => {
     if (isLoaded && isMapLoaded) {
@@ -48,6 +57,7 @@ const App: React.FC = () => {
   }, [pois]);
 
   const handleMapLoad = useCallback(() => {
+    console.log('Map is loaded');
     setIsMapLoaded(true);
   }, []);
 
@@ -61,10 +71,6 @@ const App: React.FC = () => {
     return (
       <div className="error-message">エラーが発生しました: {error.message}</div>
     );
-  }
-
-  if (isLoading) {
-    return <LoadingFallback isLoading={true} isLoaded={false} />;
   }
 
   return (
@@ -81,9 +87,9 @@ const App: React.FC = () => {
           <div
             className={`initial-background ${isLoaded && isMapLoaded ? 'hidden' : ''}`}
           />
-          {!isLoaded || !isMapLoaded ? (
+          {isLoading || !isLoaded || !isMapLoaded ? (
             <LoadingFallback
-              isLoading={!isLoaded || !isMapLoaded}
+              isLoading={isLoading || !isLoaded || !isMapLoaded}
               isLoaded={isLoaded && isMapLoaded}
             />
           ) : (
@@ -94,7 +100,7 @@ const App: React.FC = () => {
                   selectedPoi={selectedPoi}
                   setSelectedPoi={setSelectedPoi}
                   areaVisibility={areaVisibility}
-                  onLoad={handleMapLoad}
+                  onLoad={handleMapLoad} // 確認: このプロパティが正しく渡されているか
                   setAreaVisibility={setAreaVisibility}
                   currentLocation={currentLocation}
                   setCurrentLocation={setCurrentLocation}

@@ -19,6 +19,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Setting area visibility:', localAreaVisibility); // ログ出力を追加
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
 
@@ -44,9 +45,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.checked) {
+      console.log('Getting current location'); // ログ出力を追加
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          console.log('Current location obtained:', { latitude, longitude }); // ログ出力を追加
           setCurrentLocation({ lat: latitude, lng: longitude });
           setLocalAreaVisibility((prev) => ({
             ...prev,
@@ -81,6 +84,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         },
       );
     } else {
+      console.log('Clearing current location'); // ログ出力を追加
       setCurrentLocation(null);
       setLocalAreaVisibility((prev) => ({
         ...prev,

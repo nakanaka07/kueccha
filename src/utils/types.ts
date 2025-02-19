@@ -93,14 +93,20 @@ export interface MapConfig {
   version: string;
   style: MapStyle;
   options: {
+    mapId?: string;
+    disableDefaultUI: boolean;
     zoomControl: boolean;
     mapTypeControl: boolean;
     streetViewControl: boolean;
     fullscreenControl: boolean;
+    clickableIcons: boolean;
+    mapTypeControlOptions?: {
+      style: number;
+      position: number;
+    };
     styles?: google.maps.MapTypeStyle[];
   };
 }
-
 // マップのプロパティ型
 export interface MapProps extends BaseProps {
   pois: Poi[];
@@ -110,10 +116,7 @@ export interface MapProps extends BaseProps {
 export interface MapStyle {
   width: string;
   height: string;
-  disableDefaultUI: boolean;
-  clickableIcons: boolean;
 }
-
 // マーカーのプロパティ型
 export interface MarkerProps extends BaseProps {
   poi: Poi;

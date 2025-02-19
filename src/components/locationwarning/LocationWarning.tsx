@@ -6,8 +6,10 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    console.log('LocationWarning mounted'); // ログ出力を追加
     if (!isVisible) {
       const timer = setTimeout(() => {
+        console.log('LocationWarning closing'); // ログ出力を追加
         onClose();
       }, 300);
       return () => clearTimeout(timer);
@@ -16,7 +18,13 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
 
   return (
     <div className={`location-warning ${!isVisible ? 'hidden' : ''}`}>
-      <button className="close-button" onClick={() => setIsVisible(false)}>
+      <button
+        className="close-button"
+        onClick={() => {
+          console.log('Close button clicked'); // ログ出力を追加
+          setIsVisible(false);
+        }}
+      >
         ×
       </button>
       <div className="message">

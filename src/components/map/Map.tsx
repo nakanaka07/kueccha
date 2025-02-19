@@ -1,5 +1,5 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { mapsConfig } from '../../utils/config';
 import { ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
@@ -28,6 +28,13 @@ const Map: React.FC<MapComponentProps> = ({
     googleMapsApiKey: mapsConfig.apiKey,
     mapIds: [mapsConfig.mapId],
     libraries: mapsConfig.libraries,
+    version: mapsConfig.version,
+    language: mapsConfig.language,
+  });
+  console.log('Map loading state:', {
+    isLoaded,
+    loadError,
+    apiKey: mapsConfig.apiKey,
   });
   const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>(
     'roadmap',
@@ -35,25 +42,38 @@ const Map: React.FC<MapComponentProps> = ({
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
-  const mapOptions = {
-    ...mapsConfig.options,
-    mapTypeId: _mapType,
-    mapTypeControl: true,
-    zoomControl: true,
-    mapTypeControlOptions: isLoaded
-      ? {
-          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-          position: google.maps.ControlPosition.TOP_LEFT,
-          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-        }
-      : undefined,
-    ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
-  };
+  useEffect(() => {
+    if (loadError) {
+      console.error('Google Maps API load error:', loadError);
+    }
+  }, [loadError]);
+
+  const mapOptions = useMemo(
+    () => ({
+      ...mapsConfig.options,
+      mapTypeId: _mapType,
+      mapTypeControl: true,
+      zoomControl: true,
+      mapTypeControlOptions: isLoaded
+        ? {
+            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            position: google.maps.ControlPosition.TOP_LEFT,
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+          }
+        : undefined,
+      ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
+    }),
+    [isLoaded, _mapType],
+  );
 
   const handleMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
+      console.log('Map loaded:', mapInstance);
       setMap(mapInstance);
-      onLoad();
+      setTimeout(() => {
+        console.log('Calling onLoad');
+        onLoad();
+      }, 0);
     },
     [onLoad],
   );
@@ -179,6 +199,11 @@ const Map: React.FC<MapComponentProps> = ({
         zoom={mapsConfig.defaultZoom}
         options={mapOptions}
         onLoad={handleMapLoad}
+        mapContainerStyle={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+        }}
       >
         {map &&
           displayedPois.map((poi) => (

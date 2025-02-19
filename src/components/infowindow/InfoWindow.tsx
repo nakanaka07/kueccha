@@ -24,16 +24,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       infoWindowRef.current &&
       !infoWindowRef.current.contains(event.target as Node)
     ) {
+      console.log('Clicked outside InfoWindow'); // ログ出力を追加
       onCloseClick();
     }
   };
 
   useEffect(() => {
+    console.log('InfoWindow mounted'); // ログ出力を追加
     window.addEventListener('resize', handleResize);
     handleResize();
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      console.log('InfoWindow unmounted'); // ログ出力を追加
     };
   }, []);
 
@@ -72,7 +75,10 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       <div className="info-header">
         <h2 id="info-window-title">{poi.name}</h2>
         <button
-          onClick={onCloseClick}
+          onClick={() => {
+            console.log('Close button clicked'); // ログ出力を追加
+            onCloseClick();
+          }}
           aria-label="閉じる"
           className="modal-close-button"
           title="閉じます。"
