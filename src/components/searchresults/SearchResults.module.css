@@ -21,3 +21,13 @@
   outline: none;
   background-color: #e0e0e0;
 }
+
+.searchResultItem h3 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.searchResultItem p {
+  margin: 0;
+  color: #666;
+}

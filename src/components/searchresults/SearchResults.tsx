@@ -35,7 +35,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             }
           }}
         >
-          {poi.name}
+          <h3>{poi.name}</h3>
+          <p>
+            {typeof poi.description === 'string'
+              ? poi.description
+              : 'No description available'}
+          </p>{' '}
+          {/* 詳細情報を追加 */}
+          <p>{poi.address}</p> {/* 住所を追加 */}
         </div>
       ))}
     </div>

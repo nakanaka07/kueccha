@@ -6,10 +6,10 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    console.log('LocationWarning mounted'); // ログ出力を追加
+    console.log('LocationWarning mounted');
     if (!isVisible) {
       const timer = setTimeout(() => {
-        console.log('LocationWarning closing'); // ログ出力を追加
+        console.log('LocationWarning closing');
         onClose();
       }, 300);
       return () => clearTimeout(timer);
@@ -21,16 +21,16 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
       <button
         className="close-button"
         onClick={() => {
-          console.log('Close button clicked'); // ログ出力を追加
+          console.log('Close button clicked');
           setIsVisible(false);
         }}
       >
         ×
       </button>
       <div className="message">
-        ブラウザ環境によっては正しい位置情報を
+        ブラウザ環境によっては正しい位置情報を取得できない場合がございます。
         <br />
-        取得できない場合がございます。
+        位置情報の取得を許可するか、ブラウザの設定を確認してください。
         <br />
         ご了承ください。
       </div>

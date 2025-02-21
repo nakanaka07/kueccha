@@ -8,4 +8,4 @@ export * from './locationwarning/LocationWarning';
 export * from './map/Map';
 export * from './marker/Marker';
 export * from './searchbar/SearchBar';
-export * from './searchresults/SearchResults.module';
+export * from './searchresults/SearchResults';

@@ -1,6 +1,18 @@
 import { LoadScriptProps } from '@react-google-maps/api';
-import { MARKER_COLORS } from './constants';
+import { MARKER_COLORS, ERROR_MESSAGES } from './constants';
 import type { Config } from './types';
+
+// 環境変数の検証関数
+const validateEnvironmentVariables = () => {
+  if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+    throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
+  }
+  if (!import.meta.env.VITE_GOOGLE_MAPS_MAP_ID) {
+    throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
+  }
+};
+
+validateEnvironmentVariables();
 
 // Google Mapsの設定
 export const mapsConfig: Config['maps'] = {
@@ -79,7 +91,12 @@ export const logConfigInDevelopment = (config: Config): void => {
 };
 
 // 設定の検証とログの実行
-validateConfig(CONFIG);
-logConfigInDevelopment(CONFIG);
+try {
+  validateConfig(CONFIG);
+  logConfigInDevelopment(CONFIG);
+} catch (error) {
+  console.error('Configuration validation failed:', error);
+  throw error;
+}
 
 export default CONFIG;

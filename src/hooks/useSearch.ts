@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Poi } from '../utils/types';
 
 const DEBOUNCE_DELAY = 300;
@@ -48,6 +48,14 @@ const useSearch = (pois: Poi[]) => {
     },
     [pois],
   );
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, []);
 
   return { searchResults, search, query };
 };

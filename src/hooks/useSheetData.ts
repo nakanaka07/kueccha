@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CONFIG } from '../utils/config';
+import { validateConfig } from '../utils/config';
 import { AREAS, ERROR_MESSAGES } from '../utils/constants';
 import type { Poi, AreaType } from '../utils/types';
 
@@ -26,21 +27,6 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
       'データの取得に失敗しました。インターネット接続を確認し、再試行してください。',
     code: 'FETCH_ERROR',
   };
-};
-
-const retryFetch = async (
-  fetchFunction: () => Promise<unknown>,
-  retryCount: number,
-): Promise<unknown> => {
-  try {
-    return await fetchFunction();
-  } catch (error) {
-    if (retryCount < API_CONFIG.MAX_RETRIES) {
-      await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
-      return retryFetch(fetchFunction, retryCount + 1);
-    }
-    throw error;
-  }
 };
 
 const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
@@ -74,18 +60,12 @@ export function useSheetData() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
 
-  const validateConfig = () => {
-    if (!CONFIG.sheets.spreadsheetId || !CONFIG.sheets.apiKey) {
-      throw new Error(ERROR_MESSAGES.CONFIG.MISSING);
-    }
-  };
-
   const fetchAreaData = useCallback(
     async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
       const areaName = AREAS[area];
       const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
 
-      const fetchFunction = async (): Promise<Poi[]> => {
+      try {
         const response = await fetch(url);
         if (!response.ok) {
           if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
@@ -129,9 +109,13 @@ export function useSheetData() {
             };
           })
           .filter((poi: Poi | null): poi is Poi => poi !== null);
-      };
-
-      return retryFetch(fetchFunction, retryCount) as Promise<Poi[]>;
+      } catch (error) {
+        if (retryCount < API_CONFIG.MAX_RETRIES) {
+          await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
+          return fetchAreaData(area, retryCount + 1);
+        }
+        throw error;
+      }
     },
     [],
   );
@@ -144,7 +128,7 @@ export function useSheetData() {
     console.log('Fetching data...');
 
     try {
-      validateConfig();
+      validateConfig(CONFIG);
       const normalAreas = Object.keys(AREAS).filter(
         (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
       ) as AreaType[];

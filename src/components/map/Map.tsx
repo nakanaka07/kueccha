@@ -1,17 +1,30 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { mapsConfig } from '../../utils/config';
+import styles from './Map.module.css';
+import { MapControls } from './MapControls';
+import './MapControls.module.css';
+import { MapError } from './MapError';
+import { useMapControl } from '../../hooks/useMapControl';
+import { mapsConfig, validateConfig, CONFIG } from '../../utils/config';
 import { ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
-import resetNorthIcon from '../../utils/images/ano_icon04.png';
-import recommendIcon from '../../utils/images/ano_icon_recommend.png';
-import currentLocationIcon from '../../utils/images/shi_icon04.png';
 import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
-import { Marker } from '../marker/Marker';
-import SearchResults from '../searchresults/SearchResults.module';
+import Marker from '../marker/Marker';
+import SearchResults from '../searchresults/SearchResults';
 import type { MapComponentProps, Poi } from '../../utils/types';
 
-const Map: React.FC<MapComponentProps> = ({
+if (!mapsConfig.apiKey || !mapsConfig.mapId) {
+  throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
+}
+
+try {
+  validateConfig(CONFIG);
+} catch (error) {
+  console.error('Configuration validation failed:', error);
+  throw error;
+}
+
+export const Map: React.FC<MapComponentProps> = ({
   pois,
   selectedPoi,
   setSelectedPoi,
@@ -23,7 +36,6 @@ const Map: React.FC<MapComponentProps> = ({
   showWarning,
   setShowWarning,
 }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: mapsConfig.apiKey,
     mapIds: [mapsConfig.mapId],
@@ -31,11 +43,10 @@ const Map: React.FC<MapComponentProps> = ({
     version: mapsConfig.version,
     language: mapsConfig.language,
   });
-  console.log('Map loading state:', {
-    isLoaded,
-    loadError,
-    apiKey: mapsConfig.apiKey,
-  });
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const { resetNorth, handleGetCurrentLocation: getCurrentLocation } =
+    useMapControl(map);
   const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>(
     'roadmap',
   );
@@ -43,82 +54,45 @@ const Map: React.FC<MapComponentProps> = ({
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loadError) {
-      console.error('Google Maps API load error:', loadError);
+    if (!isLoaded) {
+      console.log('Map is loading...');
+      return;
     }
-  }, [loadError]);
+    if (loadError) {
+      console.error('Map load error:', loadError);
+      return;
+    }
+    console.log('Map loaded successfully');
+  }, [isLoaded, loadError]);
 
-  const mapOptions = useMemo(
-    () => ({
+  const mapOptions = useMemo(() => {
+    if (!isLoaded) return {};
+    return {
       ...mapsConfig.options,
       mapTypeId: _mapType,
       mapTypeControl: true,
       zoomControl: true,
-      mapTypeControlOptions: isLoaded
-        ? {
-            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-            position: google.maps.ControlPosition.TOP_LEFT,
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-          }
-        : undefined,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+        position: google.maps.ControlPosition.TOP_LEFT,
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+      },
       ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
-    }),
-    [isLoaded, _mapType],
-  );
+    };
+  }, [isLoaded, _mapType]);
 
   const handleMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
-      console.log('Map loaded:', mapInstance);
-      setMap(mapInstance);
-      setTimeout(() => {
-        console.log('Calling onLoad');
-        onLoad();
-      }, 0);
+      console.log('Map instance loaded:', mapInstance);
+      if (mapInstance) {
+        setMap(mapInstance);
+        onLoad(mapInstance);
+      } else {
+        console.error('Map instance is null');
+      }
     },
     [onLoad],
   );
-
-  const resetNorth = useCallback(() => {
-    if (map) {
-      map.setHeading(0);
-    }
-  }, [map]);
-
-  const handleGetCurrentLocation = useCallback(() => {
-    if (currentLocation) {
-      setCurrentLocation(null);
-      setAreaVisibility((prev) => ({
-        ...prev,
-        CURRENT_LOCATION: false,
-      }));
-      setShowWarning(false);
-    } else {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setCurrentLocation({ lat: latitude, lng: longitude });
-            setAreaVisibility((prev) => ({
-              ...prev,
-              CURRENT_LOCATION: true,
-            }));
-            setShowWarning(true);
-          },
-          (error) => {
-            console.error('Error getting current location:', error);
-            alert('現在地の取得に失敗しました。');
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          },
-        );
-      } else {
-        alert('このブラウザは現在地取得に対応していません。');
-      }
-    }
-  }, [currentLocation, setCurrentLocation, setAreaVisibility, setShowWarning]);
 
   const toggleRecommendations = useCallback(() => {
     setAreaVisibility((prev) => ({
@@ -181,29 +155,48 @@ const Map: React.FC<MapComponentProps> = ({
     [setSelectedPoi, map],
   );
 
+  const handleGetCurrentLocation = useCallback(() => {
+    getCurrentLocation({
+      onSuccess: (location) => {
+        setCurrentLocation(location);
+        setAreaVisibility((prev) => ({
+          ...prev,
+          CURRENT_LOCATION: true,
+        }));
+        setShowWarning(true);
+      },
+      onError: (error) => alert(error),
+    });
+  }, [
+    getCurrentLocation,
+    setCurrentLocation,
+    setAreaVisibility,
+    setShowWarning,
+  ]);
+
   if (loadError) {
-    console.error('Google Maps API load error:', loadError);
-    return <div>{ERROR_MESSAGES.MAP.LOAD_FAILED}</div>;
+    return (
+      <MapError
+        message={ERROR_MESSAGES.MAP.LOAD_FAILED}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return <div className="loading-container">地図を読み込んでいます...</div>;
   }
 
   const displayedPois = pois.filter((poi) => areaVisibility[poi.area]);
 
   return (
-    <div role="region" aria-label="地図" className="map-container">
+    <div role="region" aria-label="地図" className={styles.mapContainer}>
       <GoogleMap
         center={mapsConfig.defaultCenter}
         zoom={mapsConfig.defaultZoom}
         options={mapOptions}
         onLoad={handleMapLoad}
-        mapContainerStyle={{
-          width: '100%',
-          height: '100%',
-          position: 'absolute',
-        }}
+        mapContainerStyle={mapsConfig.style}
       >
         {map &&
           displayedPois.map((poi) => (
@@ -242,57 +235,11 @@ const Map: React.FC<MapComponentProps> = ({
           />
         )}
       </GoogleMap>
-      <button
-        onClick={resetNorth}
-        style={{
-          position: 'absolute',
-          top: '15px',
-          right: '50px',
-          background: 'none',
-          border: 'none',
-        }}
-        title="北向きにリセットします。"
-      >
-        <img
-          src={resetNorthIcon}
-          alt="北向きにリセット"
-          style={{ width: '50px', height: '50px' }}
-        />
-      </button>
-      <button
-        onClick={handleGetCurrentLocation}
-        style={{
-          position: 'absolute',
-          top: '15px',
-          right: '110px',
-          background: 'none',
-          border: 'none',
-        }}
-        title="現在地を取得します。"
-      >
-        <img
-          src={currentLocationIcon}
-          alt="現在地を取得"
-          style={{ width: '50px', height: '50px' }}
-        />
-      </button>
-      <button
-        onClick={toggleRecommendations}
-        style={{
-          position: 'absolute',
-          top: '15px',
-          right: '170px',
-          background: 'none',
-          border: 'none',
-        }}
-        title="おすすめエリアの表示を切り替えます。"
-      >
-        <img
-          src={recommendIcon}
-          alt="おすすめエリアの表示を切り替え"
-          style={{ width: '50px', height: '50px' }}
-        />
-      </button>
+      <MapControls
+        onResetNorth={resetNorth}
+        onGetCurrentLocation={handleGetCurrentLocation}
+        onToggleRecommendations={toggleRecommendations}
+      />
       {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
       <SearchResults
         results={displayedPois}
@@ -304,5 +251,4 @@ const Map: React.FC<MapComponentProps> = ({
 
 Map.displayName = 'Map';
 
-export { Map };
 export default Map;

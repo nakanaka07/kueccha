@@ -1,5 +1,5 @@
 import { LoadScriptProps } from '@react-google-maps/api';
-import { ErrorInfo } from 'react';
+import { ReactNode } from 'react';
 import { AREAS, BUSINESS_HOURS } from './constants';
 
 // AREASのキーを表す型
@@ -27,16 +27,18 @@ export interface Config {
 }
 
 // エラーバウンダリのプロパティ型
-export interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+export interface ErrorBoundaryProps extends BaseProps {
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 // エラーバウンダリの状態型
-export interface State {
+export interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
+  errorInfo: {
+    componentStack: string;
+  } | null;
 }
 
 // フィルターパネルのプロパティ型
@@ -107,6 +109,7 @@ export interface MapConfig {
     styles?: google.maps.MapTypeStyle[];
   };
 }
+
 // マップのプロパティ型
 export interface MapProps extends BaseProps {
   pois: Poi[];
@@ -117,6 +120,7 @@ export interface MapStyle {
   width: string;
   height: string;
 }
+
 // マーカーのプロパティ型
 export interface MarkerProps extends BaseProps {
   poi: Poi;
@@ -151,7 +155,7 @@ export interface Poi {
 }
 
 // サーチバーのプロパティ型
-export interface SearchBarProps {
+export interface SearchBarProps extends BaseProps {
   onSearch: (query: string) => void;
   pois: Poi[];
 }
@@ -161,7 +165,7 @@ export interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   areaVisibility: Record<AreaType, boolean>;
-  onLoad: () => void;
+  onLoad: (mapInstance: google.maps.Map) => void;
   setAreaVisibility: React.Dispatch<
     React.SetStateAction<Record<AreaType, boolean>>
   >;
@@ -174,12 +178,12 @@ export interface MapComponentProps extends MapProps {
 }
 
 // ロケーション警告のプロパティ型
-export interface LocationWarningProps {
+export interface LocationWarningProps extends BaseProps {
   onClose: () => void;
 }
 
 // ハンバーガーメニューのプロパティ型
-export interface HamburgerMenuProps {
+export interface HamburgerMenuProps extends BaseProps {
   pois: Poi[];
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
   setAreaVisibility: React.Dispatch<
@@ -214,7 +218,7 @@ export interface MenuItem {
 }
 
 // フィードバックフォームのプロパティ型
-export interface FeedbackFormProps {
+export interface FeedbackFormProps extends BaseProps {
   onClose: () => void;
 }
 

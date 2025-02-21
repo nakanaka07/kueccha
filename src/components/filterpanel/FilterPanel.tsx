@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './FilterPanel.css';
-import { markerConfig, AREAS } from '../../utils/constants';
+import { MARKER_CONFIG, AREAS } from '../../utils/constants';
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -19,7 +19,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('Setting area visibility:', localAreaVisibility); // ログ出力を追加
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
 
@@ -38,18 +37,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       name,
       count: areaCounts[area as AreaType] ?? 0,
       isVisible: localAreaVisibility[area as AreaType],
-      color: markerConfig.colors[area as AreaType],
+      color: MARKER_CONFIG.colors[area as AreaType],
     }));
 
   const handleCurrentLocationChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.checked) {
-      console.log('Getting current location'); // ログ出力を追加
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log('Current location obtained:', { latitude, longitude }); // ログ出力を追加
           setCurrentLocation({ lat: latitude, lng: longitude });
           setLocalAreaVisibility((prev) => ({
             ...prev,
@@ -59,7 +56,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           setLocationError(null);
         },
         (error) => {
-          console.error('Error getting current location:', error);
           let errorMessage = '位置情報の取得に失敗しました';
           switch (error.code) {
             case error.PERMISSION_DENIED:
@@ -84,7 +80,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         },
       );
     } else {
-      console.log('Clearing current location'); // ログ出力を追加
       setCurrentLocation(null);
       setLocalAreaVisibility((prev) => ({
         ...prev,
@@ -147,13 +142,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               />
               <span
                 className="custom-checkbox"
-                style={{ borderColor: markerConfig.colors.CURRENT_LOCATION }}
+                style={{ borderColor: MARKER_CONFIG.colors.CURRENT_LOCATION }}
               ></span>
               <div className="filter-details">
                 <span
                   className="marker-color"
                   style={{
-                    backgroundColor: markerConfig.colors.CURRENT_LOCATION,
+                    backgroundColor: MARKER_CONFIG.colors.CURRENT_LOCATION,
                   }}
                   aria-hidden="true"
                 />

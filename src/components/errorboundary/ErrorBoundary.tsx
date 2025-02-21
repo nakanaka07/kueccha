@@ -1,23 +1,35 @@
 import React, { Component, ErrorInfo } from 'react';
 import './ErrorBoundary.css';
-import { ERROR_MESSAGES } from '../../utils/constants';
-import type { ErrorBoundaryProps, State } from '../../utils/types';
+import { ERROR_MESSAGES, ERROR_BOUNDARY_MESSAGES } from '../../utils/constants';
+import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
-  state: State = {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = {
     hasError: false,
     error: null,
     errorInfo: null,
   };
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return {
+      hasError: true,
+      error,
+      errorInfo: null,
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ errorInfo });
+    this.setState({
+      errorInfo: { componentStack: errorInfo.componentStack || '' },
+    });
+    this.logError(error, errorInfo);
+  }
 
-    console.error('Error logged:', {
+  private logError(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', {
       error,
       errorInfo,
       componentStack: errorInfo.componentStack,
@@ -25,26 +37,43 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   }
 
   private handleReset = () => {
-    console.log('Resetting error boundary state'); // ログ出力を追加
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+    });
   };
+
+  private renderErrorMessage() {
+    const { error } = this.state;
+    const { fallback } = this.props;
+
+    if (fallback) {
+      return fallback;
+    }
+
+    return (
+      <div className="error-boundary" role="alert" aria-live="assertive">
+        <div className="error-content">
+          <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
+          <p>{error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}</p>
+          <p>問題が解決しない場合は、サポートにお問い合わせください。</p>
+          <button
+            onClick={this.handleReset}
+            aria-label={ERROR_BOUNDARY_MESSAGES.RETRY_BUTTON}
+          >
+            {ERROR_BOUNDARY_MESSAGES.RETRY_BUTTON}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   render() {
     if (this.state.hasError) {
-      return (
-        this.props.fallback || (
-          <div className="error-boundary" role="alert" aria-live="assertive">
-            <div className="error-content">
-              <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
-              <p>
-                {this.state.error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}
-              </p>
-              <button onClick={this.handleReset}>再試行</button>
-            </div>
-          </div>
-        )
-      );
+      return this.renderErrorMessage();
     }
+
     return this.props.children;
   }
 }

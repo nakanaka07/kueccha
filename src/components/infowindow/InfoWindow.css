@@ -107,3 +107,23 @@
 .info-horizontal .info-section {
   flex: 1 1 50%;
 }
+
+.info-section h3 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.info-section p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.formatted-url {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.formatted-url:hover {
+  text-decoration: underline;
+}

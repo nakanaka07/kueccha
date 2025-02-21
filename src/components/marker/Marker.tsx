@@ -34,13 +34,15 @@ const Marker = React.memo(
         zIndex,
       });
 
-      marker.addListener('click', () => {
-        console.log('Marker clicked:', poi); // ログ出力を追加
+      const handleClick = () => {
+        console.log('Marker clicked:', poi);
         onClick(poi);
-      });
+      };
+
+      marker.addListener('click', handleClick);
       markerRef.current = marker;
 
-      console.log('Marker added:', poi); // ログ出力を追加
+      console.log('Marker added:', poi);
 
       if (poi.area === 'RECOMMEND') {
         iconElement.classList.add('marker-recommendation');
@@ -51,10 +53,10 @@ const Marker = React.memo(
 
       return () => {
         if (markerRef.current) {
-          markerRef.current.map = null;
           google.maps.event.clearInstanceListeners(markerRef.current);
+          markerRef.current.map = null;
           markerRef.current = null;
-          console.log('Marker removed:', poi); // ログ出力を追加
+          console.log('Marker removed:', poi);
         }
       };
     }, [map, poi, onClick, zIndex]);
@@ -66,10 +68,10 @@ const Marker = React.memo(
       ) {
         if (isSelected) {
           markerRef.current.content.classList.add('marker-selected');
-          console.log('Marker selected:', poi); // ログ出力を追加
+          console.log('Marker selected:', poi);
         } else {
           markerRef.current.content.classList.remove('marker-selected');
-          console.log('Marker deselected:', poi); // ログ出力を追加
+          console.log('Marker deselected:', poi);
         }
       }
     }, [isSelected, poi]);

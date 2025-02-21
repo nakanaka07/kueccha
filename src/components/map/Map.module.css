@@ -1,0 +1,28 @@
+.mapControlButton {
+  position: absolute;
+  background: none;
+  border: none;
+}
+
+.mapControlButton img {
+  width: 50px;
+  height: 50px;
+}
+
+.resetNorthButton {
+  position: absolute;
+  top: 15px;
+  right: 50px;
+}
+
+.currentLocationButton {
+  position: absolute;
+  top: 15px;
+  right: 110px;
+}
+
+.recommendButton {
+  position: absolute;
+  top: 15px;
+  right: 170px;
+}

@@ -62,10 +62,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
         value={query}
         onChange={handleInputChange}
         placeholder="検索..."
+        className="search-input"
       />
-      <button onClick={handleSearch}>検索</button>
-      <button onClick={handleClear}>クリア</button>
-      <button onClick={handleShowAll}>一覧</button>
+      <div className="search-buttons">
+        <button onClick={handleSearch} className="search-button">
+          検索
+        </button>
+        <button onClick={handleClear} className="search-button">
+          クリア
+        </button>
+        <button onClick={handleShowAll} className="search-button">
+          一覧
+        </button>
+      </div>
       <div className="suggestions">
         {suggestions.map((suggestion) => (
           <div

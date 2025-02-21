@@ -13,6 +13,12 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
+    if (!name.trim()) {
+      setError(ERROR_MESSAGES.FORM.EMPTY_NAME);
+      console.log('Validation failed: empty name'); // ログ出力を追加
+      return false;
+    }
+
     if (!message.trim()) {
       setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
       console.log('Validation failed: empty message'); // ログ出力を追加

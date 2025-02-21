@@ -45,11 +45,6 @@ export const formatInformation = (
 
     try {
       return React.createElement('div', { key: elementKey }, [
-        React.createElement(
-          'span',
-          { key: `${elementKey}-label` },
-          type === 'url' ? 'URL:' : '説明:',
-        ),
         type === 'url'
           ? React.createElement(
               'a',
@@ -59,6 +54,7 @@ export const formatInformation = (
                 target: '_blank',
                 rel: 'noopener noreferrer',
                 title: content,
+                className: 'formatted-url', // クラス名を追加
               },
               truncateUrl(content, 30),
             )

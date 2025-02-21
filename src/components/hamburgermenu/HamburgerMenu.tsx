@@ -8,7 +8,7 @@ import React, {
 import './HamburgerMenu.css';
 import { MENU_ITEMS } from '../../utils/constants';
 import SearchBar from '../searchbar/SearchBar';
-import SearchResults from '../searchresults/SearchResults.module';
+import SearchResults from '../searchresults/SearchResults';
 import type { HamburgerMenuProps } from '../../utils/types';
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -21,18 +21,21 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const toggleMenu = () => {
+  const toggleMenu = useCallback(() => {
     console.log('Menu toggled:', !isOpen); // ログ出力を追加
-    setIsOpen(!isOpen);
-  };
+    setIsOpen((prevIsOpen) => !prevIsOpen);
+  }, []);
 
-  const menuActions = {
-    toggleSearchBar: () => {
-      console.log('Search bar toggled:', !isSearchBarVisible); // ログ出力を追加
-      setIsSearchBarVisible(!isSearchBarVisible);
-      setIsOpen(false);
-    },
-  };
+  const menuActions = useMemo(
+    () => ({
+      toggleSearchBar: () => {
+        console.log('Search bar toggled:', !isSearchBarVisible); // ログ出力を追加
+        setIsSearchBarVisible((prevIsVisible) => !prevIsVisible);
+        setIsOpen(false);
+      },
+    }),
+    [isSearchBarVisible],
+  );
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {

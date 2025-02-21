@@ -11,12 +11,12 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   const [isVisible, setIsVisible] = useState(isLoading);
 
   useEffect(() => {
-    console.log('LoadingFallback state:', { isLoading, isLoaded }); // ログ出力を追加
+    console.log('LoadingFallback state:', { isLoading, isLoaded });
     let timer: NodeJS.Timeout;
     if (isLoaded) {
       timer = setTimeout(() => {
         setIsVisible(false);
-        console.log('LoadingFallback hidden'); // ログ出力を追加
+        console.log('LoadingFallback hidden');
       }, 2000);
     } else {
       setIsVisible(isLoading);
@@ -35,6 +35,9 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
       <div className="loading-content">
         <div className="loading-spinner" aria-hidden="true" />
         <p>{message}</p>
+        <p>
+          しばらくお待ちください。ロードが完了しない場合は、ページをリロードしてください。
+        </p>
       </div>
     </div>
   );

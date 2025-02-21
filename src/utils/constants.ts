@@ -73,7 +73,9 @@ export const ERROR_MESSAGES = {
     MAP: 'マップを読み込んでいます...',
   },
   MAP: {
-    LOAD_FAILED: 'マップの読み込みに失敗しました',
+    LOAD_FAILED: 'Google Maps の読み込みに失敗しました。',
+    CONFIG_MISSING:
+      'Google Maps の設定が不完全です。API キーとMap IDを確認してください。',
     RETRY_MESSAGE: 'しばらく経ってから再度お試しください',
   },
   SYSTEM: {
@@ -81,10 +83,16 @@ export const ERROR_MESSAGES = {
     UNKNOWN: '予期せぬエラーが発生しました',
   },
   FORM: {
+    EMPTY_NAME: '名前を入力してください。',
     EMPTY_MESSAGE: 'メッセージを入力してください。',
     INVALID_EMAIL: '有効なメールアドレスを入力してください。',
     SUBMISSION_FAILED: '送信に失敗しました。もう一度お試しください。',
   },
+} as const;
+
+export const ERROR_BOUNDARY_MESSAGES = {
+  UNKNOWN_ERROR: 'エラーが発生しました',
+  RETRY_BUTTON: '再試行',
 } as const;
 
 // 現在地のPOIの定数
@@ -135,7 +143,6 @@ export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
   (acc, area) => ({
     ...acc,
     [area]:
-      area !== 'RECOMMEND' &&
       area !== 'SNACK' &&
       area !== 'PUBLIC_TOILET' &&
       area !== 'PARKING' &&
@@ -145,7 +152,23 @@ export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
 );
 
 // マーカーの設定の定数
-export const markerConfig = {
+export const MARKER_CONFIG = {
   colors: MARKER_COLORS,
   icons: MARKER_ICONS,
 };
+
+export const LOADING_DELAY = 0;
+export const BACKGROUND_HIDE_DELAY = 1000;
+
+export const MAP_CONFIGS = {
+  GEOLOCATION: {
+    TIMEOUT: 10000,
+    MAX_AGE: 0,
+    HIGH_ACCURACY: true,
+  },
+  CONTROL_POSITIONS: {
+    TOP_LEFT: 1, // google.maps.ControlPosition.TOP_LEFT の代わりに数値を使用
+  },
+  MAP_TYPES: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+  DEFAULT_TYPE: 'roadmap',
+} as const;

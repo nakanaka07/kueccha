@@ -109,36 +109,42 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.holidayInfo,
               title: '定休日について',
               content: <p>{poi.holidayInfo}</p>,
+              description: 'この場所の定休日に関する情報です。',
             },
             {
               key: 'reservation',
               condition: poi.parking,
               title: '駐車場',
               content: <p>{poi.parking}</p>,
+              description: '駐車場の有無や詳細についての情報です。',
             },
             {
               key: 'payment',
               condition: poi.payment,
               title: 'キャッシュレス',
               content: <p>{poi.payment}</p>,
+              description: '利用可能な支払い方法についての情報です。',
             },
             {
               key: 'category',
               condition: poi.category,
               title: 'カテゴリー',
               content: <p>{poi.category}</p>,
+              description: 'この場所のカテゴリーに関する情報です。',
             },
             {
               key: 'genre',
               condition: poi.genre,
               title: 'ジャンル',
               content: <p>{poi.genre}</p>,
+              description: 'この場所のジャンルに関する情報です。',
             },
             {
               key: 'area',
               condition: poi.area,
               title: 'エリア',
               content: <p>{AREAS[poi.area]}</p>,
+              description: 'この場所が属するエリアに関する情報です。',
             },
             {
               key: 'phone',
@@ -152,12 +158,14 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                 ) : (
                   <span>{poi.phone}</span>
                 ),
+              description: 'この場所への問い合わせ先の電話番号です。',
             },
             {
               key: 'address',
               condition: poi.address,
               title: '所在地',
               content: <p>{poi.address}</p>,
+              description: 'この場所の住所に関する情報です。',
             },
             {
               key: 'information',
@@ -168,6 +176,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                   {poi.information ? formatInformation(poi.information) : null}
                 </div>
               ),
+              description: 'この場所に関連する追加情報です。',
             },
             {
               key: 'view',
@@ -183,6 +192,8 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
                   Google マップで写真を見る
                 </a>
               ),
+              description:
+                'Google マップでこの場所の写真を見ることができます。',
             },
           ].map((item) =>
             item.condition ? (
