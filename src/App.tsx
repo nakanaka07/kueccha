@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import './App.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
@@ -31,6 +31,32 @@ const App: React.FC = () => {
   const displayedPois = searchResults.length > 0 ? searchResults : pois;
   const isInitialLoading = isLoading || !isLoaded || !isMapLoaded;
 
+  const [localSelectedPoi, setLocalSelectedPoi] = useState<Poi | null>(
+    selectedPoi,
+  );
+  const [localAreaVisibility, setLocalAreaVisibility] =
+    useState<Record<AreaType, boolean>>(areaVisibility);
+  const [localCurrentLocation, setLocalCurrentLocation] =
+    useState<LatLngLiteral | null>(currentLocation);
+  const [localShowWarning, setLocalShowWarning] =
+    useState<boolean>(showWarning);
+
+  useEffect(() => {
+    setLocalSelectedPoi(selectedPoi);
+  }, [selectedPoi]);
+
+  useEffect(() => {
+    setLocalAreaVisibility(areaVisibility);
+  }, [areaVisibility]);
+
+  useEffect(() => {
+    setLocalCurrentLocation(currentLocation);
+  }, [currentLocation]);
+
+  useEffect(() => {
+    setLocalShowWarning(showWarning);
+  }, [showWarning]);
+
   if (error) {
     return (
       <div className="error-message" role="alert">
@@ -53,111 +79,44 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      <ErrorBoundary
-        fallback={
-          <div className="error-message" role="alert">
-            <p>
-              エラーが発生しました。再試行するには以下のボタンをクリックしてください。
-            </p>
-            <button onClick={refetch}>再試行</button>
-          </div>
-        }
-      >
+      <ErrorBoundary>
         <div className="app-container">
-          <div className="map-container">
-            <Map
-              pois={displayedPois}
-              selectedPoi={selectedPoi}
-              setSelectedPoi={
-                actions.setSelectedPoi as React.Dispatch<
-                  React.SetStateAction<Poi | null>
-                >
-              }
-              areaVisibility={areaVisibility}
-              onLoad={actions.handleMapLoad}
-              setAreaVisibility={
-                actions.setAreaVisibility as React.Dispatch<
-                  React.SetStateAction<Record<AreaType, boolean>>
-                >
-              }
-              currentLocation={currentLocation}
-              setCurrentLocation={
-                actions.setCurrentLocation as React.Dispatch<
-                  React.SetStateAction<LatLngLiteral | null>
-                >
-              }
-              showWarning={showWarning}
-              setShowWarning={
-                actions.setShowWarning as React.Dispatch<
-                  React.SetStateAction<boolean>
-                >
-              }
-            />
-          </div>
+          <Map
+            pois={displayedPois}
+            selectedPoi={localSelectedPoi}
+            setSelectedPoi={setLocalSelectedPoi}
+            areaVisibility={localAreaVisibility}
+            onLoad={actions.handleMapLoad}
+            setAreaVisibility={setLocalAreaVisibility}
+            currentLocation={localCurrentLocation}
+            setCurrentLocation={setLocalCurrentLocation}
+            showWarning={localShowWarning}
+            setShowWarning={setLocalShowWarning}
+          />
           <HamburgerMenu
             pois={displayedPois}
-            setSelectedPoi={
-              actions.setSelectedPoi as React.Dispatch<
-                React.SetStateAction<Poi | null>
-              >
-            }
-            setAreaVisibility={
-              actions.setAreaVisibility as React.Dispatch<
-                React.SetStateAction<Record<AreaType, boolean>>
-              >
-            }
-            localAreaVisibility={areaVisibility}
-            setLocalAreaVisibility={
-              actions.setAreaVisibility as React.Dispatch<
-                React.SetStateAction<Record<AreaType, boolean>>
-              >
-            }
-            currentLocation={currentLocation}
-            setCurrentLocation={
-              actions.setCurrentLocation as React.Dispatch<
-                React.SetStateAction<LatLngLiteral | null>
-              >
-            }
-            setShowWarning={
-              actions.setShowWarning as React.Dispatch<
-                React.SetStateAction<boolean>
-              >
-            }
+            setSelectedPoi={setLocalSelectedPoi}
+            setAreaVisibility={setLocalAreaVisibility}
+            localAreaVisibility={localAreaVisibility}
+            setLocalAreaVisibility={setLocalAreaVisibility}
+            currentLocation={localCurrentLocation}
+            setCurrentLocation={setLocalCurrentLocation}
+            setShowWarning={setLocalShowWarning}
             search={search}
             searchResults={searchResults}
             handleSearchResultClick={actions.handleSearchResultClick}
           />
           <FilterPanel
             pois={displayedPois}
-            setSelectedPoi={
-              actions.setSelectedPoi as React.Dispatch<
-                React.SetStateAction<Poi | null>
-              >
-            }
-            setAreaVisibility={
-              actions.setAreaVisibility as React.Dispatch<
-                React.SetStateAction<Record<AreaType, boolean>>
-              >
-            }
+            setSelectedPoi={setLocalSelectedPoi}
+            setAreaVisibility={setLocalAreaVisibility}
             isFilterPanelOpen={true} // フィルターパネルを開くための状態を追加
             onCloseClick={() => {}} // 閉じるボタンのハンドラーを追加
-            localAreaVisibility={areaVisibility}
-            setLocalAreaVisibility={
-              actions.setAreaVisibility as React.Dispatch<
-                React.SetStateAction<Record<AreaType, boolean>>
-              >
-            }
-            currentLocation={currentLocation}
-            setCurrentLocation={
-              actions.setCurrentLocation as React.Dispatch<
-                React.SetStateAction<LatLngLiteral | null>
-              >
-            }
-            setShowWarning={
-              actions.setShowWarning as React.Dispatch<
-                React.SetStateAction<boolean>
-              >
-            }
+            localAreaVisibility={localAreaVisibility}
+            setLocalAreaVisibility={setLocalAreaVisibility}
+            currentLocation={localCurrentLocation}
+            setCurrentLocation={setLocalCurrentLocation}
+            setShowWarning={setLocalShowWarning}
           />
           <button onClick={refetch}>データを更新</button>
           <button onClick={() => setIsFeedbackFormOpen(true)}>

@@ -192,11 +192,14 @@ export const Map: React.FC<MapComponentProps> = ({
   return (
     <div role="region" aria-label="地図" className={styles.mapContainer}>
       <GoogleMap
+        mapContainerStyle={{
+          width: '100%',
+          height: '100%',
+        }}
         center={mapsConfig.defaultCenter}
         zoom={mapsConfig.defaultZoom}
         options={mapOptions}
         onLoad={handleMapLoad}
-        mapContainerStyle={mapsConfig.style}
       >
         {map &&
           displayedPois.map((poi) => (
