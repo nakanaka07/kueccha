@@ -1,33 +1,55 @@
+/* マーカーが点滅するアニメーションを定義します。 */
 .marker-blinking {
   animation: marker-blinking-animation 1s infinite;
+  /* 1秒間隔で無限にアニメーションを繰り返します。 */
 }
 
+/* マーカーの点滅アニメーションのキーフレームを定義します。 */
 @keyframes marker-blinking-animation {
   0% {
     opacity: 1;
+    /* アニメーションの開始時は不透明です。 */
   }
+
   50% {
     opacity: 0.5;
+    /* アニメーションの中間時は半透明です。 */
   }
+
   100% {
     opacity: 1;
+    /* アニメーションの終了時は再び不透明になります。 */
   }
 }
 
+/* 選択されたマーカーのスタイルを定義します。 */
 .marker-selected {
   border: 3px solid red;
+  /* 赤い枠線を設定します。 */
   border-radius: 50%;
+  /* 角を丸くします。 */
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  /* 赤い影を設定します。 */
 }
 
+/* 推奨マーカーのスタイルを定義します。 */
 .marker-recommendation {
   position: absolute;
+  /* 絶対位置を設定します。 */
   z-index: 100000;
+  /* Zインデックスを非常に高く設定します。 */
   width: 50px;
+  /* 幅を50pxに設定します。 */
   height: 50px;
+  /* 高さを50pxに設定します。 */
   background-color: rgba(255, 0, 0, 0.7);
+  /* 半透明の赤い背景色を設定します。 */
   border-radius: 50%;
+  /* 角を丸くします。 */
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  /* 赤い影を設定します。 */
   cursor: pointer;
+  /* カーソルをポインタに変更します。 */
   animation: marker-pulse 1s infinite;
+  /* 1秒間隔で無限にアニメーションを繰り返します。 */
 }

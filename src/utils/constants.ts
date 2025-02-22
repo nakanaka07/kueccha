@@ -1,3 +1,5 @@
+// 画像のインポート
+// 各エリアや機能に対応するアイコン画像をインポートします。
 import publicToiletIcon from './images/ano_icon01.png';
 import recommendIcon from './images/ano_icon_recommend.png';
 import ryotsuAikawaIcon from './images/icon_map01.png';
@@ -7,9 +9,10 @@ import defaultIcon from './images/row2.png';
 import parkingIcon from './images/shi_icon01.png';
 import snackIcon from './images/shi_icon02.png';
 import currentLocationIcon from './images/shi_icon04.png';
-import type { AreaType, Poi, MenuItem } from './types';
+import type { AreaType, Poi, MenuItem } from './types'; // 型定義をインポートします。
 
 // エリアの定数
+// 各エリアの名前を定義します。
 export const AREAS = {
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
   CURRENT_LOCATION: '現在地',
@@ -19,21 +22,10 @@ export const AREAS = {
   RECOMMEND: 'おすすめ',
   RYOTSU_AIKAWA: '両津・相川地区',
   SNACK: 'スナック',
-} as const;
-
-// 営業時間の定数
-export const BUSINESS_HOURS = [
-  { day: '月', key: 'monday' },
-  { day: '火', key: 'tuesday' },
-  { day: '水', key: 'wednesday' },
-  { day: '木', key: 'thursday' },
-  { day: '金', key: 'friday' },
-  { day: '土', key: 'saturday' },
-  { day: '日', key: 'sunday' },
-  { day: '祝', key: 'holiday' },
-] as const;
+} as const; // 定数としてエリア名を定義し、変更不可にします。
 
 // 情報ウィンドウの営業時間の定数
+// 情報ウィンドウに表示する各曜日とそのキーを定義します。
 export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '月曜日', key: 'monday' },
   { day: '火曜日', key: 'tuesday' },
@@ -43,9 +35,10 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '土曜日', key: 'saturday' },
   { day: '日曜日', key: 'sunday' },
   { day: '祝祭日', key: 'holiday' },
-] as const;
+] as const; // 定数として曜日とそのキーを定義し、変更不可にします。
 
 // マーカーの色の定数
+// 各エリアに対応するマーカーの色を定義します。
 export const MARKER_COLORS = {
   AKADOMARI_HAMOCHI_OGI: '#007b43',
   CURRENT_LOCATION: '#42a30f',
@@ -56,9 +49,10 @@ export const MARKER_COLORS = {
   RECOMMEND: '#d7003a',
   RYOTSU_AIKAWA: '#d9a62e',
   SNACK: '#65318e',
-} as const;
+} as const; // 定数としてマーカーの色を定義し、変更不可にします。
 
 // エラーメッセージの定数
+// 各種エラーメッセージを定義します。
 export const ERROR_MESSAGES = {
   CONFIG: {
     INVALID: '設定が正しくありません',
@@ -88,23 +82,24 @@ export const ERROR_MESSAGES = {
     INVALID_EMAIL: '有効なメールアドレスを入力してください。',
     SUBMISSION_FAILED: '送信に失敗しました。もう一度お試しください。',
   },
-} as const;
-
-export const ERROR_BOUNDARY_MESSAGES = {
-  UNKNOWN_ERROR: 'エラーが発生しました',
-  RETRY_BUTTON: '再試行',
-} as const;
+  ERROR_BOUNDARY: {
+    UNKNOWN_ERROR: 'エラーが発生しました',
+    RETRY_BUTTON: '再試行',
+  },
+} as const; // 定数としてエラーメッセージを定義し、変更不可にします。
 
 // 現在地のPOIの定数
+// 現在地を表すPOIオブジェクトを定義します。
 export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
   id: 'current-location',
   name: '現在地',
   area: 'CURRENT_LOCATION' as AreaType,
   category: '現在地',
   genre: '現在地',
-};
+}; // 現在地のPOIオブジェクトを定義し、locationプロパティを除外します。
 
 // マーカーのアイコンの定数
+// 各エリアに対応するマーカーのアイコンを定義します。
 export const MARKER_ICONS: Record<string, string> = {
   RYOTSU_AIKAWA: ryotsuAikawaIcon,
   KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
@@ -115,9 +110,10 @@ export const MARKER_ICONS: Record<string, string> = {
   PARKING: parkingIcon,
   CURRENT_LOCATION: currentLocationIcon,
   DEFAULT: defaultIcon,
-};
+}; // 各エリアに対応するマーカーのアイコンを定義します。
 
 // メニューアイテムの定数
+// メニューに表示するアイテムを定義します。
 export const MENU_ITEMS: MenuItem[] = [
   {
     label: '表示するエリアを選択',
@@ -134,9 +130,10 @@ export const MENU_ITEMS: MenuItem[] = [
     title: '検索',
     action: 'toggleSearchBar',
   },
-];
+]; // メニューに表示するアイテムを定義します。
 
 // 初期表示の定数
+// 各エリアの初期表示状態を定義します。
 export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
   AREAS,
 ).reduce(
@@ -149,26 +146,31 @@ export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
       area !== 'CURRENT_LOCATION',
   }),
   {} as Record<AreaType, boolean>,
-);
+); // 各エリアの初期表示状態を定義し、特定のエリアは非表示にします。
 
 // マーカーの設定の定数
+// マーカーの色とアイコンの設定を定義します。
 export const MARKER_CONFIG = {
   colors: MARKER_COLORS,
   icons: MARKER_ICONS,
-};
+}; // マーカーの色とアイコンの設定を定義します。
 
-export const LOADING_DELAY = 0;
-export const BACKGROUND_HIDE_DELAY = 1000;
+// ローディングの遅延時間の定数
+// ローディングの遅延時間を定義します。
+export const LOADING_DELAY = 0; // ローディングの遅延時間を0に設定します。
+export const BACKGROUND_HIDE_DELAY = 1000; // 背景を非表示にする遅延時間を1000msに設定します。
 
+// マップの設定の定数
+// マップの各種設定を定義します。
 export const MAP_CONFIGS = {
   GEOLOCATION: {
-    TIMEOUT: 10000,
-    MAX_AGE: 0,
-    HIGH_ACCURACY: true,
+    TIMEOUT: 10000, // 位置情報取得のタイムアウト時間を10000msに設定します。
+    MAX_AGE: 0, // キャッシュの最大年齢を0に設定します。
+    HIGH_ACCURACY: true, // 高精度の位置情報を取得するかどうかをtrueに設定します。
   },
   CONTROL_POSITIONS: {
-    TOP_LEFT: 1, // google.maps.ControlPosition.TOP_LEFT の代わりに数値を使用
+    TOP_LEFT: 1, // google.maps.ControlPosition.TOP_LEFT の代わりに数値を使用します。
   },
-  MAP_TYPES: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-  DEFAULT_TYPE: 'roadmap',
-} as const;
+  MAP_TYPES: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 使用可能なマップタイプを定義します。
+  DEFAULT_TYPE: 'roadmap', // デフォルトのマップタイプを'roadmap'に設定します。
+} as const; // 定数としてマップの設定を定義し、変更不可にします。

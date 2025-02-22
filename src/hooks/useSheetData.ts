@@ -1,22 +1,39 @@
+// Reactのフックをインポートします。
+// useState: 状態管理のためのフック
+// useEffect: 副作用を処理するためのフック
+// useCallback: メモ化されたコールバック関数を作成するためのフック
 import { useState, useEffect, useCallback } from 'react';
+// アプリケーションの設定と検証関数をインポートします。
 import { CONFIG } from '../utils/config';
 import { validateConfig } from '../utils/config';
+// 定数とエラーメッセージをインポートします。
 import { AREAS, ERROR_MESSAGES } from '../utils/constants';
+// 型定義をインポートします。
+// Poi: POI（ポイントオブインタレスト）の型
+// AreaType: エリアの型
 import type { Poi, AreaType } from '../utils/types';
 
+// FetchErrorインターフェースの定義
+// エラーメッセージとエラーコードを含むオブジェクトの型を定義します。
 interface FetchError {
   message: string;
   code: string;
 }
 
+// APIの設定
+// 最大リトライ回数、リトライ間隔、ベースURLを定義します。
 const API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
 } as const;
 
+// 指定した時間だけ待機する関数
+// 非同期処理で指定した時間(ms)だけ待機します。
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// エラーハンドリング関数
+// エラーが発生した場合の処理を定義します。
 const handleError = (error: unknown, retryCount: number): FetchError => {
   console.error(error);
   if (retryCount < API_CONFIG.MAX_RETRIES) {
@@ -29,6 +46,8 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
   };
 };
 
+// WKT形式の座標を解析する関数
+// WKT形式の文字列から緯度経度を抽出します。
 const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   try {
     const match = wkt.match(/POINT\s*\(([0-9.]+)\s+([0-9.]+)\)/);
@@ -54,12 +73,19 @@ const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   return null;
 };
 
+// useSheetDataフックの定義
+// Google Sheetsからデータを取得し、状態を管理するカスタムフックです。
 export function useSheetData() {
+  // POIの配列を管理する状態変数
   const [pois, setPois] = useState<Poi[]>([]);
+  // ローディング状態を管理する状態変数
   const [isLoading, setIsLoading] = useState(false);
+  // エラー情報を管理する状態変数
   const [error, setError] = useState<FetchError | null>(null);
+  // データが取得済みかどうかを管理する状態変数
   const [isFetched, setIsFetched] = useState(false);
 
+  // エリアデータを取得する関数
   const fetchAreaData = useCallback(
     async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
       const areaName = AREAS[area];
@@ -120,6 +146,7 @@ export function useSheetData() {
     [],
   );
 
+  // データを取得する関数
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
@@ -153,12 +180,14 @@ export function useSheetData() {
     }
   }, [isLoading, isFetched, fetchAreaData]);
 
+  // コンポーネントのマウント時にデータを取得する
   useEffect(() => {
     if (!isFetched) {
       fetchData();
     }
   }, [fetchData, isFetched]);
 
+  // データの再取得を行う関数
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);
