@@ -49,10 +49,6 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
         <div className="loading-spinner" aria-hidden="true" />
         {/* エラーメッセージ */}
         <p>{message}</p>
-        {/* ローディング中のメッセージ */}
-        <p>
-          しばらくお待ちください。ロードが完了しない場合は、ページをリロードしてください。
-        </p>
       </div>
     </div>
   );

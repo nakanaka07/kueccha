@@ -1,4 +1,4 @@
-// ReactのuseState, useEffect, useCallbackフックをインポートします。
+// Reactのフックをインポートします。
 // useState: 状態変数を定義するために使用します。
 // useEffect: 副作用を処理するために使用します。
 // useCallback: メモ化されたコールバック関数を作成するために使用します。
