@@ -22,8 +22,7 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
     return { message: ERROR_MESSAGES.DATA.FETCH_FAILED, code: 'FETCH_ERROR' };
   }
   return {
-    message:
-      'データの取得に失敗しました。インターネット接続を確認し、再試行してください。',
+    message: 'データの取得に失敗しました。インターネット接続を確認し、再試行してください。',
     code: 'FETCH_ERROR',
   };
 };
@@ -60,71 +59,66 @@ export function useSheetData() {
   const [isFetched, setIsFetched] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false); // isLoaded 状態を追加
 
-  const fetchAreaData = useCallback(
-    async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
-      const areaName = AREAS[area];
-      const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
+  const fetchAreaData = useCallback(async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
+    const areaName = AREAS[area];
+    const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
 
-      try {
-        console.log(`Fetching data for area: ${area}`);
-        const response = await fetch(url);
-        if (!response.ok) {
-          if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
-            console.warn(
-              `Rate limit exceeded. Retrying... (${retryCount + 1})`,
-            );
-            await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
-            return fetchAreaData(area, retryCount + 1);
-          }
-          throw new Error(`Failed to fetch data for area: ${area}`);
-        }
-        const data = await response.json();
-        console.log(`Data fetched for area: ${area}`, data);
-
-        return (data.values?.slice(1) || [])
-          .filter((row: string[]) => row[1] && row[33])
-          .map((row: string[]): Poi | null => {
-            const coordinates = parseWKT(row[1]);
-            if (!coordinates) {
-              return null;
-            }
-
-            return {
-              id: row[1],
-              name: String(row[32]),
-              area: area as AreaType,
-              location: coordinates,
-              genre: row[33],
-              category: row[34],
-              parking: row[35],
-              payment: row[36],
-              monday: row[37],
-              tuesday: row[38],
-              wednesday: row[39],
-              thursday: row[40],
-              friday: row[41],
-              saturday: row[42],
-              sunday: row[43],
-              holiday: row[44],
-              holidayInfo: row[45],
-              information: row[46],
-              view: row[47],
-              phone: row[48],
-              address: row[49],
-            };
-          })
-          .filter((poi: Poi | null): poi is Poi => poi !== null);
-      } catch (error) {
-        console.error(`Error fetching data for area: ${area}`, error);
-        if (retryCount < API_CONFIG.MAX_RETRIES) {
+    try {
+      console.log(`Fetching data for area: ${area}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
+          console.warn(`Rate limit exceeded. Retrying... (${retryCount + 1})`);
           await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
           return fetchAreaData(area, retryCount + 1);
         }
-        throw error;
+        throw new Error(`Failed to fetch data for area: ${area}`);
       }
-    },
-    [],
-  );
+      const data = await response.json();
+      console.log(`Data fetched for area: ${area}`, data);
+
+      return (data.values?.slice(1) || [])
+        .filter((row: string[]) => row[1] && row[33])
+        .map((row: string[]): Poi | null => {
+          const coordinates = parseWKT(row[1]);
+          if (!coordinates) {
+            return null;
+          }
+
+          return {
+            id: row[1],
+            name: String(row[32]),
+            area: area as AreaType,
+            location: coordinates,
+            genre: row[33],
+            category: row[34],
+            parking: row[35],
+            payment: row[36],
+            monday: row[37],
+            tuesday: row[38],
+            wednesday: row[39],
+            thursday: row[40],
+            friday: row[41],
+            saturday: row[42],
+            sunday: row[43],
+            holiday: row[44],
+            holidayInfo: row[45],
+            information: row[46],
+            view: row[47],
+            phone: row[48],
+            address: row[49],
+          };
+        })
+        .filter((poi: Poi | null): poi is Poi => poi !== null);
+    } catch (error) {
+      console.error(`Error fetching data for area: ${area}`, error);
+      if (retryCount < API_CONFIG.MAX_RETRIES) {
+        await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
+        return fetchAreaData(area, retryCount + 1);
+      }
+      throw error;
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
@@ -138,14 +132,10 @@ export function useSheetData() {
       const normalAreas = Object.keys(AREAS).filter(
         (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
       ) as AreaType[];
-      const normalPoisArrays = await Promise.all(
-        normalAreas.map((area) => fetchAreaData(area)),
-      );
+      const normalPoisArrays = await Promise.all(normalAreas.map((area) => fetchAreaData(area)));
       const recommendPois = await fetchAreaData('RECOMMEND');
 
-      const poisMap = new Map(
-        normalPoisArrays.flat().map((poi) => [poi.id, poi]),
-      );
+      const poisMap = new Map(normalPoisArrays.flat().map((poi) => [poi.id, poi]));
       recommendPois.forEach((poi) => poisMap.set(poi.id, poi));
 
       setPois(Array.from(poisMap.values()));

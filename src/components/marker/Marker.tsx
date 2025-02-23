@@ -18,17 +18,9 @@ import { MarkerProps } from '../../utils/types';
 // isSelected: マーカーが選択されているかどうかを示すブール値です。
 // zIndex: マーカーのZインデックスを指定するオプションのプロパティです。
 const Marker = React.memo(
-  ({
-    poi,
-    onClick,
-    map,
-    isSelected,
-    zIndex,
-  }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
+  ({ poi, onClick, map, isSelected, zIndex }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
     // マーカーの参照を保持するためのuseRefフックです。
-    const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
-      null,
-    );
+    const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
     // マーカーの初期化とクリーンアップを行うuseEffectフックです。
     useEffect(() => {
@@ -89,10 +81,7 @@ const Marker = React.memo(
 
     // マーカーの選択状態を管理するuseEffectフックです。
     useEffect(() => {
-      if (
-        markerRef.current &&
-        markerRef.current.content instanceof HTMLElement
-      ) {
+      if (markerRef.current && markerRef.current.content instanceof HTMLElement) {
         if (isSelected) {
           // マーカーが選択された場合、選択クラスを追加します。
           markerRef.current.content.classList.add('marker-selected');

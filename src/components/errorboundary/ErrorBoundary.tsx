@@ -8,10 +8,7 @@ import { ERROR_MESSAGES } from '../../utils/constants';
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 
 // ErrorBoundaryコンポーネントを定義
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // 初期状態を設定
   state: ErrorBoundaryState = {
     hasError: false, // エラーが発生したかどうか
@@ -73,10 +70,7 @@ export class ErrorBoundary extends Component<
           <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
           <p>{error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}</p>
           <p>問題が解決しない場合は、サポートにお問い合わせください。</p>
-          <button
-            onClick={this.handleReset}
-            aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
-          >
+          <button onClick={this.handleReset} aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}>
             {ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
           </button>
         </div>

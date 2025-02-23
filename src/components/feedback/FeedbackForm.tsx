@@ -101,20 +101,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
   return (
     // フィードバックフォームのラッパー
-    <div
-      className="feedback-form-wrapper"
-      role="dialog"
-      aria-labelledby="feedback-title"
-    >
+    <div className="feedback-form-wrapper" role="dialog" aria-labelledby="feedback-title">
       {/* 閉じるボタン */}
       <button className="close-button" onClick={onClose} aria-label="閉じる">
         ×
       </button>
       {isSubmitted ? (
         // フォーム送信後のメッセージ
-        <div role="alert">
-          フィードバックを送信しました。ありがとうございます。
-        </div>
+        <div role="alert">フィードバックを送信しました。ありがとうございます。</div>
       ) : (
         // フィードバックフォーム
         <form onSubmit={sendFeedback} noValidate>

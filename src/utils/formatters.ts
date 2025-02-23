@@ -4,9 +4,7 @@ import React from 'react';
 
 // テキストをフォーマットしてReact要素を返す関数
 // 引数としてテキストを受け取り、フォーマットされたReact要素を返します。
-export const formatInformation = (
-  text: string | null,
-): React.ReactElement | null => {
+export const formatInformation = (text: string | null): React.ReactElement | null => {
   // テキストが空またはnullの場合はnullを返す
   if (!text?.trim()) return null;
 
@@ -23,9 +21,7 @@ export const formatInformation = (
 
   // テキストをURLとその他のテキストに分割する関数
   // 引数としてテキストを受け取り、URLとテキストに分割します。
-  const splitContentByType = (
-    text: string,
-  ): { text: string[]; urls: string[] } => {
+  const splitContentByType = (text: string): { text: string[]; urls: string[] } => {
     const urlRegex = /(https?:\/\/[^\s]+)/g; // URLを検出する正規表現
     const lines = text.split('\n'); // テキストを行ごとに分割
 
@@ -44,11 +40,7 @@ export const formatInformation = (
 
   // テキストまたはURLのReact要素を作成する関数
   // 引数として要素のタイプ、内容、インデックスを受け取り、React要素を作成します。
-  const createElement = (
-    type: 'text' | 'url',
-    content: string,
-    index: number,
-  ): React.ReactElement | null => {
+  const createElement = (type: 'text' | 'url', content: string, index: number): React.ReactElement | null => {
     const elementKey = `${type}-${index}-${content}`; // 要素のキーを生成
 
     try {

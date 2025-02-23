@@ -59,7 +59,7 @@
 }
 
 /* GoogleMapコンポーネントのコンテナスタイル */
-.mapContainer>div {
+.mapContainer > div {
   width: 100% !important;
   /* 幅100% */
   height: 100% !important;

@@ -66,9 +66,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   useEffect(() => {
     if (query) {
       // 検索クエリが存在する場合、検索候補をフィルタリングします。
-      const filteredSuggestions = pois.filter((poi) =>
-        poi.name.toLowerCase().includes(query.toLowerCase()),
-      );
+      const filteredSuggestions = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
       setSuggestions(filteredSuggestions); // フィルタリングされた候補を状態に設定します。
       console.log('Suggestions updated:', filteredSuggestions); // ログ出力を追加
     } else {

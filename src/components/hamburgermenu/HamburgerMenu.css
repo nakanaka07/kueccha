@@ -43,19 +43,19 @@
 }
 
 /* メニューが開いているときの1番目のバーのスタイル */
-.hamburger-icon[aria-expanded="true"] .bar:nth-child(1) {
+.hamburger-icon[aria-expanded='true'] .bar:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
   /* 回転と移動を設定 */
 }
 
 /* メニューが開いているときの2番目のバーのスタイル */
-.hamburger-icon[aria-expanded="true"] .bar:nth-child(2) {
+.hamburger-icon[aria-expanded='true'] .bar:nth-child(2) {
   opacity: 0;
   /* 不透明度を0に設定 */
 }
 
 /* メニューが開いているときの3番目のバーのスタイル */
-.hamburger-icon[aria-expanded="true"] .bar:nth-child(3) {
+.hamburger-icon[aria-expanded='true'] .bar:nth-child(3) {
   transform: rotate(-45deg) translate(7px, -6px);
   /* 回転と移動を設定 */
 }

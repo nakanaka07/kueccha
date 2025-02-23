@@ -52,9 +52,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }));
 
   // 現在地の表示状態を変更する関数
-  const handleCurrentLocationChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleCurrentLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       // 位置情報を取得
       navigator.geolocation.getCurrentPosition(
@@ -111,11 +109,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       {isFilterPanelOpen && (
         <div ref={panelRef} className="filter-panel">
           {/* 閉じるボタン */}
-          <button
-            onClick={onCloseClick}
-            className="close-button"
-            aria-label="閉じる"
-          >
+          <button onClick={onCloseClick} className="close-button" aria-label="閉じる">
             ×
           </button>
           <h2>表示エリア</h2>
@@ -134,16 +128,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   }
                   aria-label={`${name}を表示`}
                 />
-                <span
-                  className="custom-checkbox"
-                  style={{ borderColor: color }}
-                ></span>
+                <span className="custom-checkbox" style={{ borderColor: color }}></span>
                 <div className="filter-details">
-                  <span
-                    className="marker-color"
-                    style={{ backgroundColor: color }}
-                    aria-hidden="true"
-                  />
+                  <span className="marker-color" style={{ backgroundColor: color }} aria-hidden="true" />
                   <span className="area-name" data-fullname={name} title={name}>
                     {name}
                   </span>
@@ -159,10 +146,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 onChange={handleCurrentLocationChange}
                 aria-label="現在地を表示"
               />
-              <span
-                className="custom-checkbox"
-                style={{ borderColor: MARKER_CONFIG.colors.CURRENT_LOCATION }}
-              ></span>
+              <span className="custom-checkbox" style={{ borderColor: MARKER_CONFIG.colors.CURRENT_LOCATION }}></span>
               <div className="filter-details">
                 <span
                   className="marker-color"
@@ -171,11 +155,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   }}
                   aria-hidden="true"
                 />
-                <span
-                  className="area-name"
-                  data-fullname="現在地"
-                  title="現在地"
-                >
+                <span className="area-name" data-fullname="現在地" title="現在地">
                   現在地
                 </span>
               </div>

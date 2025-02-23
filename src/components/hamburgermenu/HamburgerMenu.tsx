@@ -92,11 +92,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           <span className="sr-only">メニュー</span>
         </button>
         {/* メニューのナビゲーション */}
-        <nav
-          className={`menu ${isOpen ? 'open' : ''}`}
-          id="menu-content"
-          aria-hidden={!isOpen}
-        >
+        <nav className={`menu ${isOpen ? 'open' : ''}`} id="menu-content" aria-hidden={!isOpen}>
           <ul>
             {items.map((item, index) => (
               <li key={index}>
@@ -110,10 +106,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           {isSearchBarVisible && (
             <>
               <SearchBar onSearch={search} pois={pois} />
-              <SearchResults
-                results={searchResults}
-                onResultClick={handleSearchResultClick}
-              />
+              <SearchResults results={searchResults} onResultClick={handleSearchResultClick} />
             </>
           )}
         </nav>

@@ -7,11 +7,7 @@ import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 // フォーマット関数とバリデーション関数をインポート
 import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
 // 型定義をインポート
-import type {
-  InfoWindowProps,
-  LatLngLiteral,
-  BusinessHourKey,
-} from '../../utils/types';
+import type { InfoWindowProps, LatLngLiteral, BusinessHourKey } from '../../utils/types';
 
 // InfoWindowコンポーネントを定義
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
@@ -29,10 +25,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
 
   // InfoWindowの外側をクリックしたときに閉じる関数
   const handleClickOutside = (event: MouseEvent) => {
-    if (
-      infoWindowRef.current &&
-      !infoWindowRef.current.contains(event.target as Node)
-    ) {
+    if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
       console.log('Clicked outside InfoWindow'); // ログ出力を追加
       onCloseClick();
     }
@@ -81,11 +74,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
 
   return (
     // InfoWindowのコンテナ
-    <div
-      className="info-window"
-      ref={infoWindowRef}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <div className="info-window" ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
       {/* ヘッダー部分 */}
       <div className="info-header">
         <h2 id="info-window-title">{poi.name}</h2>
@@ -113,9 +102,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
             <div className="info-section">
               <span className="day">位置</span>
               <span className="value">
-                {typeof poi.location === 'string'
-                  ? poi.location
-                  : formatLocation(poi.location)}
+                {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
               </span>
             </div>
           )}
@@ -188,9 +175,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.information,
               title: '関連情報',
               content: (
-                <div className="info-related">
-                  {poi.information ? formatInformation(poi.information) : null}
-                </div>
+                <div className="info-related">{poi.information ? formatInformation(poi.information) : null}</div>
               ),
               description: 'この場所に関連する追加情報です。',
             },
@@ -199,17 +184,11 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.view,
               title: '',
               content: (
-                <a
-                  href={poi.view}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="info-button"
-                >
+                <a href={poi.view} target="_blank" rel="noopener noreferrer" className="info-button">
                   Google マップで写真を見る
                 </a>
               ),
-              description:
-                'Google マップでこの場所の写真を見ることができます。',
+              description: 'Google マップでこの場所の写真を見ることができます。',
             },
           ].map((item) =>
             item.condition ? (

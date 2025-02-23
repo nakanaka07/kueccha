@@ -26,7 +26,9 @@
   /* 背景画像を繰り返さない */
   z-index: 1000;
   /* 重なり順を最前面に設定 */
-  transition: opacity 1s ease-in, pointer-events 1s ease-in;
+  transition:
+    opacity 1s ease-in,
+    pointer-events 1s ease-in;
   /* アニメーションの設定 */
   background-color: #90daee;
   /* 背景色を設定します。 */

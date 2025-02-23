@@ -19,10 +19,7 @@ interface SearchResultsProps {
 
 // SearchResultsコンポーネントを定義します。
 // 検索結果を表示し、クリックイベントを処理します。
-const SearchResults: React.FC<SearchResultsProps> = ({
-  results,
-  onResultClick,
-}) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ results, onResultClick }) => {
   // 検索結果がクリックされたときに呼び出される関数を定義します。
   // useCallbackフックを使用して、onResultClickが変更された場合にのみこの関数を再生成します。
   const handleResultClick = useCallback(

@@ -58,7 +58,9 @@
   /* テキストの色を設定します。 */
   cursor: pointer;
   /* カーソルをポインタに変更します。 */
-  transition: background-color 0.3s, box-shadow 0.3s;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s;
   /* 背景色とボックスシャドウのトランジションを設定します。 */
 }
 

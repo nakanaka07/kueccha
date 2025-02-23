@@ -46,11 +46,8 @@ export const Map: React.FC<MapComponentProps> = ({
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const { resetNorth, handleGetCurrentLocation: getCurrentLocation } =
-    useMapControl(map);
-  const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>(
-    'roadmap',
-  );
+  const { resetNorth, handleGetCurrentLocation: getCurrentLocation } = useMapControl(map);
+  const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
@@ -138,9 +135,7 @@ export const Map: React.FC<MapComponentProps> = ({
         bounds.extend(currentLocation);
       }
 
-      const allFiltersOff = Object.values(areaVisibility).every(
-        (visible) => !visible,
-      );
+      const allFiltersOff = Object.values(areaVisibility).every((visible) => !visible);
       if (allFiltersOff) {
         map.setCenter(mapsConfig.defaultCenter);
         map.setZoom(mapsConfig.defaultZoom);
@@ -195,20 +190,10 @@ export const Map: React.FC<MapComponentProps> = ({
       },
       onError: (error) => alert(error),
     });
-  }, [
-    getCurrentLocation,
-    setCurrentLocation,
-    setAreaVisibility,
-    setShowWarning,
-  ]);
+  }, [getCurrentLocation, setCurrentLocation, setAreaVisibility, setShowWarning]);
 
   if (loadError) {
-    return (
-      <MapError
-        message={ERROR_MESSAGES.MAP.LOAD_FAILED}
-        onRetry={() => window.location.reload()}
-      />
-    );
+    return <MapError message={ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={() => window.location.reload()} />;
   }
 
   if (!isLoaded) {
@@ -258,13 +243,7 @@ export const Map: React.FC<MapComponentProps> = ({
             zIndex={1000}
           />
         )}
-        {selectedPoi && (
-          <InfoWindow
-            key={selectedPoi.id}
-            poi={selectedPoi}
-            onCloseClick={handleInfoWindowClose}
-          />
-        )}
+        {selectedPoi && <InfoWindow key={selectedPoi.id} poi={selectedPoi} onCloseClick={handleInfoWindowClose} />}
       </GoogleMap>
       <MapControls
         onResetNorth={resetNorth}
@@ -272,10 +251,7 @@ export const Map: React.FC<MapComponentProps> = ({
         onToggleRecommendations={toggleRecommendations}
       />
       {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
-      <SearchResults
-        results={displayedPois}
-        onResultClick={handleSearchResultClick}
-      />
+      <SearchResults results={displayedPois} onResultClick={handleSearchResultClick} />
     </div>
   );
 };

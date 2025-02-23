@@ -59,8 +59,7 @@ export const ERROR_MESSAGES = {
     MISSING: '必要な設定が不足しています。設定を追加してください。',
   },
   DATA: {
-    FETCH_FAILED:
-      'データの取得に失敗しました。ネットワーク接続を確認してください。',
+    FETCH_FAILED: 'データの取得に失敗しました。ネットワーク接続を確認してください。',
     LOADING_FAILED: 'データの読み込みに失敗しました。再試行してください。',
   },
   LOADING: {
@@ -69,13 +68,11 @@ export const ERROR_MESSAGES = {
   },
   MAP: {
     LOAD_FAILED: 'Google Maps の読み込みに失敗しました。再試行してください。',
-    CONFIG_MISSING:
-      'Google Maps の設定が不完全です。API キーとMap IDを確認してください。',
+    CONFIG_MISSING: 'Google Maps の設定が不完全です。API キーとMap IDを確認してください。',
     RETRY_MESSAGE: 'しばらく経ってから再度お試しください。',
   },
   SYSTEM: {
-    CONTAINER_NOT_FOUND:
-      'コンテナ要素が見つかりません。ページをリロードしてください。',
+    CONTAINER_NOT_FOUND: 'コンテナ要素が見つかりません。ページをリロードしてください。',
     UNKNOWN: '予期せぬエラーが発生しました。サポートに連絡してください。',
   },
   FORM: {
@@ -142,16 +139,10 @@ export const MENU_ITEMS: MenuItem[] = [
 
 // 初期表示の定数
 // 各エリアの初期表示状態を定義します。
-export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(
-  AREAS,
-).reduce(
+export const INITIAL_VISIBILITY: Record<AreaType, boolean> = Object.keys(AREAS).reduce(
   (acc, area) => ({
     ...acc,
-    [area]:
-      area !== 'SNACK' &&
-      area !== 'PUBLIC_TOILET' &&
-      area !== 'PARKING' &&
-      area !== 'CURRENT_LOCATION',
+    [area]: area !== 'SNACK' && area !== 'PUBLIC_TOILET' && area !== 'PARKING' && area !== 'CURRENT_LOCATION',
   }),
   {} as Record<AreaType, boolean>,
 ); // 各エリアの初期表示状態を定義し、特定のエリアは非表示にします。

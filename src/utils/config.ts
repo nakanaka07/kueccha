@@ -29,12 +29,7 @@ export const mapsConfig: Config['maps'] = {
   mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // Google MapsのマップID
   defaultCenter: { lat: 38.0, lng: 138.5 }, // マップのデフォルト中心座標
   defaultZoom: 10, // マップのデフォルトズームレベル
-  libraries: [
-    'places',
-    'geometry',
-    'drawing',
-    'marker',
-  ] as LoadScriptProps['libraries'], // 使用するGoogle Mapsのライブラリ
+  libraries: ['places', 'geometry', 'drawing', 'marker'] as LoadScriptProps['libraries'], // 使用するGoogle Mapsのライブラリ
   language: 'ja', // マップの言語設定
   version: 'weekly', // Google Maps APIのバージョン
   style: {

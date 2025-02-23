@@ -26,19 +26,11 @@ export const MapControls: React.FC<MapControlsProps> = ({
   // コントロールボタンを含むコンテナを表示します。
   <div className={styles.mapControlsContainer}>
     {/* 北向きにリセットするボタンを表示します。 */}
-    <button
-      onClick={onResetNorth}
-      className={styles.mapControlButton}
-      title="北向きにリセットします。"
-    >
+    <button onClick={onResetNorth} className={styles.mapControlButton} title="北向きにリセットします。">
       <img src={resetNorthIcon} alt="北向きにリセット" />
     </button>
     {/* 現在地を取得するボタンを表示します。 */}
-    <button
-      onClick={onGetCurrentLocation}
-      className={styles.mapControlButton}
-      title="現在地を取得します。"
-    >
+    <button onClick={onGetCurrentLocation} className={styles.mapControlButton} title="現在地を取得します。">
       <img src={currentLocationIcon} alt="現在地を取得" />
     </button>
     {/* おすすめエリアの表示を切り替えるボタンを表示します。 */}

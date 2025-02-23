@@ -59,9 +59,7 @@ const useSearch = (pois: Poi[]) => {
         }
 
         // クエリに基づいてPOIをフィルタリングします。
-        const results = pois.filter((poi) =>
-          poi.name.toLowerCase().includes(query.toLowerCase()),
-        );
+        const results = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
 
         // フィルタリング結果をキャッシュに保存します。
         cache.current[query] = results;

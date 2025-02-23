@@ -20,7 +20,9 @@
   /* 最大幅を370pxに設定 */
   border-radius: 8px;
   /* 角を丸くする */
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
   /* アニメーションの設定 */
   text-align: center;
   /* テキストを中央揃え */

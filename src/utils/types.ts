@@ -15,8 +15,7 @@ export interface BaseProps {
 }
 
 // BUSINESS_HOURSのキーを表す型
-export type BusinessHourKey =
-  (typeof INFO_WINDOW_BUSINESS_HOURS)[number]['key'];
+export type BusinessHourKey = (typeof INFO_WINDOW_BUSINESS_HOURS)[number]['key'];
 
 // アプリケーションの設定を表す型
 export interface Config {
@@ -49,19 +48,13 @@ export interface ErrorBoundaryState {
 export interface FilterPanelProps extends BaseProps {
   pois: Poi[]; // POIの配列
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POI選択の状態を設定する関数
-  setAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >; // エリアの可視性を設定する関数
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの可視性を設定する関数
   isFilterPanelOpen: boolean; // フィルターパネルが開いているかどうか
   onCloseClick: () => void; // 閉じるボタンのクリックハンドラー
   localAreaVisibility: Record<AreaType, boolean>; // ローカルのエリア可視性
-  setLocalAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >; // ローカルのエリア可視性を設定する関数
+  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // ローカルのエリア可視性を設定する関数
   currentLocation: LatLngLiteral | null; // 現在の位置
-  setCurrentLocation: React.Dispatch<
-    React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
+  setCurrentLocation: React.Dispatch<React.SetStateAction<LatLngLiteral | null>>; // 現在の位置を設定する関数
   setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 警告表示を設定する関数
 }
 
@@ -188,17 +181,11 @@ export interface LocationWarningProps extends BaseProps {
 export interface HamburgerMenuProps extends BaseProps {
   pois: Poi[]; // POIの配列
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>; // POI選択の状態を設定する関数
-  setAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >; // エリアの可視性を設定する関数
+  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // エリアの可視性を設定する関数
   localAreaVisibility: Record<AreaType, boolean>; // ローカルのエリア可視性
-  setLocalAreaVisibility: React.Dispatch<
-    React.SetStateAction<Record<AreaType, boolean>>
-  >; // ローカルのエリア可視性を設定する関数
+  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // ローカルのエリア可視性を設定する関数
   currentLocation: LatLngLiteral | null; // 現在の位置
-  setCurrentLocation: React.Dispatch<
-    React.SetStateAction<LatLngLiteral | null>
-  >; // 現在の位置を設定する関数
+  setCurrentLocation: React.Dispatch<React.SetStateAction<LatLngLiteral | null>>; // 現在の位置を設定する関数
   setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 警告表示を設定する関数
   search: (query: string) => void; // 検索ハンドラー
   searchResults: Poi[]; // 検索結果のPOI配列

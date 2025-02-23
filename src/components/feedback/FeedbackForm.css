@@ -110,7 +110,9 @@
   /* 背景色を変更 */
   transform: scale(1.05);
   /* 拡大 */
-  transition: transform 0.2s, background-color 0.2s;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
   /* トランジションを設定 */
 }
 

@@ -32,25 +32,25 @@
     "allowSyntheticDefaultImports": true,
 
     // 厳格な型チェックを有効化する一連の設定
-    "strict": true,                           // 全ての厳格な型チェックを有効化
-    "strictNullChecks": true,                 // null/undefinedチェックを厳格化
-    "strictFunctionTypes": true,              // 関数の引数と戻り値の型チェックを厳格化
-    "strictBindCallApply": true,             // Function.prototype.bind/call/applyの型チェックを厳格化
-    "strictPropertyInitialization": true,     // クラスプロパティの初期化チェックを厳格化
-    "noImplicitThis": true,                  // this型が暗黙的にanyになることを禁止
-    "alwaysStrict": true,                    // 全てのファイルを厳格モードで解析
+    "strict": true, // 全ての厳格な型チェックを有効化
+    "strictNullChecks": true, // null/undefinedチェックを厳格化
+    "strictFunctionTypes": true, // 関数の引数と戻り値の型チェックを厳格化
+    "strictBindCallApply": true, // Function.prototype.bind/call/applyの型チェックを厳格化
+    "strictPropertyInitialization": true, // クラスプロパティの初期化チェックを厳格化
+    "noImplicitThis": true, // this型が暗黙的にanyになることを禁止
+    "alwaysStrict": true, // 全てのファイルを厳格モードで解析
 
     // プロジェクト設定の厳格化
     "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字の一貫性を強制
-    "resolveJsonModule": true,                // JSONファイルのインポートを許可
-    "isolatedModules": true,                  // ファイルごとの個別コンパイルを可能に
+    "resolveJsonModule": true, // JSONファイルのインポートを許可
+    "isolatedModules": true, // ファイルごとの個別コンパイルを可能に
 
     // React関連の設定
-    "jsx": "react",                           // JSXのコンパイル方法を指定
+    "jsx": "react", // JSXのコンパイル方法を指定
 
     // ビルド最適化設定
-    "incremental": true,                      // 増分ビルドを有効化（ビルド時間短縮）
-    "outDir": "./dist",                       // コンパイル結果の出力先
+    "incremental": true, // 増分ビルドを有効化（ビルド時間短縮）
+    "outDir": "./dist", // コンパイル結果の出力先
 
     // パスエイリアスの設定
     // @/で始まるインポートパスをsrcディレクトリ配下にマッピング
@@ -60,8 +60,8 @@
 
     // 型定義ファイルの検索場所を指定
     "typeRoots": [
-      "./node_modules/@types",                // 標準の型定義
-      "./types"                               // プロジェクト固有の型定義
+      "./node_modules/@types", // 標準の型定義
+      "./types" // プロジェクト固有の型定義
     ],
 
     // 外部ライブラリの型チェックをスキップ（ビルド時間短縮）
@@ -70,21 +70,21 @@
 
   // コンパイル対象のファイルパターンを指定
   "include": [
-    "src/**/*",         // srcディレクトリ配下の全ファイル
-    "server.ts",        // サーバーサイドのエントリーポイント
-    "vite.config.js",   // Vite設定ファイル
-    "eslint.config.js"  // ESLint設定ファイル
+    "src/**/*", // srcディレクトリ配下の全ファイル
+    "server.ts", // サーバーサイドのエントリーポイント
+    "vite.config.js", // Vite設定ファイル
+    "eslint.config.js" // ESLint設定ファイル
   ],
 
   // コンパイル対象から除外するパターンを指定
   "exclude": [
-    "dist",            // ビルド出力ディレクトリ
-    "node_modules"     // 外部パッケージ
+    "dist", // ビルド出力ディレクトリ
+    "node_modules" // 外部パッケージ
   ],
 
   // ts-node実行時の設定
   "ts-node": {
-    "transpileOnly": true,  // 型チェックをスキップし、トランスパイルのみ実行
-    "esm": true            // ESモジュールのサポートを有効化
+    "transpileOnly": true, // 型チェックをスキップし、トランスパイルのみ実行
+    "esm": true // ESモジュールのサポートを有効化
   }
 }

@@ -6,8 +6,7 @@ export const useAppState = (pois: Poi[]) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
-  const [areaVisibility] =
-    useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
+  const [areaVisibility] = useState<Record<AreaType, boolean>>(INITIAL_VISIBILITY);
   const [currentLocation] = useState<LatLngLiteral | null>(null);
   const [showWarning] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);

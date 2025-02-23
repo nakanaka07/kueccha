@@ -6,7 +6,9 @@
   /* 縦方向に配置 */
   gap: 10px;
   /* 要素間の間隔を設定 */
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
   /* トランジションを設定 */
   transform: translateY(-100%);
   /* 初期位置を設定 */
@@ -103,7 +105,7 @@
 }
 
 /* カスタムチェックボックスのスタイル */
-.filter-item input[type='checkbox']+.custom-checkbox {
+.filter-item input[type='checkbox'] + .custom-checkbox {
   width: 16px;
   /* 幅を設定 */
   height: 16px;
@@ -123,13 +125,13 @@
 }
 
 /* チェックされたカスタムチェックボックスのスタイル */
-.filter-item input[type='checkbox']:checked+.custom-checkbox {
+.filter-item input[type='checkbox']:checked + .custom-checkbox {
   background-color: #007bff;
   /* 背景色を設定 */
 }
 
 /* チェックされたカスタムチェックボックスのチェックマークのスタイル */
-.filter-item input[type='checkbox']:checked+.custom-checkbox::after {
+.filter-item input[type='checkbox']:checked + .custom-checkbox::after {
   content: '';
   /* コンテンツを設定 */
   position: absolute;

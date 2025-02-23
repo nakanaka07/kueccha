@@ -28,7 +28,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "all-refresh": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune && pnpm install"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -62,6 +63,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react": "^7.37.4",
     "prettier": "^3.5.1",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "vite": "^6.1.1",

@@ -16,15 +16,8 @@ import { Poi, AreaType, LatLngLiteral } from './utils/types';
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch, isLoaded } = useSheetData();
   const { searchResults, search } = useSearch(pois);
-  const {
-    isMapLoaded,
-    mapInstance,
-    selectedPoi,
-    areaVisibility,
-    currentLocation,
-    showWarning,
-    actions,
-  } = useAppState(pois);
+  const { isMapLoaded, mapInstance, selectedPoi, areaVisibility, currentLocation, showWarning, actions } =
+    useAppState(pois);
 
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const displayedPois = searchResults.length > 0 ? searchResults : pois;
@@ -42,15 +35,10 @@ const App: React.FC = () => {
     );
   }, [isLoading, isLoaded, isMapLoaded]);
 
-  const [localSelectedPoi, setLocalSelectedPoi] = useState<Poi | null>(
-    selectedPoi,
-  );
-  const [localAreaVisibility, setLocalAreaVisibility] =
-    useState<Record<AreaType, boolean>>(areaVisibility);
-  const [localCurrentLocation, setLocalCurrentLocation] =
-    useState<LatLngLiteral | null>(currentLocation);
-  const [localShowWarning, setLocalShowWarning] =
-    useState<boolean>(showWarning);
+  const [localSelectedPoi, setLocalSelectedPoi] = useState<Poi | null>(selectedPoi);
+  const [localAreaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(areaVisibility);
+  const [localCurrentLocation, setLocalCurrentLocation] = useState<LatLngLiteral | null>(currentLocation);
+  const [localShowWarning, setLocalShowWarning] = useState<boolean>(showWarning);
 
   useEffect(() => {
     console.log('Selected POI updated:', selectedPoi);
