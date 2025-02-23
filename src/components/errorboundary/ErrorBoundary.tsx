@@ -2,7 +2,7 @@
 import React, { Component, ErrorInfo } from 'react';
 // CSSファイルをインポート
 import './ErrorBoundary.css';
-// 定数をインポーロ
+// 定数をインポート
 import { ERROR_MESSAGES } from '../../utils/constants';
 // 型定義をインポート
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';

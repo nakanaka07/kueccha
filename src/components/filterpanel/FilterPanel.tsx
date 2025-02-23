@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 // CSSファイルをインポート
 import './FilterPanel.css';
 // 定数をインポート
-import { MARKER_CONFIG, AREAS } from '../../utils/constants';
+import { MARKER_CONFIG, AREAS, ERROR_MESSAGES } from '../../utils/constants';
 // 型定義をインポート
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
@@ -26,6 +26,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // エリアの表示状態を更新するuseEffectフック
+  // localAreaVisibilityが変更されるたびにsetAreaVisibilityを呼び出す
   useEffect(() => {
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility, setAreaVisibility]);
@@ -41,13 +42,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // エリア情報を作成
   const areas = Object.entries(AREAS)
-    .filter(([area]) => area !== 'CURRENT_LOCATION')
+    .filter(([area]) => area !== 'CURRENT_LOCATION') // 現在地は除外
     .map(([area, name]) => ({
       area: area as AreaType,
       name,
-      count: areaCounts[area as AreaType] ?? 0,
-      isVisible: localAreaVisibility[area as AreaType],
-      color: MARKER_CONFIG.colors[area as AreaType],
+      count: areaCounts[area as AreaType] ?? 0, // 各エリアのPOIの数
+      isVisible: localAreaVisibility[area as AreaType], // エリアの表示状態
+      color: MARKER_CONFIG.colors[area as AreaType], // エリアのマーカーの色
     }));
 
   // 現在地の表示状態を変更する関数
@@ -59,48 +60,48 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setCurrentLocation({ lat: latitude, lng: longitude });
+          setCurrentLocation({ lat: latitude, lng: longitude }); // 現在地を設定
           setLocalAreaVisibility((prev) => ({
             ...prev,
-            CURRENT_LOCATION: true,
+            CURRENT_LOCATION: true, // 現在地を表示
           }));
-          setShowWarning(true);
-          setLocationError(null);
+          setShowWarning(true); // 警告メッセージを表示
+          setLocationError(null); // エラーをクリア
         },
         (error) => {
           // エラーメッセージを設定
-          let errorMessage = '位置情報の取得に失敗しました';
+          let errorMessage: string = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = '位置情報の取得が許可されていません';
+              errorMessage = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = '位置情報が利用できません';
+              errorMessage = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
               break;
             case error.TIMEOUT:
-              errorMessage = '位置情報の取得がタイムアウトしました';
+              errorMessage = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
               break;
             default:
-              errorMessage = '未知のエラーが発生しました';
+              errorMessage = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
               break;
           }
-          setLocationError(errorMessage);
+          setLocationError(errorMessage); // エラーメッセージを設定
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
+          enableHighAccuracy: true, // 高精度の位置情報を取得
+          timeout: 10000, // タイムアウト時間を設定
+          maximumAge: 0, // キャッシュを使用しない
         },
       );
     } else {
       // 現在地の表示をオフにする
-      setCurrentLocation(null);
+      setCurrentLocation(null); // 現在地をクリア
       setLocalAreaVisibility((prev) => ({
         ...prev,
-        CURRENT_LOCATION: false,
+        CURRENT_LOCATION: false, // 現在地を非表示
       }));
-      setShowWarning(false);
-      setLocationError(null);
+      setShowWarning(false); // 警告メッセージを非表示
+      setLocationError(null); // エラーをクリア
     }
   };
 
@@ -128,7 +129,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   onChange={() =>
                     setLocalAreaVisibility((prev) => ({
                       ...prev,
-                      [area]: !prev[area],
+                      [area]: !prev[area], // エリアの表示状態をトグル
                     }))
                   }
                   aria-label={`${name}を表示`}

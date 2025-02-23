@@ -55,26 +55,28 @@ export const MARKER_COLORS = {
 // 各種エラーメッセージを定義します。
 export const ERROR_MESSAGES = {
   CONFIG: {
-    INVALID: '設定が正しくありません',
-    MISSING: '必要な設定が不足しています',
+    INVALID: '設定が正しくありません。設定を確認してください。',
+    MISSING: '必要な設定が不足しています。設定を追加してください。',
   },
   DATA: {
-    FETCH_FAILED: 'データの取得に失敗しました',
-    LOADING_FAILED: 'データの読み込みに失敗しました',
+    FETCH_FAILED:
+      'データの取得に失敗しました。ネットワーク接続を確認してください。',
+    LOADING_FAILED: 'データの読み込みに失敗しました。再試行してください。',
   },
   LOADING: {
-    DATA: '読み込み中...',
-    MAP: 'マップを読み込んでいます...',
+    DATA: 'データを読み込み中です。しばらくお待ちください。',
+    MAP: 'マップを読み込み中です。しばらくお待ちください。',
   },
   MAP: {
-    LOAD_FAILED: 'Google Maps の読み込みに失敗しました。',
+    LOAD_FAILED: 'Google Maps の読み込みに失敗しました。再試行してください。',
     CONFIG_MISSING:
       'Google Maps の設定が不完全です。API キーとMap IDを確認してください。',
-    RETRY_MESSAGE: 'しばらく経ってから再度お試しください',
+    RETRY_MESSAGE: 'しばらく経ってから再度お試しください。',
   },
   SYSTEM: {
-    CONTAINER_NOT_FOUND: 'コンテナ要素が見つかりません',
-    UNKNOWN: '予期せぬエラーが発生しました',
+    CONTAINER_NOT_FOUND:
+      'コンテナ要素が見つかりません。ページをリロードしてください。',
+    UNKNOWN: '予期せぬエラーが発生しました。サポートに連絡してください。',
   },
   FORM: {
     EMPTY_NAME: '名前を入力してください。',
@@ -83,8 +85,14 @@ export const ERROR_MESSAGES = {
     SUBMISSION_FAILED: '送信に失敗しました。もう一度お試しください。',
   },
   ERROR_BOUNDARY: {
-    UNKNOWN_ERROR: 'エラーが発生しました',
+    UNKNOWN_ERROR: 'エラーが発生しました。ページをリロードしてください。',
     RETRY_BUTTON: '再試行',
+  },
+  GEOLOCATION: {
+    PERMISSION_DENIED: '位置情報の取得が許可されていません',
+    POSITION_UNAVAILABLE: '位置情報が利用できません',
+    TIMEOUT: '位置情報の取得がタイムアウトしました',
+    UNKNOWN: '未知のエラーが発生しました',
   },
 } as const; // 定数としてエラーメッセージを定義し、変更不可にします。
 
