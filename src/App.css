@@ -1,0 +1,73 @@
+/* .app-containerクラスはアプリケーション全体のコンテナのスタイルを定義します。 */
+.app-container {
+  position: relative; /* 相対位置を指定します。 */
+  width: 100%; /* 幅を100%に設定します。 */
+  height: 100vh; /* 高さをビューポートの高さに設定します。 */
+  overflow: hidden; /* コンテンツがはみ出した場合に非表示にします。 */
+}
+
+/* .map-containerクラスは地図コンテナのスタイルを定義します。 */
+.map-container {
+  position: absolute; /* 絶対位置を指定します。 */
+  top: 0; /* 上端を0に設定します。 */
+  left: 0; /* 左端を0に設定します。 */
+  width: 100%; /* 幅を100%に設定します。 */
+  height: 100%; /* 高さを100%に設定します。 */
+  z-index: 0; /* z-indexを0に設定します。 */
+}
+
+/* .map-container内のdiv要素のスタイルを定義します。 */
+.map-container > div {
+  width: 100%; /* 幅を100%に設定します。 */
+  height: 100%; /* 高さを100%に設定します。 */
+}
+
+/* .initial-backgroundクラスは初期背景のスタイルを定義します。 */
+.initial-background {
+  position: fixed; /* 固定位置を指定します。 */
+  top: 0; /* 上端を0に設定します。 */
+  left: 0; /* 左端を0に設定します。 */
+  width: 100%; /* 幅を100%に設定します。 */
+  height: 100%; /* 高さを100%に設定します。 */
+  background-image: url('/src/utils/images/row1.png'); /* 背景画像を設定します。 */
+  background-size: contain; /* 背景画像をコンテナに収めます。 */
+  background-repeat: no-repeat; /* 背景画像を繰り返しません。 */
+  background-position: center; /* 背景画像を中央に配置します。 */
+  z-index: 1000; /* z-indexを1000に設定します。 */
+  transition: opacity 1s ease-in; /* 不透明度のトランジションを設定します。 */
+  background-color: #90daee; /* 背景色を設定します。 */
+}
+
+/* .initial-background.hiddenクラスは初期背景が非表示のときのスタイルを定義します。 */
+.initial-background.hidden {
+  opacity: 0; /* 不透明度を0に設定します。 */
+  pointer-events: none; /* ポインターイベントを無効にします。 */
+}
+
+/* .error-messageクラスはエラーメッセージのスタイルを定義します。 */
+.error-message {
+  color: red; /* 文字色を赤に設定します。 */
+  font-weight: bold; /* 文字を太字に設定します。 */
+  text-align: center; /* テキストを中央揃えにします。 */
+  margin-top: 20px; /* 上マージンを20pxに設定します。 */
+}
+
+/* .error-message内のp要素のスタイルを定義します。 */
+.error-message p {
+  margin: 10px 0; /* 上下マージンを10pxに設定します。 */
+}
+
+/* .error-message内のbutton要素のスタイルを定義します。 */
+.error-message button {
+  background-color: #ff4d4d; /* 背景色を赤に設定します。 */
+  color: white; /* 文字色を白に設定します。 */
+  border: none; /* ボーダーをなしに設定します。 */
+  padding: 10px 20px; /* パディングを設定します。 */
+  cursor: pointer; /* カーソルをポインターに設定します。 */
+  font-size: 16px; /* フォントサイズを16pxに設定します。 */
+}
+
+/* .error-message内のbutton要素がホバーされたときのスタイルを定義します。 */
+.error-message button:hover {
+  background-color: #ff1a1a; /* ホバー時の背景色を濃い赤に設定します。 */
+}
