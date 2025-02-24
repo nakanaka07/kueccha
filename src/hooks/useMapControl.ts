@@ -8,6 +8,7 @@ import type { LatLngLiteral } from '../utils/types';
 export const useMapControl = (map: google.maps.Map | null) => {
   // 北をリセットする関数を定義します。マップの向きを北にリセットします。
   const resetNorth = useCallback(() => {
+    // mapがnullでない場合に実行します。
     if (map) {
       // マップの向きを北に設定します。
       map.setHeading(0);
@@ -69,7 +70,7 @@ export const useMapControl = (map: google.maps.Map | null) => {
 
   // フックが返すオブジェクト。北をリセットする関数と現在地を取得する関数を含みます。
   return {
-    resetNorth,
-    handleGetCurrentLocation,
+    resetNorth, // マップの向きを北にリセットする関数
+    handleGetCurrentLocation, // 現在地を取得する関数
   };
 };

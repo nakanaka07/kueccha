@@ -25,8 +25,6 @@ const useSearch = (pois: Poi[]) => {
   // 検索関数を定義します。検索クエリを引数として受け取ります。
   const search = useCallback(
     (query: string) => {
-      // 検索クエリをログ出力します。
-      console.log('Search query:', query);
       // 検索クエリを状態変数にセットします。
       setQuery(query);
 
@@ -40,21 +38,18 @@ const useSearch = (pois: Poi[]) => {
         // クエリが'clear'の場合、検索結果をクリアします。
         if (query === 'clear') {
           setSearchResults([]);
-          console.log('Search results cleared');
           return;
         }
 
         // クエリが'all'または空文字列の場合、全てのPOIを検索結果にセットします。
         if (query === 'all' || !query) {
           setSearchResults(pois);
-          console.log('Search results set to all POIs');
           return;
         }
 
         // キャッシュにクエリが存在する場合、キャッシュから検索結果をセットします。
         if (cache.current[query]) {
           setSearchResults(cache.current[query]);
-          console.log('Search results from cache:', cache.current[query]);
           return;
         }
 
@@ -65,7 +60,6 @@ const useSearch = (pois: Poi[]) => {
         cache.current[query] = results;
         // フィルタリング結果を検索結果にセットします。
         setSearchResults(results);
-        console.log('Search results:', results);
       }, DEBOUNCE_DELAY);
     },
     [pois], // poisが変更された場合にのみこの関数を再生成します。

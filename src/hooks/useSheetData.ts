@@ -1,21 +1,29 @@
+// Reactのフックをインポートします。useStateとuseEffectは状態管理、useCallbackはメモ化された関数を作成するために使用します。
 import { useState, useEffect, useCallback } from 'react';
+// CONFIGとvalidateConfigをインポートします。Google Sheets APIの設定とその検証に使用します。
 import { CONFIG, validateConfig } from '../utils/config';
+// AREASとERROR_MESSAGESをインポートします。エリアの定数とエラーメッセージに使用します。
 import { AREAS, ERROR_MESSAGES } from '../utils/constants';
+// Poi型とAreaType型をインポートします。ポイントオブインタレストとエリアの型定義に使用します。
 import type { Poi, AreaType } from '../utils/types';
 
+// FetchErrorインターフェースを定義します。エラーメッセージとエラーコードを含みます。
 interface FetchError {
   message: string;
   code: string;
 }
 
+// APIの設定を定数として定義します。最大リトライ回数、リトライ間隔、ベースURLを含みます。
 const API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
 } as const;
 
+// 指定されたミリ秒だけ待機する関数を定義します。
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// エラーハンドリング関数を定義します。エラーとリトライ回数を引数に取り、FetchErrorオブジェクトを返します。
 const handleError = (error: unknown, retryCount: number): FetchError => {
   console.error(error);
   if (retryCount < API_CONFIG.MAX_RETRIES) {
@@ -27,6 +35,7 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
   };
 };
 
+// WKT形式の文字列を解析して緯度経度オブジェクトを返す関数を定義します。
 const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   try {
     const match = wkt.match(/POINT\s*\(([0-9.]+)\s+([0-9.]+)\)/);
@@ -52,30 +61,34 @@ const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   return null;
 };
 
+// useSheetDataフックを定義します。Google Sheetsからデータを取得し、状態を管理します。
 export function useSheetData() {
+  // POI（ポイントオブインタレスト）の配列を管理する状態変数を定義します。初期値は空配列です。
   const [pois, setPois] = useState<Poi[]>([]);
+  // データ取得中かどうかを管理する状態変数を定義します。初期値はfalseです。
   const [isLoading, setIsLoading] = useState(false);
+  // エラー情報を管理する状態変数を定義します。初期値はnullです。
   const [error, setError] = useState<FetchError | null>(null);
+  // データが取得済みかどうかを管理する状態変数を定義します。初期値はfalseです。
   const [isFetched, setIsFetched] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false); // isLoaded 状態を追加
+  // データがロード済みかどうかを管理する状態変数を定義します。初期値はfalseです。
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // 指定されたエリアのデータを取得する非同期関数を定義します。リトライ回数を引数に取ります。
   const fetchAreaData = useCallback(async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
     const areaName = AREAS[area];
     const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
 
     try {
-      console.log(`Fetching data for area: ${area}`);
       const response = await fetch(url);
       if (!response.ok) {
         if (response.status === 429 && retryCount < API_CONFIG.MAX_RETRIES) {
-          console.warn(`Rate limit exceeded. Retrying... (${retryCount + 1})`);
           await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
           return fetchAreaData(area, retryCount + 1);
         }
         throw new Error(`Failed to fetch data for area: ${area}`);
       }
       const data = await response.json();
-      console.log(`Data fetched for area: ${area}`, data);
 
       return (data.values?.slice(1) || [])
         .filter((row: string[]) => row[1] && row[33])
@@ -111,7 +124,6 @@ export function useSheetData() {
         })
         .filter((poi: Poi | null): poi is Poi => poi !== null);
     } catch (error) {
-      console.error(`Error fetching data for area: ${area}`, error);
       if (retryCount < API_CONFIG.MAX_RETRIES) {
         await delay(API_CONFIG.RETRY_DELAY * (retryCount + 1));
         return fetchAreaData(area, retryCount + 1);
@@ -120,12 +132,12 @@ export function useSheetData() {
     }
   }, []);
 
+  // データを取得する非同期関数を定義します。データ取得中または取得済みの場合は何もしません。
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
     setIsLoading(true);
     setError(null);
-    console.log('Fetching data...');
 
     try {
       validateConfig(CONFIG);
@@ -141,31 +153,26 @@ export function useSheetData() {
       setPois(Array.from(poisMap.values()));
       setIsFetched(true);
       setIsLoaded(true); // データフェッチ完了後に isLoaded を true に設定
-      console.log('Data fetched successfully:', Array.from(poisMap.values()));
-
-      // ログを追加して、データフェッチ後の状態を確認
-      console.log('POIs state updated:', Array.from(poisMap.values()));
-      console.log('isLoaded state:', true); // isLoaded の状態をログ出力
     } catch (err) {
-      console.error('Error fetching data:', err);
       setError(handleError(err, API_CONFIG.MAX_RETRIES));
     } finally {
       setIsLoading(false);
-      console.log('Loading state:', { isLoading: false, isFetched: true });
     }
   }, [isLoading, isFetched, fetchAreaData]);
 
+  // コンポーネントのマウント時にデータを取得するためのuseEffectフックを定義します。
   useEffect(() => {
     if (!isFetched) {
       fetchData();
     }
   }, [fetchData, isFetched]);
 
+  // データを再取得するための関数を定義します。isFetchedをfalseに設定し、エラーをクリアします。
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);
-    console.log('Refetching data...');
   }, []);
 
-  return { pois, isLoading, isLoaded, error, refetch }; // isLoaded を返す
+  // フックが返すオブジェクト。POIの配列、ローディング状態、ロード済み状態、エラー情報、再取得関数を含みます。
+  return { pois, isLoading, isLoaded, error, refetch };
 }

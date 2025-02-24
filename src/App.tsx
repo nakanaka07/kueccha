@@ -1,89 +1,73 @@
+// Reactとフックをインポート
 import React, { useState, useEffect } from 'react';
+// ReactDOMのcreateRootをインポート
 import { createRoot } from 'react-dom/client';
+// CSSファイルをインポート
 import './App.css';
+// エラーバウンダリコンポーネントをインポート
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
+// フィードバックフォームコンポーネントをインポート
 import FeedbackForm from './components/feedback/FeedbackForm';
+// フィルターパネルコンポーネントをインポート
 import FilterPanel from './components/filterpanel/FilterPanel';
+// ハンバーガーメニューコンポーネントをインポート
 import HamburgerMenu from './components/hamburgermenu/HamburgerMenu';
+// ローディングフォールバックコンポーネントをインポート
 import LoadingFallback from './components/loadingfallback/LoadingFallback';
+// マップコンポーネントをインポート
 import Map from './components/map/Map';
+// カスタムフックをインポート
 import { useAppState } from './hooks/useAppState';
 import useSearch from './hooks/useSearch';
 import { useSheetData } from './hooks/useSheetData';
+// 定数をインポート
 import { ERROR_MESSAGES } from './utils/constants';
+// 型定義をインポート
 import { Poi, AreaType, LatLngLiteral } from './utils/types';
 
+// Appコンポーネントの定義
 const App: React.FC = () => {
+  // シートデータを取得するカスタムフックを使用
   const { pois, isLoading, error, refetch, isLoaded } = useSheetData();
+  // 検索機能を提供するカスタムフックを使用
   const { searchResults, search } = useSearch(pois);
-  const { isMapLoaded, mapInstance, selectedPoi, areaVisibility, currentLocation, showWarning, actions } =
-    useAppState(pois);
+  // アプリケーションの状態を管理するカスタムフックを使用
+  const { selectedPoi, areaVisibility, currentLocation, showWarning, actions } = useAppState(pois);
 
+  // フィードバックフォームの表示状態を管理するステート
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
+  // 表示するPOIを決定
   const displayedPois = searchResults.length > 0 ? searchResults : pois;
+  // 初期ローディング状態を管理
   const isInitialLoading = isLoading || !isLoaded;
 
-  // ローディング状態のログを追加
-  useEffect(() => {
-    console.log(
-      'Loading state updated: isLoading =',
-      isLoading,
-      ', isLoaded =',
-      isLoaded,
-      ', isMapLoaded =',
-      isMapLoaded,
-    );
-  }, [isLoading, isLoaded, isMapLoaded]);
-
+  // ローカルステートを定義し、グローバルステートの変更を監視
   const [localSelectedPoi, setLocalSelectedPoi] = useState<Poi | null>(selectedPoi);
   const [localAreaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(areaVisibility);
   const [localCurrentLocation, setLocalCurrentLocation] = useState<LatLngLiteral | null>(currentLocation);
   const [localShowWarning, setLocalShowWarning] = useState<boolean>(showWarning);
 
+  // selectedPoiが変更されたときにローカルステートを更新
   useEffect(() => {
-    console.log('Selected POI updated:', selectedPoi);
     setLocalSelectedPoi(selectedPoi);
   }, [selectedPoi]);
 
+  // areaVisibilityが変更されたときにローカルステートを更新
   useEffect(() => {
-    console.log('Area visibility updated:', areaVisibility);
     setLocalAreaVisibility(areaVisibility);
   }, [areaVisibility]);
 
+  // currentLocationが変更されたときにローカルステートを更新
   useEffect(() => {
-    console.log('Current location updated:', currentLocation);
     setLocalCurrentLocation(currentLocation);
   }, [currentLocation]);
 
+  // showWarningが変更されたときにローカルステートを更新
   useEffect(() => {
-    console.log('Show warning updated:', showWarning);
     setLocalShowWarning(showWarning);
   }, [showWarning]);
 
-  // POIsデータの受け取りと表示に関するログを追加
-  useEffect(() => {
-    console.log('POIs data fetched:', pois);
-  }, [pois]);
-
-  // Mapのロード状態に関するログを追加
-  useEffect(() => {
-    console.log('Map load status:', {
-      isMapLoaded,
-      hasMapInstance: !!mapInstance,
-    });
-  }, [isMapLoaded, mapInstance]);
-
-  useEffect(() => {
-    console.log('Map loading status:', {
-      isInitialLoading,
-      isLoaded,
-      isMapLoaded,
-      hasMapInstance: !!mapInstance,
-    });
-  }, [isInitialLoading, isLoaded, isMapLoaded, mapInstance]);
-
-  console.log('App component rendered with POIs:', pois);
-
+  // エラーが発生した場合のエラーハンドリング
   if (error) {
     return (
       <ErrorBoundary>
@@ -93,6 +77,7 @@ const App: React.FC = () => {
     );
   }
 
+  // 初期ローディング状態の場合のローディング表示
   if (isInitialLoading) {
     return (
       <LoadingFallback
@@ -103,68 +88,65 @@ const App: React.FC = () => {
     );
   }
 
+  // メインのアプリケーションUIをレンダリング
   return (
     <div className="app">
       <ErrorBoundary>
         <div className="app-container">
           <Map
-            pois={displayedPois}
-            selectedPoi={localSelectedPoi}
-            setSelectedPoi={setLocalSelectedPoi}
-            areaVisibility={localAreaVisibility}
+            pois={displayedPois} // 表示するPOI
+            selectedPoi={localSelectedPoi} // 選択されたPOI
+            setSelectedPoi={setLocalSelectedPoi} // POI選択を設定する関数
+            areaVisibility={localAreaVisibility} // エリアの可視性
             onLoad={(mapInstance) => {
-              console.log('Map loaded:', mapInstance);
-              actions.handleMapLoad(mapInstance);
+              actions.handleMapLoad(mapInstance); // マップがロードされたときの処理
             }}
-            setAreaVisibility={setLocalAreaVisibility}
-            currentLocation={localCurrentLocation}
-            setCurrentLocation={setLocalCurrentLocation}
-            showWarning={localShowWarning}
-            setShowWarning={setLocalShowWarning}
-            setIsMapLoaded={actions.handleMapLoad} // この行を追加
+            setAreaVisibility={setLocalAreaVisibility} // エリアの可視性を設定する関数
+            currentLocation={localCurrentLocation} // 現在の位置
+            setCurrentLocation={setLocalCurrentLocation} // 現在の位置を設定する関数
+            showWarning={localShowWarning} // 警告表示
+            setShowWarning={setLocalShowWarning} // 警告表示を設定する関数
+            setIsMapLoaded={actions.handleMapLoad} // マップがロードされたときの処理
           />
           <HamburgerMenu
-            pois={displayedPois}
-            setSelectedPoi={setLocalSelectedPoi}
-            setAreaVisibility={setLocalAreaVisibility}
-            localAreaVisibility={localAreaVisibility}
-            setLocalAreaVisibility={setLocalAreaVisibility}
-            currentLocation={localCurrentLocation}
-            setCurrentLocation={setLocalCurrentLocation}
-            setShowWarning={setLocalShowWarning}
-            search={search}
-            searchResults={searchResults}
+            pois={displayedPois} // 表示するPOI
+            setSelectedPoi={setLocalSelectedPoi} // POI選択を設定する関数
+            setAreaVisibility={setLocalAreaVisibility} // エリアの可視性を設定する関数
+            localAreaVisibility={localAreaVisibility} // ローカルのエリア可視性
+            setLocalAreaVisibility={setLocalAreaVisibility} // ローカルのエリア可視性を設定する関数
+            currentLocation={localCurrentLocation} // 現在の位置
+            setCurrentLocation={setLocalCurrentLocation} // 現在の位置を設定する関数
+            setShowWarning={setLocalShowWarning} // 警告表示を設定する関数
+            search={search} // 検索関数
+            searchResults={searchResults} // 検索結果
             handleSearchResultClick={(poi) => {
-              console.log('Search result clicked:', poi);
-              actions.handleSearchResultClick(poi);
+              actions.handleSearchResultClick(poi); // 検索結果がクリックされたときの処理
             }}
           />
           <FilterPanel
-            pois={displayedPois}
-            setSelectedPoi={setLocalSelectedPoi}
-            setAreaVisibility={setLocalAreaVisibility}
-            isFilterPanelOpen={true}
+            pois={displayedPois} // 表示するPOI
+            setSelectedPoi={setLocalSelectedPoi} // POI選択を設定する関数
+            setAreaVisibility={setLocalAreaVisibility} // エリアの可視性を設定する関数
+            isFilterPanelOpen={true} // フィルターパネルの表示状態
             onCloseClick={() => {
-              console.log('Filter panel closed');
+              // フィルターパネルが閉じられたときの処理
             }}
-            localAreaVisibility={localAreaVisibility}
-            setLocalAreaVisibility={setLocalAreaVisibility}
-            currentLocation={localCurrentLocation}
-            setCurrentLocation={setLocalCurrentLocation}
-            setShowWarning={setLocalShowWarning}
+            localAreaVisibility={localAreaVisibility} // ローカルのエリア可視性
+            setLocalAreaVisibility={setLocalAreaVisibility} // ローカルのエリア可視性を設定する関数
+            currentLocation={localCurrentLocation} // 現在の位置
+            setCurrentLocation={setLocalCurrentLocation} // 現在の位置を設定する関数
+            setShowWarning={setLocalShowWarning} // 警告表示を設定する関数
           />
           <button
             onClick={() => {
-              console.log('Refetch button clicked');
-              refetch();
+              refetch(); // データを再取得する処理
             }}
           >
             データを更新
           </button>
           <button
             onClick={() => {
-              console.log('Feedback form button clicked');
-              setIsFeedbackFormOpen(true);
+              setIsFeedbackFormOpen(true); // フィードバックフォームを開く処理
             }}
           >
             フィードバックを送信
@@ -172,8 +154,7 @@ const App: React.FC = () => {
           {isFeedbackFormOpen && (
             <FeedbackForm
               onClose={() => {
-                console.log('Feedback form closed');
-                setIsFeedbackFormOpen(false);
+                setIsFeedbackFormOpen(false); // フィードバックフォームを閉じる処理
               }}
             />
           )}
@@ -183,8 +164,10 @@ const App: React.FC = () => {
   );
 };
 
+// アプリケーションのルートコンテナを取得
 const container = document.getElementById('app');
 if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 
+// Reactのルートを作成し、Appコンポーネントをレンダリング
 const root = createRoot(container);
 root.render(<App />);
