@@ -34,8 +34,8 @@ const Marker = React.memo(
       const iconElement = document.createElement('div');
       iconElement.style.backgroundImage = `url(${iconUrl})`;
       iconElement.style.backgroundSize = 'contain';
-      iconElement.style.width = '40px';
-      iconElement.style.height = '40px';
+      iconElement.style.width = '36px';
+      iconElement.style.height = '36px';
 
       // マーカーを作成し、マップに追加します。
       const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -48,7 +48,6 @@ const Marker = React.memo(
 
       // マーカーがクリックされたときに呼び出される関数を定義します。
       const handleClick = () => {
-        console.log('Marker clicked:', poi); // ログ出力を追加
         onClick(poi); // 親コンポーネントから渡されたonClickコールバックを呼び出します。
       };
 
@@ -56,8 +55,6 @@ const Marker = React.memo(
       marker.addListener('click', handleClick);
       // マーカーの参照を更新します。
       markerRef.current = marker;
-
-      console.log('Marker added:', poi); // ログ出力を追加
 
       // 特定のエリアに応じてアイコン要素にクラスを追加します。
       if (poi.area === 'RECOMMEND') {
@@ -74,7 +71,6 @@ const Marker = React.memo(
           google.maps.event.clearInstanceListeners(markerRef.current);
           markerRef.current.map = null;
           markerRef.current = null;
-          console.log('Marker removed:', poi); // ログ出力を追加
         }
       };
     }, [map, poi, onClick, zIndex]); // 依存関係が変更された場合にのみこの副作用を再実行します。
@@ -85,11 +81,9 @@ const Marker = React.memo(
         if (isSelected) {
           // マーカーが選択された場合、選択クラスを追加します。
           markerRef.current.content.classList.add('marker-selected');
-          console.log('Marker selected:', poi); // ログ出力を追加
         } else {
           // マーカーが選択解除された場合、選択クラスを削除します。
           markerRef.current.content.classList.remove('marker-selected');
-          console.log('Marker deselected:', poi); // ログ出力を追加
         }
       }
     }, [isSelected, poi]); // isSelectedとpoiが変更された場合にのみこの副作用を再実行します。

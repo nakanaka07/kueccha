@@ -204,17 +204,16 @@ export const Map: React.FC<MapComponentProps> = ({
     return <div className="loading-container">地図を読み込んでいます...</div>;
   }
 
-  // 表示するPOIをフィルタリングします。
-  const displayedPois = pois.filter((poi) => areaVisibility[poi.area]);
+  // 表示するPOIをフィルタリングし、RECOMMENDのマーカーを最後に並び替えます。
+  const displayedPois = pois
+    .filter((poi) => areaVisibility[poi.area])
+    .sort((a, b) => (a.area === 'RECOMMEND' ? 1 : b.area === 'RECOMMEND' ? -1 : 0));
 
   // マップコンポーネントのレンダリング
   return (
     <div role="region" aria-label="地図" className={styles.mapContainer}>
       <GoogleMap
-        mapContainerStyle={{
-          width: '100%',
-          height: '100%',
-        }}
+        mapContainerStyle={MAPS_CONFIG.style}
         center={MAPS_CONFIG.defaultCenter}
         zoom={MAPS_CONFIG.defaultZoom}
         options={mapOptions}
