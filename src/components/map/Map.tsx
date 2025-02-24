@@ -13,6 +13,23 @@ import Marker from '../marker/Marker';
 import SearchResults from '../searchresults/SearchResults';
 import type { MapComponentProps, Poi } from '../../utils/types';
 
+type AreaType =
+  | 'AKADOMARI_HAMOCHI_OGI'
+  | 'CURRENT_LOCATION'
+  | 'KANAI_SAWADA_NIIBO_HATANO_MANO'
+  | 'PARKING'
+  | 'PUBLIC_TOILET'
+  | 'RECOMMEND'
+  | 'RYOTSU_AIKAWA'
+  | 'SNACK';
+
+type AreaVisibility = Record<AreaType, boolean>;
+
+const updateRecommend = (prev: AreaVisibility): AreaVisibility => ({
+  ...prev,
+  RECOMMEND: !prev.RECOMMEND,
+});
+
 if (!mapsConfig.apiKey || !mapsConfig.mapId) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
 }
@@ -114,10 +131,7 @@ export const Map: React.FC<MapComponentProps> = ({
 
   const toggleRecommendations = useCallback(() => {
     console.log('Toggling recommendations');
-    setAreaVisibility((prev) => ({
-      ...prev,
-      RECOMMEND: !prev.RECOMMEND,
-    }));
+    setAreaVisibility((prev: AreaVisibility) => updateRecommend(prev));
   }, [setAreaVisibility]);
 
   useEffect(() => {
@@ -182,7 +196,7 @@ export const Map: React.FC<MapComponentProps> = ({
       onSuccess: (location) => {
         console.log('Current location obtained:', location);
         setCurrentLocation(location);
-        setAreaVisibility((prev) => ({
+        setAreaVisibility((prev: AreaVisibility) => ({
           ...prev,
           CURRENT_LOCATION: true,
         }));
