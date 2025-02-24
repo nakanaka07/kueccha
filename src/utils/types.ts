@@ -163,7 +163,9 @@ export interface MapComponentProps extends MapProps {
   selectedPoi: Poi | null;
   setSelectedPoi: (poi: Poi | null) => void;
   areaVisibility: Record<AreaType, boolean>;
-  setAreaVisibility: (visibility: Record<AreaType, boolean>) => void;
+  setAreaVisibility: (
+    value: Record<AreaType, boolean> | ((prev: Record<AreaType, boolean>) => Record<AreaType, boolean>),
+  ) => void;
   currentLocation: LatLngLiteral | null;
   setCurrentLocation: (location: LatLngLiteral | null) => void;
   showWarning: boolean;

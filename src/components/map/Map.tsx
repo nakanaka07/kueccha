@@ -52,7 +52,7 @@ export const Map: React.FC<MapComponentProps> = ({
   setCurrentLocation,
   showWarning,
   setShowWarning,
-  setIsMapLoaded, // 新しいpropを追加
+  setIsMapLoaded,
 }) => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: mapsConfig.apiKey,
