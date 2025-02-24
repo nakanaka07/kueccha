@@ -1,5 +1,6 @@
 // 画像のインポート
 // 各エリアや機能に対応するアイコン画像をインポートします。
+import { LoadScriptProps } from '@react-google-maps/api';
 import publicToiletIcon from './images/ano_icon01.png';
 import recommendIcon from './images/ano_icon_recommend.png';
 import ryotsuAikawaIcon from './images/icon_map01.png';
@@ -14,14 +15,14 @@ import type { AreaType, Poi, MenuItem } from './types'; // 型定義をインポ
 // エリアの定数
 // 各エリアの名前を定義します。
 export const AREAS = {
-  AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
-  CURRENT_LOCATION: '現在地',
-  KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',
-  PARKING: '駐車場',
-  PUBLIC_TOILET: '公共トイレ',
   RECOMMEND: 'おすすめ',
   RYOTSU_AIKAWA: '両津・相川地区',
+  KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',
+  AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
   SNACK: 'スナック',
+  PUBLIC_TOILET: '公共トイレ',
+  PARKING: '駐車場',
+  CURRENT_LOCATION: '現在地',
 } as const; // 定数としてエリア名を定義し、変更不可にします。
 
 // 情報ウィンドウの営業時間の定数
@@ -40,15 +41,15 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
 // マーカーの色の定数
 // 各エリアに対応するマーカーの色を定義します。
 export const MARKER_COLORS = {
-  AKADOMARI_HAMOCHI_OGI: '#007b43',
-  CURRENT_LOCATION: '#42a30f',
   DEFAULT: '#000000',
-  KANAI_SAWADA_NIIBO_HATANO_MANO: '#ec6800',
-  PARKING: '#333333',
-  PUBLIC_TOILET: '#2792c3',
   RECOMMEND: '#d7003a',
   RYOTSU_AIKAWA: '#d9a62e',
+  KANAI_SAWADA_NIIBO_HATANO_MANO: '#ec6800',
+  AKADOMARI_HAMOCHI_OGI: '#007b43',
   SNACK: '#65318e',
+  PUBLIC_TOILET: '#2792c3',
+  PARKING: '#333333',
+  CURRENT_LOCATION: '#42a30f',
 } as const; // 定数としてマーカーの色を定義し、変更不可にします。
 
 // エラーメッセージの定数
@@ -106,15 +107,15 @@ export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
 // マーカーのアイコンの定数
 // 各エリアに対応するマーカーのアイコンを定義します。
 export const MARKER_ICONS: Record<string, string> = {
+  DEFAULT: defaultIcon,
+  RECOMMEND: recommendIcon,
   RYOTSU_AIKAWA: ryotsuAikawaIcon,
   KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
   AKADOMARI_HAMOCHI_OGI: akadomariHamochiOgiIcon,
-  RECOMMEND: recommendIcon,
   SNACK: snackIcon,
   PUBLIC_TOILET: publicToiletIcon,
   PARKING: parkingIcon,
   CURRENT_LOCATION: currentLocationIcon,
-  DEFAULT: defaultIcon,
 }; // 各エリアに対応するマーカーのアイコンを定義します。
 
 // メニューアイテムの定数
@@ -173,3 +174,37 @@ export const MAP_CONFIGS = {
   MAP_TYPES: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 使用可能なマップタイプを定義します。
   DEFAULT_TYPE: 'roadmap', // デフォルトのマップタイプを'roadmap'に設定します。
 } as const; // 定数としてマップの設定を定義し、変更不可にします。
+
+// Google Mapsの設定
+export const MAPS_CONFIG = {
+  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // Google Maps APIキー
+  mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // Google MapsのマップID
+  defaultCenter: { lat: 38.0, lng: 138.5 }, // マップのデフォルト中心座標
+  defaultZoom: 10, // マップのデフォルトズームレベル
+  libraries: ['places', 'geometry', 'drawing', 'marker'] as LoadScriptProps['libraries'], // 使用するGoogle Mapsのライブラリ
+  language: 'ja', // マップの言語設定
+  version: 'weekly', // Google Maps APIのバージョン
+  style: {
+    width: '100%', // マップの幅
+    height: '100%', // マップの高さ
+  },
+  options: {
+    mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // マップID
+    disableDefaultUI: false, // デフォルトUIを無効にしない
+    zoomControl: true, // ズームコントロールを表示
+    mapTypeControl: true, // マップタイプコントロールを表示
+    streetViewControl: true, // ストリートビューコントロールを表示
+    fullscreenControl: false, // フルスクリーンコントロールを表示しない
+    clickableIcons: true, // アイコンをクリック可能にする
+    mapTypeControlOptions: {
+      style: 2, // DROPDOWN_MENU
+      position: 1, // TOP_LEFT
+    },
+  },
+};
+
+// Google Sheetsの設定
+export const SHEETS_CONFIG = {
+  apiKey: import.meta.env.VITE_GOOGLE_SHEETS_API_KEY, // Google Sheets APIキー
+  spreadsheetId: import.meta.env.VITE_GOOGLE_SPREADSHEET_ID, // スプレッドシートID
+};

@@ -5,7 +5,8 @@ import { MapControls } from './MapControls';
 import './MapControls.module.css';
 import { MapError } from './MapError';
 import { useMapControl } from '../../hooks/useMapControl';
-import { mapsConfig, validateConfig, CONFIG } from '../../utils/config';
+import { validateConfig, CONFIG } from '../../utils/config';
+import { MAPS_CONFIG } from '../../utils/constants';
 import { ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
 import { updateRecommend } from '../../utils/types';
 import InfoWindow from '../infowindow/InfoWindow';
@@ -14,7 +15,7 @@ import Marker from '../marker/Marker';
 import SearchResults from '../searchresults/SearchResults';
 import type { MapComponentProps, Poi, AreaVisibility } from '../../utils/types';
 
-if (!mapsConfig.apiKey || !mapsConfig.mapId) {
+if (!MAPS_CONFIG.apiKey || !MAPS_CONFIG.mapId) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
 }
 
@@ -39,11 +40,11 @@ export const Map: React.FC<MapComponentProps> = ({
   setIsMapLoaded,
 }) => {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: mapsConfig.apiKey,
-    mapIds: [mapsConfig.mapId],
-    libraries: mapsConfig.libraries,
-    version: mapsConfig.version,
-    language: mapsConfig.language,
+    googleMapsApiKey: MAPS_CONFIG.apiKey,
+    mapIds: [MAPS_CONFIG.mapId],
+    libraries: MAPS_CONFIG.libraries,
+    version: MAPS_CONFIG.version,
+    language: MAPS_CONFIG.language,
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -70,8 +71,8 @@ export const Map: React.FC<MapComponentProps> = ({
     console.log('Map component status:', {
       isLoaded,
       loadError,
-      apiKey: mapsConfig.apiKey,
-      mapId: mapsConfig.mapId,
+      apiKey: MAPS_CONFIG.apiKey,
+      mapId: MAPS_CONFIG.mapId,
     });
   }, [isLoaded, loadError]);
 
@@ -86,7 +87,7 @@ export const Map: React.FC<MapComponentProps> = ({
   const mapOptions = useMemo(() => {
     if (!isLoaded) return {};
     return {
-      ...mapsConfig.options,
+      ...MAPS_CONFIG.options,
       mapTypeId: _mapType,
       mapTypeControl: true,
       zoomControl: true,
@@ -95,7 +96,7 @@ export const Map: React.FC<MapComponentProps> = ({
         position: google.maps.ControlPosition.TOP_LEFT,
         mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
       },
-      ...(mapsConfig.mapId ? { mapId: mapsConfig.mapId } : {}),
+      ...(MAPS_CONFIG.mapId ? { mapId: MAPS_CONFIG.mapId } : {}),
     };
   }, [isLoaded, _mapType]);
 
@@ -135,8 +136,8 @@ export const Map: React.FC<MapComponentProps> = ({
 
       const allFiltersOff = Object.values(areaVisibility).every((visible) => !visible);
       if (allFiltersOff) {
-        map.setCenter(mapsConfig.defaultCenter);
-        map.setZoom(mapsConfig.defaultZoom);
+        map.setCenter(MAPS_CONFIG.defaultCenter);
+        map.setZoom(MAPS_CONFIG.defaultZoom);
       } else {
         map.fitBounds(bounds);
         map.panToBounds(bounds);
@@ -207,8 +208,8 @@ export const Map: React.FC<MapComponentProps> = ({
           width: '100%',
           height: '100%',
         }}
-        center={mapsConfig.defaultCenter}
-        zoom={mapsConfig.defaultZoom}
+        center={MAPS_CONFIG.defaultCenter}
+        zoom={MAPS_CONFIG.defaultZoom}
         options={mapOptions}
         onLoad={handleMapLoad}
       >
