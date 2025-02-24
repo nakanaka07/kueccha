@@ -11,12 +11,6 @@ export type AreaType = keyof typeof AREAS;
 // AreaVisibility 型の定義
 export type AreaVisibility = Record<AreaType, boolean>;
 
-// updateRecommend 関数の定義
-export const updateRecommend = (prev: AreaVisibility): AreaVisibility => ({
-  ...prev,
-  RECOMMEND: !prev.RECOMMEND,
-});
-
 // 共通のプロパティを持つ基本的なプロパティ型
 export interface BaseProps {
   className?: string; // 任意のクラス名
@@ -229,3 +223,21 @@ export interface TemplateParams {
   email: string; // メールアドレス
   message: string; // メッセージ
 }
+
+// MapErrorコンポーネントのプロパティの型を定義します。
+// message: エラーメッセージを表示するための文字列。
+// onRetry: 再試行ボタンがクリックされたときに呼び出される関数。
+export type MapErrorProps = {
+  message: string; // エラーメッセージを格納するプロパティ
+  onRetry: () => void; // 再試行ボタンがクリックされたときに呼び出される関数
+};
+
+// MapControlsコンポーネントのプロパティの型を定義します。
+// onResetNorth: 北向きにリセットするための関数。
+// onGetCurrentLocation: 現在地を取得するための関数。
+// onToggleRecommendations: おすすめエリアの表示を切り替えるための関数。
+export type MapControlsProps = {
+  onResetNorth: () => void; // 北向きにリセットするための関数
+  onGetCurrentLocation: () => void; // 現在地を取得するための関数
+  onToggleRecommendations: () => void; // おすすめエリアの表示を切り替えるための関数
+};

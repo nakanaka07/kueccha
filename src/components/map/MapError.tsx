@@ -1,12 +1,5 @@
 import React from 'react';
-
-// MapErrorコンポーネントのプロパティの型を定義します。
-// message: エラーメッセージを表示するための文字列。
-// onRetry: 再試行ボタンがクリックされたときに呼び出される関数。
-type MapErrorProps = {
-  message: string; // エラーメッセージを格納するプロパティ
-  onRetry: () => void; // 再試行ボタンがクリックされたときに呼び出される関数
-};
+import { MapErrorProps } from '../../utils/types'; // types.tsからMapErrorPropsをインポート
 
 // MapErrorコンポーネントを定義します。
 // エラーメッセージと再試行ボタンを表示します。
