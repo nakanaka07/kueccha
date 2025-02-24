@@ -8,6 +8,15 @@ import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from './constants';
 // AREASのキーを表す型
 export type AreaType = keyof typeof AREAS;
 
+// AreaVisibility 型の定義
+export type AreaVisibility = Record<AreaType, boolean>;
+
+// updateRecommend 関数の定義
+export const updateRecommend = (prev: AreaVisibility): AreaVisibility => ({
+  ...prev,
+  RECOMMEND: !prev.RECOMMEND,
+});
+
 // 共通のプロパティを持つ基本的なプロパティ型
 export interface BaseProps {
   className?: string; // 任意のクラス名

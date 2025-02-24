@@ -7,28 +7,12 @@ import { MapError } from './MapError';
 import { useMapControl } from '../../hooks/useMapControl';
 import { mapsConfig, validateConfig, CONFIG } from '../../utils/config';
 import { ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
+import { updateRecommend } from '../../utils/types';
 import InfoWindow from '../infowindow/InfoWindow';
 import LocationWarning from '../locationwarning/LocationWarning';
 import Marker from '../marker/Marker';
 import SearchResults from '../searchresults/SearchResults';
-import type { MapComponentProps, Poi } from '../../utils/types';
-
-type AreaType =
-  | 'AKADOMARI_HAMOCHI_OGI'
-  | 'CURRENT_LOCATION'
-  | 'KANAI_SAWADA_NIIBO_HATANO_MANO'
-  | 'PARKING'
-  | 'PUBLIC_TOILET'
-  | 'RECOMMEND'
-  | 'RYOTSU_AIKAWA'
-  | 'SNACK';
-
-type AreaVisibility = Record<AreaType, boolean>;
-
-const updateRecommend = (prev: AreaVisibility): AreaVisibility => ({
-  ...prev,
-  RECOMMEND: !prev.RECOMMEND,
-});
+import type { MapComponentProps, Poi, AreaVisibility } from '../../utils/types';
 
 if (!mapsConfig.apiKey || !mapsConfig.mapId) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
