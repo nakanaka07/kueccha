@@ -14,9 +14,9 @@
   /* コンテンツの背景色 */
 
   display: flex;
-  /* フレックスボックスを使用 */
+  /* フレックスボックスを使用して中央揃え */
   justify-content: center;
-  /* 中央揃え */
+  /* 水平方向に中央揃え */
   align-items: center;
   /* 垂直方向に中央揃え */
   height: 100vh;

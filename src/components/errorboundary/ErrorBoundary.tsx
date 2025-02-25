@@ -4,6 +4,8 @@ import React, { Component, ErrorInfo } from 'react';
 import './ErrorBoundary.css';
 // 定数をインポート
 import { ERROR_MESSAGES } from '../../utils/constants';
+// エラーログ送信用の関数をインポート
+import { sendErrorLog } from '../../utils/logger';
 // 型定義をインポート
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 
@@ -11,16 +13,17 @@ import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // 初期状態を設定
   state: ErrorBoundaryState = {
-    hasError: false, // エラーが発生したかどうか
-    error: null, // エラーオブジェクト
-    errorInfo: null, // エラー情報
+    hasError: false, // エラーが発生したかどうかを示すフラグ
+    error: null, // 発生したエラーオブジェクト
+    errorInfo: null, // エラーに関する追加情報
   };
 
   // エラーが発生したときに状態を更新する静的メソッド
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // エラーが発生したことを示す状態を返す
     return {
       hasError: true, // エラーが発生したことを設定
-      error, // エラーオブジェクトを設定
+      error, // 発生したエラーオブジェクトを設定
       errorInfo: null, // エラー情報を初期化
     };
   }
@@ -29,7 +32,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // エラー情報を状態に設定
     this.setState({
-      errorInfo: { componentStack: errorInfo.componentStack || '' },
+      errorInfo: { componentStack: errorInfo.componentStack || '' }, // エラーのスタックトレースを設定
     });
     // エラーをログに出力
     this.logError(error, errorInfo);
@@ -37,15 +40,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   // エラーをログに出力するプライベートメソッド
   private logError(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', {
-      error,
-      errorInfo,
-      componentStack: errorInfo.componentStack,
-    });
+    // エラーログをサーバーに送信
+    sendErrorLog(error, errorInfo);
   }
 
   // エラー状態をリセットするハンドラ
   private handleReset = () => {
+    // エラー状態をリセット
     this.setState({
       hasError: false, // エラー状態をリセット
       error: null, // エラーオブジェクトをリセット

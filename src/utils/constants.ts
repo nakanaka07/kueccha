@@ -15,13 +15,13 @@ import type { AreaType, Poi, MenuItem } from './types'; // 型定義をインポ
 // エリアの定数
 // 各エリアの名前を定義します。
 export const AREAS = {
-  RECOMMEND: 'おすすめ',
   RYOTSU_AIKAWA: '両津・相川地区',
   KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
   SNACK: 'スナック',
   PUBLIC_TOILET: '公共トイレ',
   PARKING: '駐車場',
+  RECOMMEND: 'おすすめ',
   CURRENT_LOCATION: '現在地',
 } as const; // 定数としてエリア名を定義し、変更不可にします。
 
@@ -42,13 +42,13 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
 // 各エリアに対応するマーカーの色を定義します。
 export const MARKER_COLORS = {
   DEFAULT: '#000000',
-  RECOMMEND: '#d7003a',
   RYOTSU_AIKAWA: '#d9a62e',
   KANAI_SAWADA_NIIBO_HATANO_MANO: '#ec6800',
   AKADOMARI_HAMOCHI_OGI: '#007b43',
   SNACK: '#65318e',
   PUBLIC_TOILET: '#2792c3',
   PARKING: '#333333',
+  RECOMMEND: '#d7003a',
   CURRENT_LOCATION: '#42a30f',
 } as const; // 定数としてマーカーの色を定義し、変更不可にします。
 
@@ -108,13 +108,13 @@ export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
 // 各エリアに対応するマーカーのアイコンを定義します。
 export const MARKER_ICONS: Record<string, string> = {
   DEFAULT: defaultIcon,
-  RECOMMEND: recommendIcon,
   RYOTSU_AIKAWA: ryotsuAikawaIcon,
   KANAI_SAWADA_NIIBO_HATANO_MANO: kanaiSawadaNiiboHatanoManoIcon,
   AKADOMARI_HAMOCHI_OGI: akadomariHamochiOgiIcon,
   SNACK: snackIcon,
   PUBLIC_TOILET: publicToiletIcon,
   PARKING: parkingIcon,
+  RECOMMEND: recommendIcon,
   CURRENT_LOCATION: currentLocationIcon,
 }; // 各エリアに対応するマーカーのアイコンを定義します。
 

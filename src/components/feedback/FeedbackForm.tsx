@@ -11,17 +11,17 @@ import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
 
 // FeedbackFormコンポーネントを定義
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
-  // 名前の状態変数とその更新関数を定義
+  // 名前の状態変数とその更新関数を定義。初期値は空文字列。
   const [name, setName] = useState('');
-  // メールアドレスの状態変数とその更新関数を定義
+  // メールアドレスの状態変数とその更新関数を定義。初期値は空文字列。
   const [email, setEmail] = useState('');
-  // メッセージの状態変数とその更新関数を定義
+  // メッセージの状態変数とその更新関数を定義。初期値は空文字列。
   const [message, setMessage] = useState('');
-  // フォームが送信されたかどうかの状態変数とその更新関数を定義
+  // フォームが送信されたかどうかの状態変数とその更新関数を定義。初期値はfalse。
   const [isSubmitted, setIsSubmitted] = useState(false);
-  // エラーメッセージの状態変数とその更新関数を定義
+  // エラーメッセージの状態変数とその更新関数を定義。初期値は空文字列。
   const [error, setError] = useState('');
-  // ローディング状態の状態変数とその更新関数を定義
+  // ローディング状態の状態変数とその更新関数を定義。初期値はfalse。
   const [isLoading, setIsLoading] = useState(false);
 
   // フォームのバリデーション関数
@@ -76,9 +76,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
       setIsSubmitted(true); // フォームが送信されたことを設定
       setError(''); // エラーメッセージをクリア
-    } catch (err) {
+    } catch {
       setError(ERROR_MESSAGES.FORM.SUBMISSION_FAILED); // エラーメッセージを設定
-      console.error('Feedback submission error:', err); // エラーをログ出力
     } finally {
       setIsLoading(false); // ローディング状態を解除
     }
@@ -91,7 +90,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setEmail(''); // メールアドレスをリセット
       setMessage(''); // メッセージをリセット
     }
-  }, [isSubmitted]);
+  }, [isSubmitted]); // isSubmittedが変更されたときに実行
 
   return (
     // フィードバックフォームのラッパー
