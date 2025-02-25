@@ -26,20 +26,17 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   // InfoWindowの外側をクリックしたときに閉じる関数
   const handleClickOutside = (event: MouseEvent) => {
     if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
-      console.log('Clicked outside InfoWindow'); // ログ出力を追加
       onCloseClick();
     }
   };
 
   // コンポーネントのマウント時とアンマウント時にリサイズイベントリスナーを追加/削除
   useEffect(() => {
-    console.log('InfoWindow mounted'); // ログ出力を追加
     window.addEventListener('resize', handleResize);
     handleResize();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      console.log('InfoWindow unmounted'); // ログ出力を追加
     };
   }, []);
 
@@ -80,7 +77,6 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
         <h2 id="info-window-title">{poi.name}</h2>
         <button
           onClick={() => {
-            console.log('Close button clicked'); // ログ出力を追加
             onCloseClick();
           }}
           aria-label="閉じる"

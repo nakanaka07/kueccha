@@ -12,11 +12,9 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
 
   // コンポーネントのマウント時とisVisibleの変更時に実行されるuseEffectフック
   useEffect(() => {
-    console.log('LocationWarning mounted');
     // isVisibleがfalseになった場合、300ms後にonCloseを呼び出す
     if (!isVisible) {
       const timer = setTimeout(() => {
-        console.log('LocationWarning closing');
         onClose();
       }, 300);
       // クリーンアップ関数でタイマーをクリア
@@ -31,7 +29,6 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
       <button
         className="close-button"
         onClick={() => {
-          console.log('Close button clicked');
           setIsVisible(false); // isVisibleをfalseに設定
         }}
       >

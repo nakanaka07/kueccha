@@ -11,7 +11,6 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   const [isVisible, setIsVisible] = useState(isLoading);
 
   useEffect(() => {
-    console.log('LoadingFallback state updated:', { isLoading, isLoaded });
     if (!isLoading && isLoaded) {
       setIsVisible(false);
     } else {

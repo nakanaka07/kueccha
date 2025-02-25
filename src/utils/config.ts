@@ -40,16 +40,16 @@ export const validateConfig = (config: Config): void => {
 };
 
 // 開発環境での設定のログ関数
-export const logConfigInDevelopment = (config: Config): void => {
+export const logConfigInDevelopment = (): void => {
   if (import.meta.env.MODE !== 'development') return;
 
-  console.log('Configuration loaded successfully:', config);
+  console.log('Configuration loaded successfully');
 };
 
 // 設定の検証とログの実行
 try {
   validateConfig(CONFIG);
-  logConfigInDevelopment(CONFIG);
+  logConfigInDevelopment();
 } catch (error) {
   console.error('Configuration validation failed:', error);
   throw error;

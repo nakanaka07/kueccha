@@ -32,7 +32,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   // メニューの開閉をトグルする関数
   const toggleMenu = useCallback(() => {
-    console.log('Menu toggled:', !isOpen); // ログ出力を追加
     setIsOpen((prevIsOpen) => !prevIsOpen);
   }, [isOpen]);
 
@@ -40,7 +39,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const menuActions = useMemo(
     () => ({
       toggleSearchBar: () => {
-        console.log('Search bar toggled:', !isSearchBarVisible); // ログ出力を追加
         setIsSearchBarVisible((prevIsVisible) => !prevIsVisible);
         setIsOpen(false);
       },
@@ -51,7 +49,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   // メニューの外側をクリックしたときにメニューを閉じる関数
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-      console.log('Clicked outside menu'); // ログ出力を追加
       setIsOpen(false);
     }
   }, []);

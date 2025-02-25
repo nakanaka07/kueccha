@@ -23,7 +23,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   // useCallbackフックを使用して、依存関係が変更された場合にのみこの関数を再生成します。
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log('Input changed:', e.target.value); // ログ出力を追加
       setQuery(e.target.value); // 入力値を状態に設定します。
     },
     [], // 依存関係は空の配列です。この関数は一度だけ生成されます。
@@ -31,13 +30,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   // 検索ボタンがクリックされたときに呼び出される関数です。
   const handleSearch = useCallback(() => {
-    console.log('Search initiated with query:', query); // ログ出力を追加
     onSearch(query); // 親コンポーネントから渡されたonSearchコールバックを呼び出します。
   }, [onSearch, query]); // onSearchとqueryが変更された場合にのみこの関数を再生成します。
 
   // クリアボタンがクリックされたときに呼び出される関数です。
   const handleClear = useCallback(() => {
-    console.log('Search cleared'); // ログ出力を追加
     setQuery(''); // 検索クエリを空にします。
     setSuggestions([]); // 検索候補を空にします。
     onSearch('clear'); // 親コンポーネントから渡されたonSearchコールバックを呼び出します。
@@ -45,7 +42,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   // 一覧ボタンがクリックされたときに呼び出される関数です。
   const handleShowAll = useCallback(() => {
-    console.log('Show all POIs'); // ログ出力を追加
     setQuery(''); // 検索クエリを空にします。
     setSuggestions([]); // 検索候補を空にします。
     onSearch('all'); // 親コンポーネントから渡されたonSearchコールバックを呼び出します。
@@ -54,7 +50,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   // 検索候補がクリックされたときに呼び出される関数です。
   const handleSuggestionClick = useCallback(
     (suggestion: Poi) => {
-      console.log('Suggestion clicked:', suggestion); // ログ出力を追加
       setQuery(suggestion.name); // 検索クエリを候補の名前に設定します。
       setSuggestions([]); // 検索候補を空にします。
       onSearch(suggestion.name); // 親コンポーネントから渡されたonSearchコールバックを呼び出します。
@@ -68,7 +63,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
       // 検索クエリが存在する場合、検索候補をフィルタリングします。
       const filteredSuggestions = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
       setSuggestions(filteredSuggestions); // フィルタリングされた候補を状態に設定します。
-      console.log('Suggestions updated:', filteredSuggestions); // ログ出力を追加
     } else {
       setSuggestions([]); // 検索クエリが空の場合、検索候補を空にします。
     }

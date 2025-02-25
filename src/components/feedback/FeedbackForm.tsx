@@ -29,21 +29,18 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
     // 名前が空の場合のエラーメッセージを設定
     if (!name.trim()) {
       setError(ERROR_MESSAGES.FORM.EMPTY_NAME);
-      console.log('Validation failed: empty name'); // ログ出力を追加
       return false;
     }
 
     // メッセージが空の場合のエラーメッセージを設定
     if (!message.trim()) {
       setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
-      console.log('Validation failed: empty message'); // ログ出力を追加
       return false;
     }
 
     // メールアドレスが無効な場合のエラーメッセージを設定
     if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setError(ERROR_MESSAGES.FORM.INVALID_EMAIL);
-      console.log('Validation failed: invalid email'); // ログ出力を追加
       return false;
     }
 
@@ -60,7 +57,6 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
     if (!validateForm()) return;
 
     setIsLoading(true); // ローディング状態を設定
-    console.log('Sending feedback...'); // ログ出力を追加
 
     try {
       // テンプレートパラメータを設定
@@ -80,7 +76,6 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 
       setIsSubmitted(true); // フォームが送信されたことを設定
       setError(''); // エラーメッセージをクリア
-      console.log('Feedback sent successfully'); // ログ出力を追加
     } catch (err) {
       setError(ERROR_MESSAGES.FORM.SUBMISSION_FAILED); // エラーメッセージを設定
       console.error('Feedback submission error:', err); // エラーをログ出力
@@ -95,7 +90,6 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setName(''); // 名前をリセット
       setEmail(''); // メールアドレスをリセット
       setMessage(''); // メッセージをリセット
-      console.log('Form reset after submission'); // ログ出力を追加
     }
   }, [isSubmitted]);
 

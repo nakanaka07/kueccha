@@ -12,8 +12,6 @@ import './MapControls.module.css';
 import { MapError } from './MapError';
 // useMapControlフックをインポートします。
 import { useMapControl } from '../../hooks/useMapControl';
-// 設定の検証関数と設定オブジェクトをインポートします。
-import { validateConfig, CONFIG } from '../../utils/config';
 // 定数をインポートします。
 import { MAPS_CONFIG, ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
 // updateRecommend関数をインポートします。
@@ -33,15 +31,6 @@ import type { MapComponentProps, Poi, AreaVisibility } from '../../utils/types';
 if (!MAPS_CONFIG.apiKey || !MAPS_CONFIG.mapId) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
 }
-
-// 設定の検証を試み、失敗した場合はエラーをスローします。
-try {
-  validateConfig(CONFIG);
-} catch (error) {
-  console.error('Configuration validation failed:', error);
-  throw error;
-}
-
 // Mapコンポーネントを定義します。
 export const Map: React.FC<MapComponentProps> = ({
   pois, // POIの配列
