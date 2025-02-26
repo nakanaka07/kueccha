@@ -7,7 +7,7 @@ import React, {
   useMemo, // メモ化された値を作成するためのフック
 } from 'react';
 // CSSファイルをインポート
-import './HamburgerMenu.css';
+import './HamburgerMenu-module.css';
 // 定数をインポート
 import { MENU_ITEMS } from '../../utils/constants';
 // 検索バーと検索結果コンポーネントをインポート

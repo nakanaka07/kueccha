@@ -1,12 +1,163 @@
-/* HTMLとBODYの要素に対して全体の幅と高さを100%に設定 */
+/* モダンなリセットCSS + 基本スタイル */
+
+/* 基本的なボックスサイジングルール */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ルートのフォントサイズ設定（rem計算の基準） */
+:root {
+  /* カラー変数 */
+  --primary-color: #4a6da7;
+  --secondary-color: #6c757d;
+  --accent-color: #e63946;
+  --text-color: #333333;
+  --bg-color: #ffffff;
+  --light-gray: #f8f9fa;
+  --border-color: #dee2e6;
+
+  /* フォントとタイポグラフィー */
+  font-size: 16px;
+  font-family: 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  /* カラー変数（プライマリーカラー） */
+  --primary-hover: #3b5998;
+  --primary-focus: #4285f4;
+
+  /* セカンダリーカラー */
+  --secondary-hover: #5a6268;
+
+  /* アクセントカラー */
+  --accent-hover: #d32f2f;
+
+  /* 基本カラー */
+  --text-light: #666666;
+  --text-dark: #eeeeee;
+  --bg-light: #f8f9fa;
+  --bg-dark: #121212;
+
+  /* エラー関連 */
+  --error-color: #d32f2f;
+  --error-light: #ffcdd2;
+  --error-hover: #c62828;
+
+  /* UI要素 */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* 地図関連の固有変数 */
+  --map-bg: var(--bg-color);
+  --map-loading-bg: var(--bg-light);
+  --map-focus: var(--primary-focus);
+  --map-text: var(--text-color);
+  --map-dark-bg: var(--bg-dark);
+  --map-dark-text: var(--text-dark);
+}
+
+/* HTML・BODYのスタイリング */
 html,
 body {
   width: 100%;
-  /* ビューポート全体の幅を占める */
   height: 100%;
-  /* ビューポート全体の高さを占める */
-  margin: 0;
-  /* デフォルトのマージンをリセット */
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+/* アプリコンテナスタイル */
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* イメージ最適化 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* フォーカス表示の改善 */
+:focus {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* フォーム要素のスタイリング統一 */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* リンクスタイル */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover,
+a:focus {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+/* アクセシビリティ：スクリーンリーダー用 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  /* デフォルトのパディングをリセット */
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* レスポンシブメディアクエリ */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+/* 印刷用スタイル */
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+
+  a {
+    color: black;
+    text-decoration: underline;
+  }
+
+  @page {
+    margin: 2cm;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-color: #f8f9fa;
+    --bg-color: #121212;
+    --light-gray: #1e1e1e;
+    --border-color: #555555;
+    --text-light: #bbbbbb;
+  }
 }

@@ -1,40 +1,62 @@
-// Reactと必要なフックをインポート
+/**
+ * LocationWarning.tsx
+ *
+ * このファイルは位置情報の使用に関する警告メッセージを表示するコンポーネントを定義します。
+ * ユーザーに位置情報の取得に関する制限や問題について知らせるためのモーダルウィンドウとして
+ * 機能します。ユーザーが閉じるボタンをクリックすると、アニメーション付きで非表示になります。
+ */
+
+// Reactライブラリと必要なフックをインポート
 import React, { useState, useEffect } from 'react';
-// CSSファイルをインポート
-import './LocationWarning.css';
-// 型定義をインポート
+// コンポーネント固有のスタイルをインポート
+import './LocationWarning-module.css';
+// 型安全性のための型定義をインポート
 import type { LocationWarningProps } from '../../utils/types';
 
-// LocationWarningコンポーネントを定義
+/**
+ * 位置情報の警告メッセージを表示するコンポーネント
+ *
+ * @param onClose - 警告メッセージが閉じられたときに呼び出されるコールバック関数
+ */
 const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
-  // 警告メッセージの表示状態を管理する状態変数
+  // 警告メッセージの表示状態を管理するstate
+  // 初期値はtrue（表示状態）に設定
   const [isVisible, setIsVisible] = useState(true);
 
-  // コンポーネントのマウント時とisVisibleの変更時に実行されるuseEffectフック
+  /**
+   * 警告メッセージの非表示処理を制御するeffect
+   * isVisibleがfalseになったとき、アニメーション完了後に
+   * onClose関数を呼び出して親コンポーネントに通知する
+   */
   useEffect(() => {
-    // isVisibleがfalseになった場合、300ms後にonCloseを呼び出す
+    // メッセージが非表示状態になった場合
     if (!isVisible) {
+      // CSSトランジションアニメーション（300ms）完了後にonCloseを呼び出す
       const timer = setTimeout(() => {
-        onClose();
+        onClose(); // 親コンポーネントにメッセージが閉じられたことを通知
       }, 300);
-      // クリーンアップ関数でタイマーをクリア
+
+      // コンポーネントのアンマウント時やisVisibleが変更された場合にタイマーをクリア
       return () => clearTimeout(timer);
     }
-  }, [isVisible, onClose]); // isVisibleとonCloseが変更されるたびに実行
+  }, [isVisible, onClose]); // isVisibleまたはonClose関数が変更されたときにeffectを再実行
 
   return (
-    // 警告メッセージのコンテナ
+    // 警告メッセージのコンテナ要素
+    // isVisibleの値に基づいてCSSクラスを動的に適用（非表示時に'hidden'クラスを追加）
     <div className={`location-warning ${!isVisible ? 'hidden' : ''}`}>
-      {/* 閉じるボタン */}
+      {/* 閉じるボタン - ユーザーがメッセージを閉じるために使用 */}
       <button
         className="close-button"
         onClick={() => {
-          setIsVisible(false); // isVisibleをfalseに設定
+          setIsVisible(false); // ボタンクリック時にisVisibleをfalseにしてアニメーション開始
         }}
+        aria-label="警告メッセージを閉じる" // アクセシビリティのための追加
       >
         ×
       </button>
-      {/* 警告メッセージ */}
+
+      {/* 警告メッセージの本文 - 位置情報取得に関する注意事項を表示 */}
       <div className="message">
         ブラウザ環境によっては正しい位置情報を取得できない場合がございます。
         <br />
@@ -46,5 +68,5 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   );
 };
 
-// LocationWarningコンポーネントをエクスポート
+// 他のコンポーネントでインポートできるようにエクスポート
 export default LocationWarning;

@@ -1,257 +1,151 @@
-// GoogleMapコンポーネントとuseLoadScriptフックを@react-google-maps/apiからインポートします。
-import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-// Reactのフックとコンポーネントをインポートします。
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-// CSSモジュールをインポートします。
-import styles from './Map.module.css';
-// MapControlsコンポーネントをインポートします。
-import { MapControls } from './MapControls';
-// MapControlsのCSSモジュールをインポートします。
-import './MapControls.module.css';
-// MapErrorコンポーネントをインポートします。
-import { MapError } from './MapError';
-// useMapControlフックをインポートします。
-import { useMapControl } from '../../hooks/useMapControl';
-// 定数をインポートします。
-import { MAPS_CONFIG, ERROR_MESSAGES, CURRENT_LOCATION_POI } from '../../utils/constants';
-// updateRecommend関数をインポートします。
-import { updateRecommend } from '../../utils/helpers';
-// InfoWindowコンポーネントをインポートします。
-import InfoWindow from '../infowindow/InfoWindow';
-// LocationWarningコンポーネントをインポートします。
-import LocationWarning from '../locationwarning/LocationWarning';
-// Markerコンポーネントをインポートします。
-import Marker from '../marker/Marker';
-// SearchResultsコンポーネントをインポートします。
-import SearchResults from '../searchresults/SearchResults';
-// 型定義をインポートします。
-import type { MapComponentProps, Poi, AreaVisibility } from '../../utils/types';
+/**
+ * マップコンポーネント
+ *
+ * Google Maps APIを使用して地図を表示するReactコンポーネント。
+ * このコンポーネントは地図のロード、表示、エラー処理を担当し、
+ * アクセシビリティにも配慮した実装となっている。
+ */
 
-// APIキーとマップIDが設定されていない場合はエラーをスローします。
-if (!MAPS_CONFIG.apiKey || !MAPS_CONFIG.mapId) {
+// Google Maps APIのReactラッパーからコンポーネントとフックをインポート
+import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+// Reactの基本フックをインポート
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+// コンポーネント用のスタイルをインポート
+import styles from './Map-module.css';
+// エラー表示用のコンポーネントをインポート
+import { MapError } from './MapError';
+// 設定情報とエラーメッセージの定数をインポート
+import { MAPS_CONFIG, ERROR_MESSAGES } from '../../utils/constants';
+// 型定義をインポート
+import type { MapComponentProps } from '../../utils/types';
+
+// APIキーとmapIdの存在チェック（型アサーション）
+// 設定が不足している場合はアプリケーション起動時にエラーを投げる
+if (!(MAPS_CONFIG.apiKey && MAPS_CONFIG.mapId)) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
 }
-// Mapコンポーネントを定義します。
-export const Map: React.FC<MapComponentProps> = ({
-  pois, // POIの配列
-  selectedPoi, // 選択されたPOI
-  setSelectedPoi, // POIを選択する関数
-  areaVisibility, // エリアの可視性
-  onLoad, // マップがロードされたときのコールバック
-  setAreaVisibility, // エリアの可視性を設定する関数
-  currentLocation, // 現在の位置
-  setCurrentLocation, // 現在の位置を設定する関数
-  showWarning, // 警告を表示するかどうか
-  setShowWarning, // 警告を表示する関数
-  setIsMapLoaded, // マップがロードされたかどうかを設定する関数
-}) => {
-  // Google Maps APIのスクリプトをロードします。
+
+// アクセシビリティ用のラベルを定数化
+const MAP_ARIA_LABEL = '地図コンテンツ';
+const LOADING_ARIA_LABEL = '地図読み込み中';
+
+/**
+ * マップコンポーネントの実装
+ *
+ * @param onLoad - マップがロードされたときに呼び出されるコールバック関数
+ * @param setIsMapLoaded - マップのロード状態を親コンポーネントに通知するための関数
+ */
+export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => {
+  // Google Maps APIをロードするためのフック
+  // 設定オブジェクトで言語、バージョン、必要なライブラリなどを指定
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: MAPS_CONFIG.apiKey, // APIキー
-    mapIds: [MAPS_CONFIG.mapId], // マップID
-    libraries: MAPS_CONFIG.libraries, // 使用するライブラリ
-    version: MAPS_CONFIG.version, // APIバージョン
-    language: MAPS_CONFIG.language, // 言語設定
+    googleMapsApiKey: MAPS_CONFIG.apiKey,
+    mapIds: [MAPS_CONFIG.mapId],
+    libraries: MAPS_CONFIG.libraries,
+    version: MAPS_CONFIG.version,
+    language: MAPS_CONFIG.language,
   });
 
-  // マップのインスタンスを保持する状態変数
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  // マップコントロールのフックを使用します。
-  const { resetNorth, handleGetCurrentLocation: getCurrentLocation } = useMapControl(map);
-  // マップタイプを保持する状態変数
-  const [_mapType, _setMapType] = useState<google.maps.MapTypeId | string>('roadmap');
-  // 初回レンダリングかどうかを保持する状態変数
-  const [isInitialRender, setIsInitialRender] = useState(true);
-  // 選択されたマーカーのIDを保持する状態変数
-  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+  // Google Map インスタンスを保持するための状態変数
+  // 初期値は null で、マップがロードされると実際のインスタンスが設定される
+  const [map, setMap] = useState<google.maps.Map | null>(() => null);
 
-  // マップのロード状態を監視するuseEffectフック
-  useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
-    if (loadError) {
-      console.error('Map load error:', loadError);
-      return;
-    }
-  }, [isLoaded, loadError]);
-
-  // マップのオプションをメモ化します。
-  const mapOptions = useMemo(() => {
+  // マップのオプション設定をメモ化して不要な再計算を防止
+  // isLoadedの値が変わった時のみ再計算される
+  const mapOptions = useMemo<google.maps.MapOptions>(() => {
+    // マップがロードされていない場合は空オブジェクトを返す
     if (!isLoaded) return {};
+
+    // constants.tsで定義された設定を基本として使用
     return {
       ...MAPS_CONFIG.options,
-      mapTypeId: _mapType,
-      mapTypeControl: true,
-      zoomControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-        position: google.maps.ControlPosition.TOP_LEFT,
-        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-      },
-      ...(MAPS_CONFIG.mapId ? { mapId: MAPS_CONFIG.mapId } : {}),
     };
-  }, [isLoaded, _mapType]);
+  }, [isLoaded]);
 
-  // マップがロードされたときのコールバック関数
+  // マップロード時の処理をメモ化したコールバックとして定義
   const handleMapLoad = useCallback(
     (mapInstance: google.maps.Map) => {
       if (mapInstance) {
-        setMap(mapInstance);
-        setIsMapLoaded(mapInstance);
-        onLoad(mapInstance);
-      } else {
-        console.error('Map instance is null');
+        try {
+          // 内部の状態にマップインスタンスを保存
+          setMap(mapInstance);
+          // 親コンポーネントにマップのロード完了を通知
+          setIsMapLoaded(mapInstance);
+          // 親から渡されたコールバックを実行
+          onLoad(mapInstance);
+        } catch (error) {
+          console.error('Error during map load:', error);
+        }
       }
     },
     [onLoad, setIsMapLoaded],
   );
 
-  // おすすめエリアの表示を切り替える関数
-  const toggleRecommendations = useCallback(() => {
-    setAreaVisibility((prev: AreaVisibility) => updateRecommend(prev));
-  }, [setAreaVisibility]);
-
-  // マップの境界を更新するuseEffectフック
+  // コンポーネントがアンマウントされたときのクリーンアップ処理
+  // マップインスタンスの参照を解放してメモリリークを防止
   useEffect(() => {
-    if (map) {
-      const bounds = new google.maps.LatLngBounds();
-
-      pois.forEach((poi) => {
-        if (areaVisibility[poi.area]) {
-          bounds.extend(poi.location);
-        }
-      });
-
-      if (currentLocation) {
-        bounds.extend(currentLocation);
-      }
-
-      const allFiltersOff = Object.values(areaVisibility).every((visible) => !visible);
-      if (allFiltersOff) {
-        map.setCenter(MAPS_CONFIG.defaultCenter);
-        map.setZoom(MAPS_CONFIG.defaultZoom);
-      } else {
-        map.fitBounds(bounds);
-        map.panToBounds(bounds);
-        if (isInitialRender) {
-          setIsInitialRender(false);
-        }
-      }
-    }
-  }, [map, pois, areaVisibility, isInitialRender, currentLocation]);
-
-  // マーカーがクリックされたときのコールバック関数
-  const handleMarkerClick = useCallback(
-    (poi: Poi) => {
-      setSelectedPoi(poi);
-      setSelectedMarkerId(poi.id);
-    },
-    [setSelectedPoi],
-  );
-
-  // InfoWindowが閉じられたときのコールバック関数
-  const handleInfoWindowClose = useCallback(() => {
-    setSelectedPoi(null);
-    setSelectedMarkerId(null);
-  }, [setSelectedPoi]);
-
-  // 検索結果がクリックされたときのコールバック関数
-  const handleSearchResultClick = useCallback(
-    (poi: Poi) => {
-      setSelectedPoi(poi);
-      setSelectedMarkerId(poi.id);
+    return () => {
       if (map) {
-        map.panTo(poi.location);
+        // 必要に応じてリスナーや他のリソースをクリーンアップ
+        setMap(null);
       }
-    },
-    [setSelectedPoi, map],
+    };
+  }, [map]); // map変数が変更されたときのみ再実行
+
+  // GoogleMapコンポーネントをメモ化して不要な再レンダリングを防止
+  const MemoizedGoogleMap = useMemo(
+    () => (
+      <GoogleMap
+        mapContainerStyle={MAPS_CONFIG.style} // マップコンテナのCSSスタイル
+        center={MAPS_CONFIG.defaultCenter} // マップの初期中心座標
+        zoom={MAPS_CONFIG.defaultZoom} // マップの初期ズームレベル
+        options={mapOptions} // マップの表示オプション
+        onLoad={handleMapLoad} // マップロード時のコールバック
+      />
+    ),
+    [mapOptions, handleMapLoad], // 依存配列：これらの値が変わったときのみ再生成
   );
 
-  // 現在地を取得する関数
-  const handleGetCurrentLocation = useCallback(() => {
-    getCurrentLocation({
-      onSuccess: (location) => {
-        setCurrentLocation(location);
-        setAreaVisibility((prev: AreaVisibility) => ({
-          ...prev,
-          CURRENT_LOCATION: true,
-        }));
-        setShowWarning(true);
-      },
-      onError: (error) => alert(error),
-    });
-  }, [getCurrentLocation, setCurrentLocation, setAreaVisibility, setShowWarning]);
-
-  // ロードエラーが発生した場合のエラーメッセージを表示します。
+  // API読み込みエラー時の表示
+  // エラーが最優先で処理される
   if (loadError) {
-    return <MapError message={ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={() => window.location.reload()} />;
-  }
-
-  // マップがロード中の場合のローディングメッセージを表示します。
-  if (!isLoaded) {
-    return <div className="loading-container">地図を読み込んでいます...</div>;
-  }
-
-  // 表示するPOIをフィルタリングし、RECOMMENDのマーカーを最後に並び替えます。
-  const displayedPois = pois
-    .filter((poi) => areaVisibility[poi.area])
-    .sort((a, b) => (a.area === 'RECOMMEND' ? 1 : b.area === 'RECOMMEND' ? -1 : 0));
-
-  // マップコンポーネントのレンダリング
-  return (
-    <div role="region" aria-label="地図" className={styles.mapContainer}>
-      <GoogleMap
-        mapContainerStyle={MAPS_CONFIG.style}
-        center={MAPS_CONFIG.defaultCenter}
-        zoom={MAPS_CONFIG.defaultZoom}
-        options={mapOptions}
-        onLoad={handleMapLoad}
-      >
-        {map &&
-          displayedPois.map((poi) => (
-            <Marker
-              key={poi.id}
-              poi={poi}
-              onClick={handleMarkerClick}
-              map={map}
-              isSelected={selectedMarkerId === poi.id}
-              zIndex={selectedMarkerId === poi.id ? 1000 : undefined}
-            />
-          ))}
-        {map && currentLocation && (
-          <Marker
-            key="current-location-marker"
-            poi={{
-              ...CURRENT_LOCATION_POI,
-              location: currentLocation,
-              id: 'current-location',
-              name: '現在地',
-              area: 'CURRENT_LOCATION',
-              category: '現在地',
-              genre: '現在地',
-            }}
-            onClick={() => {}}
-            map={map}
-            isSelected={false}
-            zIndex={1000}
-          />
-        )}
-        {selectedPoi && <InfoWindow key={selectedPoi.id} poi={selectedPoi} onCloseClick={handleInfoWindowClose} />}
-      </GoogleMap>
-      <MapControls
-        onResetNorth={resetNorth}
-        onGetCurrentLocation={handleGetCurrentLocation}
-        onToggleRecommendations={toggleRecommendations}
+    return (
+      <MapError
+        message={ERROR_MESSAGES.MAP.LOAD_FAILED} // エラーメッセージ
+        onRetry={() => window.location.reload()} // リトライ処理
       />
-      {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
-      <SearchResults results={displayedPois} onResultClick={handleSearchResultClick} />
+    );
+  }
+
+  // マップ読み込み中の表示
+  // エラーがなく、まだロードが完了していない場合に表示
+  if (!isLoaded) {
+    return (
+      <div
+        className={styles.loadingContainer}
+        role="status" // スクリーンリーダー向けロール
+        aria-label={LOADING_ARIA_LABEL} // アクセシビリティラベル
+      >
+        地図を読み込んでいます...
+      </div>
+    );
+  }
+
+  // マップが正常にロードされた場合の表示
+  // マップコンテナはアクセシビリティに配慮した属性を持つ
+  return (
+    <div
+      role="region" // 地図領域であることを示すロール
+      aria-label={MAP_ARIA_LABEL} // スクリーンリーダー用の説明
+      className={styles.mapContainer} // スタイル適用
+      tabIndex={0} // キーボードフォーカス可能にする
+    >
+      {MemoizedGoogleMap}
     </div>
   );
 };
 
-// コンポーネントの表示名を設定します。
+// React DevToolsでの識別用にコンポーネント名を明示的に設定
 Map.displayName = 'Map';
 
-// Mapコンポーネントをエクスポートします。
 export default Map;

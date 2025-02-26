@@ -16,8 +16,8 @@ import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from './constants'; // エリア情
  * アプリケーション全体のコンポーネントで再利用される基本的なプロパティを定義します。
  */
 export interface BaseProps {
-  className?: string; // コンポーネントに適用するオプションのCSS classname
-  style?: React.CSSProperties; // コンポーネントに直接適用するインラインスタイル
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -110,7 +110,7 @@ export interface HamburgerMenuProps extends BaseProps {
   localAreaVisibility: Record<AreaType, boolean>; // メニュー内のローカルなエリア表示状態
   setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<AreaType, boolean>>>; // ローカルエリア表示状態を設定する関数
   currentLocation: LatLngLiteral | null; // ユーザーの現在位置
-  setCurrentLocation: React.Dispatch<React.SetStateAction<LatLngLiteral | null>>; // 現在位置を設定する関数
+  setCurrentLocation: React.Dispatch<React.SetStateAction<LatLngLiteral | null>>; // 現在位置を更新する関数
   setShowWarning: React.Dispatch<React.SetStateAction<boolean>>; // 位置情報の警告表示を制御する関数
   search: (query: string) => void; // 検索クエリを処理する関数
   searchResults: Poi[]; // 現在の検索結果
@@ -131,8 +131,8 @@ export interface InfoWindowProps extends BaseProps {
  * Google Mapsで位置を表現するために使用されます。
  */
 export interface LatLngLiteral {
-  lat: number; // 緯度（-90から90の範囲）
-  lng: number; // 経度（-180から180の範囲）
+  lat: number;
+  lng: number;
 }
 
 /**
@@ -152,6 +152,7 @@ export interface LoadingFallbackProps extends BaseProps {
   message?: string; // ローディング中に表示するオプションのメッセージ
   spinnerClassName?: string; // ローディングスピナーに適用する追加のクラス名
   isLoaded: boolean; // ロードが完了したかどうかを示すフラグ
+  fadeDuration?: number; // フェードアウトの時間（ミリ秒）
 }
 
 /**
@@ -165,28 +166,15 @@ export type Location = LatLngLiteral;
  * Google Maps APIの設定と表示オプションを定義します。
  */
 export interface MapConfig {
-  apiKey: string; // Google Maps APIにアクセスするためのキー
-  mapId: string; // カスタムマップスタイル用のマップID
-  defaultCenter: Location; // マップの初期中心位置
-  defaultZoom: number; // マップの初期ズームレベル
-  libraries: LoadScriptProps['libraries']; // 読み込むGoogle Mapsライブラリ
-  language: string; // マップで使用する言語（例：'ja'）
-  version: string; // 使用するGoogle Maps APIのバージョン
-  style: MapStyle; // マップのCSSスタイル
-  options: {
-    mapId?: string; // カスタムマップスタイル用のマップID（オプション）
-    disableDefaultUI: boolean; // デフォルトのユーザーインターフェース要素を無効にするフラグ
-    zoomControl: boolean; // ズームコントロールの表示有無
-    mapTypeControl: boolean; // マップタイプコントロールの表示有無
-    streetViewControl: boolean; // ストリートビューコントロールの表示有無
-    fullscreenControl: boolean; // フルスクリーンコントロールの表示有無
-    clickableIcons: boolean; // マップ上のアイコンをクリック可能にするかどうか
-    mapTypeControlOptions?: {
-      style: number; // マップタイプコントロールのスタイル定数
-      position: number; // マップタイプコントロールの位置定数
-    };
-    styles?: google.maps.MapTypeStyle[]; // カスタムマップスタイル設定
-  };
+  apiKey: string;
+  mapId: string;
+  defaultCenter: LatLngLiteral;
+  defaultZoom: number;
+  libraries: LoadScriptProps['libraries'];
+  language: string;
+  version: string;
+  style: MapStyle;
+  options: google.maps.MapOptions;
 }
 
 /**
@@ -198,23 +186,19 @@ export interface MapProps extends BaseProps {
 }
 
 /**
- * メインマップコンポーネントの拡張プロパティ型。
- * 状態管理と追加機能を含むマップコンポーネントのプロパティを定義します。
+ * メインマップコンポーネントのプロパティ型。
+ * 基本的なマップ表示に必要な最小限のプロパティを定義。
  */
-export interface MapComponentProps extends MapProps {
-  pois: Poi[]; // マップ上に表示するPOIの配列
-  selectedPoi: Poi | null; // 現在選択されているPOI
-  setSelectedPoi: (poi: Poi | null) => void; // POI選択状態を更新する関数
-  areaVisibility: Record<AreaType, boolean>; // 各エリアの表示/非表示状態
-  setAreaVisibility: (
-    value: Record<AreaType, boolean> | ((prev: Record<AreaType, boolean>) => Record<AreaType, boolean>),
-  ) => void; // エリア表示状態を更新する関数
-  currentLocation: LatLngLiteral | null; // ユーザーの現在位置
-  setCurrentLocation: (location: LatLngLiteral | null) => void; // 現在位置を更新する関数
-  showWarning: boolean; // 位置情報の警告表示状態
-  setShowWarning: (show: boolean) => void; // 警告表示状態を更新する関数
-  onLoad: (map: google.maps.Map | null) => void; // マップ読み込み完了時に呼び出される関数
-  setIsMapLoaded: (map: google.maps.Map | null) => void; // マップ読み込み状態を設定する関数
+export interface MapComponentProps {
+  /**
+   * マップがロードされたときに呼び出されるコールバック関数
+   */
+  onLoad: (map: google.maps.Map | null) => void;
+
+  /**
+   * マップのロード状態を親コンポーネントに通知するための関数
+   */
+  setIsMapLoaded: (map: google.maps.Map | null) => void;
 }
 
 /**
@@ -222,8 +206,8 @@ export interface MapComponentProps extends MapProps {
  * マップ読み込みや表示中のエラーを処理するために使用されます。
  */
 export type MapErrorProps = {
-  message: string; // 表示するエラーメッセージ
-  onRetry: () => void; // 再試行ボタンがクリックされたときに呼び出される関数
+  message: string;
+  onRetry: () => void;
 };
 
 /**
@@ -238,11 +222,10 @@ export type MapControlsProps = {
 
 /**
  * マップのスタイルを表す型。
- * マップコンテナのCSSスタイルを定義します。
  */
 export interface MapStyle {
-  width: string; // マップコンテナの幅（例：'100%'）
-  height: string; // マップコンテナの高さ（例：'500px'）
+  width: string;
+  height: string;
 }
 
 /**
@@ -311,6 +294,18 @@ export interface Poi {
 export interface SearchBarProps extends BaseProps {
   onSearch: (query: string) => void; // 検索クエリが送信されたときに呼び出される関数
   pois: Poi[]; // 検索対象となるPOIの配列
+}
+
+/**
+ * 検索結果コンポーネントのプロパティ型。
+ * 検索結果のPOIリストを表示し、クリックイベントを処理するコンポーネント用。
+ */
+export interface SearchResultsProps extends BaseProps {
+  // 表示する検索結果のPOIデータ配列
+  results: Poi[];
+
+  // 検索結果の項目がクリックされたときに呼び出されるコールバック関数
+  onResultClick: (poi: Poi) => void;
 }
 
 /**

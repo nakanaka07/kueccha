@@ -1,0 +1,81 @@
+/*
+ * App-module.css
+ * アプリケーション全体のスタイルを定義
+ */
+
+/* グローバル変数 */
+:root {
+  --app-bg-color: #ffffff;
+  --error-color: #ff4d4d;
+  --error-hover-color: #ff1a1a;
+}
+
+/* アプリケーション全体のコンテナ */
+.app-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* マップコンテナ - 必要な場合に使用 */
+.map-container {
+  position: absolute;
+  inset: 0; /* top, right, bottom, left を一括指定 */
+  z-index: 0;
+}
+
+/* マップコンテナ内の要素 */
+.map-container > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* エラーメッセージ表示 */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--error-color);
+  font-weight: 600;
+  text-align: center;
+  padding: 20px;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+/* エラーメッセージ内の段落 */
+.error-message p {
+  margin: 10px 0;
+}
+
+/* リトライボタン */
+.error-message button {
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+/* リトライボタンのホバー状態 */
+.error-message button:hover {
+  background-color: var(--error-hover-color);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .error-message {
+    font-size: 14px;
+  }
+
+  .error-message button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}

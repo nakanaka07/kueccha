@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import './FilterPanel.css';
+import './FilterPanel-module.css';
 import useCurrentLocation from '../../hooks/useCurrentLocation';
 import { MARKER_CONFIG, AREAS } from '../../utils/constants';
 import type { AreaType, FilterPanelProps } from '../../utils/types';

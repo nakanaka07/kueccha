@@ -255,11 +255,14 @@ export const MAPS_CONFIG = {
     zoomControl: true, // ズームコントロールを表示する
     mapTypeControl: true, // マップタイプ切り替えコントロールを表示する
     streetViewControl: true, // ストリートビューコントロールを表示する
-    fullscreenControl: false, // フルスクリーンコントロールは非表示にする
+    fullscreenControl: true, // Map.tsxと合わせて変更
     clickableIcons: true, // マップ上のアイコンをクリック可能にする
+    gestureHandling: 'cooperative', // この設定を追加
     mapTypeControlOptions: {
-      style: 2, // ドロップダウンメニュー形式で表示（2 = DROPDOWN_MENU）
-      position: 1, // 左上に配置（1 = TOP_LEFT）
+      // 実行時に実際のGoogle Maps API Enumを使用
+      style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+      position: google.maps.ControlPosition.TOP_LEFT,
+      mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
     },
   },
 };

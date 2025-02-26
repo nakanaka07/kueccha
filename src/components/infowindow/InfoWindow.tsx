@@ -1,7 +1,7 @@
 // Reactと必要なフックをインポート
 import React, { useEffect, useRef, useMemo } from 'react';
 // CSSファイルをインポート
-import './InfoWindow.css';
+import './InfoWindow-module.css';
 // 定数をインポート
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 // フォーマット関数とバリデーション関数をインポート
