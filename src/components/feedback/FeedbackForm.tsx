@@ -13,7 +13,7 @@ import emailjs from '@emailjs/browser';
 // Reactと必要なフックをインポート - コンポーネントの状態管理とライフサイクル管理に使用
 import React, { useState, useEffect } from 'react';
 // CSSファイルをインポート - コンポーネントのスタイルを適用するため
-import './FeedbackForm-module.css';
+import './FeedbackForm.module.css';
 // エラーメッセージの定数をインポート - 一貫したエラーメッセージを表示するため
 import { ERROR_MESSAGES } from '../../utils/constants';
 // 型定義をインポート - TypeScriptの型安全性を確保するため

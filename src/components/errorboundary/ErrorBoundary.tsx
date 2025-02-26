@@ -10,7 +10,7 @@
 // ReactのComponentクラスとErrorInfo型をインポート - エラーバウンダリーはクラスコンポーネントとして実装する必要がある
 import React, { Component, ErrorInfo } from 'react';
 // コンポーネントのスタイルを定義するCSSファイルをインポート
-import './ErrorBoundary-module.css';
+import styles from './ErrorBoundary.module.css';
 // アプリケーション内で使用される標準エラーメッセージを含む定数をインポート
 import { ERROR_MESSAGES } from '../../utils/constants';
 // エラーバウンダリーコンポーネントのプロパティと状態の型定義をインポート
@@ -109,9 +109,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     // カスタムフォールバックがない場合はデフォルトのエラーメッセージUIを表示
     return (
-      <div className="error-boundary" role="alert" aria-live="assertive">
+      <div className={styles.errorBoundary} role="alert" aria-live="assertive">
         {/* エラーメッセージを含むコンテンツコンテナ */}
-        <div className="error-content">
+        <div className={styles.errorContent}>
           {/* エラーのタイトル - 不明なエラーのメッセージを表示 */}
           <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
           {/* エラーの詳細メッセージ（存在する場合）または汎用メッセージを表示 */}

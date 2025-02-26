@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './MapError-module.css'; // CSSモジュールとして正しくインポート
+import styles from './MapError.module.css'; // CSSモジュールとして正しくインポート
 import { MapErrorProps } from '../../utils/types'; // types.tsからMapErrorPropsをインポート
 
 // MapErrorコンポーネントを定義します。

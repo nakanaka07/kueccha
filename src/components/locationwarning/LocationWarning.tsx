@@ -9,7 +9,7 @@
 // Reactライブラリと必要なフックをインポート
 import React, { useState, useEffect } from 'react';
 // コンポーネント固有のスタイルをインポート
-import './LocationWarning-module.css';
+import './LocationWarning.module.css';
 // 型安全性のための型定義をインポート
 import type { LocationWarningProps } from '../../utils/types';
 

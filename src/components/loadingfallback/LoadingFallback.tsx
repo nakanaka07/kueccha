@@ -9,7 +9,7 @@
 // React本体と状態管理のためのフックをインポート
 import React, { useEffect, useState } from 'react';
 // コンポーネントのスタイルをインポート
-import './LoadingFallback-module.css';
+import './LoadingFallback.module.css';
 // エラーメッセージの定数をインポート（デフォルトメッセージとして使用）
 import { ERROR_MESSAGES } from '../../utils/constants';
 // このコンポーネントのProps型定義をインポート

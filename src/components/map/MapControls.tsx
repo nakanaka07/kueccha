@@ -1,7 +1,7 @@
 // Reactライブラリをインポートします。これにより、Reactコンポーネントを作成できます。
 import React from 'react';
 // CSSモジュールをインポートします。これにより、スタイルをコンポーネントに適用できます。
-import styles from './MapControls-module.css';
+import styles from './MapControls.module.css';
 // 画像ファイルをインポートします。これらはボタンのアイコンとして使用されます。
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
 import recommendIcon from '../../utils/images/ano_icon_recommend.png';

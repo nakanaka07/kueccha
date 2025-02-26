@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './App-module.css';
+import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import Map from './components/map/Map';
 import { ERROR_MESSAGES } from './utils/constants';
@@ -22,7 +22,7 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <ErrorBoundary>
-        <div className="app-container">
+        <div className={styles.appContainer}>
           <Map onLoad={handleMapLoad} setIsMapLoaded={handleMapLoad} />
         </div>
       </ErrorBoundary>

@@ -12,7 +12,7 @@ import React, { useEffect, useRef } from 'react';
 // useEffect: コンポーネントのレンダリング後に実行される副作用を定義するためのフックです。
 // useRef: コンポーネントのレンダリング間で値を保持するためのフックです。
 // マーカーのスタイルを定義したCSSファイルをインポートします。
-import './Marker-module.css';
+import './Marker.module.css';
 // 異なるタイプのマーカーに使用するアイコンURLを定義した定数をインポートします。
 import { MARKER_ICONS } from '../../utils/constants';
 // マーカーコンポーネントのプロパティの型定義をインポートします。

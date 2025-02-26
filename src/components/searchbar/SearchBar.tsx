@@ -18,7 +18,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // useEffect: 副作用（API呼び出しやDOM操作など）を処理するためのフックです。検索候補の更新に使用します。
 // useCallback: パフォーマンス最適化のため、関数をメモ化するフックです。不要な再レンダリングを防ぎます。
 // SearchBarコンポーネント専用のスタイルをインポートします。
-import './SearchBar-module.css';
+import './SearchBar.module.css';
 // このCSSファイルには検索バーの視覚的なデザイン（入力フィールド、ボタン、候補リストなど）が定義されています。
 // アプリケーション全体で使用される型定義をインポートします。
 import { Poi, SearchBarProps } from '../../utils/types';

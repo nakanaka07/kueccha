@@ -15,7 +15,7 @@
 // 必要なライブラリと型のインポート
 import React, { useCallback } from 'react';
 // Reactライブラリとフックをインポート - UIコンポーネントの構築と最適化に必要
-import styles from './SearchResults-module.css';
+import styles from './SearchResults.module.css';
 // CSSモジュールをインポート - コンポーネント固有のスタイルをカプセル化
 import type { Poi, SearchResultsProps } from '../../utils/types';
 // 型定義をインポート - タイプセーフな実装を実現

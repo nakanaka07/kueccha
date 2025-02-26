@@ -11,7 +11,7 @@ import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 // Reactの基本フックをインポート
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 // コンポーネント用のスタイルをインポート
-import styles from './Map-module.css';
+import styles from './Map.module.css';
 // エラー表示用のコンポーネントをインポート
 import { MapError } from './MapError';
 // 設定情報とエラーメッセージの定数をインポート

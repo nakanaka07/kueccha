@@ -11,14 +11,79 @@
 
 /* ルートのフォントサイズ設定（rem計算の基準） */
 :root {
-  /* カラー変数 */
-  --primary-color: #4a6da7;
-  --secondary-color: #6c757d;
-  --accent-color: #e63946;
-  --text-color: #333333;
-  --bg-color: #ffffff;
-  --light-gray: #f8f9fa;
-  --border-color: #dee2e6;
+  /* ベースカラー変数 - すべての色の基本となる定義 */
+  --color-primary: #4a6da7;
+  --color-primary-light: #6b8bc5;
+  --color-primary-dark: #3b5998;
+  --color-primary-focus: #4285f4;
+
+  --color-secondary: #6c757d;
+  --color-secondary-light: #868e96;
+  --color-secondary-dark: #5a6268;
+
+  --color-accent: #e63946;
+  --color-accent-light: #ff6b6b;
+  --color-accent-dark: #d32f2f;
+
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-text-dark: #eeeeee;
+
+  --color-bg: #ffffff;
+  --color-bg-light: #f8f9fa;
+  --color-bg-dark: #121212;
+
+  --color-border: #dee2e6;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+
+  --color-error: #d32f2f;
+  --color-error-light: #ffcdd2;
+  --color-error-dark: #c62828;
+
+  --color-success: #4caf50;
+  --color-success-light: #a5d6a7;
+  --color-success-dark: #388e3c;
+
+  --color-warning: #ff9800;
+  --color-warning-light: #ffcc80;
+  --color-warning-dark: #f57c00;
+
+  /* UI要素用の派生変数 - 基本カラーから派生 */
+  --text-color: var(--color-text);
+  --bg-color: var(--color-bg);
+  --light-gray: var(--color-bg-light);
+  --border-color: var(--color-border);
+
+  /* インタラクション状態の派生変数 */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-dark);
+  --primary-focus: var(--color-primary-focus);
+
+  --secondary-color: var(--color-secondary);
+  --secondary-hover: var(--color-secondary-dark);
+
+  --accent-color: var(--color-accent);
+  --accent-hover: var(--color-accent-dark);
+
+  /* エラー関連の統一変数 */
+  --error-color: var(--color-error);
+  --error-hover: var(--color-error-dark);
+  --error-light: var(--color-error-light);
+  --error-bg: var(--error-light);
+  --error-text: var(--error-color);
+
+  /* フォーカス状態の統一変数 */
+  --focus-outline-color: var(--primary-focus);
+  --focus-outline-width: 3px;
+  --focus-outline-offset: 2px;
+
+  /* コンポーネント固有の変数 */
+  --map-bg: var(--bg-color);
+  --map-loading-bg: var(--light-gray);
+  --map-focus: var(--primary-focus);
+  --map-text: var(--text-color);
+  --map-dark-bg: var(--color-bg-dark);
+  --map-dark-text: var(--color-text-dark);
 
   /* フォントとタイポグラフィー */
   font-size: 16px;
@@ -26,38 +91,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-
-  /* カラー変数（プライマリーカラー） */
-  --primary-hover: #3b5998;
-  --primary-focus: #4285f4;
-
-  /* セカンダリーカラー */
-  --secondary-hover: #5a6268;
-
-  /* アクセントカラー */
-  --accent-hover: #d32f2f;
-
-  /* 基本カラー */
-  --text-light: #666666;
-  --text-dark: #eeeeee;
-  --bg-light: #f8f9fa;
-  --bg-dark: #121212;
-
-  /* エラー関連 */
-  --error-color: #d32f2f;
-  --error-light: #ffcdd2;
-  --error-hover: #c62828;
-
-  /* UI要素 */
-  --shadow-color: rgba(0, 0, 0, 0.1);
-
-  /* 地図関連の固有変数 */
-  --map-bg: var(--bg-color);
-  --map-loading-bg: var(--bg-light);
-  --map-focus: var(--primary-focus);
-  --map-text: var(--text-color);
-  --map-dark-bg: var(--bg-dark);
-  --map-dark-text: var(--text-dark);
 }
 
 /* HTML・BODYのスタイリング */
@@ -86,10 +119,15 @@ img {
   display: block;
 }
 
-/* フォーカス表示の改善 */
+/* フォーカス表示の統一 */
 :focus {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
 }
 
 /* フォーム要素のスタイリング統一 */
@@ -115,7 +153,7 @@ a:focus {
 }
 
 /* アクセシビリティ：スクリーンリーダー用 */
-.sr-only {
+.srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -154,10 +192,17 @@ a:focus {
 /* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --text-color: #f8f9fa;
-    --bg-color: #121212;
+    --text-color: var(--color-text-dark);
+    --bg-color: var(--color-bg-dark);
     --light-gray: #1e1e1e;
     --border-color: #555555;
-    --text-light: #bbbbbb;
+    --text-light: var(--color-text-light);
+
+    /* ダークモードでのエラー表示調整 */
+    --error-bg: rgba(211, 47, 47, 0.2);
+    --error-text: var(--color-error-light);
+
+    /* ダークモードでのフォーカス調整 */
+    --focus-outline-color: var(--color-primary-light);
   }
 }
