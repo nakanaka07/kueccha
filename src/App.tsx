@@ -1,6 +1,20 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * App.tsx
+ * このファイルはアプリケーションのメインエントリーポイントです。
+ * 主な機能：
+ * - アプリケーション全体の状態管理
+ * - コンポーネントの組み立てとレンダリング
+ * - エラー処理とローディング状態の管理
+ * - ユーザーインタラクションのハンドリング
+ */
+
+// 基本的なReactの機能とフックをインポート（コンポーネントの作成と状態管理に必要）
+import React, { useState } from 'react';
+// React 19のクライアントサイドレンダリング用APIをインポート
 import { createRoot } from 'react-dom/client';
+// グローバルスタイルの適用
 import './App.css';
+// 各種コンポーネントのインポート
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import FeedbackForm from './components/feedback/FeedbackForm';
 import FilterPanel from './components/filterpanel/FilterPanel';
@@ -10,9 +24,10 @@ import Map from './components/map/Map';
 import { useAppState } from './hooks/useAppState';
 import useSearch from './hooks/useSearch';
 import { useSheetData } from './hooks/useSheetData';
+import { useSyncState } from './hooks/useSyncState';
 import { ERROR_MESSAGES } from './utils/constants';
-import { Poi, AreaType, LatLngLiteral } from './utils/types';
 
+// メインのAppコンポーネント
 const App: React.FC = () => {
   const { pois, isLoading, error, refetch, isLoaded } = useSheetData();
   const { searchResults, search } = useSearch(pois);
@@ -30,44 +45,18 @@ const App: React.FC = () => {
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const displayedPois = searchResults.length > 0 ? searchResults : pois;
   const isInitialLoading = isLoading || !isLoaded;
+  const [localSelectedPoi, setLocalSelectedPoi] = useSyncState(selectedPoi, actions.setSelectedPoi);
+  const [localAreaVisibility, setLocalAreaVisibility] = useSyncState(areaVisibility, setAreaVisibility);
+  const [localCurrentLocation, setLocalCurrentLocation] = useSyncState(currentLocation, setCurrentLocation);
+  const [localShowWarning, setLocalShowWarning] = useSyncState(showWarning, setShowWarning);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(true);
 
-  // ローカル状態
-  const [localSelectedPoi, setLocalSelectedPoi] = useState<Poi | null>(selectedPoi);
-  const [localAreaVisibility, setLocalAreaVisibility] = useState<Record<AreaType, boolean>>(areaVisibility);
-  const [localCurrentLocation, setLocalCurrentLocation] = useState<LatLngLiteral | null>(currentLocation);
-  const [localShowWarning, setLocalShowWarning] = useState<boolean>(showWarning);
-
-  // ローカル状態をグローバル状態に同期
-  useEffect(() => {
-    setAreaVisibility(localAreaVisibility);
-  }, [localAreaVisibility, setAreaVisibility]);
-
-  useEffect(() => {
-    setCurrentLocation(localCurrentLocation);
-  }, [localCurrentLocation, setCurrentLocation]);
-
-  useEffect(() => {
-    setShowWarning(localShowWarning);
-  }, [localShowWarning, setShowWarning]);
-
-  // グローバル状態をローカル状態に同期
-  useEffect(() => {
-    setLocalSelectedPoi(selectedPoi);
-  }, [selectedPoi]);
-
-  useEffect(() => {
-    setLocalAreaVisibility(areaVisibility);
-  }, [areaVisibility]);
-
-  useEffect(() => {
-    setLocalCurrentLocation(currentLocation);
-  }, [currentLocation]);
-
-  useEffect(() => {
-    setLocalShowWarning(showWarning);
-  }, [showWarning]);
+  const handleFilterPanelClose = () => {
+    setIsFilterPanelOpen(false);
+  };
 
   if (error) {
+    console.error(error);
     return (
       <ErrorBoundary>
         <div>Error: {error.message}</div>
@@ -124,8 +113,8 @@ const App: React.FC = () => {
             pois={displayedPois}
             setSelectedPoi={setLocalSelectedPoi}
             setAreaVisibility={setLocalAreaVisibility}
-            isFilterPanelOpen={true}
-            onCloseClick={() => {}}
+            isFilterPanelOpen={isFilterPanelOpen}
+            onCloseClick={handleFilterPanelClose}
             localAreaVisibility={localAreaVisibility}
             setLocalAreaVisibility={setLocalAreaVisibility}
             currentLocation={localCurrentLocation}

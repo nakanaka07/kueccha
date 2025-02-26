@@ -32,6 +32,7 @@ export const useAppState = (pois: Poi[]) => {
     isLoaded,
     isMapLoaded,
     selectedPoi,
+    setSelectedPoi,
     areaVisibility,
     setAreaVisibility,
     currentLocation,
@@ -42,6 +43,7 @@ export const useAppState = (pois: Poi[]) => {
     actions: {
       handleMapLoad,
       handleSearchResultClick,
+      setSelectedPoi,
     },
   };
 };
