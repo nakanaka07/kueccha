@@ -71,6 +71,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     });
 
     // ここにエラーログの送信などの処理を追加することも可能
+    console.error('ErrorBoundary caught an error', error, errorInfo);
   }
 
   /**

@@ -4,10 +4,10 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* エラーコンテンツのスタイル */
+/* エラーコンテンツのスタイル - グローバル変数を使用 */
 .errorContent {
   background-color: var(--bg-color);
   padding: 2rem;
@@ -16,24 +16,26 @@
   text-align: center;
   max-width: 90vw;
   width: 400px;
+  border: 1px solid var(--error-border);
 }
 
 /* エラーコンテンツの見出しのスタイル */
 .errorContent h1 {
   font-size: 1.5rem;
   margin-bottom: 0.75rem;
-  color: var(--text-color);
+  color: var(--error-text);
+  font-weight: 500;
 }
 
 /* エラーコンテンツの段落のスタイル */
 .errorContent p {
   font-size: 1rem;
   margin-bottom: 1.25rem;
-  color: var(--secondary-color);
+  color: var(--text-color);
   word-break: break-word;
 }
 
-/* エラーコンテンツのボタンのスタイル */
+/* エラーコンテンツのボタンのスタイル - グローバル変数を使用 */
 .errorContent button {
   padding: 0.625rem 1.25rem;
   font-size: 1rem;
@@ -50,7 +52,7 @@
   background-color: var(--error-hover);
 }
 
-/* ボタンのフォーカス時のスタイル */
+/* ボタンのフォーカス時のスタイル - グローバル変数を使用 */
 .errorContent button:focus,
 .errorContent button:focus-visible {
   outline: var(--focus-outline-width) solid var(--focus-outline-color);
@@ -64,9 +66,57 @@
   }
 }
 
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .errorContent {
+    padding: 1.5rem;
+    width: 85%;
+  }
+
+  .errorContent h1 {
+    font-size: 1.2rem;
+  }
+
+  .errorContent p {
+    font-size: 0.9rem;
+  }
+
+  .errorContent button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
 /* ダークモード対応 - グローバル変数を使用 */
 @media (prefers-color-scheme: dark) {
+  .errorBoundary {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
   .errorContent {
     background-color: var(--light-gray);
+    border-color: var(--error-border);
+    box-shadow: 0 2px 10px var(--error-shadow);
+  }
+
+  .errorContent h1 {
+    color: var(--error-text);
+  }
+
+  .errorContent p {
+    color: var(--text-color);
+  }
+
+  .errorContent button {
+    background-color: var(--error-color);
+  }
+
+  .errorContent button:hover {
+    background-color: var(--error-hover);
+  }
+
+  .errorContent button:focus,
+  .errorContent button:focus-visible {
+    outline-color: var(--focus-outline-color);
   }
 }

@@ -1,18 +1,32 @@
-import React from 'react';
-import styles from './MapError.module.css'; // CSSモジュールとして正しくインポート
-import { MapErrorProps } from '../../utils/types'; // types.tsからMapErrorPropsをインポート
+/**
+ * MapError.tsx
+ * マップの読み込みや表示時に発生したエラーを表示するコンポーネント
+ */
 
-// MapErrorコンポーネントを定義します。
-export const MapError: React.FC<MapErrorProps> = ({ message, onRetry }) => (
-  // エラーコンテナを定義し、役割をalertに設定します。
-  <div className={styles.errorContainer} role="alert">
-    {/* 地図の読み込みエラーを示すメッセージを表示します。 */}
-    <p>地図の読み込み中にエラーが発生しました。</p>
-    {/* 受け取ったエラーメッセージを表示します。 */}
-    <p>{message}</p>
-    {/* インターネット接続の確認を促すメッセージを表示します。 */}
-    <p>インターネット接続を確認し、再度お試しください。</p>
-    {/* 再試行ボタンを表示し、クリック時にonRetry関数を呼び出します。 */}
-    <button onClick={onRetry}>再読み込み</button>
-  </div>
-);
+import React from 'react';
+// MapError.module.cssではなく、Map.module.cssを使用するように変更
+import styles from './Map.module.css';
+import { MapErrorProps } from '../../utils/types';
+
+/**
+ * MapErrorコンポーネント
+ * マップ関連のエラーを一貫したデザインで表示する
+ */
+export const MapError: React.FC<MapErrorProps> = ({ message, onRetry }) => {
+  return (
+    <div className={styles.mapError} role="alert" aria-live="assertive">
+      <div className={styles.errorContainer}>
+        <h2 className={styles.errorTitle}>地図の読み込みに失敗しました</h2>
+        <p className={styles.errorContent}>{message}</p>
+        <p className={styles.errorContent}>インターネット接続を確認し、再度お試しください。</p>
+        {onRetry && (
+          <button onClick={onRetry} className={styles.retryButton} aria-label="再読み込み">
+            再読み込み
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MapError;

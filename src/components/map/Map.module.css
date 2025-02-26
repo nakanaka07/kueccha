@@ -1,24 +1,17 @@
-/* 基本変数定義 */
-:root {
-  /* カラー変数 */
-  --map-bg-color: #ffffff;
-  --map-focus-color: #4285f4;
-  --map-text-color: #333333;
+/**
+ * Map.module.css
+ * マップコンポーネントのスタイル定義
+ * グローバル変数を使用して視覚的な一貫性を確保
+ */
 
-  /* ロード画面背景色 */
-  --map-loading-bg: #f8f8f8;
-
-  /* ダークモード用カラー変数 */
-  --map-dark-bg-color: #222222;
-  --map-dark-text-color: #eeeeee;
-}
-
-/* マップコンテナ - ベース */
+/* マップコンテナのベーススタイル */
 .mapContainer {
   position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  background-color: var(--map-bg);
+  color: var(--map-text);
 }
 
 /* GoogleMapが生成する直下のdiv要素 */
@@ -29,14 +22,15 @@
   height: 100%;
 }
 
-/* アクセシビリティ対応 - フォーカス時の視覚的なインジケーター */
+/* アクセシビリティ対応 - フォーカス時の視覚的インジケーター */
+.mapContainer:focus,
 .mapContainer:focus-visible {
-  outline: 3px solid var(--map-focus-color);
-  outline-offset: -3px;
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
   z-index: 1;
 }
 
-/* ロード中表示 */
+/* ロード中表示コンテナ */
 .loadingContainer {
   display: flex;
   justify-content: center;
@@ -44,22 +38,137 @@
   width: 100%;
   height: 100vh;
   background-color: var(--map-loading-bg);
-  color: var(--map-text-color);
+  color: var(--map-text);
   font-size: 1.2rem;
   font-weight: 500;
 }
 
-/* レスポンシブ設定 */
+/* マップエラー表示 */
+.mapError {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  text-align: center;
+  padding: 2rem;
+}
+
+/* エラーメッセージコンテナ */
+.errorContainer {
+  max-width: 500px;
+  padding: 1.5rem;
+  background-color: var(--bg-color);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--error-shadow);
+}
+
+/* エラータイトル */
+.errorTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: var(--error-text);
+}
+
+/* エラーコンテンツ */
+.errorContent {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+/* リトライボタン */
+.retryButton {
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* リトライボタンのホバー状態 */
+.retryButton:hover {
+  background-color: var(--error-hover);
+}
+
+/* リトライボタンのフォーカス状態 */
+.retryButton:focus,
+.retryButton:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* レスポンシブ対応 */
 @media (max-width: 768px) {
   .loadingContainer {
     font-size: 1rem;
+  }
+
+  .errorTitle {
+    font-size: 1.25rem;
+  }
+
+  .errorContent {
+    font-size: 0.9rem;
+  }
+
+  .retryButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 }
 
 /* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
+  /* マップコンテナ */
+  .mapContainer {
+    background-color: var(--map-dark-bg);
+    color: var(--map-dark-text);
+  }
+
+  /* ロード中表示 */
   .loadingContainer {
-    background-color: var(--map-dark-bg-color);
-    color: var(--map-dark-text-color);
+    background-color: var(--light-gray);
+    color: var(--text-color);
+  }
+
+  /* エラー表示 */
+  .mapError {
+    background-color: var(--error-bg);
+  }
+
+  .errorContainer {
+    background-color: var(--light-gray);
+    border-color: var(--error-border);
+  }
+
+  .errorTitle {
+    color: var(--error-text);
+  }
+
+  .errorContent {
+    color: var(--text-color);
+  }
+
+  .retryButton {
+    background-color: var(--error-color);
+  }
+
+  .retryButton:hover {
+    background-color: var(--error-hover);
+  }
+}
+
+/* モーションを減らす設定が有効な場合のスタイル */
+@media (prefers-reduced-motion: reduce) {
+  .retryButton {
+    transition: none;
   }
 }

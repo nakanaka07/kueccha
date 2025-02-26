@@ -174,7 +174,24 @@ export interface MapConfig {
   language: string;
   version: string;
   style: MapStyle;
-  options: google.maps.MapOptions;
+  // google.maps.MapOptions から独自の型定義に変更
+  options: {
+    mapId?: string;
+    disableDefaultUI?: boolean;
+    zoomControl?: boolean;
+    mapTypeControl?: boolean;
+    streetViewControl?: boolean;
+    fullscreenControl?: boolean;
+    clickableIcons?: boolean;
+    gestureHandling?: string;
+    mapTypeControlOptions?: {
+      style?: number;
+      position?: number;
+      mapTypeIds?: string[];
+    };
+    // anyからunknownに変更し、型安全性を向上
+    [key: string]: unknown;
+  };
 }
 
 /**

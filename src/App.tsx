@@ -19,11 +19,17 @@ const App: React.FC = () => {
     }
   };
 
+  // マップの状態を管理するための関数（必要に応じて使用）
+  const handleMapLoadedState = (_mapInstance: google.maps.Map | null) => {
+    // マップインスタンスが必要なときに状態を更新するなど
+    // 現在は使用していないため、引数名の先頭に_を付けています
+  };
+
   return (
-    <div className="app">
+    <div className={styles.app}>
       <ErrorBoundary>
         <div className={styles.appContainer}>
-          <Map onLoad={handleMapLoad} setIsMapLoaded={handleMapLoad} />
+          <Map onLoad={handleMapLoad} setIsMapLoaded={handleMapLoadedState} />
         </div>
       </ErrorBoundary>
     </div>

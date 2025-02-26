@@ -11,7 +11,9 @@
 
 /* ルートのフォントサイズ設定（rem計算の基準） */
 :root {
-  /* ベースカラー変数 - すべての色の基本となる定義 */
+  /* ===============================================
+   * グローバルカラー変数 - すべての色の基本となる定義
+   * =============================================== */
   --color-primary: #4a6da7;
   --color-primary-light: #6b8bc5;
   --color-primary-dark: #3b5998;
@@ -48,7 +50,9 @@
   --color-warning-light: #ffcc80;
   --color-warning-dark: #f57c00;
 
-  /* UI要素用の派生変数 - 基本カラーから派生 */
+  /* ===============================================
+   * UI要素用の派生変数 - グローバルカラーから派生
+   * =============================================== */
   --text-color: var(--color-text);
   --bg-color: var(--color-bg);
   --light-gray: var(--color-bg-light);
@@ -71,19 +75,38 @@
   --error-light: var(--color-error-light);
   --error-bg: var(--error-light);
   --error-text: var(--error-color);
+  --error-border: var(--color-error);
+  --error-shadow: rgba(211, 47, 47, 0.3);
 
   /* フォーカス状態の統一変数 */
   --focus-outline-color: var(--primary-focus);
   --focus-outline-width: 3px;
   --focus-outline-offset: 2px;
 
-  /* コンポーネント固有の変数 */
+  /* ===============================================
+   * コンポーネント固有の変数 - グローバル変数から派生
+   * =============================================== */
   --map-bg: var(--bg-color);
   --map-loading-bg: var(--light-gray);
   --map-focus: var(--primary-focus);
   --map-text: var(--text-color);
   --map-dark-bg: var(--color-bg-dark);
   --map-dark-text: var(--color-text-dark);
+
+  /* フォームコンポーネント変数 */
+  --input-bg: var(--bg-color);
+  --input-border: var(--border-color);
+  --input-text: var(--text-color);
+  --input-focus-border: var(--primary-color);
+  --input-placeholder: var(--color-secondary-light);
+
+  /* ボタンコンポーネント変数 */
+  --button-primary-bg: var(--primary-color);
+  --button-primary-text: white;
+  --button-secondary-bg: var(--secondary-color);
+  --button-secondary-text: white;
+  --button-disabled-bg: var(--light-gray);
+  --button-disabled-text: var(--color-secondary);
 
   /* フォントとタイポグラフィー */
   font-size: 16px;
@@ -130,6 +153,18 @@ img {
   outline-offset: var(--focus-outline-offset);
 }
 
+/* インタラクティブ要素の統一フォーカススタイル */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[role="button"]:focus,
+[tabindex]:focus {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
 /* フォーム要素のスタイリング統一 */
 button,
 input,
@@ -163,6 +198,26 @@ a:focus {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* エラー表示の統一スタイル */
+.errorContainer {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  box-shadow: 0 2px 4px var(--error-shadow);
+}
+
+.errorTitle {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.errorMessage {
+  font-size: 0.9rem;
 }
 
 /* レスポンシブメディアクエリ */
@@ -201,8 +256,19 @@ a:focus {
     /* ダークモードでのエラー表示調整 */
     --error-bg: rgba(211, 47, 47, 0.2);
     --error-text: var(--color-error-light);
+    --error-border: #d32f2f;
+    --error-shadow: rgba(211, 47, 47, 0.2);
 
     /* ダークモードでのフォーカス調整 */
     --focus-outline-color: var(--color-primary-light);
+
+    /* ダークモードでのフォーム要素調整 */
+    --input-bg: #2d2d2d;
+    --input-border: #555555;
+    --input-placeholder: #888888;
+
+    /* ダークモードでのボタン調整 */
+    --button-disabled-bg: #2d2d2d;
+    --button-disabled-text: #888888;
   }
 }
