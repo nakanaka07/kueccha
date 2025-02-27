@@ -1,0 +1,98 @@
+name: Deploy Vite App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      # コードをチェックアウト
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # pnpmをセットアップ
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2.0.0
+        with:
+          version: latest
+
+      # Node.jsをセットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      # pnpm依存関係のキャッシュ
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+            ${{ runner.os }}-pnpm-
+
+      # .envファイルの作成
+      - name: Create .env file
+        run: |
+          set -e
+          cat > .env <<EOL
+          VITE_GOOGLE_MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.MAPS_MAP_ID }}
+          VITE_GOOGLE_SHEETS_API_KEY=${{ secrets.SHEETS_API_KEY }}
+          VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.SPREADSHEET_ID }}
+          VITE_EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }}
+          EOL
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: pnpm install
+
+      # pnpmキャッシュのクリーンアップ
+      - name: Clean pnpm cache
+        run: pnpm store prune
+
+      # ビルド
+      - name: Build
+        run: pnpm run build
+
+      # アーティファクトのアップロード
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    steps:
+      # GitHub Pagesへのデプロイ
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # ページURLの設定
+      - name: Set page URL
+        run: echo "page_url=${{ steps.deployment.outputs.page_url }}" >> $GITHUB_ENV
