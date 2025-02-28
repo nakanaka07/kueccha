@@ -1,0 +1,102 @@
+/**
+ * MapControls.module.css
+ * マップコントロールコンポーネントのスタイル定義
+ * グローバル変数を使用して視覚的な一貫性を確保
+ */
+
+/* コントロールボタンを含むコンテナのスタイルを定義します。 */
+.mapControlsContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+/* 各コントロールボタンのスタイルを定義します。 */
+.mapControlButton {
+  background: var(--bg-color);
+  border: none;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px var(--color-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+/* コントロールボタン内の画像のスタイルを定義します。 */
+.mapControlButton img {
+  width: 24px;
+  height: 24px;
+}
+
+/* コントロールボタンのホバー状態 */
+.mapControlButton:hover {
+  background-color: var(--light-gray);
+  transform: translateY(-1px);
+}
+
+/* コントロールボタンのアクティブ状態 */
+.mapControlButton:active {
+  transform: translateY(1px);
+}
+
+/* コントロールボタンのフォーカス状態 */
+.mapControlButton:focus,
+.mapControlButton:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* モーションを減らす設定が有効な場合のスタイル */
+@media (prefers-reduced-motion: reduce) {
+  .mapControlButton {
+    transition: none;
+    transform: none;
+  }
+
+  .mapControlButton:hover,
+  .mapControlButton:active {
+    transform: none;
+  }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .mapControlsContainer {
+    top: 8px;
+    left: 8px;
+    gap: 8px;
+  }
+
+  .mapControlButton {
+    padding: 4px;
+  }
+
+  .mapControlButton img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .mapControlButton {
+    background-color: var(--light-gray);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .mapControlButton:hover {
+    background-color: var(--color-bg-dark);
+  }
+
+  /* ダークモードでのフィルター適用（必要に応じて画像を明るく） */
+  .mapControlButton img {
+    filter: brightness(0.9);
+  }
+}

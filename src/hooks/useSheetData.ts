@@ -1,29 +1,87 @@
-// Reactのフックをインポートします。useStateとuseEffectは状態管理、useCallbackはメモ化された関数を作成するために使用します。
 import { useState, useEffect, useCallback } from 'react';
-// CONFIGとvalidateConfigをインポートします。Google Sheets APIの設定とその検証に使用します。
 import { CONFIG, validateConfig } from '../utils/config';
-// AREASとERROR_MESSAGESをインポートします。エリアの定数とエラーメッセージに使用します。
 import { AREAS, ERROR_MESSAGES } from '../utils/constants';
-// Poi型とAreaType型をインポートします。ポイントオブインタレストとエリアの型定義に使用します。
 import type { Poi, AreaType } from '../utils/types';
 
-// FetchErrorインターフェースを定義します。エラーメッセージとエラーコードを含みます。
+/**
+ * Google Sheets APIからPOI（Point of Interest）データを取得・管理するカスタムフック
+ *
+ * このフックは、Google Sheets APIを使用して複数エリアのPOIデータを非同期で取得し、
+ * データのロード状態、エラー状態を管理します。リトライ機能、WKT形式の座標変換、
+ * データの重複排除などの処理も実装しています。
+ *
+ * @returns {Object} POIデータと関連する状態を含むオブジェクト
+ *   @property {Poi[]} pois - 取得したPOI（Point of Interest）データの配列
+ *   @property {boolean} isLoading - データ取得処理中かどうか
+ *   @property {boolean} isLoaded - データが正常に読み込まれたかどうか
+ *   @property {FetchError|null} error - エラー情報（存在する場合）
+ *   @property {function} refetch - データを再取得するための関数
+ *
+ * @example
+ * function MapComponent() {
+ *   const { pois, isLoading, isLoaded, error, refetch } = useSheetData();
+ *
+ *   if (isLoading) {
+ *     return <LoadingSpinner />;
+ *   }
+ *
+ *   if (error) {
+ *     return (
+ *       <div>
+ *         <p>エラー: {error.message}</p>
+ *         <button onClick={refetch}>再試行</button>
+ *       </div>
+ *     );
+ *   }
+ *
+ *   return (
+ *     <div>
+ *       <h2>POI一覧 ({pois.length}件)</h2>
+ *       <ul>
+ *         {pois.map(poi => (
+ *           <li key={poi.id}>{poi.name}</li>
+ *         ))}
+ *       </ul>
+ *     </div>
+ *   );
+ * }
+ *
+ * @remarks
+ * - このフックを使用する前に、CONFIG内にGoogle Sheets APIキーと対象スプレッドシートIDが設定されている必要があります
+ * - 各エリアのデータは並行して取得され、重複するPOIはIDに基づいて統合されます
+ * - ネットワークエラーが発生した場合、最大3回のリトライを行います
+ * - WKT形式の座標データは緯度・経度オブジェクトに変換され、範囲外の座標は除外されます
+ */
+
+/**
+ * APIからのデータ取得エラーを表すインターフェース
+ */
 interface FetchError {
   message: string;
   code: string;
 }
 
-// APIの設定を定数として定義します。最大リトライ回数、リトライ間隔、ベースURLを含みます。
+/**
+ * API接続に関する設定
+ */
 const API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
 } as const;
 
-// 指定されたミリ秒だけ待機する関数を定義します。
+/**
+ * 指定されたミリ秒だけ処理を遅延させる関数
+ * @param {number} ms - 遅延時間（ミリ秒）
+ */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// エラーハンドリング関数を定義します。エラーとリトライ回数を引数に取り、FetchErrorオブジェクトを返します。
+/**
+ * エラーを処理し、適切なエラーメッセージを生成する関数
+ * @param {unknown} error - 発生したエラー
+ * @param {number} retryCount - 現在のリトライ回数
+ * @returns {FetchError} フォーマット済みエラーオブジェクト
+ */
 const handleError = (error: unknown, retryCount: number): FetchError => {
   console.error(error);
   if (retryCount < API_CONFIG.MAX_RETRIES) {
@@ -35,7 +93,11 @@ const handleError = (error: unknown, retryCount: number): FetchError => {
   };
 };
 
-// WKT形式の文字列を解析して緯度経度オブジェクトを返す関数を定義します。
+/**
+ * WKT形式の座標文字列を解析し、緯度・経度オブジェクトに変換する関数
+ * @param {string} wkt - WKT形式の座標文字列（例: 'POINT(138.3 38.2)'）
+ * @returns {Object|null} 緯度・経度オブジェクトまたは無効な場合はnull
+ */
 const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   try {
     const match = wkt.match(/POINT\s*\(([0-9.]+)\s+([0-9.]+)\)/);
@@ -61,20 +123,24 @@ const parseWKT = (wkt: string): { lat: number; lng: number } | null => {
   return null;
 };
 
-// useSheetDataフックを定義します。Google Sheetsからデータを取得し、状態を管理します。
 export function useSheetData() {
-  // POI（ポイントオブインタレスト）の配列を管理する状態変数を定義します。初期値は空配列です。
+  // POIデータを管理する状態
   const [pois, setPois] = useState<Poi[]>([]);
-  // データ取得中かどうかを管理する状態変数を定義します。初期値はfalseです。
+  // データ読み込み中の状態
   const [isLoading, setIsLoading] = useState(false);
-  // エラー情報を管理する状態変数を定義します。初期値はnullです。
+  // エラー情報の状態
   const [error, setError] = useState<FetchError | null>(null);
-  // データが取得済みかどうかを管理する状態変数を定義します。初期値はfalseです。
+  // データの取得が完了したかどうかの状態
   const [isFetched, setIsFetched] = useState(false);
-  // データがロード済みかどうかを管理する状態変数を定義します。初期値はfalseです。
+  // データが正常にロードされたかどうかの状態
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 指定されたエリアのデータを取得する非同期関数を定義します。リトライ回数を引数に取ります。
+  /**
+   * 指定されたエリアのデータをGoogle Sheetsから取得する関数
+   * @param {AreaType} area - 取得対象のエリアタイプ
+   * @param {number} retryCount - 現在のリトライ回数
+   * @returns {Promise<Poi[]>} 取得したPOIデータの配列
+   */
   const fetchAreaData = useCallback(async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
     const areaName = AREAS[area];
     const url = `${API_CONFIG.BASE_URL}/${CONFIG.sheets.spreadsheetId}/values/${area === 'RECOMMEND' ? 'おすすめ' : areaName}!A:AX?key=${CONFIG.sheets.apiKey}`;
@@ -132,7 +198,10 @@ export function useSheetData() {
     }
   }, []);
 
-  // データを取得する非同期関数を定義します。データ取得中または取得済みの場合は何もしません。
+  /**
+   * 全エリアのPOIデータを取得する関数
+   * 各エリアのデータを並行して取得し、結果を統合します
+   */
   const fetchData = useCallback(async () => {
     if (isLoading || isFetched) return;
 
@@ -147,6 +216,7 @@ export function useSheetData() {
       const normalPoisArrays = await Promise.all(normalAreas.map((area) => fetchAreaData(area)));
       const recommendPois = await fetchAreaData('RECOMMEND');
 
+      // IDに基づいてPOIデータを統合し、重複を排除
       const poisMap = new Map(normalPoisArrays.flat().map((poi) => [poi.id, poi]));
       recommendPois.forEach((poi) => poisMap.set(poi.id, poi));
 
@@ -160,19 +230,21 @@ export function useSheetData() {
     }
   }, [isLoading, isFetched, fetchAreaData]);
 
-  // コンポーネントのマウント時にデータを取得するためのuseEffectフックを定義します。
+  // コンポーネントのマウント時またはisFetched状態変更時に自動的にデータを取得
   useEffect(() => {
     if (!isFetched) {
       fetchData();
     }
   }, [fetchData, isFetched]);
 
-  // データを再取得するための関数を定義します。isFetchedをfalseに設定し、エラーをクリアします。
+  /**
+   * データを再取得するための関数
+   * エラーをクリアし、フェッチフラグをリセットして新たにデータ取得を開始します
+   */
   const refetch = useCallback(() => {
     setIsFetched(false);
     setError(null);
   }, []);
 
-  // フックが返すオブジェクト。POIの配列、ローディング状態、ロード済み状態、エラー情報、再取得関数を含みます。
   return { pois, isLoading, isLoaded, error, refetch };
 }

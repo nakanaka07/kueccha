@@ -1,80 +1,119 @@
-// Reactのフックをインポートします。
-// useState: 状態管理のためのフック
-// useCallback: メモ化されたコールバック関数を作成するためのフック
-// useRef: ミュータブルなrefオブジェクトを作成するためのフック
-// useEffect: 副作用を処理するためのフック
 import { useState, useCallback, useRef, useEffect } from 'react';
-// POI（ポイントオブインタレスト）の型定義をインポートします。
 import type { Poi } from '../utils/types';
 
-// デバウンスの遅延時間を定義します（ミリ秒単位）。
+/**
+ * POIデータの検索機能を提供するカスタムフック
+ *
+ * このフックは、POI（Point of Interest）配列に対する検索機能を実装し、
+ * デバウンス処理とキャッシング機能によってパフォーマンスを最適化します。
+ * 特定のキーワード('clear', 'all')に対する特殊処理も実装しています。
+ *
+ * @param {Poi[]} pois - 検索対象となるPOI（Point of Interest）の配列
+ * @returns {Object} 検索関連の状態と操作関数を含むオブジェクト
+ *   @property {Poi[]} searchResults - 検索結果のPOI配列
+ *   @property {function} search - 検索を実行する関数（クエリ文字列を引数に取る）
+ *   @property {string} query - 現在の検索クエリ文字列
+ *
+ * @example
+ * function SearchComponent({ poisData }) {
+ *   const { searchResults, search, query } = useSearch(poisData);
+ *
+ *   return (
+ *     <div>
+ *       <input
+ *         type="text"
+ *         value={query}
+ *         onChange={(e) => search(e.target.value)}
+ *         placeholder="検索..."
+ *       />
+ *       <ul>
+ *         {searchResults.map((poi) => (
+ *           <li key={poi.id}>{poi.name}</li>
+ *         ))}
+ *       </ul>
+ *     </div>
+ *   );
+ * }
+ *
+ * @remarks
+ * - 入力の度に検索が実行されるのを防ぐため、300ミリ秒のデバウンス処理が適用されています
+ * - 検索結果はクエリ文字列ごとにキャッシュされるため、同じ検索の再実行は高速です
+ * - 'clear'を検索すると結果がクリアされ、'all'を検索すると全POIが表示されます
+ * - 検索は大文字小文字を区別せず、部分一致で行われます
+ */
 const DEBOUNCE_DELAY = 300;
 
-// useSearchフックを定義します。
-// POIの配列を引数として受け取り、検索結果と検索関数を返します。
 const useSearch = (pois: Poi[]) => {
-  // 検索結果を管理する状態変数。初期値は空の配列です。
+  // 検索結果を管理する状態変数
   const [searchResults, setSearchResults] = useState<Poi[]>([]);
-  // 検索クエリを管理する状態変数。初期値は空文字列です。
+  // 検索クエリを管理する状態変数
   const [query, setQuery] = useState('');
-  // 検索結果のキャッシュを管理するrefオブジェクト。初期値は空のオブジェクトです。
+  // 検索結果のキャッシュを管理するrefオブジェクト
   const cache = useRef<Record<string, Poi[]>>({});
-  // デバウンス用のタイムアウトIDを管理するrefオブジェクト。初期値はnullです。
+  // デバウンス用のタイムアウトIDを管理するrefオブジェクト
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // 検索関数を定義します。検索クエリを引数として受け取ります。
+  /**
+   * 検索を実行する関数
+   * 入力のデバウンス処理、キャッシュチェック、特殊キーワード処理を行います
+   *
+   * @param {string} query - 検索クエリ文字列
+   */
   const search = useCallback(
     (query: string) => {
-      // 検索クエリを状態変数にセットします。
       setQuery(query);
 
-      // 既存のデバウンスタイムアウトがある場合はクリアします。
+      // 既存のデバウンスタイムアウトがある場合はクリア
       if (debounceTimeout.current) {
         clearTimeout(debounceTimeout.current);
       }
 
-      // 新しいデバウンスタイムアウトを設定します。
+      // デバウンス処理を適用
       debounceTimeout.current = setTimeout(() => {
-        // クエリが'clear'の場合、検索結果をクリアします。
+        // 特殊キーワード: 'clear' - 結果をクリア
         if (query === 'clear') {
           setSearchResults([]);
           return;
         }
 
-        // クエリが'all'または空文字列の場合、全てのPOIを検索結果にセットします。
-        if (query === 'all' || !query) {
+        // 特殊キーワード: 'all' - 全POIを表示
+        if (query === 'all') {
           setSearchResults(pois);
           return;
         }
 
-        // キャッシュにクエリが存在する場合、キャッシュから検索結果をセットします。
+        // 空クエリの場合は空の結果を返す
+        if (!query) {
+          setSearchResults([]);
+          return;
+        }
+
+        // キャッシュチェック
         if (cache.current[query]) {
           setSearchResults(cache.current[query]);
           return;
         }
 
-        // クエリに基づいてPOIをフィルタリングします。
+        // キャッシュにない場合は新規検索を実行
         const results = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
 
-        // フィルタリング結果をキャッシュに保存します。
+        // 結果をキャッシュに保存
         cache.current[query] = results;
-        // フィルタリング結果を検索結果にセットします。
         setSearchResults(results);
       }, DEBOUNCE_DELAY);
     },
-    [pois], // poisが変更された場合にのみこの関数を再生成します。
+    [pois],
   );
 
-  // コンポーネントのアンマウント時にデバウンスタイムアウトをクリアします。
+  // クリーンアップ: コンポーネントのアンマウント時にタイムアウトをクリア
   useEffect(() => {
     return () => {
       if (debounceTimeout.current) {
         clearTimeout(debounceTimeout.current);
       }
     };
-  }, []); // 空の依存配列により、初回マウント時とアンマウント時にのみ実行されます。
+  }, []);
 
-  // 検索結果、検索関数、検索クエリを返します。
   return { searchResults, search, query };
 };
 

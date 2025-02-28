@@ -213,31 +213,13 @@ export const ERROR_MESSAGES = {
 } as const; // constアサーションで値を不変にする
 
 /**
- * マップ設定の詳細定義
- *
- * Google Mapsの各種設定パラメータを定義します。
- * 位置情報取得のオプションやマップの表示コントロールの設定などが含まれます。
- */
-export const MAP_CONFIGS = {
-  GEOLOCATION: {
-    TIMEOUT: 10000, // 位置情報取得のタイムアウト時間（ミリ秒）
-    MAX_AGE: 0, // キャッシュされた位置情報の最大許容年齢（0=キャッシュを使用しない）
-    HIGH_ACCURACY: true, // 高精度の位置情報を要求（バッテリー消費増加の可能性あり）
-  },
-  CONTROL_POSITIONS: {
-    TOP_LEFT: 1, // コントロールの位置指定（左上）- Google Maps APIの定数値に対応
-  },
-  MAP_TYPES: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 利用可能なマップタイプ
-  DEFAULT_TYPE: 'roadmap', // デフォルトで使用するマップタイプ
-} as const; // constアサーションで値を不変にする
-
-/**
  * Google Maps API設定
  *
- * Google Maps APIの主要な設定パラメータを定義します。
- * 環境変数から取得したAPI KeyやMap IDなどの設定が含まれます。
+ * Google Mapsの全ての設定パラメータを定義します。
+ * 環境変数から取得した設定や位置情報オプション、マップ表示設定などを含みます。
  */
 export const MAPS_CONFIG = {
+  // API関連設定
   apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // 環境変数からGoogle Maps APIキーを取得
   mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // 環境変数からGoogle Maps Map IDを取得
   defaultCenter: { lat: 38.0, lng: 138.5 }, // 佐渡島周辺をデフォルトの中心に設定
@@ -245,10 +227,22 @@ export const MAPS_CONFIG = {
   libraries: ['places', 'geometry', 'drawing', 'marker'] as LoadScriptProps['libraries'], // 使用するGoogle Mapsのライブラリ
   language: 'ja', // マップの言語設定（日本語）
   version: 'weekly', // Google Maps APIのバージョン指定
+
+  // 旧MAP_CONFIGSの内容
+  geolocation: {
+    timeout: 10000, // 位置情報取得のタイムアウト時間（ミリ秒）
+    maxAge: 0, // キャッシュされた位置情報の最大許容年齢（0=キャッシュを使用しない）
+    highAccuracy: true, // 高精度の位置情報を要求（バッテリー消費増加の可能性あり）
+  },
+  defaultType: 'roadmap', // デフォルトで使用するマップタイプ
+
+  // コンテナスタイル
   style: {
     width: '100%', // マップのコンテナ幅（親要素いっぱいに広げる）
     height: '100%', // マップのコンテナ高さ（親要素いっぱいに広げる）
   },
+
+  // マップオプション
   options: {
     mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // マップIDを再指定（一貫性のため）
     disableDefaultUI: false, // デフォルトUIを有効にする
