@@ -106,11 +106,21 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => 
         zoom={MAPS_CONFIG.defaultZoom}
         options={{
           mapId: MAPS_CONFIG.mapId,
-          disableDefaultUI: true,
-          zoomControl: true,
-          scrollwheel: true,
+          mapTypeId: google.maps.MapTypeId.TERRAIN,
+          disableDefaultUI: false,
           disableDoubleClickZoom: false,
-          clickableIcons: false,
+          scrollwheel: true,
+          zoomControl: true,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true,
+          clickableIcons: true,
+          gestureHandling: 'cooperative',
+          mapTypeControlOptions: {
+            style: 1,
+            position: 1,
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+          },
         }}
         onLoad={handleMapLoad}
         aria-label={MAP_ARIA_LABEL}

@@ -222,19 +222,19 @@ export const MAPS_CONFIG = {
   // API関連設定
   apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // 環境変数からGoogle Maps APIキーを取得
   mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // 環境変数からGoogle Maps Map IDを取得
-  defaultCenter: { lat: 38.0, lng: 138.5 }, // 佐渡島周辺をデフォルトの中心に設定
-  defaultZoom: 10, // デフォルトのズームレベル（島全体が見える程度）
   libraries: ['places', 'geometry', 'drawing', 'marker'] as LoadScriptProps['libraries'], // 使用するGoogle Mapsのライブラリ
-  language: 'ja', // マップの言語設定（日本語）
   version: 'weekly', // Google Maps APIのバージョン指定
+  language: 'ja', // マップの言語設定（日本語）
 
-  // 旧MAP_CONFIGSの内容
+  // マップ表示設定
+  defaultCenter: { lat: 38.07, lng: 138.4 }, // 佐渡島周辺をデフォルトの中心に設定
+  defaultZoom: 11, // デフォルトのズームレベル（島全体が見える程度）
+
   geolocation: {
     timeout: 10000, // 位置情報取得のタイムアウト時間（ミリ秒）
     maxAge: 0, // キャッシュされた位置情報の最大許容年齢（0=キャッシュを使用しない）
     highAccuracy: true, // 高精度の位置情報を要求（バッテリー消費増加の可能性あり）
   },
-  defaultType: 'roadmap', // デフォルトで使用するマップタイプ
 
   // コンテナスタイル
   style: {
@@ -245,7 +245,10 @@ export const MAPS_CONFIG = {
   // マップオプション
   options: {
     mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // マップIDを再指定（一貫性のため）
+    mapTypeId: 'terrain', // 文字列で指定（TERRAIN）
     disableDefaultUI: false, // デフォルトUIを有効にする
+    disableDoubleClickZoom: false,
+    scrollwheel: true, // スクロールホイール
     zoomControl: true, // ズームコントロールを表示する
     mapTypeControl: true, // マップタイプ切り替えコントロールを表示する
     streetViewControl: true, // ストリートビューコントロールを表示する
@@ -254,7 +257,7 @@ export const MAPS_CONFIG = {
     gestureHandling: 'cooperative', // マップのジェスチャー処理方法
     mapTypeControlOptions: {
       // Google Maps API がロードされる前の静的定義のため数値を使用
-      style: 2, // DROPDOWN_MENU の定数値（2）
+      style: 1,
       position: 1, // TOP_LEFT の定数値（1）
       mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 利用可能なマップタイプ
     },
