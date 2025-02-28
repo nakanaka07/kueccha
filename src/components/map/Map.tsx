@@ -111,16 +111,11 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => 
           disableDoubleClickZoom: false,
           scrollwheel: true,
           zoomControl: true,
-          mapTypeControl: true,
+          mapTypeControl: false,
           streetViewControl: true,
           fullscreenControl: true,
           clickableIcons: true,
           gestureHandling: 'cooperative',
-          mapTypeControlOptions: {
-            style: 1,
-            position: 1,
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-          },
         }}
         onLoad={handleMapLoad}
         aria-label={MAP_ARIA_LABEL}

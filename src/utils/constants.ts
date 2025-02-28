@@ -250,14 +250,14 @@ export const MAPS_CONFIG = {
     disableDoubleClickZoom: false,
     scrollwheel: true, // スクロールホイール
     zoomControl: true, // ズームコントロールを表示する
-    mapTypeControl: true, // マップタイプ切り替えコントロールを表示する
+    mapTypeControl: false,
     streetViewControl: true, // ストリートビューコントロールを表示する
     fullscreenControl: true, // フルスクリーンコントロールを表示する
     clickableIcons: true, // マップ上のアイコンをクリック可能にする
     gestureHandling: 'cooperative', // マップのジェスチャー処理方法
     mapTypeControlOptions: {
       // Google Maps API がロードされる前の静的定義のため数値を使用
-      style: 1,
+      style: 2, // DROPDOWN_MENU の定数値（2）
       position: 1, // TOP_LEFT の定数値（1）
       mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 利用可能なマップタイプ
     },
