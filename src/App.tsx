@@ -8,28 +8,29 @@ import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import Map from './components/map/Map';
+import { useMapState } from './hooks/useMapState';
 import { ERROR_MESSAGES } from './utils/constants';
 
 // メインのAppコンポーネント
 const App: React.FC = () => {
-  // マップロード時の処理
-  const handleMapLoad = (mapInstance: google.maps.Map | null) => {
+  // useMapStateフックを使ってマップの状態を一元管理
+  const { isMapLoaded, mapInstance, handleMapLoad } = useMapState();
+
+  // マップがロードされたときの追加処理
+  React.useEffect(() => {
     if (mapInstance) {
       console.log('Map loaded successfully');
+      // 将来的に必要な追加処理をここに記述
     }
-  };
-
-  // マップの状態を管理するための関数（必要に応じて使用）
-  const handleMapLoadedState = (_mapInstance: google.maps.Map | null) => {
-    // マップインスタンスが必要なときに状態を更新するなど
-    // 現在は使用していないため、引数名の先頭に_を付けています
-  };
+  }, [mapInstance]);
 
   return (
     <div className={styles.app}>
       <ErrorBoundary>
         <div className={styles.appContainer}>
-          <Map onLoad={handleMapLoad} setIsMapLoaded={handleMapLoadedState} />
+          {/* 単一のコールバックのみを渡す */}
+          <Map onLoad={handleMapLoad} />
+          {isMapLoaded && <div className={styles.mapStatusOverlay}>マップが読み込まれました</div>}
         </div>
       </ErrorBoundary>
     </div>

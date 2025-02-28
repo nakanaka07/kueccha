@@ -209,13 +209,9 @@ export interface MapProps extends BaseProps {
 export interface MapComponentProps {
   /**
    * マップがロードされたときに呼び出されるコールバック関数
+   * マップの状態管理はこのコールバックを通じて一元化されます
    */
-  onLoad: (map: google.maps.Map | null) => void;
-
-  /**
-   * マップのロード状態を親コンポーネントに通知するための関数
-   */
-  setIsMapLoaded: (map: google.maps.Map | null) => void;
+  onLoad: (map: google.maps.Map) => void;
 }
 
 /**
