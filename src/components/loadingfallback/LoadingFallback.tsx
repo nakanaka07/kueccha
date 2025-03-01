@@ -1,85 +1,156 @@
 /**
  * LoadingFallback.tsx
  *
- * このファイルはアプリケーション内でのデータ読み込み中や処理中に表示される
- * ローディングインジケーターを提供するコンポーネントを定義しています。
- * ユーザーに対してシステムが処理中であることを視覚的に伝えます。
- */
-
-// React本体と状態管理のためのフックをインポート
-import React, { useEffect, useState } from 'react';
-// コンポーネントのスタイルをインポート
-import './LoadingFallback.module.css';
-// エラーメッセージの定数をインポート（デフォルトメッセージとして使用）
-import { ERROR_MESSAGES } from '../../utils/constants';
-// このコンポーネントのProps型定義をインポート
-import type { LoadingFallbackProps } from '../../utils/types';
-
-/**
- * ローディング状態を表示するフォールバックコンポーネント
+ * @description
+ * データの読み込み状態やエラー状態を視覚的に表示するローディングインジケーターコンポーネント。
+ * 非同期処理の進行状況をユーザーに伝え、エラー発生時には適切なフィードバックと再試行オプションを提供します。
  *
- * @param isLoading - 現在ローディング中かどうかを示すブール値
- * @param isLoaded - ローディングが完了したかどうかを示すブール値
- * @param message - 表示するメッセージ。デフォルトではERROR_MESSAGES.LOADING.DATAが使用される
- * @param fadeDuration - フェードアウトにかかる時間（ミリ秒）、デフォルトは3000ms（3秒）
+ * @usage
+ * 以下のようなケースで使用します：
+ * - APIからのデータフェッチング中の表示
+ * - 大きなコンポーネントの初期化中
+ * - ファイルのアップロード/ダウンロード処理中
+ * - 画面遷移や重い処理の実行中
+ *
+ * @features
+ * - 3種類の表示バリアント（spinner, skeleton, progress）
+ * - スムーズなフェードアウトアニメーション
+ * - エラー状態の表示と再試行機能
+ * - オーバーレイモードによる操作ブロック
+ * - アクセシビリティ対応（適切なARIA属性）
+ * - React.memoによるパフォーマンス最適化
+ *
+ * @props
+ * - isLoading: boolean - ローディング中かどうかを示すフラグ
+ * - isLoaded: boolean - ロード完了したかどうかを示すフラグ
+ * - error?: Error | null - エラー情報（存在する場合はエラー表示モードになる）
+ * - message?: string - ローディング中に表示するメッセージ
+ * - errorMessage?: string - エラー時に表示するカスタムメッセージ
+ * - fadeDuration?: number - フェードアウトアニメーションの時間（ミリ秒）
+ * - onRetry?: () => void - エラー時の再試行ボタン押下時のコールバック
+ * - variant?: 'spinner' | 'skeleton' | 'progress' - 表示スタイル
+ * - showOverlay?: boolean - 背景をオーバーレイで覆うかどうか
+ *
+ * @example
+ * // 基本的な使用例
+ * <LoadingFallback
+ *   isLoading={isDataLoading}
+ *   isLoaded={!!data}
+ *   message="データを取得中です..."
+ * />
+ *
+ * // エラーハンドリング付きの使用例
+ * <LoadingFallback
+ *   isLoading={isLoading}
+ *   isLoaded={isLoaded}
+ *   error={error}
+ *   onRetry={handleRetryFetch}
+ *   showOverlay={true}
+ * />
+ *
+ * // スケルトンローディングの使用例
+ * <LoadingFallback
+ *   isLoading={isLoading}
+ *   isLoaded={isLoaded}
+ *   variant="skeleton"
+ * />
+ *
+ * @bestPractices
+ * - ロード時間が予測できる場合は'progress'バリアントの使用を検討する
+ * - ユーザーにとって重要な操作中は'showOverlay'をtrueにして誤操作を防止する
+ * - 短時間で終わる操作には表示を遅延させ、ちらつきを防止する
+ *
+ * @dependencies
+ * - useLoadingState: ローディング状態の管理ロジックを分離したカスタムフック
+ * - ERROR_MESSAGES: エラーメッセージ定数
+ * - SkeletonLoader: スケルトン表示用のサブコンポーネント（要インポート）
  */
+
+import React, { memo } from 'react';
+import styles from './LoadingFallback.module.css';
+import { useLoadingState } from '../../hooks/useLoadingState'; // 新しく作成したカスタムフック
+import { ERROR_MESSAGES } from '../../utils/constants';
+import { SkeletonLoader } from '../skeleton/SkeletonLoader'; // スケルトンローダーのインポートを追加
+
+// Props型の拡張
+interface LoadingFallbackProps {
+  isLoading: boolean;
+  isLoaded: boolean;
+  error?: Error | null;
+  message?: string;
+  errorMessage?: string;
+  fadeDuration?: number;
+  onRetry?: () => void;
+  variant?: 'spinner' | 'skeleton' | 'progress';
+  showOverlay?: boolean;
+}
+
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   isLoading,
   isLoaded,
-  message = ERROR_MESSAGES.LOADING.DATA, // デフォルトメッセージを設定
-  fadeDuration = 3000, // フェードアウトの時間をデフォルト3秒に設定
+  error = null,
+  message = ERROR_MESSAGES.LOADING.DATA,
+  errorMessage = ERROR_MESSAGES.DATA.LOADING_FAILED,
+  fadeDuration = 3000,
+  onRetry,
+  variant = 'spinner',
+  showOverlay = false,
 }) => {
-  // コンポーネントの可視性を管理する状態変数。初期値はisLoadingプロパティから設定
-  const [isVisible, setIsVisible] = useState(isLoading);
-  // フェードアウト中かどうかを管理する状態変数
-  const [isFading, setIsFading] = useState(false);
+  // カスタムフックで状態管理ロジックを分離
+  const { isVisible, isFading } = useLoadingState(isLoading, isLoaded, fadeDuration);
 
-  /**
-   * ローディング状態の変更を監視し、コンポーネントの表示/非表示を制御するエフェクト
-   * isLoadingとisLoadedの値に基づいて表示状態を更新する
-   */
-  useEffect(() => {
-    if (!isLoading && isLoaded) {
-      // ローディングが終了し、データが読み込まれた場合は3秒かけてフェードアウトし、その後非表示にする
-      setIsFading(true);
-
-      // フェードアウト後にコンポーネントを非表示にする
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setIsFading(false);
-      }, fadeDuration);
-
-      return () => clearTimeout(timer);
-    } else {
-      // それ以外の場合（ローディング中またはエラー時）は表示する
-      setIsFading(false);
-      setIsVisible(true);
-    }
-  }, [isLoaded, isLoading, fadeDuration]); // isLoadedとisLoadingの値が変更されたときに再評価
-
-  // コンポーネントが非表示の場合は何もレンダリングしない
+  // 表示されない場合は何もレンダリングしない
   if (!isVisible) return null;
 
-  // ローディング表示のJSX構造
   return (
-    // コンテナ要素 - フェードアウト中は 'fading' クラスを追加
     <div
-      className={`loading-fallback ${isFading ? 'fading' : ''}`}
+      className={`${styles.loadingFallback} ${isFading ? styles.fading : ''} ${showOverlay ? styles.overlay : ''}`}
       style={isFading ? { animationDuration: `${fadeDuration}ms` } : undefined}
+      role={error ? 'alert' : 'status'}
+      aria-live={error ? 'assertive' : 'polite'}
     >
-      {/* ローディングの内容を中央に配置するコンテナ */}
-      <div className="loading-content">
-        {/* ローディングアニメーション用のスピナー要素 */}
-        <div className="loading-spinner" aria-hidden="true" />
-        {/* ローディングメッセージを表示する段落 */}
-        <p>{message}</p>
+      <div className={styles.loadingContent}>
+        {!error ? (
+          <>
+            {variant === 'spinner' && (
+              <>
+                <div className={styles.loadingSpinner} aria-hidden="true" />
+                <p>{message}</p>
+              </>
+            )}
+            {variant === 'skeleton' && (
+              <div className={styles.skeletonContainer}>
+                <SkeletonLoader type="rectangle" width="100%" height="20px" count={3} />
+              </div>
+            )}
+            {variant === 'progress' && (
+              <div className={styles.progressContainer}>
+                <div className={styles.progressBar}>
+                  <div className={styles.progressIndicator} />
+                </div>
+                <p>{message}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className={styles.errorContainer}>
+            <div className={styles.errorIcon} aria-hidden="true" />
+            <p>{errorMessage || error.message}</p>
+            {onRetry && (
+              <button className={styles.retryButton} onClick={onRetry}>
+                再試行
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// React DevToolsでの識別用にコンポーネント名を明示的に設定
 LoadingFallback.displayName = 'LoadingFallback';
-// 名前付きエクスポートと、デフォルトエクスポートの両方を提供
+
+// メモ化したコンポーネントをエクスポート
+export const MemoizedLoadingFallback = memo(LoadingFallback);
 export { LoadingFallback };
-export default LoadingFallback;
+export default memo(LoadingFallback);

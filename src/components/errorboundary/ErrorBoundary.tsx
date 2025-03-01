@@ -1,19 +1,70 @@
 /**
  * ErrorBoundary.tsx
  *
- * このファイルはReactアプリケーションでのエラーハンドリングを担当するErrorBoundaryコンポーネントを定義します。
- * ErrorBoundaryは子コンポーネントツリー内で発生したJavaScriptエラーをキャッチし、
+ * @description
+ * Reactアプリケーション内でのエラーハンドリングを担当するコンポーネント。
+ * 子コンポーネントツリー内で発生したJavaScriptエラーをキャッチし、
  * クラッシュしたコンポーネントツリーの代わりにフォールバックUIを表示します。
  * これにより、アプリケーション全体がクラッシュすることを防ぎます。
+ *
+ * @usage
+ * 以下のようなケースで使用します：
+ * - アプリケーション全体をラップしてグローバルなエラーハンドリングを提供
+ * - 特定の機能やセクションをラップして部分的なエラー分離を実現
+ * - 外部APIとの連携など、エラーが発生しやすい処理の周囲
+ * - サードパーティライブラリの不安定な部分を分離
+ * - 実験的な機能やベータ版の機能
+ *
+ * @features
+ * - 宣言的なエラーハンドリング（try/catchの代替）
+ * - カスタマイズ可能なフォールバックUI
+ * - エラー状態のリセット機能（再試行ボタン）
+ * - エラー詳細情報の収集（デバッグやログ用）
+ * - スタックトレースの保存
+ * - アクセシビリティに配慮した実装（ARIA属性）
+ *
+ * @props
+ * - children: ReactNode - エラーバウンダリーでラップする子コンポーネント
+ * - fallback?: ReactNode - エラー発生時に表示するカスタムUI（省略時はデフォルトUI）
+ *
+ * @example
+ * // アプリケーション全体をラップする基本的な使用例
+ * <ErrorBoundary>
+ *   <App />
+ * </ErrorBoundary>
+ *
+ * // カスタムフォールバックUIを使用した例
+ * <ErrorBoundary fallback={<div>エラーが発生しました。<button>リロード</button></div>}>
+ *   <DataFetchingComponent />
+ * </ErrorBoundary>
+ *
+ * // 複数のコンポーネントを分離してエラーハンドリングする例
+ * <div>
+ *   <ErrorBoundary>
+ *     <ComponentA />
+ *   </ErrorBoundary>
+ *   <ErrorBoundary>
+ *     <ComponentB />
+ *   </ErrorBoundary>
+ * </div>
+ *
+ * @bestPractices
+ * - アプリケーションの適切なレベルでErrorBoundaryを使用（粒度を検討）
+ * - エラーメッセージは明確でユーザーフレンドリーなものにする
+ * - 可能な限りユーザーに回復のための選択肢を提供する
+ * - 開発環境ではエラー詳細を表示し、本番環境では一般的なメッセージを表示する
+ * - エラー情報は監視システムに送信して問題追跡に役立てる
+ *
+ * @dependencies
+ * - React: ComponentクラスとErrorInfo型を使用
+ * - ErrorBoundary.module.css: スタイリングを提供
+ * - ERROR_MESSAGES: 標準化されたエラーメッセージ定数
+ * - ErrorBoundaryProps/ErrorBoundaryState: 型定義
  */
 
-// ReactのComponentクラスとErrorInfo型をインポート - エラーバウンダリーはクラスコンポーネントとして実装する必要がある
 import React, { Component, ErrorInfo } from 'react';
-// コンポーネントのスタイルを定義するCSSファイルをインポート
 import styles from './ErrorBoundary.module.css';
-// アプリケーション内で使用される標準エラーメッセージを含む定数をインポート
 import { ERROR_MESSAGES } from '../../utils/constants';
-// エラーバウンダリーコンポーネントのプロパティと状態の型定義をインポート
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 
 /**
