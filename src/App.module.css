@@ -22,12 +22,13 @@
 /* マップコンテナ - 必要な場合に使用 */
 .mapContainer {
   position: absolute;
-  inset: 0; /* top, right, bottom, left を一括指定 */
+  inset: 0;
+  /* top, right, bottom, left を一括指定 */
   z-index: 0;
 }
 
 /* マップコンテナ内の要素 */
-.mapContainer > div {
+.mapContainer>div {
   width: 100%;
   height: 100%;
 }
@@ -113,5 +114,49 @@
 
   .errorButton:hover {
     background-color: var(--error-hover);
+  }
+}
+
+/* App.module.css に追加 */
+.mapStatusOverlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  z-index: 1000;
+  animation: fadeInOut 3s forwards;
+}
+
+.statusContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusIcon {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
   }
 }

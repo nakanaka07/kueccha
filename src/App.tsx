@@ -18,6 +18,7 @@
  * - マップの状態管理（読み込み状態、インスタンス管理）
  * - レスポンシブデザイン対応
  * - モジュール化されたコード構造
+ * - 統合されたローディング状態管理
  *
  * @architecture
  * - コンポーネントはプレゼンテーショナルコンポーネントとして実装
@@ -36,7 +37,7 @@
  * - react-dom/client: クライアントサイドレンダリング
  * - ErrorBoundary: エラーのグレースフルハンドリング
  * - Map: Google Maps APIを使用したマップ表示
- * - useMapState: マップ状態管理用カスタムフック
+ * - useAppState: アプリケーション状態管理用カスタムフック
  * - ERROR_MESSAGES: エラーメッセージ定数
  */
 
@@ -44,8 +45,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
+import { LoadingIndicators } from './components/loading';
 import Map from './components/map/Map';
-import { useMapState } from './hooks/useMapState';
+import { useAppState } from './hooks/useAppState';
 import { ERROR_MESSAGES } from './utils/constants';
 
 /**
@@ -56,11 +58,16 @@ import { ERROR_MESSAGES } from './utils/constants';
  * アプリケーション全体がクラッシュすることを防ぎます。
  */
 const App: React.FC = () => {
-  // useMapStateフックを使ってマップの状態を一元管理
-  // isMapLoaded: マップが読み込み完了したかどうかのフラグ
-  // mapInstance: Google Mapsのインスタンス（操作や設定変更に使用）
-  // handleMapLoad: マップ読み込み完了時に呼び出されるコールバック関数
-  const { isMapLoaded, mapInstance, handleMapLoad } = useMapState();
+  // useAppStateから詳細なローディング状態を取得
+  const {
+    mapInstance,
+    isMapLoaded,
+    isMapLoading, // マップの読み込み状態を明示的に取得
+    loading: { isVisible: isLoadingVisible, isFading },
+    error, // マップ読み込みエラー
+    actions: { handleMapLoad, retryMapLoad }, // リトライアクション
+    // POIデータの読み込み状態も取得（apiDataLoadingなど）
+  } = useAppState([]); // または別の場所からのPOIデータを渡す
 
   /**
    * マップがロードされたときの副作用処理
@@ -80,6 +87,13 @@ const App: React.FC = () => {
     }
   }, [mapInstance]); // mapInstanceが変更された時のみ実行
 
+  // ローディングメッセージの動的な設定
+  const getLoadingMessage = () => {
+    if (isMapLoading) return ERROR_MESSAGES.LOADING.MAP;
+    // その他のローディング状態に対応するメッセージ
+    return ERROR_MESSAGES.LOADING.DATA;
+  };
+
   return (
     <div className={styles.app}>
       {/*
@@ -88,6 +102,20 @@ const App: React.FC = () => {
       */}
       <ErrorBoundary>
         <div className={styles.appContainer}>
+          {/* アプリ全体のローディング表示 */}
+          {isLoadingVisible && (
+            <LoadingIndicators.Fallback
+              isLoading={!error} // エラーがある場合はローディング状態ではない
+              isLoaded={false}
+              error={error} // エラーがあれば表示
+              message={getLoadingMessage()}
+              variant="spinner"
+              spinnerClassName={styles.fullPageLoader}
+              isFading={isFading}
+              onRetry={error ? retryMapLoad : undefined} // エラー時のリトライ機能
+            />
+          )}
+
           {/*
             Map: Google Mapsを表示するコンポーネント
             onLoad: マップ読み込み完了時に状態を更新するコールバック

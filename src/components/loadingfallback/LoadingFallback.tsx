@@ -68,11 +68,12 @@
 
 import React, { memo } from 'react';
 import styles from './LoadingFallback.module.css';
-import { useLoadingState } from '../../hooks/useLoadingState'; // 新しく作成したカスタムフック
+import { useLoadingState } from '../../hooks/useLoadingState';
 import { ERROR_MESSAGES } from '../../utils/constants';
-import { SkeletonLoader } from '../skeleton/SkeletonLoader'; // スケルトンローダーのインポートを追加
+import { SkeletonLoader } from '../skeleton/SkeletonLoader';
+import { Spinner } from '../spinner/Spinner';
 
-// Props型の拡張
+// Props型の拡張に spinnerClassName プロパティを追加
 interface LoadingFallbackProps {
   isLoading: boolean;
   isLoaded: boolean;
@@ -83,6 +84,8 @@ interface LoadingFallbackProps {
   onRetry?: () => void;
   variant?: 'spinner' | 'skeleton' | 'progress';
   showOverlay?: boolean;
+  spinnerClassName?: string; // 追加: スピナーに適用する追加のクラス名
+  isFading?: boolean; // 追加: 外部から渡されるフェード状態
 }
 
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({
@@ -95,9 +98,12 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   onRetry,
   variant = 'spinner',
   showOverlay = false,
+  spinnerClassName = '', // 追加: デフォルト値は空文字列
+  isFading: externalFading, // 追加: 外部から渡されるフェード状態
 }) => {
-  // カスタムフックで状態管理ロジックを分離
-  const { isVisible, isFading } = useLoadingState(isLoading, isLoaded, fadeDuration);
+  // カスタムフックで状態管理ロジックを分離（外部のisFadingが渡された場合はそれを優先）
+  const { isVisible, isFading: internalFading } = useLoadingState(isLoading, isLoaded, fadeDuration);
+  const isFading = externalFading !== undefined ? externalFading : internalFading;
 
   // 表示されない場合は何もレンダリングしない
   if (!isVisible) return null;
@@ -114,7 +120,7 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
           <>
             {variant === 'spinner' && (
               <>
-                <div className={styles.loadingSpinner} aria-hidden="true" />
+                <Spinner size="large" className={`${styles.spinnerMargin} ${spinnerClassName}`} />
                 <p>{message}</p>
               </>
             )}

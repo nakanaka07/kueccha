@@ -1,18 +1,9 @@
-/* 基本的なリセットと変数の定義 */
-:root {
-  --loading-primary-color: #90daee;
-  --loading-text-color: #000000;
-  --loading-border-color: rgba(255, 255, 255, 0.3);
-  --loading-spinner-color: #000000;
-  --loading-fade-duration: 3s;
-  --loading-spin-duration: 1s;
-  --loading-fade-in-duration: 0.5s;
-}
+/* LoadingFallback.module.css - ローディングインジケーターコンポーネントのスタイル */
 
 /* ローディングコンテナの基本スタイル */
-.loading-fallback {
+.loadingFallback {
   position: fixed;
-  inset: 0; /* top, right, bottom, leftをすべて0に設定（モダンな省略記法） */
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -21,7 +12,7 @@
   z-index: 1000;
 
   /* 背景スタイル */
-  background-color: var(--loading-primary-color);
+  background-color: var(--color-primary-light);
   background-image: url('../../utils/images/row1.png');
   background-size: contain;
   background-position: center;
@@ -29,34 +20,140 @@
 
   /* トランジション効果 */
   opacity: 1;
-  will-change: opacity; /* パフォーマンス最適化 */
+  will-change: opacity;
+  /* パフォーマンス最適化 */
   transition: opacity 300ms ease-in;
 }
 
 /* フェードアウト効果 */
-.loading-fallback.fading {
-  animation: fadeOut var(--loading-fade-duration) ease-in forwards;
+.loadingFallback.fading {
+  animation: fadeOut 3s ease-in forwards;
 }
 
 /* コンテンツコンテナ */
-.loading-content {
+.loadingContent {
   text-align: center;
-  padding: 1.25rem; /* remで一貫性を保つ */
-  color: var(--loading-text-color);
+  padding: 1.25rem;
+  color: var(--text-color);
   font-size: 1.5rem;
-  margin-bottom: 6.25rem; /* 100px相当 - 下部からの距離を確保 */
-  animation: fadeIn var(--loading-fade-in-duration) ease-in;
+  margin-bottom: 6.25rem;
+  animation: fadeIn 0.5s ease-in;
 }
 
-/* スピナー */
-.loading-spinner {
-  width: 3.125rem; /* 50px相当 */
-  height: 3.125rem; /* 50px相当 */
-  margin: 0 auto 1.25rem; /* 上下0、左右auto、下部マージン1.25rem (20px相当) */
-  border: 0.3125rem solid var(--loading-border-color); /* 5px相当 */
-  border-top-color: var(--loading-spinner-color);
+/* エラーコンテナ */
+.errorContainer {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* エラーアイコン */
+.errorIcon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
   border-radius: 50%;
-  animation: spin var(--loading-spin-duration) linear infinite;
+  background-color: var(--error-color);
+  position: relative;
+}
+
+.errorIcon::before,
+.errorIcon::after {
+  content: '';
+  position: absolute;
+  background-color: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.errorIcon::before {
+  width: 0.25rem;
+  height: 1.5rem;
+  border-radius: 0.125rem;
+}
+
+.errorIcon::after {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  transform: translate(-50%, 80%);
+}
+
+/* 再試行ボタン */
+.retryButton {
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: var(--error-hover);
+}
+
+.retryButton:focus,
+.retryButton:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* スケルトンコンテナ */
+.skeletonContainer {
+  width: 100%;
+  max-width: 500px;
+  padding: 1rem;
+  background-color: var(--bg-color);
+  border-radius: 8px;
+}
+
+/* プログレスコンテナ */
+.progressContainer {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* プログレスバー */
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--color-bg-light);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progressIndicator {
+  height: 100%;
+  background-color: var(--primary-color);
+  width: 30%;
+  border-radius: 4px;
+  animation: progress 2s ease-in-out infinite;
+}
+
+/* オーバーレイスタイル */
+.overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 視覚的に隠し、スクリーンリーダーからのみアクセス可能 */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 /* アニメーション定義 */
@@ -65,6 +162,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -75,6 +173,7 @@
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -84,39 +183,69 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
 
+@keyframes progress {
+  0% {
+    width: 0%;
+    transform: translateX(-100%);
+  }
+
+  50% {
+    width: 70%;
+  }
+
+  100% {
+    width: 100%;
+    transform: translateX(100%);
+  }
+}
+
 /* アクセシビリティの向上 */
 @media (prefers-reduced-motion: reduce) {
-  .loading-fallback,
-  .loading-content,
-  .loading-spinner {
+
+  .loadingFallback,
+  .loadingContent,
+  .progressIndicator {
     transition: none;
     animation: none;
   }
 
-  .loading-fallback.fading {
+  .loadingFallback.fading {
     opacity: 0;
   }
 }
 
-/* ダークモードサポート */
+/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --loading-primary-color: #2a4d59;
-    --loading-text-color: #ffffff;
-    --loading-border-color: rgba(0, 0, 0, 0.3);
-    --loading-spinner-color: #ffffff;
+  .loadingFallback {
+    background-color: var(--color-primary-dark);
+  }
+
+  .skeletonContainer {
+    background-color: var(--light-gray);
+  }
+
+  .progressBar {
+    background-color: var(--border-color);
+  }
+
+  .retryButton {
+    background-color: var(--error-color);
+  }
+
+  .retryButton:hover {
+    background-color: var(--error-hover);
   }
 }
 
 /* 高コントラストモードのサポート */
 @media (forced-colors: active) {
-  .loading-spinner {
-    border-color: CanvasText;
-    border-top-color: Highlight;
+  .retryButton {
+    border: 1px solid CanvasText;
   }
 }

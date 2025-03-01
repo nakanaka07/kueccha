@@ -165,7 +165,6 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad }) => {
         center={MAPS_CONFIG.defaultCenter}
         zoom={MAPS_CONFIG.defaultZoom}
         options={{
-          mapId: MAPS_CONFIG.mapId,
           mapTypeId: google.maps.MapTypeId.TERRAIN,
           disableDefaultUI: false,
           disableDoubleClickZoom: false,

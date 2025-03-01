@@ -36,6 +36,8 @@ import { useState, useCallback } from 'react';
 export const useMapState = () => {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  // isLoadingステートを追加
+  const [isLoading, setIsLoading] = useState(true);
 
   /**
    * マップが読み込まれたときのハンドラー
@@ -44,7 +46,8 @@ export const useMapState = () => {
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
     setIsMapLoaded(true);
+    setIsLoading(false); // マップ読み込み完了時に読み込み状態を終了
   }, []);
 
-  return { isMapLoaded, mapInstance, handleMapLoad };
+  return { isMapLoaded, isLoading, mapInstance, handleMapLoad };
 };

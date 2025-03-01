@@ -148,11 +148,13 @@ export interface LocationWarningProps extends BaseProps {
  * データ読み込み中やAPI呼び出し中の表示を制御します。
  */
 export interface LoadingFallbackProps extends BaseProps {
-  isLoading: boolean; // 現在ローディング中かどうかを示すフラグ
+  isLoading?: boolean; // 現在ローディング中かどうかを示すフラグ
+  isLoaded?: boolean; // ロードが完了したかどうかを示すフラグ
   message?: string; // ローディング中に表示するオプションのメッセージ
   spinnerClassName?: string; // ローディングスピナーに適用する追加のクラス名
-  isLoaded: boolean; // ロードが完了したかどうかを示すフラグ
   fadeDuration?: number; // フェードアウトの時間（ミリ秒）
+  variant?: 'spinner' | 'skeleton' | 'progress'; // 表示種類
+  isFading?: boolean; // フェードアウト状態
 }
 
 /**

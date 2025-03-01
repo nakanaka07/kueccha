@@ -1,4 +1,6 @@
+import { useState, useCallback } from 'react';
 import { useAreaVisibility } from './useAreaVisibility';
+import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
 import { useMapState } from './useMapState';
 import { usePoiState } from './usePoiState';
@@ -67,10 +69,29 @@ import type { Poi } from '../utils/types';
  * - パフォーマンス最適化のため、不要な再レンダリングを避けるようにメモ化を検討してください
  */
 export const useAppState = (pois: Poi[]) => {
+  // 基本的な状態管理フックを呼び出す
   const mapState = useMapState();
   const poiState = usePoiState(pois);
   const { areaVisibility, setAreaVisibility } = useAreaVisibility();
   const locationWarning = useLocationWarning();
+
+  // エラー状態を追加
+  const [error, setError] = useState<Error | null>(null);
+
+  // アプリ全体のローディング状態
+  const { isVisible, isFading } = useLoadingState(
+    // mapState.isLoadingは既に定義されている
+    mapState.isLoading,
+    mapState.isMapLoaded,
+    5000,
+  );
+
+  // マップ読み込みのリトライ機能を追加
+  const retryMapLoad = useCallback(() => {
+    setError(null);
+    // リトライのためのロジックを実装
+    // 例: マップコンポーネントを再レンダリングさせるなど
+  }, []);
 
   return {
     ...mapState,
@@ -78,10 +99,20 @@ export const useAppState = (pois: Poi[]) => {
     areaVisibility,
     setAreaVisibility,
     ...locationWarning,
+    // isMapLoadingとしてマップの読み込み状態を公開
+    isMapLoading: mapState.isLoading,
+    // エラー状態を公開
+    error,
+    loading: {
+      isVisible,
+      isFading,
+    },
     actions: {
       handleMapLoad: mapState.handleMapLoad,
       handleSearchResultClick: poiState.handleSearchResultClick,
       setSelectedPoi: poiState.setSelectedPoi,
+      // リトライアクションを追加
+      retryMapLoad,
     },
   };
 };
