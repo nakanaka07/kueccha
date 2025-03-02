@@ -51,8 +51,20 @@ import React, { useCallback, useRef, useState } from 'react';
 import styles from './Map.module.css';
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
-import { MapComponentProps, Poi } from '../../utils/types';
+import { MapComponentProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
+
+// マーカーの表示優先度を決定する関数
+const getMarkerZIndex = (areaType: AreaType): number => {
+  switch (areaType) {
+    case 'RECOMMEND':
+      return 100; // 推奨エリアは最前面に表示
+    case 'CURRENT_LOCATION':
+      return 90; // 現在地は次に前面
+    default:
+      return 10; // その他のエリアは後ろに表示
+  }
+};
 
 /**
  * 起動時の設定検証
@@ -207,6 +219,7 @@ export const Map: React.FC<ExtendedMapProps> = ({
               map={mapRef.current}
               onClick={onMarkerClick} // クリック時のコールバック
               isSelected={selectedPoi?.id === poi.id} // 選択状態を渡す
+              zIndex={getMarkerZIndex(poi.area)} // エリアタイプに基づいたzIndex値を設定
             />
           ))}
       </GoogleMap>
