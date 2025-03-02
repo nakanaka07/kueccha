@@ -51,7 +51,8 @@ import React, { useCallback, useRef, useState } from 'react';
 import styles from './Map.module.css';
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
-import { MapComponentProps } from '../../utils/types';
+import { MapComponentProps, Poi } from '../../utils/types';
+import { Marker } from '../marker/Marker';
 
 /**
  * 起動時の設定検証
@@ -80,7 +81,18 @@ const LOADING_ARIA_LABEL = '地図読み込み中';
  *
  * @param onLoad - マップがロードされたときに呼び出されるコールバック関数
  */
-export const Map: React.FC<MapComponentProps> = ({ onLoad }) => {
+interface ExtendedMapProps extends MapComponentProps {
+  pois?: Poi[]; // 表示するPOIデータの配列
+  selectedPoi?: Poi | null; // 選択中のPOI
+  onMarkerClick?: (poi: Poi) => void; // マーカークリック時のコールバック
+}
+
+export const Map: React.FC<ExtendedMapProps> = ({
+  onLoad,
+  pois = [], // デフォルト値を空配列に
+  selectedPoi = null, // デフォルト値をnullに
+  onMarkerClick = () => {}, // デフォルトの空関数
+}) => {
   /**
    * Google Maps APIのロード処理
    *
@@ -165,20 +177,39 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad }) => {
         center={MAPS_CONFIG.defaultCenter}
         zoom={MAPS_CONFIG.defaultZoom}
         options={{
-          mapTypeId: google.maps.MapTypeId.TERRAIN,
+          mapId: MAPS_CONFIG.mapId,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
           disableDefaultUI: false,
           disableDoubleClickZoom: false,
           scrollwheel: true,
           zoomControl: true,
-          mapTypeControl: false,
+          mapTypeControl: true,
           streetViewControl: true,
           fullscreenControl: true,
           clickableIcons: true,
           gestureHandling: 'cooperative',
+          mapTypeControlOptions: {
+            // Google Maps API がロードされる前の静的定義のため数値を使用
+            style: 2, // DROPDOWN_MENU の定数値（2）
+            position: 1, // TOP_LEFT の定数値（1）
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 利用可能なマップタイプ
+          },
         }}
         onLoad={handleMapLoad}
         aria-label={MAP_ARIA_LABEL}
-      />
+      >
+        {/* マーカーを地図上に表示 */}
+        {mapRef.current &&
+          pois.map((poi) => (
+            <Marker
+              key={poi.id}
+              poi={poi}
+              map={mapRef.current}
+              onClick={onMarkerClick} // クリック時のコールバック
+              isSelected={selectedPoi?.id === poi.id} // 選択状態を渡す
+            />
+          ))}
+      </GoogleMap>
     </div>
   );
 };

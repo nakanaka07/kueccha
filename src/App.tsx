@@ -5,50 +5,18 @@
  * アプリケーションのルートコンポーネントとエントリーポイント。
  * Google Mapsを中心としたマップ表示機能を提供し、全体のレイアウトと
  * コンポーネント間の連携を管理します。
- *
- * @usage
- * 以下のようなケースで使用します：
- * - マップベースの位置情報表示アプリケーション
- * - 地図上にマーカーやコンテンツを表示するサービス
- * - ユーザーの位置情報を活用したインタラクティブマップ
- * - エリア別データの視覚化
- *
- * @features
- * - エラーバウンダリによる安全なエラーハンドリング
- * - マップの状態管理（読み込み状態、インスタンス管理）
- * - レスポンシブデザイン対応
- * - モジュール化されたコード構造
- * - 統合されたローディング状態管理
- *
- * @architecture
- * - コンポーネントはプレゼンテーショナルコンポーネントとして実装
- * - 状態管理ロジックはカスタムフックに分離
- * - エラー処理は専用のErrorBoundaryコンポーネントに委譲
- * - CSSモジュールによるスタイル管理
- *
- * @bestPractices
- * - 関心の分離を徹底し、状態管理ロジックとUIを分ける
- * - アプリケーション全体をErrorBoundaryでラップし、予期せぬエラーに対応
- * - パフォーマンス最適化のために不要な再レンダリングを避ける
- * - コンポーネント間の疎結合を維持する
- *
- * @dependencies
- * - React: UIコンポーネントの構築
- * - react-dom/client: クライアントサイドレンダリング
- * - ErrorBoundary: エラーのグレースフルハンドリング
- * - Map: Google Maps APIを使用したマップ表示
- * - useAppState: アプリケーション状態管理用カスタムフック
- * - ERROR_MESSAGES: エラーメッセージ定数
  */
 
-import React from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { LoadingIndicators } from './components/loading';
 import Map from './components/map/Map';
 import { useAppState } from './hooks/useAppState';
+import { useSheetData } from './hooks/useSheetData'; // POIデータ取得フック
 import { ERROR_MESSAGES } from './utils/constants';
+import type { Poi } from './utils/types'; // Poi型をインポート
 
 /**
  * メインのAppコンポーネント
@@ -58,72 +26,109 @@ import { ERROR_MESSAGES } from './utils/constants';
  * アプリケーション全体がクラッシュすることを防ぎます。
  */
 const App: React.FC = () => {
-  // useAppStateから詳細なローディング状態を取得
+  // Google Sheetsからデータを取得
+  // isPoisLoadingは使用されていないため、_isPoisLoadingとして宣言
+  const { pois, isLoading: _isPoisLoading, error: poisError } = useSheetData();
+
+  // useAppStateを拡張してPOIデータを渡す
   const {
     mapInstance,
     isMapLoaded,
-    isMapLoading, // マップの読み込み状態を明示的に取得
+    isMapLoading,
     loading: { isVisible: isLoadingVisible, isFading },
-    error, // マップ読み込みエラー
-    actions: { handleMapLoad, retryMapLoad }, // リトライアクション
-    // POIデータの読み込み状態も取得（apiDataLoadingなど）
-  } = useAppState([]); // または別の場所からのPOIデータを渡す
+    error,
+    actions: { handleMapLoad, retryMapLoad },
+    // POI関連の状態も取得
+    selectedPoi,
+    setSelectedPoi,
+  } = useAppState(pois); // POIデータを渡す
 
   /**
-   * マップがロードされたときの副作用処理
-   *
-   * マップインスタンスが利用可能になった時点で実行される処理です。
-   * 将来的なマップ機能拡張（マーカー追加、イベントリスナー設定など）は
-   * ここに実装することができます。
+   * ローディングメッセージを動的に決定
+   * useMemoを使用して不要な再計算を防止
    */
-  React.useEffect(() => {
-    if (mapInstance) {
-      console.log('Map loaded successfully');
-      // 将来的に必要な追加処理をここに記述:
-      // - マーカーの初期配置
-      // - 地図スタイルのカスタマイズ
-      // - イベントリスナーの設定
-      // - 地理的境界の設定
-    }
-  }, [mapInstance]); // mapInstanceが変更された時のみ実行
+  const loadingMessage = useMemo(() => {
+    return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
+  }, [isMapLoading]);
 
-  // ローディングメッセージの動的な設定
-  const getLoadingMessage = () => {
-    if (isMapLoading) return ERROR_MESSAGES.LOADING.MAP;
-    // その他のローディング状態に対応するメッセージ
-    return ERROR_MESSAGES.LOADING.DATA;
-  };
+  /**
+   * エラーメッセージを動的に決定
+   */
+  const errorMessage = useMemo(() => {
+    if (!error && !poisError) return null;
+    return (error || poisError)?.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
+  }, [error, poisError]);
+
+  /**
+   * マップが読み込まれたときの処理
+   * useCallbackを使用して関数を最適化
+   */
+  const handleMapInitialized = useCallback(() => {
+    if (!mapInstance) return;
+
+    console.log('Map loaded successfully');
+
+    // マップに必要な初期設定をここで実行
+    // 例: 特定のスタイル適用、イベントリスナー追加など
+  }, [mapInstance]);
+
+  /**
+   * マーカークリック時の処理を実装
+   * poiパラメーターにPoi型を明示的に指定
+   */
+  const handleMarkerClick = useCallback(
+    (poi: Poi) => {
+      setSelectedPoi(poi);
+      // 必要に応じて追加の操作（マップの中心を移動するなど）
+      if (mapInstance) {
+        mapInstance.panTo(poi.location);
+        mapInstance.setZoom(15); // 適切なズームレベルに調整
+      }
+    },
+    [mapInstance, setSelectedPoi],
+  );
+
+  /**
+   * マップインスタンスが利用可能になった時点で実行される副作用
+   */
+  useEffect(() => {
+    if (mapInstance) {
+      handleMapInitialized();
+    }
+  }, [mapInstance, handleMapInitialized]);
 
   return (
     <div className={styles.app}>
-      {/*
-        ErrorBoundary: 子コンポーネントで発生したエラーをキャッチし、
-        フォールバックUIを表示することでUXを向上させます
-      */}
       <ErrorBoundary>
         <div className={styles.appContainer}>
           {/* アプリ全体のローディング表示 */}
           {isLoadingVisible && (
             <LoadingIndicators.Fallback
-              isLoading={!error} // エラーがある場合はローディング状態ではない
+              isLoading={!error && !poisError}
               isLoaded={false}
-              error={error} // エラーがあれば表示
-              message={getLoadingMessage()}
+              error={error || poisError ? new Error(errorMessage || '') : null}
+              message={loadingMessage}
               variant="spinner"
               spinnerClassName={styles.fullPageLoader}
               isFading={isFading}
-              onRetry={error ? retryMapLoad : undefined} // エラー時のリトライ機能
+              onRetry={error || poisError ? retryMapLoad : undefined}
             />
           )}
 
-          {/*
-            Map: Google Mapsを表示するコンポーネント
-            onLoad: マップ読み込み完了時に状態を更新するコールバック
-          */}
-          <Map onLoad={handleMapLoad} />
+          {/* Google Maps表示コンポーネント */}
+          <Map onLoad={handleMapLoad} pois={pois} selectedPoi={selectedPoi} onMarkerClick={handleMarkerClick} />
 
-          {/* マップ読み込み完了時のみ表示されるステータス表示 */}
-          {isMapLoaded && <div className={styles.mapStatusOverlay}>マップが読み込まれました</div>}
+          {/* マップ読み込み完了通知 - アニメーション付きステータス表示 */}
+          {isMapLoaded && (
+            <div className={styles.mapStatusOverlay} aria-live="polite">
+              <div className={styles.statusContent}>
+                <span className={styles.statusIcon} aria-hidden="true">
+                  ✓
+                </span>
+                マップが読み込まれました
+              </div>
+            </div>
+          )}
         </div>
       </ErrorBoundary>
     </div>
@@ -132,11 +137,9 @@ const App: React.FC = () => {
 
 /**
  * DOMへのレンダリング処理
- *
- * アプリケーションのエントリーポイントとして、
- * Reactのルートコンポーネントをマウントするための処理です。
  */
 const container = document.getElementById('app');
+
 // アプリケーションのマウントポイントが存在しない場合はエラーをスロー
 if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
 

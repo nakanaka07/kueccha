@@ -245,12 +245,12 @@ export const MAPS_CONFIG = {
   // マップオプション
   options: {
     mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID, // マップIDを再指定（一貫性のため）
-    mapTypeId: 'terrain', // 文字列で指定（TERRAIN）
+    mapTypeId: 'roadmap', // 文字列で指定（TERRAIN）
     disableDefaultUI: false, // デフォルトUIを有効にする
     disableDoubleClickZoom: false,
     scrollwheel: true, // スクロールホイール
     zoomControl: true, // ズームコントロールを表示する
-    mapTypeControl: false,
+    mapTypeControl: true, // マップタイプコントロールを表示する
     streetViewControl: true, // ストリートビューコントロールを表示する
     fullscreenControl: true, // フルスクリーンコントロールを表示する
     clickableIcons: true, // マップ上のアイコンをクリック可能にする

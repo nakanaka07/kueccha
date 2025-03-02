@@ -1,53 +1,91 @@
-/* マーカーが点滅するアニメーションを定義します。 */
-.marker-blinking {
-  animation: marker-blinking-animation 1s infinite;
-  /* 1秒間隔で無限にアニメーションを繰り返します。 */
+/**
+ * Marker.module.css
+ * マップマーカーのスタイル定義
+ * グローバル変数を使用して視覚的な一貫性を確保
+ */
+
+/* マーカーが点滅するアニメーションを定義します */
+.markerBlinking {
+  animation: markerBlinkingAnimation 1s infinite;
 }
 
-/* マーカーの点滅アニメーションのキーフレームを定義します。 */
-@keyframes marker-blinking-animation {
+/* マーカーの点滅アニメーションのキーフレームを定義します */
+@keyframes markerBlinkingAnimation {
   0% {
     opacity: 1;
-    /* アニメーションの開始時は不透明です。 */
   }
 
   50% {
     opacity: 0.5;
-    /* アニメーションの中間時は半透明です。 */
   }
 
   100% {
     opacity: 1;
-    /* アニメーションの終了時は再び不透明になります。 */
   }
 }
 
-/* 選択されたマーカーのスタイルを定義します。 */
-.marker-selected {
-  border: 3px solid red;
-  /* 赤い枠線を設定します。 */
+/* 選択されたマーカーのスタイルを定義します */
+.markerSelected {
+  border: 3px solid var(--error-color);
   border-radius: 50%;
-  /* 角を丸くします。 */
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-  /* 赤い影を設定します。 */
+  box-shadow: 0 0 10px var(--error-shadow);
 }
 
-/* 推奨マーカーのスタイルを定義します。 */
-.marker-recommendation {
+/* 推奨マーカーのスタイルを定義します */
+.markerRecommendation {
   position: absolute;
-  /* 絶対位置を設定します。 */
   width: 50px;
-  /* 幅を50pxに設定します。 */
   height: 50px;
-  /* 高さを50pxに設定します。 */
-  background-color: rgba(255, 0, 0, 0.7);
-  /* 半透明の赤い背景色を設定します。 */
+  background-color: var(--error-bg);
   border-radius: 50%;
-  /* 角を丸くします。 */
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-  /* 赤い影を設定します。 */
+  box-shadow: 0 0 10px var(--error-shadow);
   cursor: pointer;
-  /* カーソルをポインタに変更します。 */
-  animation: marker-pulse 1s infinite;
-  /* 1秒間隔で無限にアニメーションを繰り返します。 */
+  animation: markerPulse 1s infinite;
+}
+
+/* マーカーのパルスアニメーションの定義 */
+@keyframes markerPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* フォーカスの統一表現 */
+.markerContent:focus,
+.markerContent:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .markerSelected {
+    border-color: var(--error-light);
+    box-shadow: 0 0 10px var(--error-shadow);
+  }
+
+  .markerRecommendation {
+    background-color: var(--error-bg);
+    box-shadow: 0 0 10px var(--error-shadow);
+  }
+}
+
+/* モーションを減らす設定が有効な場合のスタイル */
+@media (prefers-reduced-motion: reduce) {
+
+  .markerBlinking,
+  .markerRecommendation {
+    animation: none;
+  }
 }

@@ -71,7 +71,7 @@ import type { Poi } from '../utils/types';
 export const useAppState = (pois: Poi[]) => {
   // 基本的な状態管理フックを呼び出す
   const mapState = useMapState();
-  const poiState = usePoiState(pois);
+  const poiState = usePoiState(pois); // ここでPOIデータを渡していることを確認
   const { areaVisibility, setAreaVisibility } = useAreaVisibility();
   const locationWarning = useLocationWarning();
 
@@ -95,7 +95,7 @@ export const useAppState = (pois: Poi[]) => {
 
   return {
     ...mapState,
-    ...poiState,
+    ...poiState, // poiStateからselectedPoiとsetSelectedPoiが利用可能
     areaVisibility,
     setAreaVisibility,
     ...locationWarning,

@@ -8,11 +8,8 @@
 
 // Reactと必要なフックをインポートします。
 import React, { useEffect, useRef } from 'react';
-// React: UIコンポーネントを構築するためのライブラリです。
-// useEffect: コンポーネントのレンダリング後に実行される副作用を定義するためのフックです。
-// useRef: コンポーネントのレンダリング間で値を保持するためのフックです。
 // マーカーのスタイルを定義したCSSファイルをインポートします。
-import './Marker.module.css';
+import styles from './Marker.module.css';
 // 異なるタイプのマーカーに使用するアイコンURLを定義した定数をインポートします。
 import { MARKER_ICONS } from '../../utils/constants';
 // マーカーコンポーネントのプロパティの型定義をインポートします。
@@ -67,6 +64,9 @@ const Marker = React.memo(
       iconElement.style.width = '36px';
       // アイコンの高さを設定します
       iconElement.style.height = '36px';
+      // アクセシビリティ対応：タブ移動可能にし、キーボードフォーカスを受け取れるようにします
+      iconElement.setAttribute('tabindex', '0');
+      iconElement.classList.add(styles.markerContent);
 
       // Google Maps AdvancedMarkerElementを使用してマーカーを作成します
       const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -84,18 +84,33 @@ const Marker = React.memo(
       };
 
       // マーカーにクリックイベントのリスナーを追加します
-      marker.addListener('click', handleClick);
+      // clickイベントからgmp-clickイベントに変更
+      marker.addListener('gmp-click', handleClick);
+
+      // iconElementに直接gmp-clickイベントリスナーを追加
+      iconElement.addEventListener('gmp-click', () => {
+        handleClick();
+      });
+
+      // キーボードアクセシビリティ：Enterキー押下時のイベントを追加
+      iconElement.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      });
+
       // 作成したマーカーインスタンスをrefに保存して、後で参照できるようにします
       markerRef.current = marker;
 
       // POIのエリアタイプに基づいて、特別なスタイルやアニメーションを適用します
       if (poi.area === 'RECOMMEND') {
         // 推奨エリアのマーカーには特別な外観と点滅アニメーションを適用します
-        iconElement.classList.add('marker-recommendation');
-        iconElement.classList.add('marker-blinking');
+        iconElement.classList.add(styles.markerRecommendation);
+        iconElement.classList.add(styles.markerBlinking);
       } else if (poi.area === 'CURRENT_LOCATION') {
         // 現在位置のマーカーには点滅アニメーションのみを適用します
-        iconElement.classList.add('marker-blinking');
+        iconElement.classList.add(styles.markerBlinking);
       }
 
       // コンポーネントがアンマウントされる時や依存関係が変更された時の
@@ -126,10 +141,14 @@ const Marker = React.memo(
       if (markerRef.current && markerRef.current.content instanceof HTMLElement) {
         if (isSelected) {
           // マーカーが選択されている場合、選択状態を示すCSSクラスを追加します
-          markerRef.current.content.classList.add('marker-selected');
+          markerRef.current.content.classList.add(styles.markerSelected);
+          // アクセシビリティ：選択状態をARIA属性でも表現
+          markerRef.current.content.setAttribute('aria-selected', 'true');
         } else {
           // マーカーが選択されていない場合、選択状態を示すCSSクラスを削除します
-          markerRef.current.content.classList.remove('marker-selected');
+          markerRef.current.content.classList.remove(styles.markerSelected);
+          // アクセシビリティ：選択解除状態をARIA属性で表現
+          markerRef.current.content.setAttribute('aria-selected', 'false');
         }
       }
     }, [isSelected, poi]); // 選択状態またはPOI自体が変更された場合に実行します
