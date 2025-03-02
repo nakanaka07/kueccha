@@ -204,19 +204,19 @@ export const Map: React.FC<ExtendedMapProps> = ({
           },
           fullscreenControl: true,
           fullscreenControlOptions: {
-            position: 8,
+            position: 3,
           },
           zoomControl: true,
           zoomControlOptions: {
-            position: 9,
+            position: 7,
           },
           streetViewControl: true,
           streetViewControlOptions: {
-            position: 9,
+            position: 7,
           },
           cameraControl: true,
           cameraControlOptions: {
-            position: 9,
+            position: 7,
           },
         }}
         onLoad={handleMapLoad}

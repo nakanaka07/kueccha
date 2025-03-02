@@ -7,7 +7,7 @@
 /* コントロールボタンを含むコンテナのスタイルを定義します。 */
 .mapControlsContainer {
   position: absolute;
-  top: 10px;
+  bottom: 30px;
   right: 10px;
   display: flex;
   flex-direction: column;
