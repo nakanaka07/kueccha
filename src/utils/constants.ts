@@ -227,8 +227,8 @@ export const MAPS_CONFIG = {
   language: 'ja', // マップの言語設定（日本語）
 
   // マップ表示設定
-  defaultCenter: { lat: 38.0, lng: 138.4 }, // 佐渡島周辺をデフォルトの中心に設定
-  defaultZoom: 10, // デフォルトのズームレベル（島全体が見える程度）
+  defaultCenter: { lat: 38.1, lng: 138.4 }, // 佐渡島周辺をデフォルトの中心に設定
+  defaultZoom: 9, // デフォルトのズームレベル（島全体が見える程度）
 
   geolocation: {
     timeout: 10000, // 位置情報取得のタイムアウト時間（ミリ秒）

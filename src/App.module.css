@@ -87,18 +87,6 @@
   outline-offset: var(--focus-outline-offset);
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  .errorMessage {
-    font-size: 14px;
-  }
-
-  .errorButton {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
-}
-
 /* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .errorMessage {

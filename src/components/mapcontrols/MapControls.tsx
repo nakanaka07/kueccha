@@ -10,7 +10,7 @@ import { MapControlsProps } from '../../utils/types';
 
 // MapControlsコンポーネントを定義します。
 // 各ボタンを表示し、クリック時に対応する関数を呼び出します。
-export const MapControls: React.FC<Omit<MapControlsProps, 'onToggleRecommendations'>> = ({
+export const MapControls: React.FC<MapControlsProps> = ({
   onResetNorth, // 北向きにリセットする関数
   onGetCurrentLocation, // 現在地を取得する関数
 }) => (
