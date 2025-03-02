@@ -1,13 +1,4 @@
-/**
- * SearchBar.css
- *
- * 検索バーコンポーネントのスタイルを定義します。
- * レスポンシブデザイン、アクセシビリティ、視覚的一貫性に配慮しています。
- */
-
-/* カスタムプロパティ（CSS変数）の定義 */
 :root {
-  /* カラーパレット */
   --search-primary-color: #007bff;
   --search-primary-hover: #0056b3;
   --search-text-color: #333333;
@@ -16,19 +7,14 @@
   --search-shadow-color: rgba(0, 123, 255, 0.25);
   --search-focus-ring: rgba(0, 123, 255, 0.5);
   --search-suggestion-hover: #f5f5f5;
-
-  /* サイズと間隔 */
   --search-spacing-xs: 4px;
   --search-spacing-sm: 8px;
   --search-spacing-md: 12px;
   --search-spacing-lg: 16px;
   --search-border-radius: 4px;
-
-  /* アニメーション */
   --search-transition-speed: 0.2s;
 }
 
-/* 検索バー全体のコンテナ */
 .search-bar {
   display: flex;
   flex-direction: column;
@@ -41,7 +27,6 @@
     sans-serif;
 }
 
-/* 検索入力フィールド */
 .search-input {
   width: 100%;
   padding: var(--search-spacing-md);
@@ -56,14 +41,12 @@
     box-shadow var(--search-transition-speed) ease;
 }
 
-/* 入力フィールドのフォーカス状態 */
 .search-input:focus {
   outline: none;
   border-color: var(--search-primary-color);
   box-shadow: 0 0 0 3px var(--search-focus-ring);
 }
 
-/* 検索ボタングループ */
 .search-buttons {
   display: flex;
   gap: var(--search-spacing-sm);
@@ -71,7 +54,6 @@
   margin-bottom: var(--search-spacing-md);
 }
 
-/* 検索関連ボタン共通スタイル */
 .search-button {
   flex: 1;
   padding: var(--search-spacing-sm) var(--search-spacing-lg);
@@ -87,23 +69,19 @@
     transform var(--search-transition-speed) ease;
 }
 
-/* ボタンのホバー状態 */
 .search-button:hover {
   background-color: var(--search-primary-hover);
 }
 
-/* ボタンのフォーカス状態 */
 .search-button:focus {
   outline: none;
   box-shadow: 0 0 0 3px var(--search-focus-ring);
 }
 
-/* ボタンのアクティブ状態 */
 .search-button:active {
   transform: translateY(1px);
 }
 
-/* 検索候補のコンテナ */
 .suggestions {
   width: 100%;
   max-height: 300px;
@@ -114,12 +92,10 @@
   z-index: 10;
 }
 
-/* 候補がある場合のみ表示 */
 .suggestions:empty {
   display: none;
 }
 
-/* 検索候補の個別アイテム */
 .suggestion-item {
   padding: var(--search-spacing-md);
   border-bottom: 1px solid var(--search-border-color);
@@ -127,24 +103,20 @@
   transition: background-color var(--search-transition-speed) ease;
 }
 
-/* 最後の候補アイテムの下線を削除 */
 .suggestion-item:last-child {
   border-bottom: none;
 }
 
-/* 候補アイテムのホバー状態 */
 .suggestion-item:hover {
   background-color: var(--search-suggestion-hover);
 }
 
-/* 候補アイテムのフォーカス状態（キーボードナビゲーション用） */
 .suggestion-item:focus {
   outline: none;
   background-color: var(--search-suggestion-hover);
   box-shadow: inset 0 0 0 2px var(--search-primary-color);
 }
 
-/* レスポンシブデザイン - モバイル端末向け */
 @media screen and (max-width: 480px) {
   .search-buttons {
     flex-direction: column;
@@ -156,12 +128,12 @@
   }
 
   .search-input {
-    font-size: 16px; /* モバイルでズームを防ぐために16px以上に設定 */
+    font-size: 16px;
   }
 }
 
-/* アクセシビリティ - アニメーション軽減設定 */
 @media (prefers-reduced-motion: reduce) {
+
   .search-input,
   .search-button,
   .suggestion-item {
@@ -169,7 +141,6 @@
   }
 }
 
-/* ダークモードサポート */
 @media (prefers-color-scheme: dark) {
   :root {
     --search-primary-color: #4d94ff;

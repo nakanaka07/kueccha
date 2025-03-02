@@ -1,15 +1,30 @@
-/**
- * Marker.module.css
- * マップマーカーのスタイル定義
- * グローバル変数を使用して視覚的な一貫性を確保
- */
+.markerContent:focus,
+.markerContent:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
 
-/* マーカーが点滅するアニメーションを定義します */
+.markerSelected {
+  border: 3px solid var(--error-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--error-shadow);
+}
+
+.markerRecommendation {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: var(--error-bg);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--error-shadow);
+  cursor: pointer;
+  animation: markerPulse 1s infinite;
+}
+
 .markerBlinking {
   animation: markerBlinkingAnimation 1s infinite;
 }
 
-/* マーカーの点滅アニメーションのキーフレームを定義します */
 @keyframes markerBlinkingAnimation {
   0% {
     opacity: 1;
@@ -24,26 +39,6 @@
   }
 }
 
-/* 選択されたマーカーのスタイルを定義します */
-.markerSelected {
-  border: 3px solid var(--error-color);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--error-shadow);
-}
-
-/* 推奨マーカーのスタイルを定義します */
-.markerRecommendation {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background-color: var(--error-bg);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--error-shadow);
-  cursor: pointer;
-  animation: markerPulse 1s infinite;
-}
-
-/* マーカーのパルスアニメーションの定義 */
 @keyframes markerPulse {
   0% {
     transform: scale(1);
@@ -61,14 +56,6 @@
   }
 }
 
-/* フォーカスの統一表現 */
-.markerContent:focus,
-.markerContent:focus-visible {
-  outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  outline-offset: var(--focus-outline-offset);
-}
-
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .markerSelected {
     border-color: var(--error-light);
@@ -81,8 +68,8 @@
   }
 }
 
-/* モーションを減らす設定が有効な場合のスタイル */
 @media (prefers-reduced-motion: reduce) {
+
   .markerBlinking,
   .markerRecommendation {
     animation: none;

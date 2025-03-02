@@ -1,5 +1,4 @@
-/* フィルターパネルのコンテナ */
-.filterpanelContainer {
+.filterpanel-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -16,14 +15,12 @@
   z-index: 1000;
 }
 
-/* フィルターパネルが開いているときのスタイル */
-.filterpanelContainer.open {
+.filterpanel-container.open {
   transform: translate(-50%, -50%);
   opacity: 1;
 }
 
-/* フィルターパネルのスタイル */
-.filterPanel {
+.filter-panel {
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.8);
   border: 1px solid var(--border-color);
@@ -35,8 +32,7 @@
   width: 100%;
 }
 
-/* 閉じるボタンのスタイル */
-.closeButton {
+.close-button {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -48,24 +44,20 @@
   transition: color 0.3s ease;
 }
 
-/* 閉じるボタンのホバー時のスタイル */
 .close-button:hover {
   color: #007bff;
 }
 
-/* フィルターアイテムのスタイル */
 .filter-item {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
 }
 
-/* チェックボックスのスタイル */
 .filter-item input[type='checkbox'] {
   display: none;
 }
 
-/* カスタムチェックボックスのスタイル */
 .filter-item input[type='checkbox']+.custom-checkbox {
   width: 16px;
   height: 16px;
@@ -77,12 +69,10 @@
   flex-shrink: 0;
 }
 
-/* チェックされたカスタムチェックボックスのスタイル */
 .filter-item input[type='checkbox']:checked+.custom-checkbox {
   background-color: #007bff;
 }
 
-/* チェックされたカスタムチェックボックスのチェックマークのスタイル */
 .filter-item input[type='checkbox']:checked+.custom-checkbox::after {
   content: '';
   position: absolute;
@@ -95,28 +85,24 @@
   transform: rotate(45deg);
 }
 
-/* フィルター詳細のスタイル */
 .filter-details {
   display: flex;
   align-items: center;
   margin-left: 8px;
 }
 
-/* マーカーのアイコンのスタイル */
 .marker-icon {
   width: 36px;
   height: 36px;
   margin-right: 8px;
 }
 
-/* フィルター詳細のテキストのスタイル */
 .filter-details span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* エリア名のスタイル */
 .filter-details .area-name {
   position: relative;
   cursor: pointer;
@@ -126,7 +112,12 @@
   max-width: 300px;
 }
 
-/* エリア名のホバー時のツールチップのスタイル */
+.filter-details .area-name::after {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
 .filter-details .area-name:hover::after {
   content: attr(data-fullname);
   position: absolute;
@@ -144,14 +135,6 @@
   opacity: 1;
 }
 
-/* エリア名のツールチップの初期スタイル */
-.filter-details .area-name::after {
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-/* エラーメッセージのスタイル */
 .error-message {
   color: red;
   margin-top: 10px;

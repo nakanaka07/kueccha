@@ -16,23 +16,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const { locationError, handleCurrentLocationChange } = useCurrentLocation(setShowWarning);
 
-  useEffect(() => {
-    const sortedAreaVisibility = Object.keys(localAreaVisibility)
-      .sort((a, b) => (a === 'RECOMMEND' ? 1 : b === 'RECOMMEND' ? -1 : 0))
-      .reduce(
-        (acc, key) => {
-          acc[key as AreaType] = localAreaVisibility[key as AreaType];
-          return acc;
-        },
-        {} as Record<AreaType, boolean>,
-      );
-
-    // 条件付きでsetAreaVisibilityを呼び出す
-    if (JSON.stringify(sortedAreaVisibility) !== JSON.stringify(localAreaVisibility)) {
-      setAreaVisibility(sortedAreaVisibility);
-    }
-  }, [localAreaVisibility, setAreaVisibility]);
-
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
       ...acc,
@@ -51,6 +34,22 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       color: MARKER_CONFIG.colors[area as AreaType],
       icon: MARKER_CONFIG.icons[area as AreaType],
     }));
+
+  useEffect(() => {
+    const sortedAreaVisibility = Object.keys(localAreaVisibility)
+      .sort((a, b) => (a === 'RECOMMEND' ? 1 : b === 'RECOMMEND' ? -1 : 0))
+      .reduce(
+        (acc, key) => {
+          acc[key as AreaType] = localAreaVisibility[key as AreaType];
+          return acc;
+        },
+        {} as Record<AreaType, boolean>,
+      );
+
+    if (JSON.stringify(sortedAreaVisibility) !== JSON.stringify(localAreaVisibility)) {
+      setAreaVisibility(sortedAreaVisibility);
+    }
+  }, [localAreaVisibility, setAreaVisibility]);
 
   return (
     <div className={`filterpanel-container ${isFilterPanelOpen ? 'open' : ''}`}>

@@ -1,6 +1,3 @@
-/* LoadingFallback.module.css - ローディングインジケーターコンポーネントのスタイル */
-
-/* ローディングコンテナの基本スタイル */
 .loadingFallback {
   position: fixed;
   inset: 0;
@@ -10,27 +7,16 @@
   width: 100%;
   height: 100%;
   z-index: 1000;
-
-  /* 背景スタイル */
   background-color: var(--color-primary-light);
   background-image: url('../../utils/images/row1.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-
-  /* トランジション効果 */
   opacity: 1;
   will-change: opacity;
-  /* パフォーマンス最適化 */
   transition: opacity 300ms ease-in;
 }
 
-/* フェードアウト効果 */
-.loadingFallback.fading {
-  animation: fadeOut 5s ease-in-out;
-}
-
-/* コンテンツコンテナ */
 .loadingContent {
   text-align: center;
   padding: 1.25rem;
@@ -40,7 +26,6 @@
   animation: fadeIn 1s ease-in;
 }
 
-/* エラーコンテナ */
 .errorContainer {
   background-color: var(--error-bg);
   color: var(--error-text);
@@ -50,7 +35,6 @@
   margin: 1rem 0;
 }
 
-/* エラーアイコン */
 .errorIcon {
   width: 3rem;
   height: 3rem;
@@ -83,7 +67,6 @@
   transform: translate(-50%, 80%);
 }
 
-/* 再試行ボタン */
 .retryButton {
   background-color: var(--error-color);
   color: white;
@@ -106,7 +89,6 @@
   outline-offset: var(--focus-outline-offset);
 }
 
-/* スケルトンコンテナ */
 .skeletonContainer {
   width: 100%;
   max-width: 500px;
@@ -115,13 +97,11 @@
   border-radius: 8px;
 }
 
-/* プログレスコンテナ */
 .progressContainer {
   width: 100%;
   max-width: 300px;
 }
 
-/* プログレスバー */
 .progressBar {
   width: 100%;
   height: 8px;
@@ -139,12 +119,14 @@
   animation: progress 2s ease-in-out infinite;
 }
 
-/* オーバーレイスタイル */
 .overlay {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-/* 視覚的に隠し、スクリーンリーダーからのみアクセス可能 */
+.loadingFallback.fading {
+  animation: fadeOut 5s ease-in-out;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -156,7 +138,6 @@
   border: 0;
 }
 
-/* アニメーション定義 */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -205,8 +186,8 @@
   }
 }
 
-/* アクセシビリティの向上 */
 @media (prefers-reduced-motion: reduce) {
+
   .loadingFallback,
   .loadingContent,
   .progressIndicator {
@@ -219,7 +200,6 @@
   }
 }
 
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .loadingFallback {
     background-color: var(--color-primary-dark);
@@ -242,7 +222,6 @@
   }
 }
 
-/* 高コントラストモードのサポート */
 @media (forced-colors: active) {
   .retryButton {
     border: 1px solid CanvasText;

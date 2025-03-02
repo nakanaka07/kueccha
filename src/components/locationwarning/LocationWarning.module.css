@@ -1,4 +1,3 @@
-/* 警告メッセージのコンテナスタイル */
 .locationWarning {
   position: fixed;
   bottom: 10%;
@@ -18,13 +17,11 @@
   opacity: 1;
 }
 
-/* 非表示時のスタイル */
 .locationWarning.hidden {
   opacity: 0;
   transform: translate(-50%, 20px);
 }
 
-/* 閉じるボタンのスタイル */
 .closeButton {
   position: absolute;
   top: 10px;
@@ -36,21 +33,18 @@
   color: var(--text-color);
 }
 
-/* フォーカス状態の統一表現 */
 .closeButton:focus,
 .closeButton:focus-visible {
   outline: var(--focus-outline-width) solid var(--focus-outline-color);
   outline-offset: var(--focus-outline-offset);
 }
 
-/* 警告メッセージのスタイル */
 .message {
   font-size: 14px;
   color: var(--text-color);
   margin: 0;
 }
 
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .locationWarning {
     background-color: var(--light-gray);
@@ -66,7 +60,6 @@
   }
 }
 
-/* モーションを減らす設定が有効な場合のスタイル */
 @media (prefers-reduced-motion: reduce) {
   .locationWarning {
     transition: none;

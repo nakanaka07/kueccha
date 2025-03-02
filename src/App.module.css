@@ -1,9 +1,3 @@
-/*
- * App.module.css
- * アプリケーション全体のスタイルを定義
- */
-
-/* アプリケーション全体のルート要素 */
 .app {
   width: 100%;
   height: 100%;
@@ -11,7 +5,6 @@
   flex-direction: column;
 }
 
-/* アプリケーション全体のコンテナ */
 .appContainer {
   position: relative;
   width: 100%;
@@ -19,122 +12,15 @@
   overflow: hidden;
 }
 
-/* マップコンテナ - 必要な場合に使用 */
 .mapContainer {
   position: absolute;
   inset: 0;
-  /* top, right, bottom, left を一括指定 */
   z-index: 0;
 }
 
-/* マップコンテナ内の要素 */
 .mapContainer>div {
   width: 100%;
   height: 100%;
-}
-
-/* エラーメッセージ表示 - グローバル変数を使用した統一スタイル */
-.errorMessage {
-  color: var(--text-color);
-  font-size: 0.9rem;
-}
-
-/* エラーメッセージ内の段落 */
-.errorMessage p {
-  margin: 8px 0;
-  font-size: 0.9rem;
-}
-
-/* エラータイトル */
-.errorTitle {
-  font-weight: 500;
-  color: var(--error-text);
-  margin-bottom: 8px;
-}
-
-/* リトライボタン */
-.errorButton {
-  background-color: var(--error-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 16px;
-  transition: background-color 0.3s ease;
-}
-
-/* リトライボタンのホバー状態 */
-.errorButton:hover {
-  background-color: var(--error-hover);
-}
-
-/* リトライボタンのフォーカス状態 */
-.errorButton:focus {
-  outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  outline-offset: var(--focus-outline-offset);
-}
-
-/* ダークモード対応 */
-@media (prefers-color-scheme: dark) {
-  .errorMessage {
-    background-color: var(--error-bg);
-    color: var(--error-text);
-    border-color: var(--error-border);
-    box-shadow: 0 2px 4px var(--error-shadow);
-  }
-
-  .errorButton {
-    background-color: var(--error-color);
-  }
-
-  .errorButton:hover {
-    background-color: var(--error-hover);
-  }
-}
-
-.mapStatusOverlay {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 20px;
-  z-index: 1000;
-  animation: fadeInOut 3s forwards;
-}
-
-.statusContent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.statusIcon {
-  color: #4caf50;
-  font-weight: bold;
-}
-
-@keyframes fadeInOut {
-  0% {
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    visibility: hidden;
-  }
 }
 
 .locationControls {
@@ -165,7 +51,30 @@
   font-size: 12px;
 }
 
-/* 現在地マーカー用の特別なスタイル */
+.mapStatusOverlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  z-index: 1000;
+  animation: fadeInOut 3s forwards;
+}
+
+.statusContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusIcon {
+  color: #4caf50;
+  font-weight: bold;
+}
+
 .markerCurrentLocation {
   animation: pulse 1.5s infinite;
   border: 3px solid #42a30f;
@@ -173,36 +82,43 @@
   box-shadow: 0 0 8px rgba(66, 163, 15, 0.8);
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+.errorMessage {
+  color: var(--text-color);
+  font-size: 0.9rem;
 }
 
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+.errorMessage p {
+  margin: 8px 0;
+  font-size: 0.9rem;
 }
 
-/* エラー表示の統一スタイル - 全コンポーネントで採用 */
+.errorTitle {
+  font-weight: 500;
+  color: var(--error-text);
+  margin-bottom: 8px;
+}
+
+.errorButton {
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.errorButton:hover {
+  background-color: var(--error-hover);
+}
+
+.errorButton:focus {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
 .errorContainer {
   background-color: var(--error-bg);
   color: var(--error-text);
@@ -234,8 +150,70 @@
   outline-offset: var(--focus-outline-offset);
 }
 
-/* ダークモード対応 */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
+  .errorMessage {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    border-color: var(--error-border);
+    box-shadow: 0 2px 4px var(--error-shadow);
+  }
+
+  .errorButton {
+    background-color: var(--error-color);
+  }
+
+  .errorButton:hover {
+    background-color: var(--error-hover);
+  }
+
   .errorContainer {
     background-color: var(--light-gray);
     border-color: var(--error-border);

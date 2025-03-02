@@ -1,94 +1,85 @@
-/* フィードバックフォームのラッパーのスタイル */
-.feedback-form-wrapper {
+.feedbackFormWrapper {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   width: 100%;
   max-width: 400px;
+  padding: 20px;
+  background-color: #fff;
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translate(-50%, -50%);
   transition: transform 0.3s ease-in-out;
 }
 
-/* 閉じるボタンのスタイル */
-.feedback-form-wrapper .close-button {
+.feedbackFormWrapper .close-button {
   position: absolute;
   top: 10px;
   right: 10px;
   background: none;
   border: none;
+  color: #333;
   font-size: 24px;
   cursor: pointer;
-  color: #333;
 }
 
-/* フォームのスタイル */
-.feedback-form-wrapper form {
+.feedbackFormWrapper form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-/* ラベルのスタイル */
-.feedback-form-wrapper label {
+.feedbackFormWrapper label {
   display: flex;
   flex-direction: column;
-  font-size: 14px;
   color: #333;
+  font-size: 14px;
 }
 
-/* 入力フィールドとテキストエリアのスタイル */
-.feedback-form-wrapper input,
-.feedback-form-wrapper textarea {
+.feedbackFormWrapper input,
+.feedbackFormWrapper textarea {
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
-  width: 100%;
   box-sizing: border-box;
+  font-size: 14px;
 }
 
-/* 入力フィールドとテキストエリアのフォーカス時のスタイル */
-.feedback-form-wrapper input:focus,
-.feedback-form-wrapper textarea:focus {
-  outline: none;
+.feedbackFormWrapper input:focus,
+.feedbackFormWrapper textarea:focus {
   border-color: #007bff;
+  outline: none;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* 送信ボタンのスタイル */
-.feedback-form-wrapper button[type='submit'] {
+.feedbackFormWrapper button[type='submit'] {
   padding: 10px;
   background-color: #007bff;
-  color: #fff;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
+  color: #fff;
   font-size: 16px;
+  cursor: pointer;
   transition:
     background-color 0.2s,
     transform 0.2s;
 }
 
-/* 送信ボタンのホバー時のスタイル */
-.feedback-form-wrapper button[type='submit']:hover {
+.feedbackFormWrapper button[type='submit']:hover {
   background-color: #0056b3;
   transform: scale(1.05);
 }
 
-/* エラーメッセージのスタイル */
 .error-message {
-  color: #d9534f;
-  margin-top: 10px;
-  font-size: 14px;
-  padding: 10px;
-  border: 1px solid #d9534f;
-  border-radius: 4px;
-  background-color: #f2dede;
   display: flex;
   align-items: center;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f2dede;
+  border: 1px solid #d9534f;
+  border-radius: 4px;
+  color: #d9534f;
+  font-size: 14px;
 }
