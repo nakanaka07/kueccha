@@ -232,6 +232,7 @@ export type MapErrorProps = {
 export type MapControlsProps = {
   onResetNorth: () => void; // マップを北向きにリセットする関数
   onGetCurrentLocation: () => void; // ユーザーの現在位置を取得する関数
+  onFitMarkers: () => void; // すべてのマーカーが表示される範囲に調整する関数
 };
 
 /**

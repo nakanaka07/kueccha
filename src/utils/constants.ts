@@ -228,7 +228,7 @@ export const MAPS_CONFIG = {
 
   // マップ表示設定
   defaultCenter: { lat: 38.1, lng: 138.4 }, // 佐渡島周辺をデフォルトの中心に設定
-  defaultZoom: 9, // デフォルトのズームレベル（島全体が見える程度）
+  defaultZoom: 10, // デフォルトのズームレベル（島全体が見える程度）
 
   geolocation: {
     timeout: 10000, // 位置情報取得のタイムアウト時間（ミリ秒）
@@ -259,19 +259,19 @@ export const MAPS_CONFIG = {
     },
     fullscreenControl: true,
     fullscreenControlOptions: {
-      position: 8,
+      position: 9,
     },
     zoomControl: true,
     zoomControlOptions: {
-      position: 8,
+      position: 9,
     },
     streetViewControl: true,
     streetViewControlOptions: {
-      position: 8,
+      position: 9,
     },
     cameraControl: true,
     cameraControlOptions: {
-      position: 8,
+      position: 9,
     },
   },
 };

@@ -24,13 +24,11 @@ import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi } from './utils/types';
 
 const App: React.FC = () => {
-  // 既存のコード...
-  const { pois, isLoading: _isPoisLoading, error: poisError } = useSheetData();
+  const { pois, error: poisError } = useSheetData();
 
   // 現在地管理フックから、現在地取得メソッドも取得
   const { currentLocation, showWarning, setShowWarning, handleCurrentLocationChange } = useLocationWarning();
 
-  // 現在地POI変換（既存コード）
   const currentLocationPoi: Poi | null = useMemo(() => {
     if (!currentLocation) return null;
 
@@ -44,7 +42,6 @@ const App: React.FC = () => {
     };
   }, [currentLocation]);
 
-  // POI結合（既存コード）
   const allPois = useMemo(() => {
     const basePois = pois || [];
     return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
@@ -54,11 +51,12 @@ const App: React.FC = () => {
   const {
     mapInstance,
     isMapLoaded,
-    isMapLoading, // _isMapLoadingをisMapLoadingに修正
+    isMapLoading,
     loading: { isVisible: isLoadingVisible, isFading },
     error,
-    actions, // actionsオブジェクトを取り出す
+    actions,
     selectedPoi,
+    areaVisibility,
   } = useAppState(allPois);
 
   // 北向きリセット機能を追加
@@ -68,6 +66,36 @@ const App: React.FC = () => {
   const handleGetCurrentLocation = useCallback(() => {
     handleCurrentLocationChange(true);
   }, [handleCurrentLocationChange]);
+
+  // マーカーを全て表示する範囲に調整する関数
+  const handleFitMarkers = useCallback(() => {
+    if (mapInstance && allPois && allPois.length > 0) {
+      // 表示されているエリアのマーカーと現在地マーカーを対象にする
+      const visiblePois = allPois.filter((poi) => poi.id === 'current-location' || areaVisibility[poi.area]);
+
+      // 表示するマーカーがない場合は何もしない
+      if (visiblePois.length === 0) return;
+
+      // 境界オブジェクトを作成
+      const bounds = new google.maps.LatLngBounds();
+
+      // 全ての表示中マーカーの位置を境界に追加
+      visiblePois.forEach((poi) => {
+        bounds.extend(poi.location);
+      });
+
+      // 型アサーションを追加して、mapInstanceが存在することをTypeScriptに伝える
+      (mapInstance as google.maps.Map).fitBounds(bounds);
+
+      // 過度にズームインしすぎるのを防止（マーカーが1つだけの場合など）
+      const zoomListener = google.maps.event.addListener(mapInstance, 'idle', () => {
+        if ((mapInstance?.getZoom() ?? 0) > 17) {
+          mapInstance?.setZoom(17);
+        }
+        google.maps.event.removeListener(zoomListener);
+      });
+    }
+  }, [mapInstance, allPois, areaVisibility]);
 
   // エラーメッセージを動的に決定
   const errorMessage = useMemo(() => {
@@ -83,7 +111,7 @@ const App: React.FC = () => {
   // マーカークリック時の処理を実装
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
-      actions.setSelectedPoi(poi); // _setSelectedPoiをactions.setSelectedPoiに修正
+      actions.setSelectedPoi(poi);
       if (mapInstance) {
         mapInstance.panTo(poi.location);
         mapInstance.setZoom(15);
@@ -130,8 +158,11 @@ const App: React.FC = () => {
             onMarkerClick={handleMarkerClick}
           />
 
-          {/* マップコントロールを追加 */}
-          <MapControls onResetNorth={resetNorth} onGetCurrentLocation={handleGetCurrentLocation} />
+          <MapControls
+            onResetNorth={resetNorth}
+            onGetCurrentLocation={handleGetCurrentLocation}
+            onFitMarkers={handleFitMarkers}
+          />
 
           {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
         </div>
@@ -140,7 +171,6 @@ const App: React.FC = () => {
   );
 };
 
-// 残りの既存のコード...
 // DOMへのレンダリング処理
 const container = document.getElementById('app');
 
