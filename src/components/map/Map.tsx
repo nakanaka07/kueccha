@@ -194,17 +194,29 @@ export const Map: React.FC<ExtendedMapProps> = ({
           disableDefaultUI: false,
           disableDoubleClickZoom: false,
           scrollwheel: true,
-          zoomControl: true,
-          mapTypeControl: true,
-          streetViewControl: true,
-          fullscreenControl: true,
           clickableIcons: true,
           gestureHandling: 'cooperative',
+          mapTypeControl: true,
           mapTypeControlOptions: {
-            // Google Maps API がロードされる前の静的定義のため数値を使用
-            style: 2, // DROPDOWN_MENU の定数値（2）
-            position: 1, // TOP_LEFT の定数値（1）
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], // 利用可能なマップタイプ
+            style: 2,
+            position: 1,
+            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
+          },
+          fullscreenControl: true,
+          fullscreenControlOptions: {
+            position: 8,
+          },
+          zoomControl: true,
+          zoomControlOptions: {
+            position: 8,
+          },
+          streetViewControl: true,
+          streetViewControlOptions: {
+            position: 8,
+          },
+          cameraControl: true,
+          cameraControlOptions: {
+            position: 8,
           },
         }}
         onLoad={handleMapLoad}

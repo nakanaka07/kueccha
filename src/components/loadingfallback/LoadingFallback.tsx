@@ -94,7 +94,7 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   error = null,
   message = ERROR_MESSAGES.LOADING.DATA,
   errorMessage = ERROR_MESSAGES.DATA.LOADING_FAILED,
-  fadeDuration = 3000,
+  fadeDuration = 5000,
   onRetry,
   variant = 'spinner',
   showOverlay = false,

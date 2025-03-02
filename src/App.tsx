@@ -12,8 +12,10 @@ import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { LoadingIndicators } from './components/loading';
+import LocationWarning from './components/locationwarning/LocationWarning'; // 警告コンポーネントをインポート
 import Map from './components/map/Map';
 import { useAppState } from './hooks/useAppState';
+import { useLocationWarning } from './hooks/useLocationWarning'; // 現在地取得フックをインポート
 import { useSheetData } from './hooks/useSheetData'; // POIデータ取得フック
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi } from './utils/types'; // Poi型をインポート
@@ -27,8 +29,31 @@ import type { Poi } from './utils/types'; // Poi型をインポート
  */
 const App: React.FC = () => {
   // Google Sheetsからデータを取得
-  // isPoisLoadingは使用されていないため、_isPoisLoadingとして宣言
   const { pois, isLoading: _isPoisLoading, error: poisError } = useSheetData();
+
+  // 現在地の取得と警告表示を管理するフックを使用
+  const { currentLocation, showWarning, setShowWarning } = useLocationWarning();
+
+  // 現在地がある場合、それをPOI形式に変換
+  const currentLocationPoi: Poi | null = useMemo(() => {
+    if (!currentLocation) return null;
+
+    return {
+      id: 'current-location', // 一意のID
+      name: '現在地', // 表示名
+      location: currentLocation, // 位置情報
+      area: 'CURRENT_LOCATION', // マーカーのエリアタイプ（特別スタイル適用のため）
+      genre: '現在地', // 必須プロパティ
+      category: '現在地', // 必須プロパティ
+      // descriptionは不要なので削除（Poi型に含まれていないプロパティ）
+    };
+  }, [currentLocation]);
+
+  // 通常のPOIと現在地POIを結合
+  const allPois = useMemo(() => {
+    const basePois = pois || [];
+    return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
+  }, [pois, currentLocationPoi]);
 
   // useAppStateを拡張してPOIデータを渡す
   const {
@@ -41,7 +66,7 @@ const App: React.FC = () => {
     // POI関連の状態も取得
     selectedPoi,
     setSelectedPoi,
-  } = useAppState(pois); // POIデータを渡す
+  } = useAppState(allPois); // 結合したPOIデータを渡す
 
   /**
    * ローディングメッセージを動的に決定
@@ -97,6 +122,16 @@ const App: React.FC = () => {
     }
   }, [mapInstance, handleMapInitialized]);
 
+  /**
+   * 現在地が変わったときの処理
+   */
+  useEffect(() => {
+    if (currentLocation && mapInstance) {
+      // 現在地が取得できたらマップの中心を移動（オプション）
+      mapInstance.panTo(currentLocation);
+    }
+  }, [currentLocation, mapInstance]);
+
   return (
     <div className={styles.app}>
       <ErrorBoundary>
@@ -115,9 +150,6 @@ const App: React.FC = () => {
             />
           )}
 
-          {/* Google Maps表示コンポーネント */}
-          <Map onLoad={handleMapLoad} pois={pois} selectedPoi={selectedPoi} onMarkerClick={handleMarkerClick} />
-
           {/* マップ読み込み完了通知 - アニメーション付きステータス表示 */}
           {isMapLoaded && (
             <div className={styles.mapStatusOverlay} aria-live="polite">
@@ -129,6 +161,12 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Google Maps表示コンポーネント */}
+          <Map onLoad={handleMapLoad} pois={allPois} selectedPoi={selectedPoi} onMarkerClick={handleMarkerClick} />
+
+          {/* 位置情報の使用に関する警告表示 */}
+          {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
         </div>
       </ErrorBoundary>
     </div>

@@ -27,7 +27,7 @@
 
 /* フェードアウト効果 */
 .loadingFallback.fading {
-  animation: fadeOut 3s ease-in forwards;
+  animation: fadeOut 5s ease-in-out;
 }
 
 /* コンテンツコンテナ */
@@ -37,7 +37,7 @@
   color: var(--text-color);
   font-size: 1.5rem;
   margin-bottom: 6.25rem;
-  animation: fadeIn 0.5s ease-in;
+  animation: fadeIn 1s ease-in;
 }
 
 /* エラーコンテナ */
