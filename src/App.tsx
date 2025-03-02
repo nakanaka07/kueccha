@@ -6,7 +6,7 @@
  */
 
 // useEffectを削除（使用していないため）
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
@@ -26,6 +26,10 @@ import type { Poi } from './utils/types';
 const App: React.FC = () => {
   const { pois, error: poisError } = useSheetData();
 
+  // 現在地マーカーの表示/非表示を管理するステート
+  // この変数宣言を先頭に移動
+  const [showCurrentLocationMarker, setShowCurrentLocationMarker] = useState(true);
+
   // 現在地管理フックから、現在地取得メソッドも取得
   const { currentLocation, showWarning, setShowWarning, handleCurrentLocationChange } = useLocationWarning();
 
@@ -44,8 +48,9 @@ const App: React.FC = () => {
 
   const allPois = useMemo(() => {
     const basePois = pois || [];
-    return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
-  }, [pois, currentLocationPoi]);
+    // 表示状態に応じて現在地マーカーを含めるかどうかを決定
+    return currentLocationPoi && showCurrentLocationMarker ? [...basePois, currentLocationPoi] : basePois;
+  }, [pois, currentLocationPoi, showCurrentLocationMarker]);
 
   // useAppStateからの値を正しく取り出す
   const {
@@ -64,7 +69,9 @@ const App: React.FC = () => {
 
   // 現在地取得ボタン用ハンドラ
   const handleGetCurrentLocation = useCallback(() => {
+    // 現在地を取得し、マーカーを表示状態にする
     handleCurrentLocationChange(true);
+    setShowCurrentLocationMarker(true);
   }, [handleCurrentLocationChange]);
 
   // マーカーを全て表示する範囲に調整する関数
@@ -111,6 +118,15 @@ const App: React.FC = () => {
   // マーカークリック時の処理を実装
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
+      // 現在地マーカーの場合は表示/非表示を切り替える特別処理
+      if (poi.id === 'current-location') {
+        setShowCurrentLocationMarker(false); // マーカークリックで非表示にする
+        // 選択状態も解除する
+        actions.setSelectedPoi(null);
+        return;
+      }
+
+      // 通常のPOIの場合は既存の処理を実行
       actions.setSelectedPoi(poi);
       if (mapInstance) {
         mapInstance.panTo(poi.location);

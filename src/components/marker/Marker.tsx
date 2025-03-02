@@ -130,6 +130,9 @@ const Marker = React.memo(
       // これにより、APIが未ロードやマップが未初期化の状態での実行エラーを防止します
       if (!map || !window.google?.maps) return;
 
+      // 現在地マーカーの場合は特別なタイトルを設定
+      const markerTitle = poi.id === 'current-location' ? 'クリックして現在地マーカーを非表示にする' : poi.name;
+
       // POIのエリアタイプに基づいて適切なアイコンURLを取得します
       // エリアタイプに応じて視覚的に区別するため、異なるアイコン画像を使用します
       // 指定されたエリアタイプのアイコンがない場合はデフォルトアイコンを使用します
@@ -157,7 +160,7 @@ const Marker = React.memo(
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position: poi.location, // マーカーを表示する地理座標（緯度・経度）
         map, // マーカーを表示するマップインスタンス
-        title: poi.name, // マウスホバー時に表示されるツールチップテキスト（アクセシビリティにも寄与）
+        title: markerTitle, // 条件分岐したタイトルを設定
         content: iconElement, // マーカーとして表示するカスタム要素（上で作成したHTML要素）
         zIndex, // マーカー同士が重なった際の表示優先度（値が大きいほど前面に表示）
       });

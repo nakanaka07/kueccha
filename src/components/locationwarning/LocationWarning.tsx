@@ -57,11 +57,7 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
 
       {/* 警告メッセージの本文 - 位置情報取得に関する注意事項を表示 */}
       <div className={styles.message}>
-        ブラウザ環境によっては正しい位置情報を取得できない場合がございます。
-        <br />
-        位置情報の取得を許可するか、ブラウザの設定を確認してください。
-        <br />
-        ご了承ください。
+        ブラウザ環境によっては正しい位置情報を取得できない場合がございます。 ご了承ください。
       </div>
     </div>
   );
