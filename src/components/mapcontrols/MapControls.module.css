@@ -68,24 +68,6 @@
   }
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  .mapControlsContainer {
-    top: 8px;
-    left: 8px;
-    gap: 8px;
-  }
-
-  .mapControlButton {
-    padding: 4px;
-  }
-
-  .mapControlButton img {
-    width: 20px;
-    height: 20px;
-  }
-}
-
 /* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .mapControlButton {
