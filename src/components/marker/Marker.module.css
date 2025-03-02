@@ -83,7 +83,6 @@
 
 /* モーションを減らす設定が有効な場合のスタイル */
 @media (prefers-reduced-motion: reduce) {
-
   .markerBlinking,
   .markerRecommendation {
     animation: none;

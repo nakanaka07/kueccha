@@ -174,15 +174,7 @@ const Marker = React.memo(
       };
 
       // マーカーにクリックイベントのリスナーを追加します
-      // 注：AdvancedMarkerElementでは標準のclickイベントではなくgmp-clickイベントを使用
-      // これはGoogle Maps Platform固有のイベント名です
       marker.addListener('gmp-click', handleClick);
-
-      // iconElementに直接gmp-clickイベントリスナーを追加
-      // マーカー本体だけでなくアイコン要素自体にもイベントを設定し、クリック検出の確実性を高めます
-      iconElement.addEventListener('gmp-click', () => {
-        handleClick();
-      });
 
       // キーボードアクセシビリティ：Enterキーまたはスペースキー押下時のイベントを追加
       // これによりキーボードユーザーもマーカーを選択できるようになります

@@ -207,7 +207,6 @@
 
 /* アクセシビリティの向上 */
 @media (prefers-reduced-motion: reduce) {
-
   .loadingFallback,
   .loadingContent,
   .progressIndicator {

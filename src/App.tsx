@@ -120,12 +120,17 @@ const App: React.FC = () => {
     (poi: Poi) => {
       // 現在地マーカーの場合は表示/非表示を切り替える特別処理
       if (poi.id === 'current-location') {
-        setShowCurrentLocationMarker(false); // マーカークリックで非表示にする
-        // 選択状態も解除する
-        actions.setSelectedPoi(null);
+        // イベントループを完全に抜けてから処理するため、少し遅延を増やす
+        setTimeout(() => {
+          // 選択状態を解除
+          actions.setSelectedPoi(null);
+          // さらに遅延させてマーカーを非表示に
+          setTimeout(() => {
+            setShowCurrentLocationMarker(false);
+          }, 50);
+        }, 10);
         return;
       }
-
       // 通常のPOIの場合は既存の処理を実行
       actions.setSelectedPoi(poi);
       if (mapInstance) {
