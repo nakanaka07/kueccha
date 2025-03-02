@@ -3,140 +3,102 @@
  *
  * @description
  * アプリケーションのルートコンポーネントとエントリーポイント。
- * Google Mapsを中心としたマップ表示機能を提供し、全体のレイアウトと
- * コンポーネント間の連携を管理します。
  */
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+// useEffectを削除（使用していないため）
+import React, { useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { LoadingIndicators } from './components/loading';
-import LocationWarning from './components/locationwarning/LocationWarning'; // 警告コンポーネントをインポート
+import LocationWarning from './components/locationwarning/LocationWarning';
 import Map from './components/map/Map';
+// MapControlsコンポーネントをインポート
+import { MapControls } from './components/mapcontrols/MapControls';
 import { useAppState } from './hooks/useAppState';
-import { useLocationWarning } from './hooks/useLocationWarning'; // 現在地取得フックをインポート
-import { useSheetData } from './hooks/useSheetData'; // POIデータ取得フック
+import { useLocationWarning } from './hooks/useLocationWarning';
+// 北向きリセット機能用のフックをインポート
+import { useMapNorthControl } from './hooks/useMapNorthControl';
+import { useSheetData } from './hooks/useSheetData';
 import { ERROR_MESSAGES } from './utils/constants';
-import type { Poi } from './utils/types'; // Poi型をインポート
+import type { Poi } from './utils/types';
 
-/**
- * メインのAppコンポーネント
- *
- * アプリケーション全体のレイアウトとコンテンツを定義します。
- * ErrorBoundaryでラップされており、予期せぬエラーが発生した場合でも
- * アプリケーション全体がクラッシュすることを防ぎます。
- */
 const App: React.FC = () => {
-  // Google Sheetsからデータを取得
+  // 既存のコード...
   const { pois, isLoading: _isPoisLoading, error: poisError } = useSheetData();
 
-  // 現在地の取得と警告表示を管理するフックを使用
-  const { currentLocation, showWarning, setShowWarning } = useLocationWarning();
+  // 現在地管理フックから、現在地取得メソッドも取得
+  const { currentLocation, showWarning, setShowWarning, handleCurrentLocationChange } = useLocationWarning();
 
-  // 現在地がある場合、それをPOI形式に変換
+  // 現在地POI変換（既存コード）
   const currentLocationPoi: Poi | null = useMemo(() => {
     if (!currentLocation) return null;
 
     return {
-      id: 'current-location', // 一意のID
-      name: '現在地', // 表示名
-      location: currentLocation, // 位置情報
-      area: 'CURRENT_LOCATION', // マーカーのエリアタイプ（特別スタイル適用のため）
-      genre: '現在地', // 必須プロパティ
-      category: '現在地', // 必須プロパティ
-      // descriptionは不要なので削除（Poi型に含まれていないプロパティ）
+      id: 'current-location',
+      name: '現在地',
+      location: currentLocation,
+      area: 'CURRENT_LOCATION',
+      genre: '現在地',
+      category: '現在地',
     };
   }, [currentLocation]);
 
-  // 通常のPOIと現在地POIを結合
+  // POI結合（既存コード）
   const allPois = useMemo(() => {
     const basePois = pois || [];
     return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
   }, [pois, currentLocationPoi]);
 
-  // useAppStateを拡張してPOIデータを渡す
+  // useAppStateからの値を正しく取り出す
   const {
     mapInstance,
     isMapLoaded,
-    isMapLoading,
+    isMapLoading, // _isMapLoadingをisMapLoadingに修正
     loading: { isVisible: isLoadingVisible, isFading },
     error,
-    actions: { handleMapLoad, retryMapLoad },
-    // POI関連の状態も取得
+    actions, // actionsオブジェクトを取り出す
     selectedPoi,
-    setSelectedPoi,
-  } = useAppState(allPois); // 結合したPOIデータを渡す
+  } = useAppState(allPois);
 
-  /**
-   * ローディングメッセージを動的に決定
-   * useMemoを使用して不要な再計算を防止
-   */
-  const loadingMessage = useMemo(() => {
-    return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
-  }, [isMapLoading]);
+  // 北向きリセット機能を追加
+  const { resetNorth } = useMapNorthControl(mapInstance);
 
-  /**
-   * エラーメッセージを動的に決定
-   */
+  // 現在地取得ボタン用ハンドラ
+  const handleGetCurrentLocation = useCallback(() => {
+    handleCurrentLocationChange(true);
+  }, [handleCurrentLocationChange]);
+
+  // エラーメッセージを動的に決定
   const errorMessage = useMemo(() => {
     if (!error && !poisError) return null;
     return (error || poisError)?.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
   }, [error, poisError]);
 
-  /**
-   * マップが読み込まれたときの処理
-   * useCallbackを使用して関数を最適化
-   */
-  const handleMapInitialized = useCallback(() => {
-    if (!mapInstance) return;
+  // ローディングメッセージを動的に決定
+  const loadingMessage = useMemo(() => {
+    return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
+  }, [isMapLoading]);
 
-    console.log('Map loaded successfully');
-
-    // マップに必要な初期設定をここで実行
-    // 例: 特定のスタイル適用、イベントリスナー追加など
-  }, [mapInstance]);
-
-  /**
-   * マーカークリック時の処理を実装
-   * poiパラメーターにPoi型を明示的に指定
-   */
+  // マーカークリック時の処理を実装
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
-      setSelectedPoi(poi);
-      // 必要に応じて追加の操作（マップの中心を移動するなど）
+      actions.setSelectedPoi(poi); // _setSelectedPoiをactions.setSelectedPoiに修正
       if (mapInstance) {
         mapInstance.panTo(poi.location);
-        mapInstance.setZoom(15); // 適切なズームレベルに調整
+        mapInstance.setZoom(15);
       }
     },
-    [mapInstance, setSelectedPoi],
+    [mapInstance, actions.setSelectedPoi],
   );
 
-  /**
-   * マップインスタンスが利用可能になった時点で実行される副作用
-   */
-  useEffect(() => {
-    if (mapInstance) {
-      handleMapInitialized();
-    }
-  }, [mapInstance, handleMapInitialized]);
-
-  /**
-   * 現在地が変わったときの処理
-   */
-  useEffect(() => {
-    if (currentLocation && mapInstance) {
-      // 現在地が取得できたらマップの中心を移動（オプション）
-      mapInstance.panTo(currentLocation);
-    }
-  }, [currentLocation, mapInstance]);
+  // デバッグ用にコンソールログを追加
+  console.log('isMapLoaded:', isMapLoaded);
 
   return (
     <div className={styles.app}>
       <ErrorBoundary>
         <div className={styles.appContainer}>
-          {/* アプリ全体のローディング表示 */}
           {isLoadingVisible && (
             <LoadingIndicators.Fallback
               isLoading={!error && !poisError}
@@ -146,11 +108,10 @@ const App: React.FC = () => {
               variant="spinner"
               spinnerClassName={styles.fullPageLoader}
               isFading={isFading}
-              onRetry={error || poisError ? retryMapLoad : undefined}
+              onRetry={error || poisError ? actions.retryMapLoad : undefined}
             />
           )}
 
-          {/* マップ読み込み完了通知 - アニメーション付きステータス表示 */}
           {isMapLoaded && (
             <div className={styles.mapStatusOverlay} aria-live="polite">
               <div className={styles.statusContent}>
@@ -162,10 +123,16 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* Google Maps表示コンポーネント */}
-          <Map onLoad={handleMapLoad} pois={allPois} selectedPoi={selectedPoi} onMarkerClick={handleMarkerClick} />
+          <Map
+            onLoad={actions.handleMapLoad}
+            pois={allPois}
+            selectedPoi={selectedPoi}
+            onMarkerClick={handleMarkerClick}
+          />
 
-          {/* 位置情報の使用に関する警告表示 */}
+          {/* マップコントロールを追加 */}
+          <MapControls onResetNorth={resetNorth} onGetCurrentLocation={handleGetCurrentLocation} />
+
           {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
         </div>
       </ErrorBoundary>
@@ -173,9 +140,8 @@ const App: React.FC = () => {
   );
 };
 
-/**
- * DOMへのレンダリング処理
- */
+// 残りの既存のコード...
+// DOMへのレンダリング処理
 const container = document.getElementById('app');
 
 // アプリケーションのマウントポイントが存在しない場合はエラーをスロー

@@ -1,71 +1,75 @@
 /* 警告メッセージのコンテナスタイル */
-.location-warning {
+.locationWarning {
   position: fixed;
-  /* 画面に固定 */
   bottom: 10%;
-  /* 画面下から10%の位置 */
   left: 50%;
-  /* 画面左から50%の位置 */
   transform: translate(-50%, 0);
-  /* 中央揃え */
-  background-color: white;
-  /* 背景色を白に設定 */
+  background-color: var(--bg-color);
   padding: 20px;
-  /* 内側の余白を20pxに設定 */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  /* 影を追加 */
+  box-shadow: 0 0 10px var(--color-shadow);
   z-index: 1000;
-  /* 重なり順を最前面に設定 */
   max-width: 370px;
-  /* 最大幅を370pxに設定 */
   border-radius: 8px;
-  /* 角を丸くする */
   transition:
     transform 0.3s ease-in-out,
     opacity 0.3s ease-in-out;
-  /* アニメーションの設定 */
   text-align: center;
-  /* テキストを中央揃え */
   box-sizing: border-box;
-  /* ボックスサイズをborder-boxに設定 */
   opacity: 1;
-  /* 不透明度を1に設定 */
 }
 
 /* 非表示時のスタイル */
-.location-warning.hidden {
+.locationWarning.hidden {
   opacity: 0;
-  /* 不透明度を0に設定 */
   transform: translate(-50%, 20px);
-  /* 下に20px移動 */
 }
 
 /* 閉じるボタンのスタイル */
-.location-warning .close-button {
+.closeButton {
   position: absolute;
-  /* 絶対位置 */
   top: 10px;
-  /* 上から10pxの位置 */
   right: 10px;
-  /* 右から10pxの位置 */
   background: none;
-  /* 背景なし */
   border: none;
-  /* 枠線なし */
   font-size: 20px;
-  /* フォントサイズを20pxに設定 */
   cursor: pointer;
-  /* カーソルをポインターに設定 */
+  color: var(--text-color);
+}
+
+/* フォーカス状態の統一表現 */
+.closeButton:focus,
+.closeButton:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
 }
 
 /* 警告メッセージのスタイル */
-.location-warning .message {
+.message {
   font-size: 14px;
-  /* フォントサイズを14pxに設定 */
-  color: #333;
-  /* テキストカラーを#333に設定 */
+  color: var(--text-color);
   margin: 0;
-  /* マージンを0に設定 */
   padding-right: 30px;
-  /* 右側の余白を30pxに設定 */
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .locationWarning {
+    background-color: var(--light-gray);
+    box-shadow: 0 0 10px var(--color-shadow);
+  }
+
+  .message {
+    color: var(--text-color);
+  }
+
+  .closeButton {
+    color: var(--text-color);
+  }
+}
+
+/* モーションを減らす設定が有効な場合のスタイル */
+@media (prefers-reduced-motion: reduce) {
+  .locationWarning {
+    transition: none;
+  }
 }

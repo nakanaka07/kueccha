@@ -8,11 +8,11 @@
 .mapControlsContainer {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 1000;
+  z-index: 1100;
 }
 
 /* 各コントロールボタンのスタイルを定義します。 */

@@ -93,15 +93,15 @@ export const useAppState = (pois: Poi[]) => {
     // 例: マップコンポーネントを再レンダリングさせるなど
   }, []);
 
+  // useAppStateの返り値に明示的にisMapLoadedを含める
   return {
     ...mapState,
-    ...poiState, // poiStateからselectedPoiとsetSelectedPoiが利用可能
+    ...poiState,
+    isMapLoaded: mapState.isMapLoaded, // 明示的に追加
     areaVisibility,
     setAreaVisibility,
     ...locationWarning,
-    // isMapLoadingとしてマップの読み込み状態を公開
     isMapLoading: mapState.isLoading,
-    // エラー状態を公開
     error,
     loading: {
       isVisible,
@@ -111,7 +111,6 @@ export const useAppState = (pois: Poi[]) => {
       handleMapLoad: mapState.handleMapLoad,
       handleSearchResultClick: poiState.handleSearchResultClick,
       setSelectedPoi: poiState.setSelectedPoi,
-      // リトライアクションを追加
       retryMapLoad,
     },
   };

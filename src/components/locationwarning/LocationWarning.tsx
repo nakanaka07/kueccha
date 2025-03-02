@@ -8,8 +8,8 @@
 
 // Reactライブラリと必要なフックをインポート
 import React, { useState, useEffect } from 'react';
-// コンポーネント固有のスタイルをインポート
-import './LocationWarning.module.css';
+// コンポーネント固有のスタイルをインポート - スタイルのインポート方法を統一
+import styles from './LocationWarning.module.css';
 // 型安全性のための型定義をインポート
 import type { LocationWarningProps } from '../../utils/types';
 
@@ -42,12 +42,11 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   }, [isVisible, onClose]); // isVisibleまたはonClose関数が変更されたときにeffectを再実行
 
   return (
-    // 警告メッセージのコンテナ要素
-    // isVisibleの値に基づいてCSSクラスを動的に適用（非表示時に'hidden'クラスを追加）
-    <div className={`location-warning ${!isVisible ? 'hidden' : ''}`}>
+    // 警告メッセージのコンテナ要素 - クラス名をキャメルケースに修正し、stylesオブジェクトから参照
+    <div className={`${styles.locationWarning} ${!isVisible ? styles.hidden : ''}`}>
       {/* 閉じるボタン - ユーザーがメッセージを閉じるために使用 */}
       <button
-        className="close-button"
+        className={styles.closeButton}
         onClick={() => {
           setIsVisible(false); // ボタンクリック時にisVisibleをfalseにしてアニメーション開始
         }}
@@ -57,7 +56,7 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
       </button>
 
       {/* 警告メッセージの本文 - 位置情報取得に関する注意事項を表示 */}
-      <div className="message">
+      <div className={styles.message}>
         ブラウザ環境によっては正しい位置情報を取得できない場合がございます。
         <br />
         位置情報の取得を許可するか、ブラウザの設定を確認してください。
