@@ -1,5 +1,5 @@
 /* フィルターパネルのコンテナ */
-.filterpanel-container {
+.filterpanelContainer {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -17,18 +17,18 @@
 }
 
 /* フィルターパネルが開いているときのスタイル */
-.filterpanel-container.open {
+.filterpanelContainer.open {
   transform: translate(-50%, -50%);
   opacity: 1;
 }
 
 /* フィルターパネルのスタイル */
-.filter-panel {
+.filterPanel {
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--color-shadow);
   position: relative;
   max-height: 100vh;
   overflow-y: auto;
@@ -36,7 +36,7 @@
 }
 
 /* 閉じるボタンのスタイル */
-.close-button {
+.closeButton {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -44,7 +44,7 @@
   border: none;
   font-size: 30px;
   cursor: pointer;
-  color: #333;
+  color: var(--text-color);
   transition: color 0.3s ease;
 }
 
@@ -66,7 +66,7 @@
 }
 
 /* カスタムチェックボックスのスタイル */
-.filter-item input[type='checkbox'] + .custom-checkbox {
+.filter-item input[type='checkbox']+.custom-checkbox {
   width: 16px;
   height: 16px;
   border: 2px solid #007bff;
@@ -78,12 +78,12 @@
 }
 
 /* チェックされたカスタムチェックボックスのスタイル */
-.filter-item input[type='checkbox']:checked + .custom-checkbox {
+.filter-item input[type='checkbox']:checked+.custom-checkbox {
   background-color: #007bff;
 }
 
 /* チェックされたカスタムチェックボックスのチェックマークのスタイル */
-.filter-item input[type='checkbox']:checked + .custom-checkbox::after {
+.filter-item input[type='checkbox']:checked+.custom-checkbox::after {
   content: '';
   position: absolute;
   top: 2px;

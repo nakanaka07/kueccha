@@ -95,11 +95,27 @@ export const useLocationWarning = () => {
     }
   };
 
+  // 単純化したバージョン - 位置情報の取得に特化
+  const getCurrentLocationInfo = () => {
+    getCurrentPosition({
+      onSuccess: (location) => {
+        setCurrentLocation(location);
+        setShowWarning(true);
+        setLocationError(null);
+      },
+      onError: (errorMessage) => {
+        setLocationError(errorMessage);
+        setCurrentLocation(null);
+      },
+    });
+  };
+
   return {
     currentLocation,
     locationError,
     showWarning,
     setShowWarning,
     handleCurrentLocationChange,
+    getCurrentLocationInfo, // 関数名を意図に合わせて変更
   };
 };

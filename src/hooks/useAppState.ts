@@ -109,7 +109,6 @@ export const useAppState = (pois: Poi[]) => {
     },
     actions: {
       handleMapLoad: mapState.handleMapLoad,
-      handleSearchResultClick: poiState.handleSearchResultClick,
       setSelectedPoi: poiState.setSelectedPoi,
       retryMapLoad,
     },

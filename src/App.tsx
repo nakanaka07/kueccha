@@ -1,37 +1,29 @@
-/**
- * App.tsx
- *
- * @description
- * アプリケーションのルートコンポーネントとエントリーポイント。
- */
-
-// useEffectを削除（使用していないため）
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import { LoadingIndicators } from './components/loading';
 import LocationWarning from './components/locationwarning/LocationWarning';
 import Map from './components/map/Map';
-// MapControlsコンポーネントをインポート
 import { MapControls } from './components/mapcontrols/MapControls';
 import { useAppState } from './hooks/useAppState';
 import { useLocationWarning } from './hooks/useLocationWarning';
-// 北向きリセット機能用のフックをインポート
 import { useMapNorthControl } from './hooks/useMapNorthControl';
 import { useSheetData } from './hooks/useSheetData';
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi } from './utils/types';
 
+const MARKER_ZOOM_LEVEL = 15;
+
 const App: React.FC = () => {
   const { pois, error: poisError } = useSheetData();
 
-  // 現在地マーカーの表示/非表示を管理するステート
-  // この変数宣言を先頭に移動
-  const [showCurrentLocationMarker, setShowCurrentLocationMarker] = useState(true);
-
-  // 現在地管理フックから、現在地取得メソッドも取得
-  const { currentLocation, showWarning, setShowWarning, handleCurrentLocationChange } = useLocationWarning();
+  const {
+    currentLocation,
+    showWarning,
+    setShowWarning,
+    getCurrentLocationInfo,
+  } = useLocationWarning();
 
   const currentLocationPoi: Poi | null = useMemo(() => {
     if (!currentLocation) return null;
@@ -48,11 +40,9 @@ const App: React.FC = () => {
 
   const allPois = useMemo(() => {
     const basePois = pois || [];
-    // 表示状態に応じて現在地マーカーを含めるかどうかを決定
-    return currentLocationPoi && showCurrentLocationMarker ? [...basePois, currentLocationPoi] : basePois;
-  }, [pois, currentLocationPoi, showCurrentLocationMarker]);
+    return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
+  }, [pois, currentLocationPoi]);
 
-  // useAppStateからの値を正しく取り出す
   const {
     mapInstance,
     isMapLoaded,
@@ -64,37 +54,25 @@ const App: React.FC = () => {
     areaVisibility,
   } = useAppState(allPois);
 
-  // 北向きリセット機能を追加
   const { resetNorth } = useMapNorthControl(mapInstance);
 
-  // 現在地取得ボタン用ハンドラ
   const handleGetCurrentLocation = useCallback(() => {
-    // 現在地を取得し、マーカーを表示状態にする
-    handleCurrentLocationChange(true);
-    setShowCurrentLocationMarker(true);
-  }, [handleCurrentLocationChange]);
+    getCurrentLocationInfo();
+  }, [getCurrentLocationInfo]);
 
-  // マーカーを全て表示する範囲に調整する関数
   const handleFitMarkers = useCallback(() => {
     if (mapInstance && allPois && allPois.length > 0) {
-      // 表示されているエリアのマーカーと現在地マーカーを対象にする
       const visiblePois = allPois.filter((poi) => poi.id === 'current-location' || areaVisibility[poi.area]);
 
-      // 表示するマーカーがない場合は何もしない
       if (visiblePois.length === 0) return;
 
-      // 境界オブジェクトを作成
       const bounds = new google.maps.LatLngBounds();
-
-      // 全ての表示中マーカーの位置を境界に追加
       visiblePois.forEach((poi) => {
         bounds.extend(poi.location);
       });
 
-      // 型アサーションを追加して、mapInstanceが存在することをTypeScriptに伝える
       (mapInstance as google.maps.Map).fitBounds(bounds);
 
-      // 過度にズームインしすぎるのを防止（マーカーが1つだけの場合など）
       const zoomListener = google.maps.event.addListener(mapInstance, 'idle', () => {
         if ((mapInstance?.getZoom() ?? 0) > 17) {
           mapInstance?.setZoom(17);
@@ -104,45 +82,37 @@ const App: React.FC = () => {
     }
   }, [mapInstance, allPois, areaVisibility]);
 
-  // エラーメッセージを動的に決定
   const errorMessage = useMemo(() => {
     if (!error && !poisError) return null;
     return (error || poisError)?.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
   }, [error, poisError]);
 
-  // ローディングメッセージを動的に決定
   const loadingMessage = useMemo(() => {
     return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
   }, [isMapLoading]);
 
-  // マーカークリック時の処理を実装
   const handleMarkerClick = useCallback(
     (poi: Poi) => {
-      // 現在地マーカーの場合は表示/非表示を切り替える特別処理
-      if (poi.id === 'current-location') {
-        // イベントループを完全に抜けてから処理するため、少し遅延を増やす
-        setTimeout(() => {
-          // 選択状態を解除
-          actions.setSelectedPoi(null);
-          // さらに遅延させてマーカーを非表示に
-          setTimeout(() => {
-            setShowCurrentLocationMarker(false);
-          }, 50);
-        }, 10);
-        return;
-      }
-      // 通常のPOIの場合は既存の処理を実行
       actions.setSelectedPoi(poi);
-      if (mapInstance) {
+
+      if (!mapInstance) return;
+
+      try {
         mapInstance.panTo(poi.location);
-        mapInstance.setZoom(15);
+        mapInstance.setZoom(MARKER_ZOOM_LEVEL);
+
+        const srNotification = document.createElement('div');
+        srNotification.className = styles.srOnly;
+        srNotification.setAttribute('aria-live', 'polite');
+        srNotification.textContent = `${poi.name}を選択しました`;
+        document.body.appendChild(srNotification);
+        setTimeout(() => document.body.removeChild(srNotification), 3000);
+      } catch (error) {
+        console.error('マーカー選択時にエラーが発生しました:', error);
       }
     },
     [mapInstance, actions.setSelectedPoi],
   );
-
-  // デバッグ用にコンソールログを追加
-  console.log('isMapLoaded:', isMapLoaded);
 
   return (
     <div className={styles.app}>
@@ -162,13 +132,8 @@ const App: React.FC = () => {
           )}
 
           {isMapLoaded && (
-            <div className={styles.mapStatusOverlay} aria-live="polite">
-              <div className={styles.statusContent}>
-                <span className={styles.statusIcon} aria-hidden="true">
-                  ✓
-                </span>
-                マップが読み込まれました
-              </div>
+            <div className={styles.srOnly} aria-live="polite">
+              マップが読み込まれました
             </div>
           )}
 
@@ -192,12 +157,7 @@ const App: React.FC = () => {
   );
 };
 
-// DOMへのレンダリング処理
 const container = document.getElementById('app');
-
-// アプリケーションのマウントポイントが存在しない場合はエラーをスロー
 if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
-
-// React 18のcreateRootAPIを使用してレンダリング
 const root = createRoot(container);
 root.render(<App />);

@@ -1,215 +1,151 @@
 /* InfoWindowの全体スタイル */
-.info-window {
+.infoWindow {
   font-family: 'Roboto', sans-serif;
-  /* フォントファミリーを設定 */
   max-width: 300px;
-  /* 最大幅を300pxに設定 */
   position: absolute;
-  /* 絶対位置に設定 */
   left: 10px;
-  /* 左から10pxの位置に設定 */
   bottom: 50px;
-  /* 下から50pxの位置に設定 */
-  background-color: #fff;
-  /* 背景色を白に設定 */
+  background-color: var(--bg-color);
   border-radius: 8px;
-  /* 角を8pxの半径で丸める */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  /* ボックスシャドウを設定 */
+  box-shadow: 0 4px 12px var(--color-shadow);
   overflow: hidden;
-  /* コンテンツがはみ出さないようにする */
   z-index: 1002;
-  /* 重なり順を設定 */
   display: block;
-  /* ブロック要素として表示 */
 }
 
 /* InfoWindowのコンテンツ部分のスタイル */
-.info-content {
+.infoContent {
   max-height: calc(100vh - 150px);
-  /* 最大高さを計算して設定 */
   overflow-y: auto;
-  /* 縦方向のスクロールを許可 */
   overflow-x: hidden;
-  /* 横方向のスクロールを隠す */
   box-sizing: border-box;
-  /* ボックスサイズをborder-boxに設定 */
 }
 
 /* InfoWindowのヘッダー部分のスタイル */
-.info-header {
+.infoHeader {
   background-color: #f8f8f8;
-  /* 背景色を設定 */
   padding: 10px;
-  /* 内側の余白を設定 */
-  border-bottom: 1px solid #ddd;
-  /* 下部にボーダーを設定 */
+  border-bottom: 1px solid var(--border-color);
   display: flex;
-  /* フレックスボックスを使用 */
   justify-content: space-between;
-  /* 要素を左右に配置 */
   align-items: center;
-  /* 要素を中央に揃える */
 }
 
 /* ヘッダーのタイトルのスタイル */
 .info-header h2 {
   margin: 0;
-  /* マージンをリセット */
   font-size: 18px;
-  /* フォントサイズを設定 */
 }
 
 /* 閉じるボタンのスタイル */
 .modal-close-button {
   background: none;
-  /* 背景をなしに設定 */
   border: none;
-  /* ボーダーをなしに設定 */
   font-size: 30px;
-  /* フォントサイズを設定 */
   cursor: pointer;
-  /* カーソルをポインターに設定 */
   color: #333;
-  /* テキストカラーを設定 */
   transition: color 0.3s ease;
-  /* カラーのトランジションを設定 */
 }
 
 /* 閉じるボタンのホバー時のスタイル */
 .modal-close-button:hover {
   color: #555;
-  /* テキストカラーを変更 */
 }
 
 /* InfoWindowのセクション部分のスタイル */
 .info-section {
   padding: 10px;
-  /* 内側の余白を設定 */
   border-bottom: 1px solid #ddd;
-  /* 下部にボーダーを設定 */
 }
 
 /* InfoWindowのリストのスタイル */
 .info-section ul {
   padding-left: 0;
-  /* 左の余白をリセット */
   margin: 0;
-  /* マージンをリセット */
   list-style-type: none;
-  /* リストスタイルをなしに設定 */
 }
 
 /* InfoWindowのリストアイテムのスタイル */
 .info-section li {
   display: flex;
-  /* フレックスボックスを使用 */
   justify-content: space-between;
-  /* 要素を左右に配置 */
   padding: 5px 0;
-  /* 上下の余白を設定 */
   border-bottom: 1px solid #eee;
-  /* 下部にボーダーを設定 */
 }
 
 /* 最後のリストアイテムのボーダーをなしに設定 */
 .info-section li:last-child {
   border-bottom: none;
-  /* ボーダーをなしに設定 */
 }
 
 /* リストアイテムのキー部分のスタイル */
 .info-section li .day {
   font-weight: bold;
-  /* フォントを太字に設定 */
 }
 
 /* リストアイテムの値部分のスタイル */
 .info-section li .value {
   font-weight: normal;
-  /* フォントを通常に設定 */
 }
 
 /* リンクのスタイル */
 .info-link {
   color: #007bff;
-  /* テキストカラーを設定 */
   text-decoration: none;
-  /* テキストデコレーションをなしに設定 */
 }
 
 /* リンクのホバー時のスタイル */
 .info-link:hover {
   text-decoration: underline;
-  /* テキストデコレーションを下線に設定 */
 }
 
 /* ボタンのスタイル */
 .info-button {
   display: block;
-  /* ブロック要素として表示 */
   text-align: center;
-  /* テキストを中央揃え */
   background-color: #007bff;
-  /* 背景色を設定 */
   color: #fff;
-  /* テキストカラーを設定 */
   text-decoration: none;
-  /* テキストデコレーションをなしに設定 */
   padding: 10px;
-  /* 内側の余白を設定 */
   border-radius: 5px;
-  /* 角を丸める */
 }
 
 /* ボタンのホバー時のスタイル */
 .info-button:hover {
   background-color: #0056b3;
-  /* 背景色を変更 */
 }
 
 /* 水平方向のレイアウトを設定 */
 .info-horizontal {
   display: flex;
-  /* フレックスボックスを使用 */
   flex-wrap: wrap;
-  /* 要素を折り返す */
 }
 
 /* 水平方向のセクションのスタイル */
 .info-horizontal .info-section {
   flex: 1 1 50%;
-  /* フレックスアイテムのサイズを設定 */
 }
 
 /* セクションのタイトルのスタイル */
 .info-section h3 {
   font-size: 16px;
-  /* フォントサイズを設定 */
   margin-bottom: 5px;
-  /* 下部のマージンを設定 */
 }
 
 /* セクションのパラグラフのスタイル */
 .info-section p {
   margin: 0;
-  /* マージンをリセット */
   font-size: 14px;
-  /* フォントサイズを設定 */
   color: #333;
-  /* テキストカラーを設定 */
 }
 
 /* フォーマットされたURLのスタイル */
 .formatted-url {
   color: #007bff;
-  /* テキストカラーを設定 */
   text-decoration: none;
-  /* テキストデコレーションをなしに設定 */
 }
 
 /* フォーマットされたURLのホバー時のスタイル */
 .formatted-url:hover {
   text-decoration: underline;
-  /* テキストデコレーションを下線に設定 */
 }

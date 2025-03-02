@@ -1,15 +1,24 @@
 {
   "name": "sadodekueccha",
   "version": "1.0.0",
+  "description": "A solution for the Sadodekueccha challenge using React, Google Maps, and TypeScript.",
   "private": true,
   "type": "module",
-  "description": "A solution for the Sadodekueccha challenge using React, Google Maps, and TypeScript.",
   "keywords": [
     "react",
     "google maps",
     "typescript",
     "kueccha"
   ],
+  "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
+  "contributors": [
+    {
+      "name": "Yuichiro Nakaguchi",
+      "email": "nakaguchi07@gmail.com",
+      "url": "https://github.com/nakanaka07"
+    }
+  ],
+  "license": "ISC",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nakanaka07/sadodekueccha.git"
@@ -17,8 +26,6 @@
   "bugs": {
     "url": "https://github.com/nakanaka07/sadodekueccha/issues"
   },
-  "author": "Yuichiro Nakaguchi <nakaguchi07@gmail.com>",
-  "license": "ISC",
   "engines": {
     "node": ">=20"
   },
@@ -69,13 +76,6 @@
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
-  "contributors": [
-    {
-      "name": "Yuichiro Nakaguchi",
-      "email": "nakaguchi07@gmail.com",
-      "url": "https://github.com/nakanaka07"
-    }
-  ],
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"

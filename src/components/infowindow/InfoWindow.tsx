@@ -1,7 +1,7 @@
 // Reactと必要なフックをインポート
 import React, { useEffect, useRef, useMemo } from 'react';
-// CSSファイルをインポート
-import './InfoWindow.module.css';
+// CSSファイルをインポート - 正しい形式に修正
+import styles from './InfoWindow.module.css';
 // 定数をインポート
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 // フォーマット関数とバリデーション関数をインポート
@@ -61,8 +61,8 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
         (hour) =>
           poi[hour.key as BusinessHourKey] && (
             <div key={hour.key}>
-              <span className="day">{hour.day}</span>
-              <span className="value">{poi[hour.key as BusinessHourKey]}</span>
+              <span className={styles.day}>{hour.day}</span>
+              <span className={styles.value}>{poi[hour.key as BusinessHourKey]}</span>
             </div>
           ),
       ),
@@ -71,16 +71,16 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
 
   return (
     // InfoWindowのコンテナ
-    <div className="info-window" ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.infoWindow} ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
       {/* ヘッダー部分 */}
-      <div className="info-header">
+      <div className={styles.infoHeader}>
         <h2 id="info-window-title">{poi.name}</h2>
         <button
           onClick={() => {
             onCloseClick();
           }}
           aria-label="閉じる"
-          className="modal-close-button"
+          className={styles.modalCloseButton}
           title="閉じます。"
         >
           ×
@@ -88,16 +88,16 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
       </div>
 
       {/* コンテンツ部分 */}
-      <div className="info-content">
+      <div className={styles.infoContent}>
         {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
-          <div className="info-section">{businessHoursContent}</div>
+          <div className={styles.infoSection}>{businessHoursContent}</div>
         )}
 
-        <div className="info-horizontal">
+        <div className={styles.infoHorizontal}>
           {poi.location && (
-            <div className="info-section">
-              <span className="day">位置</span>
-              <span className="value">
+            <div className={styles.infoSection}>
+              <span className={styles.day}>位置</span>
+              <span className={styles.value}>
                 {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
               </span>
             </div>
@@ -151,7 +151,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               title: '問い合わせ',
               content:
                 poi.phone && isValidPhoneNumber(poi.phone) ? (
-                  <a href={`tel:${poi.phone}`} className="info-link">
+                  <a href={`tel:${poi.phone}`} className={styles.infoLink}>
                     {poi.phone}
                   </a>
                 ) : (
@@ -171,7 +171,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.information,
               title: '関連情報',
               content: (
-                <div className="info-related">{poi.information ? formatInformation(poi.information) : null}</div>
+                <div className={styles.infoRelated}>{poi.information ? formatInformation(poi.information) : null}</div>
               ),
               description: 'この場所に関連する追加情報です。',
             },
@@ -180,7 +180,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.view,
               title: '',
               content: (
-                <a href={poi.view} target="_blank" rel="noopener noreferrer" className="info-button">
+                <a href={poi.view} target="_blank" rel="noopener noreferrer" className={styles.infoButton}>
                   Google マップで写真を見る
                 </a>
               ),
@@ -188,7 +188,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
             },
           ].map((item) =>
             item.condition ? (
-              <div className="info-section" key={item.key}>
+              <div className={styles.infoSection} key={item.key}>
                 {item.title && <h3>{item.title}</h3>}
                 {item.content}
               </div>

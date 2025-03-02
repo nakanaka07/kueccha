@@ -85,7 +85,7 @@
  */
 
 // Reactと必要なフックをインポートします。
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 // マーカーのスタイルを定義したCSSファイルをインポートします。
 import styles from './Marker.module.css';
 // 異なるタイプのマーカーに使用するアイコンURLを定義した定数をインポートします。
@@ -112,6 +112,18 @@ const Marker = React.memo(
     // このrefを使用することで、コンポーネントの再レンダリング間でマーカーインスタンスを保持できます。
     const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
+    // マーカー作成処理を最適化
+    const createMarkerElement = useCallback((iconUrl: string) => {
+      const element = document.createElement('div');
+      element.style.backgroundImage = `url(${iconUrl})`;
+      element.style.backgroundSize = 'contain';
+      element.style.width = '36px';
+      element.style.height = '36px';
+      element.setAttribute('tabindex', '0');
+      element.classList.add(styles.markerContent);
+      return element;
+    }, []);
+
     /**
      * マーカーの初期化と破棄を管理するuseEffectフック
      *
@@ -126,126 +138,115 @@ const Marker = React.memo(
      * マーカーを再作成して最新の状態を反映します。
      */
     useEffect(() => {
-      // マップまたはGoogle Maps APIが利用できない場合は何もしません（早期リターン）
-      // これにより、APIが未ロードやマップが未初期化の状態での実行エラーを防止します
+      // マップまたはGoogle Maps APIが利用できない場合は何もしません
       if (!map || !window.google?.maps) return;
 
-      // 現在地マーカーの場合は特別なタイトルを設定
-      const markerTitle = poi.id === 'current-location' ? 'クリックして現在地マーカーを非表示にする' : poi.name;
-
-      // POIのエリアタイプに基づいて適切なアイコンURLを取得します
-      // エリアタイプに応じて視覚的に区別するため、異なるアイコン画像を使用します
-      // 指定されたエリアタイプのアイコンがない場合はデフォルトアイコンを使用します
-      const iconUrl = MARKER_ICONS[poi.area] || MARKER_ICONS.DEFAULT;
-
-      // マーカーとして表示するカスタムHTML要素を作成します
-      // AdvancedMarkerElementはHTML要素をマーカーとして扱えるため、より柔軟なカスタマイズが可能です
-      const iconElement = document.createElement('div');
-      // アイコン画像を背景として設定します（CSSのbackground-imageプロパティを使用）
-      iconElement.style.backgroundImage = `url(${iconUrl})`;
-      // 画像がコンテナに収まるように背景サイズを調整します（歪みを防止）
-      iconElement.style.backgroundSize = 'contain';
-      // アイコンの幅を設定します（サイズ一貫性のため固定値を使用）
-      iconElement.style.width = '36px';
-      // アイコンの高さを設定します（アスペクト比を維持）
-      iconElement.style.height = '36px';
-      // アクセシビリティ対応：タブ移動可能にし、キーボードフォーカスを受け取れるようにします
-      // これによりキーボードユーザーもマーカーを操作できるようになります
-      iconElement.setAttribute('tabindex', '0');
-      // CSSモジュールからスタイルを適用し、マーカーの基本的な外観を設定します
-      iconElement.classList.add(styles.markerContent);
-
-      // Google Maps AdvancedMarkerElementを使用してマーカーを作成します
-      // これは従来のMarkerよりも高度なカスタマイズと最適化が可能なAPIです
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        position: poi.location, // マーカーを表示する地理座標（緯度・経度）
-        map, // マーカーを表示するマップインスタンス
-        title: markerTitle, // 条件分岐したタイトルを設定
-        content: iconElement, // マーカーとして表示するカスタム要素（上で作成したHTML要素）
-        zIndex, // マーカー同士が重なった際の表示優先度（値が大きいほど前面に表示）
-      });
-
-      // マーカーがクリックされた時のイベントハンドラを定義します
-      // このハンドラは親コンポーネントから渡されたコールバック関数を呼び出し、POI情報を通知します
-      const handleClick = () => {
-        // 親コンポーネントから渡されたコールバック関数を呼び出し、クリックされたPOIを通知します
-        // これにより親コンポーネントで選択状態の更新などの処理が可能になります
-        onClick(poi);
-      };
-
-      // マーカーにクリックイベントのリスナーを追加します
-      marker.addListener('gmp-click', handleClick);
-
-      // キーボードアクセシビリティ：Enterキーまたはスペースキー押下時のイベントを追加
-      // これによりキーボードユーザーもマーカーを選択できるようになります
-      iconElement.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault(); // デフォルトの挙動（スクロールなど）を防止
-          handleClick();
-        }
-      });
-
-      // 作成したマーカーインスタンスをrefに保存して、後で参照できるようにします
-      // これにより他のuseEffectやイベントハンドラからマーカーにアクセス可能になります
-      markerRef.current = marker;
-
-      // POIのエリアタイプに基づいて、特別なスタイルやアニメーションを適用します
-      // 特定のマーカータイプを視覚的に強調するための処理です
-      if (poi.area === 'RECOMMEND') {
-        // 推奨エリアのマーカーには特別な外観と点滅アニメーションを適用します
-        // ユーザーの注目を集めるためのスタイルです
-        iconElement.classList.add(styles.markerRecommendation);
-        iconElement.classList.add(styles.markerBlinking);
-      } else if (poi.area === 'CURRENT_LOCATION') {
-        // 現在位置のマーカーには点滅アニメーションのみを適用します
-        // ユーザーの現在地を目立たせるための視覚効果です
-        iconElement.classList.add(styles.markerBlinking);
-      }
-
-      // コンポーネントがアンマウントされる時や依存関係が変更された時の
-      // クリーンアップ関数を返します。これはメモリリークを防ぐために重要です。
-      return () => {
+      try {
+        // マーカーの再作成を避けて既存のマーカーを更新する
         if (markerRef.current) {
-          // マーカーに関連するすべてのイベントリスナーを削除します
-          // これによりイベントリスナーのメモリリークを防ぎます
-          google.maps.event.clearInstanceListeners(markerRef.current);
-          // マーカーをマップから削除します（地図上から非表示にする）
-          markerRef.current.map = null;
-          // マーカーの参照をクリアします
-          markerRef.current = null;
+          // 既存マーカーの位置のみ更新
+          markerRef.current.position = poi.location;
+          return;
         }
-      };
-    }, [map, poi, onClick, zIndex]); // これらの値が変更された場合にマーカーを再作成します
+
+        const iconUrl = MARKER_ICONS[poi.area] || MARKER_ICONS.DEFAULT;
+        const iconElement = createMarkerElement(iconUrl);
+
+        // マーカーの作成
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          position: poi.location,
+          map,
+          title: poi.name,
+          content: iconElement,
+          zIndex,
+        });
+
+        markerRef.current = marker;
+
+        // POIのエリアタイプに基づくスタイル適用
+        if (poi.area === 'RECOMMEND') {
+          iconElement.classList.add(styles.markerRecommendation);
+          iconElement.classList.add(styles.markerBlinking);
+        } else if (poi.area === 'CURRENT_LOCATION') {
+          iconElement.classList.add(styles.markerBlinking);
+          iconElement.setAttribute('aria-label', '現在地');
+        }
+
+        // クリーンアップ関数
+        return () => {
+          if (markerRef.current) {
+            google.maps.event.clearInstanceListeners(markerRef.current);
+            markerRef.current.map = null;
+            markerRef.current = null;
+          }
+        };
+      } catch (error) {
+        console.error('マーカー作成中にエラーが発生しました:', error);
+      }
+    }, [map, poi.location, poi.area, zIndex, createMarkerElement]);
+
+    // イベントリスナーを別のuseEffectで管理
+    useEffect(() => {
+      if (!markerRef.current || !window.google?.maps) return;
+
+      try {
+        // クリックハンドラを定義（クロージャ内でpoiを参照するが依存配列には含めない）
+        const handleClick = () => onClick(poi);
+
+        // クリアな参照を持つキーボードイベントハンドラ
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
+        };
+
+        // 既存のリスナーをクリア
+        google.maps.event.clearInstanceListeners(markerRef.current);
+
+        // クリックイベントの追加
+        markerRef.current.addListener('gmp-click', handleClick);
+
+        // キーボードアクセシビリティ
+        const element = markerRef.current.content;
+        if (element instanceof HTMLElement) {
+          element.removeEventListener('keydown', handleKeyDown);
+          element.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+          if (markerRef.current) {
+            google.maps.event.clearInstanceListeners(markerRef.current);
+
+            if (markerRef.current.content instanceof HTMLElement) {
+              markerRef.current.content.removeEventListener('keydown', handleKeyDown);
+            }
+          }
+        };
+      } catch (error) {
+        console.error('マーカーイベント設定中にエラーが発生しました:', error);
+      }
+    }, [onClick]); // poiを依存配列から削除し、onClickのみに依存
 
     /**
      * マーカーの選択状態を管理するuseEffectフック
-     *
-     * このフックはisSelectedプロパティの変更を監視し、
-     * マーカーが選択されているかどうかに応じてスタイルを適用または削除します。
-     * 実際のDOMの直接操作を行うため、このような副作用はuseEffect内で処理することが適切です。
-     *
-     * 依存配列にはisSelectedとpoiが含まれており、
-     * これらが変更された時にマーカーの視覚的な選択状態を更新します。
      */
     useEffect(() => {
-      // マーカーが存在し、そのコンテンツがHTML要素である場合にのみ処理を行います
-      // これにより、マーカーが初期化される前にスタイル変更を試みるエラーを防ぎます
-      if (markerRef.current && markerRef.current.content instanceof HTMLElement) {
-        if (isSelected) {
-          // マーカーが選択されている場合、選択状態を示すCSSクラスを追加します
-          // これにより、選択されたマーカーを視覚的に強調表示します
-          markerRef.current.content.classList.add(styles.markerSelected);
-          // アクセシビリティ：選択状態をARIA属性でも表現
-          // スクリーンリーダーユーザーに選択状態を通知するために重要です
-          markerRef.current.content.setAttribute('aria-selected', 'true');
-        } else {
-          // マーカーが選択されていない場合、選択状態を示すCSSクラスを削除します
-          markerRef.current.content.classList.remove(styles.markerSelected);
-          // アクセシビリティ：選択解除状態をARIA属性で表現
-          markerRef.current.content.setAttribute('aria-selected', 'false');
-        }
+      // マーカー参照がない場合は何もしない
+      if (!markerRef.current || !(markerRef.current.content instanceof HTMLElement)) {
+        return;
       }
-    }, [isSelected, poi]); // 選択状態またはPOI自体が変更された場合に実行します
+
+      const content = markerRef.current.content as HTMLElement;
+
+      if (isSelected) {
+        content.classList.add(styles.markerSelected);
+        content.setAttribute('aria-selected', 'true');
+      } else {
+        content.classList.remove(styles.markerSelected);
+        content.setAttribute('aria-selected', 'false');
+      }
+    }, [isSelected]); // poiを依存配列から削除し、isSelectedだけに依存
 
     // このコンポーネントは直接何もレンダリングしません
     // 代わりに、Google Maps APIを通じてマップ上にマーカーを表示します

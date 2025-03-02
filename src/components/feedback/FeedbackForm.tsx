@@ -10,11 +10,11 @@
 
 // emailjsライブラリをインポート - フィードバックをメールとして送信するために使用
 import emailjs from '@emailjs/browser';
-// Reactと必要なフックをインポート - コンポーネントの状態管理とライフサイクル管理に使用
+// Reactと必要なフックをインポート
 import React, { useState, useEffect } from 'react';
-// CSSファイルをインポート - コンポーネントのスタイルを適用するため
-import './FeedbackForm.module.css';
-// エラーメッセージの定数をインポート - 一貫したエラーメッセージを表示するため
+// CSSファイルをインポート - 正しい形式に修正
+import styles from './FeedbackForm.module.css';
+// エラーメッセージの定数をインポート
 import { ERROR_MESSAGES } from '../../utils/constants';
 // 型定義をインポート - TypeScriptの型安全性を確保するため
 import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
@@ -146,7 +146,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   return (
     // フィードバックフォームのラッパー
     // role="dialog"とaria-labelledbyでアクセシビリティを確保
-    <div className="feedback-form-wrapper" role="dialog" aria-labelledby="feedback-title">
+    <div className={styles.feedbackFormWrapper} role="dialog" aria-labelledby="feedback-title">
       {/* 閉じるボタン - フォームを閉じるためのボタン */}
       <button className="close-button" onClick={onClose} aria-label="閉じる">
         ×
