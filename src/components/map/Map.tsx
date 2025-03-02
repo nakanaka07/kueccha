@@ -204,7 +204,7 @@ export const Map: React.FC<ExtendedMapProps> = ({
           },
           fullscreenControl: true,
           fullscreenControlOptions: {
-            position: 9,
+            position: 8,
           },
           zoomControl: true,
           zoomControlOptions: {

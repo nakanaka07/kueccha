@@ -259,7 +259,7 @@ export const MAPS_CONFIG = {
     },
     fullscreenControl: true,
     fullscreenControlOptions: {
-      position: 9,
+      position: 8,
     },
     zoomControl: true,
     zoomControlOptions: {
