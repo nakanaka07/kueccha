@@ -1,66 +1,85 @@
 import { useCallback } from 'react';
-import { ERROR_MESSAGES, MAPS_CONFIG } from '../utils/constants';
-import type { LatLngLiteral } from '../utils/types';
+import CONFIG from '../utils/config';
+import { ERROR_MESSAGES } from '../utils/constants';
+import type { GeolocationError, LatLngLiteral } from '../utils/types';
 
-type GeolocationOptions = {
-  enableHighAccuracy?: boolean;
-  timeout?: number;
-  maximumAge?: number;
-};
-
+/**
+ * 位置情報取得のカスタムフック
+ *
+ * @returns getCurrentPosition - 現在位置を取得する関数
+ */
 export const useGeolocation = () => {
+  /**
+   * 現在の位置情報を取得する
+   *
+   * @param callbacks - 成功・失敗時のコールバック関数
+   * @param options - Geolocation APIのオプション（省略可）
+   */
   const getCurrentPosition = useCallback(
     (
       callbacks: {
         onSuccess: (location: LatLngLiteral) => void;
-        onError: (error: string) => void;
+        onError: (error: GeolocationError) => void;
       },
-      options?: GeolocationOptions,
+      options?: Partial<typeof CONFIG.maps.geolocation>,
     ) => {
-      // デフォルト設定をconstantsから取得し、オプションでオーバーライド可能に
-      const geolocationOptions = {
-        enableHighAccuracy: MAPS_CONFIG.geolocation.highAccuracy,
-        timeout: MAPS_CONFIG.geolocation.timeout,
-        maximumAge: MAPS_CONFIG.geolocation.maxAge,
-        ...options,
-      };
-
+      // ブラウザのgeolocation APIが利用可能か確認
       if (!navigator.geolocation) {
-        callbacks.onError('このブラウザでは位置情報がサポートされていません。');
+        callbacks.onError({
+          code: -1,
+          message: 'このブラウザでは位置情報がサポートされていません。',
+        });
         return;
       }
 
+      // CONFIG設定と引数のオプションをマージ
+      const geolocationOptions = {
+        enableHighAccuracy: CONFIG.maps.geolocation.highAccuracy,
+        timeout: CONFIG.maps.geolocation.timeout,
+        maximumAge: CONFIG.maps.geolocation.maxAge,
+        ...options,
+      };
+
+      // 位置情報を取得
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const location = {
+          const location: LatLngLiteral = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
           callbacks.onSuccess(location);
         },
         (error) => {
-          let errorMessage;
+          let message: string;
+          let details: string | undefined;
 
+          // エラーコードに応じたメッセージを設定
           switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
+            case GeolocationPositionError.PERMISSION_DENIED:
+              message = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
+              details = '位置情報の使用が許可されていません。ブラウザの設定を確認してください。';
               break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
+            case GeolocationPositionError.POSITION_UNAVAILABLE:
+              message = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
+              details = '位置情報を取得できませんでした。ネットワーク接続を確認してください。';
               break;
-            case error.TIMEOUT:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
+            case GeolocationPositionError.TIMEOUT:
+              message = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
+              details = `位置情報の取得がタイムアウトしました（${CONFIG.maps.geolocation.timeout}ms）。`;
               break;
             default:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
+              message = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
+              details = error.message || '詳細不明のエラーが発生しました。';
               break;
           }
 
-          callbacks.onError(errorMessage);
+          console.warn(`位置情報エラー [${error.code}]: ${message}`, error);
+          callbacks.onError({ code: error.code, message, details });
         },
         geolocationOptions,
       );
     },
+    // 依存配列は空のまま - 外部依存がないため
     [],
   );
 

@@ -1,14 +1,12 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Map.module.css';
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
 import { MapComponentProps, Poi, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 
-if (!(MAPS_CONFIG.apiKey && MAPS_CONFIG.mapId)) {
-  throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
-}
+// トップレベルの例外チェックを削除
 
 const MAP_ARIA_LABEL = '地図コンテンツ';
 const LOADING_ARIA_LABEL = '地図読み込み中';
@@ -24,21 +22,22 @@ const getMarkerZIndex = (areaType: AreaType): number => {
   }
 };
 
-interface ExtendedMapProps extends MapComponentProps {
-  pois?: Poi[];
-  selectedPoi?: Poi | null;
-  onMarkerClick?: (poi: Poi) => void;
-}
-
 export const Map: React.FC<ExtendedMapProps> = ({
   onLoad,
   pois = [],
   selectedPoi = null,
   onMarkerClick = () => {},
 }) => {
+  // 設定チェックをコンポーネント内部で行う
+  useEffect(() => {
+    if (!(MAPS_CONFIG.apiKey && MAPS_CONFIG.mapId)) {
+      setMapError(new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING));
+    }
+  }, []);
+
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: MAPS_CONFIG.apiKey,
-    mapIds: [MAPS_CONFIG.mapId],
+    googleMapsApiKey: MAPS_CONFIG.apiKey || '',
+    mapIds: MAPS_CONFIG.mapId ? [MAPS_CONFIG.mapId] : [],
     libraries: MAPS_CONFIG.libraries,
     version: MAPS_CONFIG.version,
     language: MAPS_CONFIG.language,
@@ -62,6 +61,31 @@ export const Map: React.FC<ExtendedMapProps> = ({
     window.location.reload();
   }, []);
 
+  // マーカーのレンダリングを効率化
+  const renderMarkers = useCallback(() => {
+    if (!mapRef.current || pois.length === 0) return null;
+
+    return pois.map((poi) => (
+      <Marker
+        key={poi.id}
+        poi={poi}
+        map={mapRef.current}
+        onClick={onMarkerClick}
+        isSelected={selectedPoi?.id === poi.id}
+        zIndex={getMarkerZIndex(poi.area)}
+      />
+    ));
+  }, [pois, selectedPoi, onMarkerClick]);
+
+  useEffect(() => {
+    // マップのイベントリスナーなどをセットアップする場合はここで行う
+
+    return () => {
+      // クリーンアップ処理
+      mapRef.current = null;
+    };
+  }, []);
+
   if (!isLoaded) {
     return (
       <div className={styles.loadingContainer} aria-label={LOADING_ARIA_LABEL} role="progressbar" aria-busy="true">
@@ -71,11 +95,25 @@ export const Map: React.FC<ExtendedMapProps> = ({
   }
 
   if (loadError) {
-    return <MapError message={loadError.message || ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={handleRetry} />;
+    console.error('Google Maps API読み込みエラー:', loadError);
+    return (
+      <MapError
+        message={loadError.message || ERROR_MESSAGES.MAP.LOAD_FAILED}
+        details="Google Maps APIの読み込みに失敗しました。ネットワーク接続とAPIキーを確認してください。"
+        onRetry={handleRetry}
+      />
+    );
   }
 
   if (mapError) {
-    return <MapError message={mapError.message || ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={handleRetry} />;
+    console.error('マップエラー:', mapError);
+    return (
+      <MapError
+        message={mapError.message || ERROR_MESSAGES.MAP.LOAD_FAILED}
+        details="マップの表示中にエラーが発生しました。"
+        onRetry={handleRetry}
+      />
+    );
   }
 
   return (
@@ -84,51 +122,11 @@ export const Map: React.FC<ExtendedMapProps> = ({
         mapContainerClassName={styles.mapContainer}
         center={MAPS_CONFIG.defaultCenter}
         zoom={MAPS_CONFIG.defaultZoom}
-        options={{
-          mapId: MAPS_CONFIG.mapId,
-          mapTypeId: google.maps.MapTypeId.ROADMAP,
-          disableDefaultUI: false,
-          disableDoubleClickZoom: false,
-          scrollwheel: true,
-          clickableIcons: true,
-          gestureHandling: 'cooperative',
-          mapTypeControl: true,
-          mapTypeControlOptions: {
-            style: 2,
-            position: 1,
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
-          },
-          fullscreenControl: true,
-          fullscreenControlOptions: {
-            position: 3,
-          },
-          zoomControl: true,
-          zoomControlOptions: {
-            position: 7,
-          },
-          streetViewControl: true,
-          streetViewControlOptions: {
-            position: 7,
-          },
-          cameraControl: true,
-          cameraControlOptions: {
-            position: 7,
-          },
-        }}
+        options={MAPS_CONFIG.options}
         onLoad={handleMapLoad}
         aria-label={MAP_ARIA_LABEL}
       >
-        {mapRef.current &&
-          pois.map((poi) => (
-            <Marker
-              key={poi.id}
-              poi={poi}
-              map={mapRef.current}
-              onClick={onMarkerClick}
-              isSelected={selectedPoi?.id === poi.id}
-              zIndex={getMarkerZIndex(poi.area)}
-            />
-          ))}
+        {renderMarkers()}
       </GoogleMap>
     </div>
   );

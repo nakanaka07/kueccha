@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useGeolocation } from './useGeolocation';
-import type { LatLngLiteral } from '../utils/types';
+import type { LatLngLiteral, GeolocationError } from '../utils/types';
 
 export const useLocationWarning = () => {
   const [locationState, setLocationState] = useState({
@@ -21,12 +21,12 @@ export const useLocationWarning = () => {
     }));
   }, []);
 
-  // エラーハンドラを共通化
-  const handleLocationError = useCallback((errorMessage: string) => {
-    console.warn(`位置情報エラー: ${errorMessage}`);
+  // エラーハンドラをGeolocationError型に対応
+  const handleLocationError = useCallback((error: GeolocationError) => {
+    console.warn(`位置情報エラー: ${error.message}`);
     setLocationState((prev) => ({
       ...prev,
-      error: errorMessage,
+      error: error.message,
       currentLocation: null,
     }));
   }, []);

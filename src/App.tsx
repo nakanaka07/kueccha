@@ -3,33 +3,27 @@ import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary, LoadingIndicators, LocationWarning, Map, MapControls } from './components';
 import { useAppState } from './hooks/useAppState';
+import { useCurrentLocationPoi } from './hooks/useCurrentLocationPoi';
+import { useErrorHandling } from './hooks/useErrorHandling';
 import { useLocationWarning } from './hooks/useLocationWarning';
 import { useMapNorthControl } from './hooks/useMapNorthControl';
 import { useSheetData } from './hooks/useSheetData';
-import { ERROR_MESSAGES } from './utils/constants';
-import type { Poi } from './utils/types';
+import { APP, ERROR_MESSAGES } from './utils/constants';
 
+// メインコンポーネント
 const App: React.FC = () => {
   const { pois, error: poisError } = useSheetData();
-
   const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
 
-  const currentLocationPoi: Poi | null = useMemo(() => {
-    if (!currentLocation) return null;
+  // カスタムフックで現在地POIを生成
+  const currentLocationPoi = useCurrentLocationPoi(currentLocation);
 
-    return {
-      id: 'current-location',
-      name: '現在地',
-      location: currentLocation,
-      area: 'CURRENT_LOCATION',
-      genre: '現在地',
-      category: '現在地',
-    };
-  }, [currentLocation]);
-
+  // POIリストの結合（不要なレンダリングを防ぐためのメモ化）
   const allPois = useMemo(() => {
-    const basePois = pois || [];
-    return currentLocationPoi ? [...basePois, currentLocationPoi] : basePois;
+    if (!pois) {
+      return currentLocationPoi ? [currentLocationPoi] : [];
+    }
+    return currentLocationPoi ? [currentLocationPoi, ...pois] : pois;
   }, [pois, currentLocationPoi]);
 
   const {
@@ -37,24 +31,24 @@ const App: React.FC = () => {
     isMapLoaded,
     isMapLoading,
     loading: { isVisible: isLoadingVisible, isFading },
-    error,
+    error: mapError,
     actions,
     selectedPoi,
   } = useAppState(allPois);
 
-  const { resetNorth } = useMapNorthControl(mapInstance);
+  const { onResetNorth: resetNorth } = useMapNorthControl(mapInstance);
 
+  // エラー処理のロジックを分離したカスタムフックを使用
+  const { combinedError, errorMessage } = useErrorHandling(mapError, poisError);
+
+  // 現在地取得のコールバック
   const handleGetCurrentLocation = useCallback(() => {
     getCurrentLocationInfo();
   }, [getCurrentLocationInfo]);
 
-  const errorMessage = useMemo(() => {
-    if (!error && !poisError) return null;
-    return (error || poisError)?.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
-  }, [error, poisError]);
-
+  // ローディングメッセージの生成
   const loadingMessage = useMemo(() => {
-    return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
+    return isMapLoading ? APP.ui.messages.loading.map : APP.ui.messages.loading.data;
   }, [isMapLoading]);
 
   return (
@@ -63,14 +57,14 @@ const App: React.FC = () => {
         <div className={styles.appContainer}>
           {isLoadingVisible && (
             <LoadingIndicators.Fallback
-              isLoading={!error && !poisError}
+              isLoading={!combinedError}
               isLoaded={false}
-              error={error || poisError ? new Error(errorMessage || '') : null}
+              error={combinedError ? new Error(errorMessage) : null}
               message={loadingMessage}
               variant="spinner"
               spinnerClassName={styles.fullPageLoader}
               isFading={isFading}
-              onRetry={error || poisError ? actions.retryMapLoad : undefined}
+              onRetry={combinedError ? actions.retryMapLoad : undefined}
             />
           )}
 
@@ -91,7 +85,16 @@ const App: React.FC = () => {
   );
 };
 
-const container = document.getElementById('app');
-if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
-const root = createRoot(container);
-root.render(<App />);
+// レンダリングロジックをメイン関数に分離
+function renderApp() {
+  const container = document.getElementById('app');
+  if (!container) throw new Error(ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
+
+  const root = createRoot(container);
+  root.render(<App />);
+}
+
+// アプリケーションのレンダリング
+renderApp();
+
+export default App;
