@@ -7,7 +7,7 @@
   color: var(--map-text);
 }
 
-.mapContainer>div {
+.mapContainer > div {
   position: absolute;
   inset: 0;
   width: 100%;

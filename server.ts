@@ -1,9 +1,9 @@
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 

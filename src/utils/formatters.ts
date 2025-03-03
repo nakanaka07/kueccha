@@ -45,11 +45,7 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
               },
               truncateUrl(content, 30),
             )
-          : React.createElement(
-              'span',
-              { key: `${elementKey}-text` },
-              content.trim(),
-            ),
+          : React.createElement('span', { key: `${elementKey}-text` }, content.trim()),
       ]);
     } catch (error) {
       console.error('Error creating element:', error);

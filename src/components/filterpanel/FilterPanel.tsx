@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import './FilterPanel.module.css';
-import useCurrentLocation from '../../hooks/useCurrentLocation';
 import { MARKER_CONFIG, AREAS } from '../../utils/constants';
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
@@ -11,10 +10,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onCloseClick,
   localAreaVisibility,
   setLocalAreaVisibility,
-  setShowWarning,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
-  const { locationError, handleCurrentLocationChange } = useCurrentLocation(setShowWarning);
 
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
@@ -84,12 +81,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </label>
             ))}
             <label className="filter-item">
-              <input
-                type="checkbox"
-                checked={localAreaVisibility.CURRENT_LOCATION}
-                onChange={(e) => handleCurrentLocationChange(e.target.checked)}
-                aria-label="現在地を表示"
-              />
+              <input type="checkbox" checked={localAreaVisibility.CURRENT_LOCATION} aria-label="現在地を表示" />
               <span className="custom-checkbox" style={{ borderColor: MARKER_CONFIG.colors.CURRENT_LOCATION }}></span>
               <div className="filter-details">
                 <img
@@ -104,11 +96,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </div>
             </label>
           </div>
-          {locationError && (
-            <div className="error-message" role="alert">
-              {locationError}
-            </div>
-          )}
         </div>
       )}
     </div>

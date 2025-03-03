@@ -15,12 +15,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
     }
   }, [query, pois]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
-    },
-    [],
-  );
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  }, []);
 
   const handleSearch = useCallback(() => {
     onSearch(query);
@@ -49,13 +46,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   return (
     <div className="search-bar">
-      <input
-        type="text"
-        value={query}
-        onChange={handleInputChange}
-        placeholder="検索..."
-        className="search-input"
-      />
+      <input type="text" value={query} onChange={handleInputChange} placeholder="検索..." className="search-input" />
 
       <div className="search-buttons">
         <button onClick={handleSearch} className="search-button">
@@ -73,11 +64,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
       <div className="suggestions">
         {suggestions.map((suggestion) => (
-          <div
-            key={suggestion.id}
-            onClick={() => handleSuggestionClick(suggestion)}
-            className="suggestion-item"
-          >
+          <div key={suggestion.id} onClick={() => handleSuggestionClick(suggestion)} className="suggestion-item">
             {suggestion.name}
           </div>
         ))}

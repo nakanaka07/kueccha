@@ -13,7 +13,6 @@ export type MapErrorProps = {
 export type MapControlsProps = {
   onResetNorth: () => void;
   onGetCurrentLocation: () => void;
-  onFitMarkers: () => void;
 };
 export type MenuActionType = {
   handleAreaClick: () => void;

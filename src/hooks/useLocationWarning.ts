@@ -1,46 +1,66 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useGeolocation } from './useGeolocation';
 import type { LatLngLiteral } from '../utils/types';
 
 export const useLocationWarning = () => {
-  const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [showWarning, setShowWarning] = useState(false);
+  const [locationState, setLocationState] = useState({
+    currentLocation: null as LatLngLiteral | null,
+    error: null as string | null,
+    showWarning: false,
+  });
+
   const { getCurrentPosition } = useGeolocation();
 
-  const handleCurrentLocationChange = (isChecked: boolean) => {
-    if (isChecked) {
-      getCurrentPosition({
-        onSuccess: (location) => {
-          setCurrentLocation(location);
-          setShowWarning(true);
-          setLocationError(null);
-        },
-        onError: (errorMessage) => {
-          setLocationError(errorMessage);
-          setCurrentLocation(null);
-        },
-      });
-    } else {
-      setCurrentLocation(null);
-      setShowWarning(false);
-      setLocationError(null);
-    }
-  };
+  // 成功ハンドラを共通化
+  const handleLocationSuccess = useCallback((location: LatLngLiteral) => {
+    setLocationState((prev) => ({
+      ...prev,
+      currentLocation: location,
+      showWarning: true,
+      error: null,
+    }));
+  }, []);
 
-  const getCurrentLocationInfo = () => {
+  // エラーハンドラを共通化
+  const handleLocationError = useCallback((errorMessage: string) => {
+    console.warn(`位置情報エラー: ${errorMessage}`);
+    setLocationState((prev) => ({
+      ...prev,
+      error: errorMessage,
+      currentLocation: null,
+    }));
+  }, []);
+
+  const handleCurrentLocationChange = useCallback(
+    (isChecked: boolean) => {
+      if (isChecked) {
+        getCurrentPosition({
+          onSuccess: handleLocationSuccess,
+          onError: handleLocationError,
+        });
+      } else {
+        setLocationState({
+          currentLocation: null,
+          showWarning: false,
+          error: null,
+        });
+      }
+    },
+    [getCurrentPosition, handleLocationSuccess, handleLocationError],
+  );
+
+  const getCurrentLocationInfo = useCallback(() => {
     getCurrentPosition({
-      onSuccess: (location) => {
-        setCurrentLocation(location);
-        setShowWarning(true);
-        setLocationError(null);
-      },
-      onError: (errorMessage) => {
-        setLocationError(errorMessage);
-        setCurrentLocation(null);
-      },
+      onSuccess: handleLocationSuccess,
+      onError: handleLocationError,
     });
-  };
+  }, [getCurrentPosition, handleLocationSuccess, handleLocationError]);
+
+  // 分割代入で旧インターフェースと互換性を保つ
+  const { currentLocation, error: locationError, showWarning } = locationState;
+  const setShowWarning = useCallback((show: boolean) => {
+    setLocationState((prev) => ({ ...prev, showWarning: show }));
+  }, []);
 
   return {
     currentLocation,

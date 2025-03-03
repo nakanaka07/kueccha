@@ -21,7 +21,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
   isLoading,
   isLoaded,
   delayMs = 0,
-  fadeDuration = 300,
+  fadeDuration = 5000,
 }) => {
   const [shouldRender, setShouldRender] = useState(delayMs === 0);
 

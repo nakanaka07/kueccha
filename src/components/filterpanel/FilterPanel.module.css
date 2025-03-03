@@ -58,7 +58,7 @@
   display: none;
 }
 
-.filter-item input[type='checkbox']+.custom-checkbox {
+.filter-item input[type='checkbox'] + .custom-checkbox {
   width: 16px;
   height: 16px;
   border: 2px solid #007bff;
@@ -69,11 +69,11 @@
   flex-shrink: 0;
 }
 
-.filter-item input[type='checkbox']:checked+.custom-checkbox {
+.filter-item input[type='checkbox']:checked + .custom-checkbox {
   background-color: #007bff;
 }
 
-.filter-item input[type='checkbox']:checked+.custom-checkbox::after {
+.filter-item input[type='checkbox']:checked + .custom-checkbox::after {
   content: '';
   position: absolute;
   top: 2px;

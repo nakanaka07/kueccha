@@ -13,11 +13,7 @@ export const useAppState = (pois: Poi[]) => {
   const locationWarning = useLocationWarning();
   const [error, setError] = useState<Error | null>(null);
 
-  const { isVisible, isFading } = useLoadingState(
-    mapState.isLoading,
-    mapState.isMapLoaded,
-    5000,
-  );
+  const { isVisible, isFading } = useLoadingState(mapState.isLoading, mapState.isMapLoaded, 5000);
 
   const retryMapLoad = useCallback(() => {
     setError(null);

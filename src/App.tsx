@@ -9,8 +9,6 @@ import { useSheetData } from './hooks/useSheetData';
 import { ERROR_MESSAGES } from './utils/constants';
 import type { Poi } from './utils/types';
 
-const MARKER_ZOOM_LEVEL = 15;
-
 const App: React.FC = () => {
   const { pois, error: poisError } = useSheetData();
 
@@ -42,7 +40,6 @@ const App: React.FC = () => {
     error,
     actions,
     selectedPoi,
-    areaVisibility,
   } = useAppState(allPois);
 
   const { resetNorth } = useMapNorthControl(mapInstance);
@@ -50,28 +47,6 @@ const App: React.FC = () => {
   const handleGetCurrentLocation = useCallback(() => {
     getCurrentLocationInfo();
   }, [getCurrentLocationInfo]);
-
-  const handleFitMarkers = useCallback(() => {
-    if (mapInstance && allPois && allPois.length > 0) {
-      const visiblePois = allPois.filter((poi) => poi.id === 'current-location' || areaVisibility[poi.area]);
-
-      if (visiblePois.length === 0) return;
-
-      const bounds = new google.maps.LatLngBounds();
-      visiblePois.forEach((poi) => {
-        bounds.extend(poi.location);
-      });
-
-      (mapInstance as google.maps.Map).fitBounds(bounds);
-
-      const zoomListener = google.maps.event.addListener(mapInstance, 'idle', () => {
-        if ((mapInstance?.getZoom() ?? 0) > 17) {
-          mapInstance?.setZoom(17);
-        }
-        google.maps.event.removeListener(zoomListener);
-      });
-    }
-  }, [mapInstance, allPois, areaVisibility]);
 
   const errorMessage = useMemo(() => {
     if (!error && !poisError) return null;
@@ -81,29 +56,6 @@ const App: React.FC = () => {
   const loadingMessage = useMemo(() => {
     return isMapLoading ? ERROR_MESSAGES.LOADING.MAP : ERROR_MESSAGES.LOADING.DATA;
   }, [isMapLoading]);
-
-  const handleMarkerClick = useCallback(
-    (poi: Poi) => {
-      actions.setSelectedPoi(poi);
-
-      if (!mapInstance) return;
-
-      try {
-        mapInstance.panTo(poi.location);
-        mapInstance.setZoom(MARKER_ZOOM_LEVEL);
-
-        const srNotification = document.createElement('div');
-        srNotification.className = styles.srOnly;
-        srNotification.setAttribute('aria-live', 'polite');
-        srNotification.textContent = `${poi.name}を選択しました`;
-        document.body.appendChild(srNotification);
-        setTimeout(() => document.body.removeChild(srNotification), 3000);
-      } catch (error) {
-        console.error('マーカー選択時にエラーが発生しました:', error);
-      }
-    },
-    [mapInstance, actions.setSelectedPoi],
-  );
 
   return (
     <div className={styles.app}>
@@ -128,18 +80,9 @@ const App: React.FC = () => {
             </div>
           )}
 
-          <Map
-            onLoad={actions.handleMapLoad}
-            pois={allPois}
-            selectedPoi={selectedPoi}
-            onMarkerClick={handleMarkerClick}
-          />
+          <Map onLoad={actions.handleMapLoad} pois={allPois} selectedPoi={selectedPoi} />
 
-          <MapControls
-            onResetNorth={resetNorth}
-            onGetCurrentLocation={handleGetCurrentLocation}
-            onFitMarkers={handleFitMarkers}
-          />
+          <MapControls onResetNorth={resetNorth} onGetCurrentLocation={handleGetCurrentLocation} />
 
           {showWarning && <LocationWarning onClose={() => setShowWarning(false)} />}
         </div>

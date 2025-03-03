@@ -1,22 +1,11 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './HamburgerMenu.module.css';
 import { MENU_ITEMS } from '../../utils/constants';
 import SearchBar from '../searchbar/SearchBar';
 import SearchResults from '../searchresults/SearchResults';
 import type { HamburgerMenuProps } from '../../utils/types';
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
-  pois,
-  search,
-  searchResults,
-  handleSearchResultClick,
-}) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResults, handleSearchResultClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

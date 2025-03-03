@@ -1,15 +1,10 @@
 import React from 'react';
-import { MapControlsProps } from '../../utils/types';
 import styles from './MapControls.module.css';
-import fitMarkersIcon from '../../utils/images/ano_icon02.png';
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
 import currentLocationIcon from '../../utils/images/shi_icon04.png';
+import { MapControlsProps } from '../../utils/types';
 
-export const MapControls: React.FC<MapControlsProps> = ({
-  onResetNorth,
-  onGetCurrentLocation,
-  onFitMarkers,
-}) => (
+export const MapControls: React.FC<MapControlsProps> = ({ onResetNorth, onGetCurrentLocation }) => (
   <div className={styles.mapControlsContainer}>
     <button
       onClick={onResetNorth}
@@ -26,14 +21,6 @@ export const MapControls: React.FC<MapControlsProps> = ({
       aria-label="現在地を取得"
     >
       <img src={currentLocationIcon} alt="" aria-hidden="true" />
-    </button>
-    <button
-      onClick={onFitMarkers}
-      className={styles.mapControlButton}
-      title="すべてのマーカーが表示される範囲に調整します。"
-      aria-label="マーカー全体を表示"
-    >
-      <img src={fitMarkersIcon} alt="" aria-hidden="true" />
     </button>
   </div>
 );

@@ -133,7 +133,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .search-input,
   .search-button,
   .suggestion-item {

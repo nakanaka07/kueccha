@@ -14,8 +14,7 @@ export function useLoadingState(isLoading: boolean, isLoaded: boolean, fadeDurat
       }, fadeDuration);
 
       return () => clearTimeout(timer);
-    }
-    else {
+    } else {
       setIsFading(false);
       setIsVisible(true);
     }

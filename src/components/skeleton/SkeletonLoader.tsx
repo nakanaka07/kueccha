@@ -12,12 +12,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type, width = '1
   const items = Array(count)
     .fill(0)
     .map((_, index) => (
-      <div
-        key={index}
-        className={`${styles.skeleton} ${styles[type]}`}
-        style={{ width, height }}
-        aria-hidden="true"
-      />
+      <div key={index} className={`${styles.skeleton} ${styles[type]}`} style={{ width, height }} aria-hidden="true" />
     ));
 
   return <>{items}</>;
