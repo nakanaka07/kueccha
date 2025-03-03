@@ -34,4 +34,4 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   );
 };
 
-export default LocationWarning;
+export { LocationWarning };

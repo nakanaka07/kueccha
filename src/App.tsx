@@ -1,11 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
-import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
-import { LoadingIndicators } from './components/loading';
-import LocationWarning from './components/locationwarning/LocationWarning';
-import Map from './components/map/Map';
-import { MapControls } from './components/mapcontrols/MapControls';
+import { ErrorBoundary, LoadingIndicators, LocationWarning, Map, MapControls } from './components';
 import { useAppState } from './hooks/useAppState';
 import { useLocationWarning } from './hooks/useLocationWarning';
 import { useMapNorthControl } from './hooks/useMapNorthControl';
@@ -18,12 +14,7 @@ const MARKER_ZOOM_LEVEL = 15;
 const App: React.FC = () => {
   const { pois, error: poisError } = useSheetData();
 
-  const {
-    currentLocation,
-    showWarning,
-    setShowWarning,
-    getCurrentLocationInfo,
-  } = useLocationWarning();
+  const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
 
   const currentLocationPoi: Poi | null = useMemo(() => {
     if (!currentLocation) return null;
