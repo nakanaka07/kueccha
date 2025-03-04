@@ -7,7 +7,7 @@ import { useCurrentLocationPoi } from './hooks/useCurrentLocationPoi';
 import { useErrorHandling } from './hooks/useErrorHandling';
 import { useLocationWarning } from './hooks/useLocationWarning';
 import { useMapNorthControl } from './hooks/useMapNorthControl';
-import { useSheetData } from './hooks/useSheetData';
+import { useSheetData } from './features/data';
 import { APP, ERROR_MESSAGES } from './utils/constants';
 
 // メインコンポーネント

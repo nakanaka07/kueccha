@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useGeolocation } from './useGeolocation';
-import type { LatLngLiteral, GeolocationError } from '../utils/types';
+import { useGeolocation } from '../features/map';
+import type { LatLngLiteral, GeolocationError } from '../types/common';
 
 export const useLocationWarning = () => {
   const [locationState, setLocationState] = useState({

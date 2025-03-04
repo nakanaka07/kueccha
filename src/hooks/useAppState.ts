@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAreaVisibility } from './useAreaVisibility';
 import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
-import { useMapState } from './useMapState';
-import { usePoiState } from './usePoiState';
-import { CONFIG } from '../utils/config';
-import { APP, ERROR_MESSAGES } from '../utils/constants';
-import type { Poi, AppError, LatLngLiteral } from '../utils/types';
+import { CONFIG } from '../constants/config';
+import { ERROR_MESSAGES } from '../constants/messages';
+import { LOADING_DELAY } from '../constants/ui';
+import { useAreaVisibility } from '../features/filter/hooks/useAreaVisibility';
+import { useMapState } from '../features/map/hooks/useMapState';
+import { usePoiState } from '../features/poi/hooks/usePoiState';
+import type { Poi, AppError, LatLngLiteral } from '../types/common';
 
 export const useAppState = (pois: Poi[]) => {
   const mapState = useMapState();
@@ -16,12 +17,8 @@ export const useAppState = (pois: Poi[]) => {
   const [error, setError] = useState<AppError | null>(null);
   const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
 
-  // APP.ui.loadingDelayから遅延時間を取得して使用
-  const { isVisible, isFading } = useLoadingState(
-    mapState.isLoading,
-    mapState.isMapLoaded,
-    APP.ui.loadingDelay || 5000,
-  );
+  // 遅延時間を設定
+  const { isVisible, isFading } = useLoadingState(mapState.isLoading, mapState.isMapLoaded, LOADING_DELAY || 5000);
 
   // CONFIG.maps.geolocationの設定を使用して位置情報を取得
   const getUserLocation = useCallback(() => {
@@ -100,7 +97,6 @@ export const useAppState = (pois: Poi[]) => {
   }, [mapState.isMapLoaded, currentLocation, getUserLocation, error]);
 
   // エラー状態の監視
-  // mapStateからエラー情報を取得する代わりに、他の方法でエラーを検出
   useEffect(() => {
     // マップ読み込み中にエラーが発生した場合の処理
     if (!mapState.isMapLoaded && !mapState.isLoading && !error) {

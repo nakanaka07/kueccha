@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BACKGROUND_HIDE_DELAY } from '../utils/constants';
+import { BACKGROUND_HIDE_DELAY } from '../constants/ui';
 
 /**
  * ローディング状態とフェードアウト処理を管理するカスタムフック

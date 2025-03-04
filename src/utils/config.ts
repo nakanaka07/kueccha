@@ -1,5 +1,6 @@
-import { APP } from './constants';
-import type { Config } from './types';
+// 更新されたインポートパス
+import { APP } from '../constants'; // './constants'から変更
+import type { Config } from '../types/common'; // './types'から変更
 
 const validateEnvironmentVariables = () => {
   const requiredEnvVars = {

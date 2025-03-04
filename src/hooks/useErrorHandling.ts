@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { ERROR_MESSAGES } from '../utils/constants';
-import type { AppError } from '../utils/types';
+import { ERROR_MESSAGES } from '../constants/messages';
+import type { AppError } from '../types/common';
 
 /**
  * エラーコードに基づいて適切なエラーメッセージを取得
