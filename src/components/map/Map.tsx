@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Map.module.css';
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
-import { MapComponentProps, Poi, AreaType } from '../../utils/types';
+import { ExtendedMapProps, AreaType } from '../../utils/types';
 import { Marker } from '../marker/Marker';
 
 // トップレベルの例外チェックを削除
@@ -122,7 +122,13 @@ export const Map: React.FC<ExtendedMapProps> = ({
         mapContainerClassName={styles.mapContainer}
         center={MAPS_CONFIG.defaultCenter}
         zoom={MAPS_CONFIG.defaultZoom}
-        options={MAPS_CONFIG.options}
+        options={{
+          ...MAPS_CONFIG.options,
+          mapTypeControlOptions: {
+            ...MAPS_CONFIG.options.mapTypeControlOptions,
+            mapTypeIds: Array.from(MAPS_CONFIG.options.mapTypeControlOptions.mapTypeIds),
+          },
+        }}
         onLoad={handleMapLoad}
         aria-label={MAP_ARIA_LABEL}
       >

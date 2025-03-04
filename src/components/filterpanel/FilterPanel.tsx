@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './FilterPanel.module.css';
-import { MARKER_CONFIG, AREAS } from '../../utils/constants';
+import { AREAS, MARKERS } from '../../utils/constants';
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -28,8 +28,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       name,
       count: areaCounts[area as AreaType] ?? 0,
       isVisible: localAreaVisibility[area as AreaType],
-      color: MARKER_CONFIG.colors[area as AreaType],
-      icon: MARKER_CONFIG.icons[area as AreaType],
+      color: MARKERS.colors[area as AreaType],
+      icon: MARKERS.icons[area as AreaType],
     }));
 
   useEffect(() => {
@@ -82,10 +82,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             ))}
             <label className="filter-item">
               <input type="checkbox" checked={localAreaVisibility.CURRENT_LOCATION} aria-label="現在地を表示" />
-              <span className="custom-checkbox" style={{ borderColor: MARKER_CONFIG.colors.CURRENT_LOCATION }}></span>
+              <span className="custom-checkbox" style={{ borderColor: MARKERS.colors.CURRENT_LOCATION }}></span>
               <div className="filter-details">
                 <img
-                  src={MARKER_CONFIG.icons.CURRENT_LOCATION}
+                  src={MARKERS.icons.CURRENT_LOCATION}
                   alt="現在地のアイコン"
                   className="marker-icon"
                   aria-hidden="true"

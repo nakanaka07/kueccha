@@ -243,3 +243,6 @@ export const CURRENT_LOCATION_POI: Poi = {
   genre: '現在地',
   location: { lat: 0, lng: 0 }, // デフォルト値を設定（実際には useCurrentLocationPoi で上書きされる）
 };
+
+// MARKER_ICONSとして再エクスポート
+export const MARKER_ICONS = MARKERS.icons;
