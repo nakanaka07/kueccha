@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import styles from './LoadingFallback.module.css';
-import { SkeletonLoader } from './SkeletonLoader';
-import { Spinner } from './Spinner';
+import { LoadingVariant } from './LoadingVariant';
+import { ErrorDisplay } from './ErrorDisplay';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import { useLoadingState } from '../../hooks/useLoadingState';
 
@@ -46,37 +46,16 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
     >
       <div className={styles.loadingContent}>
         {!error ? (
-          <>
-            {variant === 'spinner' && (
-              <>
-                <Spinner size="large" className={`${styles.spinnerMargin} ${spinnerClassName}`} />
-                <p>{message}</p>
-              </>
-            )}
-            {variant === 'skeleton' && (
-              <div className={styles.skeletonContainer}>
-                <SkeletonLoader type="rectangle" width="100%" height="20px" count={3} />
-              </div>
-            )}
-            {variant === 'progress' && (
-              <div className={styles.progressContainer}>
-                <div className={styles.progressBar}>
-                  <div className={styles.progressIndicator} />
-                </div>
-                <p>{message}</p>
-              </div>
-            )}
-          </>
+          <LoadingVariant
+            variant={variant}
+            message={message}
+            spinnerClassName={spinnerClassName}
+          />
         ) : (
-          <div className={styles.errorContainer}>
-            <div className={styles.errorIcon} aria-hidden="true" />
-            <p>{errorMessage || error.message}</p>
-            {onRetry && (
-              <button className={styles.retryButton} onClick={onRetry}>
-                再試行
-              </button>
-            )}
-          </div>
+          <ErrorDisplay
+            message={errorMessage || error.message}
+            onRetry={onRetry}
+          />
         )}
       </div>
     </div>

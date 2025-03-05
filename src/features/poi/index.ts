@@ -1,6 +1,6 @@
 // コンポーネントのエクスポート
 export { default as Marker } from './components/Marker';
-export { default as InfoWindow } from './components/InfoWindow';
+export { default as InfoWindow } from './components/InfoWindowContainer';
 
 // フックのエクスポート
 export { usePoiState } from './hooks/usePoiState';

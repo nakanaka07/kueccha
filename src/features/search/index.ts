@@ -1,5 +1,5 @@
 // コンポーネントのエクスポート
-export { default as SearchBar } from './components/SearchBar';
+export { default as SearchBar } from './components/SearchBarContainer';
 export { default as SearchResults } from './components/SearchResults';
 
 // フックのエクスポート

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import styles from './Spinner.module.css';
 import { useLoadingState } from '../../hooks/useLoadingState';
+import { SpinnerView } from './SpinnerView';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';
@@ -40,15 +40,13 @@ export const Spinner: React.FC<SpinnerProps> = ({
   if (!isVisible || !shouldRender) return null;
 
   return (
-    <div
-      className={`${styles.spinner} ${styles[size]} ${isFading ? styles.fading : ''} ${className}`}
-      style={color ? { borderTopColor: color } : undefined}
-      aria-hidden="true"
-      role="presentation"
-      data-testid="spinner"
-    >
-      <span className={styles.visuallyHidden}>{label}</span>
-    </div>
+    <SpinnerView
+      size={size}
+      color={color}
+      className={className}
+      label={label}
+      isFading={isFading}
+    />
   );
 };
 
