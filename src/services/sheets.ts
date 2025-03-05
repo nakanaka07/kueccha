@@ -1,12 +1,13 @@
 import { AREAS } from '../constants/areas';
 import { CONFIG } from '../constants/config';
-import { ERROR_MESSAGES } from '../constants/messages';
+import { createError, handleApiError } from './errors';
 import type { Poi, AreaType, AppError } from '../types/common';
 
 // API関連の定数
 export const SHEETS_API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
+  REQUEST_TIMEOUT: 30000, // タイムアウト設定を追加
   BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
   GEOGRAPHIC_BOUNDS: {
     LAT_MIN: 37.5,
@@ -14,7 +15,16 @@ export const SHEETS_API_CONFIG = {
     LNG_MIN: 138.0,
     LNG_MAX: 138.6,
   },
+  // キャッシュ関連の設定
+  CACHE_TTL: 10 * 60 * 1000, // 10分間キャッシュを有効に
 } as const;
+
+// データキャッシュ
+interface CacheEntry {
+  data: Poi[];
+  timestamp: number;
+}
+const dataCache: Record<string, CacheEntry> = {};
 
 /**
  * 指定したミリ秒待機するためのユーティリティ関数
@@ -22,44 +32,11 @@ export const SHEETS_API_CONFIG = {
 export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * エラーハンドリングを行う関数
+ * エラーハンドリングを行う関数 - 互換性のために残す
+ * @deprecated 代わりに services/errors.ts の handleApiError を使用
  */
 export const handleSheetsError = (error: unknown, retryCount: number): AppError => {
-  console.error('データ取得エラー:', error);
-
-  // ネットワークエラーの特定
-  if (error instanceof Error) {
-    if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
-      return {
-        message: ERROR_MESSAGES.DATA.FETCH_FAILED,
-        code: 'NETWORK_ERROR',
-        details: error.message,
-      };
-    }
-
-    // APIキーに関連する問題の特定
-    if (error.message.includes('API key') || error.message.includes('403')) {
-      return {
-        message: ERROR_MESSAGES.CONFIG.INVALID,
-        code: 'API_KEY_ERROR',
-        details: error.message,
-      };
-    }
-  }
-
-  if (retryCount < SHEETS_API_CONFIG.MAX_RETRIES) {
-    return {
-      message: `${ERROR_MESSAGES.DATA.FETCH_FAILED} 再試行しています (${retryCount + 1}/${SHEETS_API_CONFIG.MAX_RETRIES})`,
-      code: 'FETCH_ERROR_RETRYING',
-      details: error instanceof Error ? error.message : String(error),
-    };
-  }
-
-  return {
-    message: ERROR_MESSAGES.DATA.FETCH_FAILED,
-    code: 'FETCH_ERROR_MAX_RETRIES',
-    details: error instanceof Error ? error.message : String(error),
-  };
+  return handleApiError(error, retryCount, SHEETS_API_CONFIG.MAX_RETRIES, SHEETS_API_CONFIG.RETRY_DELAY, 'シート');
 };
 
 /**
@@ -104,91 +81,189 @@ export const getAreaEndpoint = (area: AreaType): string => {
 };
 
 /**
- * 1つのエリアのデータを取得する関数
+ * シートのレスポンスからPOIデータに変換する関数
  */
-export const fetchAreaData = async (area: AreaType, retryCount = 0): Promise<Poi[]> => {
+export const convertSheetRowToPoi = (row: string[], area: AreaType): Poi | null => {
+  // 座標と名前が存在するデータのみ
+  if (!row[1] || !row[32]) return null;
+
+  // 座標データを解析
+  const coordinates = parseWKT(row[1]);
+  if (!coordinates) return null;
+
+  return {
+    id: row[1],
+    name: String(row[32]),
+    area: area as AreaType,
+    location: coordinates,
+    genre: row[33] || '',
+    category: row[34] || '',
+    parking: row[35],
+    payment: row[36],
+    monday: row[37],
+    tuesday: row[38],
+    wednesday: row[39],
+    thursday: row[40],
+    friday: row[41],
+    saturday: row[42],
+    sunday: row[43],
+    holiday: row[44],
+    holidayInfo: row[45],
+    information: row[46],
+    view: row[47],
+    phone: row[48],
+    address: row[49],
+  };
+};
+
+/**
+ * レスポンスデータを処理して正規化する関数
+ */
+export const processSheetResponse = async (response: Response, area: AreaType): Promise<Poi[]> => {
+  if (!response.ok) {
+    const statusCode = response.status;
+    const errorText = await response.text();
+
+    throw new Error(`エリア ${area} のデータ取得に失敗しました。ステータス: ${statusCode}, 詳細: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  // データ変換処理
+  return (data.values?.slice(1) || [])
+    .map((row: string[]) => convertSheetRowToPoi(row, area))
+    .filter((poi: Poi | null): poi is Poi => poi !== null);
+};
+
+/**
+ * キャッシュが有効かを確認する関数
+ */
+export const isCacheValid = (cacheKey: string): boolean => {
+  const entry = dataCache[cacheKey];
+  if (!entry) return false;
+
+  const now = Date.now();
+  return (now - entry.timestamp) < SHEETS_API_CONFIG.CACHE_TTL;
+};
+
+/**
+ * 1つのエリアのデータを取得する関数（改良版）
+ */
+export const fetchAreaData = async (area: AreaType, retryCount = 0, useCache = true): Promise<Poi[]> => {
+  // キャッシュの確認
+  const cacheKey = `area_${area}`;
+  if (useCache && isCacheValid(cacheKey)) {
+    console.log(`キャッシュから ${area} のデータを使用`);
+    return dataCache[cacheKey].data;
+  }
+
   const url = getAreaEndpoint(area);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SHEETS_API_CONFIG.REQUEST_TIMEOUT);
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      const statusCode = response.status;
-      const errorText = await response.text();
+    const response = await fetch(url, {
+      signal: controller.signal,
+    });
 
-      // サーバーエラーや率制限エラーの場合は再試行
-      if ((statusCode === 429 || statusCode >= 500) && retryCount < SHEETS_API_CONFIG.MAX_RETRIES) {
-        console.warn(`サーバーエラー (${statusCode}), 再試行中 (${retryCount + 1}/${SHEETS_API_CONFIG.MAX_RETRIES})`);
-        await delay(SHEETS_API_CONFIG.RETRY_DELAY * Math.pow(2, retryCount)); // 指数バックオフ
-        return fetchAreaData(area, retryCount + 1);
-      }
+    clearTimeout(timeoutId);
+    const pois = await processSheetResponse(response, area);
 
-      throw new Error(`エリア ${area} のデータ取得に失敗しました。ステータス: ${statusCode}, 詳細: ${errorText}`);
+    // キャッシュに保存
+    if (useCache) {
+      dataCache[cacheKey] = {
+        data: pois,
+        timestamp: Date.now(),
+      };
     }
 
-    const data = await response.json();
-
-    // データの変換と整形を行う
-    return (data.values?.slice(1) || [])
-      .filter((row: string[]) => row[1] && row[32]) // 座標と名前が存在するデータのみ
-      .map((row: string[]): Poi | null => {
-        const coordinates = parseWKT(row[1]);
-        if (!coordinates) {
-          return null;
-        }
-
-        return {
-          id: row[1],
-          name: String(row[32]),
-          area: area as AreaType,
-          location: coordinates,
-          genre: row[33] || '',
-          category: row[34] || '',
-          parking: row[35],
-          payment: row[36],
-          monday: row[37],
-          tuesday: row[38],
-          wednesday: row[39],
-          thursday: row[40],
-          friday: row[41],
-          saturday: row[42],
-          sunday: row[43],
-          holiday: row[44],
-          holidayInfo: row[45],
-          information: row[46],
-          view: row[47],
-          phone: row[48],
-          address: row[49],
-        };
-      })
-      .filter((poi: Poi | null): poi is Poi => poi !== null);
+    return pois;
   } catch (error) {
-    // エラー時のリトライ処理
-    if (retryCount < SHEETS_API_CONFIG.MAX_RETRIES) {
-      await delay(SHEETS_API_CONFIG.RETRY_DELAY * (retryCount + 1));
-      return fetchAreaData(area, retryCount + 1);
+    clearTimeout(timeoutId);
+
+    // AbortControllerによるタイムアウトの場合
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw createError('DATA', 'TIMEOUT', `エリア ${area} のデータ取得がタイムアウトしました`, 'SHEET_TIMEOUT');
     }
+
+    // サーバーエラーや率制限エラーの場合は再試行
+    if (retryCount < SHEETS_API_CONFIG.MAX_RETRIES) {
+      console.warn(`エラー発生、再試行中 (${retryCount + 1}/${SHEETS_API_CONFIG.MAX_RETRIES})`, error);
+      await delay(SHEETS_API_CONFIG.RETRY_DELAY * Math.pow(2, retryCount)); // 指数バックオフ
+      return fetchAreaData(area, retryCount + 1, useCache);
+    }
+
     throw error;
   }
 };
 
 /**
- * 全エリアのデータを取得する関数
+ * 全エリアのデータを取得する関数（改良版）
  */
-export const fetchAllAreaData = async (): Promise<Poi[]> => {
-  // 通常エリア（CURRENT_LOCATIONとRECOMMEND以外）を取得
-  const normalAreas = Object.keys(AREAS).filter(
-    (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
-  ) as AreaType[];
+export const fetchAllAreaData = async (useCache = true): Promise<Poi[]> => {
+  // キャッシュの確認
+  const cacheKey = 'all_areas';
+  if (useCache && isCacheValid(cacheKey)) {
+    console.log('キャッシュから全エリアデータを使用');
+    return dataCache[cacheKey].data;
+  }
 
-  // 並列でデータを取得
-  const normalPoisArrays = await Promise.all(normalAreas.map((area) => fetchAreaData(area)));
+  try {
+    // 通常エリア（CURRENT_LOCATIONとRECOMMEND以外）を取得
+    const normalAreas = Object.keys(AREAS).filter(
+      (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
+    ) as AreaType[];
 
-  // おすすめのPOIも取得
-  const recommendPois = await fetchAreaData('RECOMMEND');
+    // 並列でデータを取得
+    const results = await Promise.allSettled(normalAreas.map((area) => fetchAreaData(area, 0, useCache)));
 
-  // 重複を削除して統合
-  const poisMap = new Map(normalPoisArrays.flat().map((poi) => [poi.id, poi]));
-  recommendPois.forEach((poi) => poisMap.set(poi.id, poi));
+    // 成功したレスポンスのみ抽出
+    let normalPois: Poi[] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        normalPois = normalPois.concat(result.value);
+      } else {
+        console.error(`エリア ${normalAreas[index]} の取得に失敗:`, result.reason);
+      }
+    });
 
-  return Array.from(poisMap.values());
+    // おすすめのPOIも取得
+    let recommendPois: Poi[] = [];
+    try {
+      recommendPois = await fetchAreaData('RECOMMEND', 0, useCache);
+    } catch (error) {
+      console.error('おすすめデータの取得に失敗:', error);
+      // おすすめデータの失敗は許容し、他のデータは返す
+    }
+
+    // 重複を削除して統合
+    const poisMap = new Map(normalPois.map((poi) => [poi.id, poi]));
+    recommendPois.forEach((poi) => poisMap.set(poi.id, poi));
+
+    const result = Array.from(poisMap.values());
+
+    // キャッシュに保存
+    if (useCache) {
+      dataCache[cacheKey] = {
+        data: result,
+        timestamp: Date.now(),
+      };
+    }
+
+    return result;
+  } catch (error) {
+    console.error('全エリアデータの取得中にエラーが発生しました:', error);
+    throw createError('DATA', 'FETCH_FAILED', error instanceof Error ? error.message : String(error), 'ALL_AREAS_ERROR');
+  }
+};
+
+/**
+ * キャッシュをクリアする関数
+ */
+export const clearCache = (areaKey?: string): void => {
+  if (areaKey) {
+    delete dataCache[`area_${areaKey}`];
+  } else {
+    Object.keys(dataCache).forEach(key => delete dataCache[key]);
+  }
 };

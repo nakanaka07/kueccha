@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ERROR_MESSAGES } from '../constants/messages';
+import { isRetryableError, getErrorSeverity, formatErrorDetails } from '../services/errors';
 import type { AppError } from '../types/common';
 
 /**
@@ -77,18 +77,22 @@ export function useErrorHandling(mapError: AppError | null, poisError: AppError 
 
   // エラーメッセージの生成
   const errorMessage = useMemo(() => {
-    if (!combinedError) return '';
-    return getErrorMessage(combinedError);
+    return combinedError?.message || '';
   }, [combinedError]);
 
   // エラー詳細の提供
   const errorDetails = useMemo(() => {
-    return combinedError?.details || '';
+    return formatErrorDetails(combinedError);
   }, [combinedError]);
 
   // エラーが再試行可能かどうか
   const isRetryable = useMemo(() => {
-    return combinedError ? isRetryableError(combinedError) : false;
+    return isRetryableError(combinedError);
+  }, [combinedError]);
+
+  // エラーの重大度
+  const severity = useMemo(() => {
+    return getErrorSeverity(combinedError);
   }, [combinedError]);
 
   // エラータイプの判別（デバッグやログ記録に有用）
@@ -104,6 +108,7 @@ export function useErrorHandling(mapError: AppError | null, poisError: AppError 
     errorMessage,
     errorDetails,
     isRetryable,
+    severity,
     errorType,
   };
 }

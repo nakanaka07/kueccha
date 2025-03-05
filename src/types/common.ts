@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { AREAS } from '../constants/areas';
+import { INFO_WINDOW_BUSINESS_HOURS } from '../constants/ui';
 
 // 基本Props型
 export interface BaseProps {
@@ -13,9 +15,9 @@ export interface LatLngLiteral {
 }
 
 // エリア関連型
-export type AreaType = string; // 後でconstantsから適切にインポート
+export type AreaType = keyof typeof AREAS;
 export type AreaVisibility = Record<AreaType, boolean>;
-export type BusinessHourKey = string; // 後でconstantsから適切にインポート
+export type BusinessHourKey = keyof typeof INFO_WINDOW_BUSINESS_HOURS;
 
 // 設定関連型
 export interface Config {

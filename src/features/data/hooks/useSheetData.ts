@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AREAS } from '../../../constants/areas';
-import { fetchAllAreaData, handleSheetsError, SHEETS_API_CONFIG } from '../../../services/sheets';
+import { fetchAllAreaData } from '../../../services/sheets';
+import { createError } from '../../../services/errors';
+import { useDataCache } from '../../../hooks/useDataCache';
 import type { Poi, AreaType, AppError } from '../../../types/common';
 
 /**
@@ -12,22 +14,40 @@ export function useSheetData() {
   const [error, setError] = useState<AppError | null>(null);
   const [isFetched, setIsFetched] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { lastCacheCleared, clearCache } = useDataCache();
 
-  // データ取得ロジックはサービスに委譲
-  const fetchData = useCallback(async () => {
-    // すでに読み込み中または取得済みの場合は処理しない
-    if (isLoading || isFetched) return;
+  // データ取得ロジック
+  const fetchData = useCallback(async (useCache = true) => {
+    // すでに読み込み中の場合は処理しない
+    if (isLoading) return;
+
+    // キャッシュを使うか判断
+    const shouldUseCache = useCache && isFetched;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const fetchedPois = await fetchAllAreaData();
+      const fetchedPois = await fetchAllAreaData(shouldUseCache);
       setPois(fetchedPois);
       setIsFetched(true);
       setIsLoaded(true);
     } catch (err) {
-      setError(handleSheetsError(err, SHEETS_API_CONFIG.MAX_RETRIES));
+      console.error('データ取得エラー:', err);
+      let appError: AppError;
+
+      if (err instanceof Error) {
+        appError = createError(
+          'DATA',
+          'FETCH_FAILED',
+          err.message,
+          err.name === 'AbortError' ? 'REQUEST_TIMEOUT' : 'FETCH_ERROR'
+        );
+      } else {
+        appError = createError('DATA', 'UNKNOWN', String(err));
+      }
+
+      setError(appError);
     } finally {
       setIsLoading(false);
     }
@@ -36,15 +56,27 @@ export function useSheetData() {
   // 最初のレンダリングでデータをフェッチする
   useEffect(() => {
     if (!isFetched) {
-      fetchData();
+      fetchData(true);
     }
   }, [fetchData, isFetched]);
 
+  // キャッシュがクリアされたら再取得
+  useEffect(() => {
+    if (lastCacheCleared && isFetched) {
+      fetchData(false);
+    }
+  }, [lastCacheCleared, fetchData, isFetched]);
+
   // データを再取得するための関数
-  const refetch = useCallback(() => {
+  const refetch = useCallback((forceRefresh = false) => {
+    if (forceRefresh) {
+      // 強制リフレッシュの場合はキャッシュもクリア
+      clearCache();
+    }
+
     setIsFetched(false);
     setError(null);
-  }, []);
+  }, [clearCache]);
 
   // カテゴリー別にPOIを分類したデータを提供
   const poisByCategory = useMemo(() => {
