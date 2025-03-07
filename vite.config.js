@@ -50,6 +50,10 @@ export default defineConfig(({ mode, command }) => {
     resolve: {
       alias: {
         '@': '/src',
+        '@core': path.resolve(__dirname, './src/core'),
+        '@modules': path.resolve(__dirname, './src/modules'),
+        '@shared': path.resolve(__dirname, './src/shared'),
+        '@app': path.resolve(__dirname, './src/app'),
       },
     },
     build: {

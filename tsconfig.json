@@ -25,12 +25,17 @@
     "outDir": "./dist",
     "skipLibCheck": true,
 
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@core/*": ["src/core/*"],
+      "@modules/*": ["src/modules/*"],
+      "@shared/*": ["src/shared/*"],
+      "@app/*": ["src/app/*"]
     },
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js", "env.d.ts", "css.d.ts"],
+  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js", "env.d.ts", "css.d.ts", "src/common"],
   "exclude": ["dist", "node_modules"],
   "ts-node": {
     "transpileOnly": true,
