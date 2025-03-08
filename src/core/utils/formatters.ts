@@ -1,9 +1,17 @@
+/**
+ * 機能: テキストフォーマットと検証のためのユーティリティ関数
+ * 依存関係:
+ *   - React (ReactElement作成のため)
+ * 注意点:
+ *   - formatInformation: URLの検出と分離を行いますが、すべてのURL形式に対応していない可能性があります
+ *   - 古いブラウザでは URL APIの互換性に問題がある場合があります
+ *   - isValidPhoneNumber: 国際的な電話番号形式の一部をサポートしていますが、完全網羅ではありません
+ */
 import React from 'react';
 
 export const formatInformation = (text: string | null): React.ReactElement | null => {
   if (!text?.trim()) return null;
 
-  // URLの正規表現を改善（より正確に検出する）
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
   const isValidUrl = (url: string): boolean => {
@@ -19,20 +27,16 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
     const lines = text.split('\n');
     const result = { text: [], urls: [] } as { text: string[]; urls: string[] };
 
-    // 各行ごとに処理し、URL部分とテキスト部分を分離する
     lines.forEach((line) => {
       const matches = line.match(urlRegex);
 
       if (matches && matches.length > 0) {
-        // URLを含む行
         const validUrls = matches.filter(isValidUrl);
         result.urls.push(...validUrls);
 
-        // URLを除いたテキスト部分があれば追加
         const textPart = line.replace(urlRegex, '').trim();
         if (textPart) result.text.push(textPart);
       } else if (line.trim()) {
-        // 通常のテキスト行
         result.text.push(line);
       }
     });
@@ -43,7 +47,6 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
   const truncateUrl = (url: string, maxLength: number): string => {
     if (url.length <= maxLength) return url;
 
-    // URLをより読みやすく省略する
     try {
       const urlObj = new URL(url);
       const domain = urlObj.hostname;
@@ -58,7 +61,6 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
 
       return `${domain}${truncatedPath}`;
     } catch {
-      // 万が一失敗したら単純な省略に戻す
       return `${url.slice(0, maxLength)}...`;
     }
   };
@@ -96,7 +98,7 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
     const elements = [
       ...content.text.map((line, index) => createElement('text', line, index)),
       ...content.urls.map((url, index) => createElement('url', url, index)),
-    ].filter(Boolean); // nullを除外
+    ].filter(Boolean);
 
     return elements.length > 0 ? React.createElement('div', { key: 'info-container' }, elements) : null;
   } catch (error) {
@@ -106,7 +108,6 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
 };
 
 export const isValidPhoneNumber = (phone: string): boolean => {
-  // より厳格な電話番号チェック（国際標準対応）
   const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,3}[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,4}$/;
   return phone ? phoneRegex.test(phone) : false;
 };

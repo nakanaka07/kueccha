@@ -1,3 +1,12 @@
+/**
+ * 機能: 検索機能に関する型定義
+ * 依存関係:
+ *   - common.ts (BaseProps型を使用)
+ *   - poi.ts (Poi型とLatLngLiteral型を使用)
+ * 注意点:
+ *   - SearchOptions型は検索ロジックの動作に直接影響する
+ *   - フィールド指定検索や並べ替えなどの拡張機能をサポート
+ */
 import { BaseProps } from './common';
 import { Poi, LatLngLiteral } from './poi';
 

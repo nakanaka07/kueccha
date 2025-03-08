@@ -1,12 +1,19 @@
+/**
+ * 機能: UIコンポーネントの型定義
+ * 依存関係:
+ *   - React (ReactNode型を使用)
+ *   - common.ts (BaseProps型を使用)
+ * 注意点:
+ *   - コンポーネントのProps型定義は対応するコンポーネントと一致している必要がある
+ *   - エラーバウンダリー関連の型はReactのライフサイクルメソッドに依存する
+ */
 import { ReactNode } from 'react';
 import { BaseProps } from './common';
 
-// モーダル系コンポーネントの基本Props
 export interface ModalBaseProps extends BaseProps {
   onClose: () => void;
 }
 
-// LoadingFallback専用のProps
 export interface LoadingFallbackProps extends BaseProps {
   isLoading?: boolean;
   isLoaded?: boolean;
@@ -33,5 +40,5 @@ export interface ErrorBoundaryState {
 export interface MenuItem {
   label: string;
   title: string;
-  action: string; // MenuActionTypeのキー
+  action: string;
 }

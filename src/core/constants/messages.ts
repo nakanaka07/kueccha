@@ -1,11 +1,18 @@
-// ローディングメッセージ
+/**
+ * 機能: アプリケーション全体で使用される各種メッセージを定義
+ * 依存関係:
+ *   - なし
+ * 注意点:
+ *   - ERRORSオブジェクトは個別のエラーメッセージを定義
+ *   - ERROR_MESSAGESはカテゴリ別に整理された構造化されたメッセージを提供
+ *   - 多言語対応する場合は、これらの文字列を直接変更するのではなく、i18nシステムに移行することを推奨
+ */
 export const LOADING_MESSAGES = {
   data: 'データを読み込み中です。しばらくお待ちください。',
   map: 'マップを読み込み中です。しばらくお待ちください。',
   retry: 'しばらく経ってから再度お試しください。',
 };
 
-// エラーメッセージ
 export const ERRORS = {
   config: '設定が正しくありません。設定を確認してください。',
   configMissing: '必要な設定が不足しています。設定を追加してください。',
@@ -33,7 +40,6 @@ export const ERRORS = {
   },
 };
 
-// 整形されたエラーメッセージ
 export const ERROR_MESSAGES = {
   CONFIG: { INVALID: ERRORS.config, MISSING: ERRORS.configMissing },
   DATA: { FETCH_FAILED: ERRORS.dataFetch, LOADING_FAILED: ERRORS.dataLoading },

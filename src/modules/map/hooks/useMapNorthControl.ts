@@ -1,3 +1,15 @@
+/*
+ * 機能: マップの向きを北に戻すためのカスタムフック
+ * 依存関係:
+ *   - React (useCallback)
+ *   - CONFIG（マップ設定）
+ *   - google.maps.Map型（Googleマップインスタンス）
+ * 注意点:
+ *   - マップインスタンスがnullの場合は警告を出力
+ *   - エラーハンドリングを実装
+ *   - MapControlsPropsインターフェースの仕様に合わせた関数命名
+ */
+
 import { useCallback } from 'react';
 import { CONFIG } from '../../../constants/config';
 

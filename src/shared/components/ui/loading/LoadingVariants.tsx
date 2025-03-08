@@ -1,4 +1,15 @@
-// LoadingVariants.tsx
+/*
+ * 機能: 異なるタイプのローディング表示を提供するコンポーネント
+ * 依存関係:
+ *   - React
+ *   - LoadingFallback.module.cssスタイルシート
+ *   - SkeletonLoaderコンポーネント
+ *   - Spinnerコンポーネント
+ * 注意点:
+ *   - 3つの表示バリエーション（spinner, skeleton, progress）をサポート
+ *   - 各バリアントにはメッセージを表示可能
+ *   - spinnerClassNameでスピナーのスタイルをカスタマイズ可能
+ */
 import React from 'react';
 import styles from './LoadingFallback.module.css';
 import { SkeletonLoader } from './SkeletonLoader';

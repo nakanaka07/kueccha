@@ -1,37 +1,45 @@
-// App.tsx
+/*
+ * 機能:
+ *   - アプリケーションのメインコンポーネント
+ *   - POI（Points of Interest）データの統合と管理
+ *   - マップ表示と位置情報機能の統合
+ *   - 現在地情報の取得と関連警告の表示
+ *   - エラーハンドリングとロード状態の管理
+ *
+ * 依存関係:
+ *   - React v16.8以上（Hooksを使用）
+ *   - カスタムフック: useAppState, useLocationWarning, useSheetData, useMapNorthControl, useCurrentLocationPoi
+ *   - 定数: LOADING_MESSAGES
+ *   - コンポーネント: AppLayout
+ *   - 地図ライブラリ（mapInstanceを通じてアクセス）
+ *
+ * 注意点:
+ *   - 位置情報機能の許可が必要です
+ *   - マップとデータの読み込み状態に応じた表示制御があります
+ *   - エラー発生時は統合されたエラーメッセージが表示されます
+ *   - 現在地POIと外部POIデータを統合して表示します
+ */
 import React, { useCallback, useMemo } from 'react';
-// 正しい相対パスに修正
-import { CONFIG } from '../core/constants/config';
+import { LOADING_MESSAGES } from '../core/constants/messages';
 import { useAppState } from '../core/hooks/useAppState';
 import { useLocationWarning } from '../core/hooks/useLocationWarning';
-// 存在しないインポートを正しいパスに修正
-import { createError } from '../core/services/errors';
-import { useSheetData } from '../core/services/sheets'; // sheets.tsに統合済み
+import { useSheetData } from '../core/services/sheets';
 import { useMapNorthControl } from '../modules/map/hooks/useMapNorthControl';
 import { useCurrentLocationPoi } from '../modules/poi/hooks/useCurrentLocationPoi';
 import { AppLayout } from '../shared/components/layout/AppLayout';
 
-// useErrorHandling が見当たらないので、作成する必要があります
-
-// エラーハンドリングのフックを追加
-const useErrorHandling = (mapError: any, poisError: any) => {
-  const combinedError = mapError || poisError;
-  const errorMessage = combinedError?.message || '予期しないエラーが発生しました';
-  return { combinedError, errorMessage };
-};
+interface AppError {
+  message: string;
+  code?: string;
+}
 
 const App: React.FC = () => {
-  const { pois, error: poisError } = useSheetData();
+  const { data: pois, error: poisError } = useSheetData();
   const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
-
-  // カスタムフックで現在地POIを生成
   const currentLocationPoi = useCurrentLocationPoi(currentLocation);
 
-  // POIリストの結合（不要なレンダリングを防ぐためのメモ化）
   const allPois = useMemo(() => {
-    if (!pois) {
-      return currentLocationPoi ? [currentLocationPoi] : [];
-    }
+    if (!pois) return currentLocationPoi ? [currentLocationPoi] : [];
     return currentLocationPoi ? [currentLocationPoi, ...pois] : pois;
   }, [pois, currentLocationPoi]);
 
@@ -47,25 +55,21 @@ const App: React.FC = () => {
 
   const { onResetNorth: resetNorth } = useMapNorthControl(mapInstance);
 
-  // エラー処理のロジックを分離したカスタムフックを使用
-  const { combinedError, errorMessage } = useErrorHandling(mapError, poisError);
+  const combinedError = mapError || poisError;
+  const errorMessage = combinedError?.message || '予期しないエラーが発生しました';
 
-  // 現在地取得のコールバック
   const handleGetCurrentLocation = useCallback(() => {
     getCurrentLocationInfo();
   }, [getCurrentLocationInfo]);
 
-  // ローディングメッセージの生成
-  const loadingMessage = useMemo(() => {
-    return isMapLoading ? CONFIG.ui.messages.loading.map : CONFIG.ui.messages.loading.data;
-  }, [isMapLoading]);
+  const loadingMessage = useMemo(() => (isMapLoading ? LOADING_MESSAGES.map : LOADING_MESSAGES.data), [isMapLoading]);
 
   return (
     <AppLayout
       isMapLoaded={isMapLoaded}
       isLoadingVisible={isLoadingVisible}
       isFading={isFading}
-      combinedError={combinedError}
+      combinedError={!!combinedError}
       errorMessage={errorMessage}
       loadingMessage={loadingMessage}
       showWarning={showWarning}

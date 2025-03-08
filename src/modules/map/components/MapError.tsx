@@ -1,3 +1,15 @@
+/*
+ * 機能: マップ読み込みエラー時に表示されるエラーコンポーネント
+ * 依存関係:
+ *   - React
+ *   - Map.module.css（スタイル定義）
+ *   - 型定義: MapErrorProps
+ * 注意点:
+ *   - アクセシビリティ対応済み（role, aria-live属性）
+ *   - エラーメッセージとエラー詳細を表示
+ *   - 任意の再試行ハンドラ（onRetry）を受け付ける
+ */
+
 import React from 'react';
 import styles from './Map.module.css';
 import { MapErrorProps } from '../../../types/map';

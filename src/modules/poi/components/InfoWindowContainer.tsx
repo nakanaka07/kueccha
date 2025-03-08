@@ -1,4 +1,19 @@
-// components/InfoWindowContainer.tsx
+/*
+ * 機能: POI詳細情報を表示する情報ウィンドウコンポーネント
+ * 依存関係:
+ *   - React
+ *   - BusinessHoursSection, InfoItemコンポーネント
+ *   - InfoWindow.module.css (スタイリング)
+ *   - AREAS定数
+ *   - formatInformation, isValidPhoneNumber関数
+ *   - useInfoWindowInteractionフック
+ *   - InfoWindowProps, LatLngLiteral型定義
+ * 注意点:
+ *   - POIの詳細情報を構造化して表示
+ *   - 各情報項目は条件付きでレンダリング（存在する場合のみ表示）
+ *   - 外部クリックで閉じる機能を実装
+ */
+
 import React from 'react';
 import { BusinessHoursSection } from './BusinessHoursSection';
 import { InfoItem } from './InfoItem';
@@ -24,7 +39,6 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
         <BusinessHoursSection poi={poi} />
 
         <div className={styles.infoHorizontal}>
-          {/* 位置情報 */}
           {poi.location && (
             <InfoItem
               title="位置"
@@ -36,13 +50,10 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
             />
           )}
 
-          {/* 定休日情報 */}
           {poi.holidayInfo && <InfoItem title="定休日について" content={<p>{poi.holidayInfo}</p>} />}
 
-          {/* 駐車場情報 */}
           {poi.parking && <InfoItem title="駐車場" content={<p>{poi.parking}</p>} />}
 
-          {/* 以下同様に他の情報項目... */}
           {poi.phone && (
             <InfoItem
               title="問い合わせ"
@@ -58,7 +69,6 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
             />
           )}
 
-          {/* Google マップ表示リンク */}
           {poi.view && (
             <InfoItem
               content={

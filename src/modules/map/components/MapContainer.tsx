@@ -1,4 +1,18 @@
-// components/MapContainer.tsx
+/*
+ * 機能: Google Maps APIを使用してマップを表示するコンテナコンポーネント
+ * 依存関係:
+ *   - @react-google-maps/api（GoogleMap, useLoadScript）
+ *   - React (useCallback, useRef)
+ *   - コンポーネント: MapError, MapLoading, MarkerList
+ *   - フック: useMapConfig
+ *   - 型定義: ExtendedMapProps
+ * 注意点:
+ *   - Google Maps APIキーが必要
+ *   - マップ読み込み中、エラー発生時の表示処理を含む
+ *   - マップインスタンスはrefで管理
+ *   - アクセシビリティに配慮（aria-label属性）
+ */
+
 import { useLoadScript, GoogleMap } from '@react-google-maps/api';
 import React, { useCallback, useRef } from 'react';
 import styles from './Map.module.css';
@@ -42,7 +56,6 @@ const MapContainer: React.FC<ExtendedMapProps> = ({
     window.location.reload();
   }, []);
 
-  // 条件分岐によるレンダリング
   if (configError) {
     return (
       <MapError

@@ -1,4 +1,16 @@
-// hooks/useMarkerInteraction.ts
+/*
+ * 機能: マーカーとのインタラクション（クリック、キーボード操作など）を管理するフック
+ * 依存関係:
+ *   - React useEffect
+ *   - Google Maps JavaScript API (marker.AdvancedMarkerElement)
+ *   - Marker.module.css (スタイリング)
+ *   - Poi型定義
+ * 注意点:
+ *   - Google Maps APIが初期化されていることが前提
+ *   - マーカーの選択状態のスタイル管理も行う
+ *   - クリーンアップ処理でイベントリスナーを適切に削除
+ */
+
 import { useEffect } from 'react';
 import styles from '../components/Marker.module.css';
 import type { Poi } from '../../../../types/poi';
@@ -11,7 +23,6 @@ interface UseMarkerInteractionProps {
 }
 
 export function useMarkerInteraction({ marker, poi, onClick, isSelected }: UseMarkerInteractionProps) {
-  // イベントハンドラ設定
   useEffect(() => {
     if (!marker || !window.google?.maps) return;
 
@@ -24,11 +35,9 @@ export function useMarkerInteraction({ marker, poi, onClick, isSelected }: UseMa
         }
       };
 
-      // 既存のイベントリスナーをクリア
       google.maps.event.clearInstanceListeners(marker);
       marker.addListener('gmp-click', handleClick);
 
-      // キーボード操作のサポート
       const element = marker.content;
       if (element instanceof HTMLElement) {
         element.removeEventListener('keydown', handleKeyDown);
@@ -46,7 +55,6 @@ export function useMarkerInteraction({ marker, poi, onClick, isSelected }: UseMa
     }
   }, [marker, onClick, poi]);
 
-  // 選択状態の管理
   useEffect(() => {
     if (!marker || !(marker.content instanceof HTMLElement)) return;
 

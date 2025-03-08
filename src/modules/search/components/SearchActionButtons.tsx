@@ -1,4 +1,14 @@
-// components/SearchActionButtons.tsx
+/*
+ * 機能: 検索バーのアクションボタン群（検索、クリア、一覧）を提供するReactコンポーネント
+ * 依存関係:
+ *   - React
+ *   - SearchBar.module.css (スタイリング)
+ * 注意点:
+ *   - 3つのボタン（検索、クリア、一覧）を提供
+ *   - 各ボタンのクリックイベントハンドラは親コンポーネントから渡される
+ *   - レスポンシブデザインに対応したスタイリングが必要
+ */
+
 import React from 'react';
 import styles from './SearchBar.module.css';
 

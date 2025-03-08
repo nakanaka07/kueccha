@@ -1,4 +1,15 @@
-// FilterItem.tsx
+/*
+ * 機能: フィルター項目コンポーネント - 単一エリアの表示/非表示を切り替えるUI
+ * 依存関係:
+ *   - React
+ *   - FilterPanel.module.css スタイル
+ *   - AreaType 型定義
+ * 注意点:
+ *   - カスタムスタイルのチェックボックスを使用しています
+ *   - エリアの色に応じたボーダーカラーが適用されます
+ *   - アクセシビリティに配慮したラベルとaria属性を使用しています
+ */
+
 import React from 'react';
 import styles from './FilterPanel.module.css';
 import type { AreaType } from '../../../types/common';

@@ -1,17 +1,20 @@
+/**
+ * 機能: ブラウザの位置情報APIをラップした位置情報サービス
+ * 依存関係:
+ *   - Web Geolocation API
+ *   - CONFIG設定 (config.ts)
+ *   - エラーメッセージ定数 (messages.ts)
+ * 注意点:
+ *   - ユーザーが位置情報の使用を許可する必要があります
+ *   - モバイルデバイスでは精度が向上しますが、バッテリー消費が増加します
+ *   - タイムアウトやエラー処理が実装されています
+ *   - 屋内や地下では精度が低下する可能性があります
+ */
 import { CONFIG } from '../../constants/config';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import type { GeolocationError, LatLngLiteral } from '../../types/common';
 
-/**
- * 位置情報取得のためのサービス
- */
 export const GeolocationService = {
-  /**
-   * 現在の位置情報を取得する
-   *
-   * @param callbacks - 成功・失敗時のコールバック関数
-   * @param options - Geolocation APIのオプション（省略可）
-   */
   getCurrentPosition: (
     callbacks: {
       onSuccess: (location: LatLngLiteral) => void;
@@ -19,7 +22,6 @@ export const GeolocationService = {
     },
     options?: Partial<typeof CONFIG.maps.geolocation>,
   ): void => {
-    // ブラウザのgeolocation APIが利用可能か確認
     if (!navigator.geolocation) {
       callbacks.onError({
         code: -1,
@@ -28,7 +30,6 @@ export const GeolocationService = {
       return;
     }
 
-    // CONFIG設定と引数のオプションをマージ
     const geolocationOptions = {
       enableHighAccuracy: CONFIG.maps.geolocation.highAccuracy,
       timeout: CONFIG.maps.geolocation.timeout,
@@ -36,7 +37,6 @@ export const GeolocationService = {
       ...options,
     };
 
-    // 位置情報を取得
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const location: LatLngLiteral = {
@@ -49,7 +49,6 @@ export const GeolocationService = {
         let message: string;
         let details: string | undefined;
 
-        // エラーコードに応じたメッセージを設定
         switch (error.code) {
           case GeolocationPositionError.PERMISSION_DENIED:
             message = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
@@ -76,9 +75,6 @@ export const GeolocationService = {
     );
   },
 
-  /**
-   * 位置情報の監視を開始する
-   */
   watchPosition: (
     callbacks: {
       onSuccess: (location: LatLngLiteral) => void;
@@ -110,11 +106,9 @@ export const GeolocationService = {
         callbacks.onSuccess(location);
       },
       (error) => {
-        // エラーハンドリングは getCurrentPosition と同じロジックを使用
         let message: string;
         let details: string | undefined;
 
-        // エラーコードに応じたメッセージを設定
         switch (error.code) {
           case GeolocationPositionError.PERMISSION_DENIED:
             message = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
@@ -141,9 +135,6 @@ export const GeolocationService = {
     );
   },
 
-  /**
-   * 位置情報の監視を停止する
-   */
   clearWatch: (watchId: number): void => {
     if (navigator.geolocation && watchId !== -1) {
       navigator.geolocation.clearWatch(watchId);

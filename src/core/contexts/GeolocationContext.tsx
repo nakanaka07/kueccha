@@ -1,9 +1,22 @@
+/**
+ * 機能: 位置情報サービスの状態と操作を管理するReactコンテキスト
+ * 依存関係:
+ *   - React (createContext, useContext, useState, useCallback, useEffect)
+ *   - ../../constants/config からのCONFIG設定
+ *   - ../../constants/messages からのERROR_MESSAGES
+ *   - ../../types/common からのLatLngLiteral, AppError型
+ *   - Geolocation Web API
+ * 注意点:
+ *   - 位置情報の取得には利用者の許可が必要
+ *   - エラーの種類（権限拒否、位置情報取得不可、タイムアウトなど）に応じた処理を提供
+ *   - 権限拒否時は警告表示オプションあり
+ *   - Geolocation APIがサポートされていない環境ではエラーを返す
+ */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { CONFIG } from '../../constants/config';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import type { LatLngLiteral, AppError } from '../../types/common';
 
-// 状態の型定義
 interface GeolocationState {
   currentLocation: LatLngLiteral | null;
   isLocating: boolean;
@@ -11,7 +24,6 @@ interface GeolocationState {
   showWarning: boolean;
 }
 
-// コンテキストの型定義
 interface GeolocationContextType {
   state: GeolocationState;
   getCurrentLocation: () => Promise<LatLngLiteral | null>;
@@ -19,10 +31,8 @@ interface GeolocationContextType {
   setShowWarning: (show: boolean) => void;
 }
 
-// コンテキストの作成
 export const GeolocationContext = createContext<GeolocationContextType | null>(null);
 
-// コンテキストプロバイダーコンポーネント
 export const GeolocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GeolocationState>({
     currentLocation: null,
@@ -31,7 +41,6 @@ export const GeolocationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     showWarning: false,
   });
 
-  // 位置情報を取得する関数
   const getCurrentLocation = useCallback(async (): Promise<LatLngLiteral | null> => {
     if (!navigator.geolocation) {
       setState((prev) => ({
@@ -101,12 +110,10 @@ export const GeolocationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, []);
 
-  // エラーをクリアする関数
   const clearGeolocationError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // 位置情報の警告表示を設定する関数
   const setShowWarning = useCallback((show: boolean) => {
     setState((prev) => ({ ...prev, showWarning: show }));
   }, []);
@@ -125,7 +132,6 @@ export const GeolocationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 };
 
-// フック
 export const useGeolocationContext = () => {
   const context = useContext(GeolocationContext);
   if (!context) {

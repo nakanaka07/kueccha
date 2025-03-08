@@ -1,4 +1,12 @@
-// アイコン画像のインポート
+/**
+ * 機能: Google Maps用のマーカーアイコンと色の定義
+ * 依存関係:
+ *   - ../utils/imagesディレクトリ内の各種アイコン画像ファイル
+ * 注意点:
+ *   - アイコンファイルへのパスが正確であることを確認
+ *   - const assertionを使用して型安全性を確保
+ *   - MARKER_ICONSは直接アクセス用にMARKERS.iconsをエクスポート
+ */
 import publicToiletIcon from '../utils/images/ano_icon01.png';
 import recommendIcon from '../utils/images/ano_icon_recommend.png';
 import ryotsuAikawaIcon from '../utils/images/icon_map01.png';
@@ -9,7 +17,6 @@ import parkingIcon from '../utils/images/shi_icon01.png';
 import snackIcon from '../utils/images/shi_icon02.png';
 import currentLocationIcon from '../utils/images/shi_icon04.png';
 
-// マーカー関連の設定
 export const MARKERS = {
   colors: {
     DEFAULT: '#000000',
@@ -35,5 +42,4 @@ export const MARKERS = {
   },
 } as const;
 
-// マーカーアイコンの直接アクセス用エクスポート
 export const MARKER_ICONS = MARKERS.icons;

@@ -1,3 +1,15 @@
+/**
+ * 機能: 位置情報取得とその警告表示を管理するカスタムフック
+ * 依存関係:
+ *   - React hooks (useState, useCallback)
+ *   - useGeolocation（位置情報取得用カスタムフック）
+ *   - LatLngLiteral, GeolocationError 型定義
+ * 注意点:
+ *   - ブラウザの位置情報APIに依存するため、ユーザー許可が必要
+ *   - エラー処理を含む（権限拒否、タイムアウトなど）
+ *   - モバイルとデスクトップで動作精度が異なる場合あり
+ *   - 位置情報の取得状態と表示制御を統合管理
+ */
 import { useState, useCallback } from 'react';
 import { useGeolocation } from '../../modules/map';
 import type { LatLngLiteral, GeolocationError } from '../../types/common';
@@ -11,7 +23,6 @@ export const useLocationWarning = () => {
 
   const { getCurrentPosition } = useGeolocation();
 
-  // 成功ハンドラを共通化
   const handleLocationSuccess = useCallback((location: LatLngLiteral) => {
     setLocationState((prev) => ({
       ...prev,
@@ -21,7 +32,6 @@ export const useLocationWarning = () => {
     }));
   }, []);
 
-  // エラーハンドラをGeolocationError型に対応
   const handleLocationError = useCallback((error: GeolocationError) => {
     console.warn(`位置情報エラー: ${error.message}`);
     setLocationState((prev) => ({
@@ -56,7 +66,6 @@ export const useLocationWarning = () => {
     });
   }, [getCurrentPosition, handleLocationSuccess, handleLocationError]);
 
-  // 分割代入で旧インターフェースと互換性を保つ
   const { currentLocation, error: locationError, showWarning } = locationState;
   const setShowWarning = useCallback((show: boolean) => {
     setLocationState((prev) => ({ ...prev, showWarning: show }));

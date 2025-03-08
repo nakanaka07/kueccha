@@ -1,34 +1,23 @@
+/**
+ * 機能: グローバル状態とローカル状態を双方向に同期するカスタムフック
+ * 依存関係:
+ *   - React hooks (useState, useEffect, useRef)
+ *   - React 16.8以上 (フックをサポートするバージョン)
+ * 注意点:
+ *   - 循環参照の可能性があるため、isEqualオプションで適切な比較関数を指定する
+ *   - デバッグモードで同期の流れを確認可能
+ *   - 同期方向を一方向に制限することも可能
+ *   - パフォーマンス考慮: 複雑なオブジェクトの場合はカスタム比較関数を実装すべき
+ */
 import { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
 
-/**
- * グローバル状態とローカル状態を同期させるためのカスタムフック
- *
- * @template T - 状態の型
- * @param globalState - 同期元となるグローバルな状態
- * @param setGlobalState - グローバルな状態を更新するための関数
- * @param options - 動作オプション
- * @returns [localState, setLocalState] - ローカル状態と更新関数のタプル
- */
 export function useSyncState<T>(
   globalState: T,
   setGlobalState: Dispatch<SetStateAction<T>>,
   options?: {
-    /**
-     * 状態を比較するためのカスタム関数
-     * デフォルトでは参照の比較を行います
-     */
     isEqual?: (a: T, b: T) => boolean;
-    /**
-     * デバッグモード (コンソールにログを出力)
-     */
     debug?: boolean;
-    /**
-     * グローバル→ローカルの同期を無効にする
-     */
     disableGlobalToLocal?: boolean;
-    /**
-     * ローカル→グローバルの同期を無効にする
-     */
     disableLocalToGlobal?: boolean;
   },
 ): [T, Dispatch<SetStateAction<T>>] {
@@ -44,7 +33,6 @@ export function useSyncState<T>(
     disableLocalToGlobal = false,
   } = options || {};
 
-  // グローバル→ローカルの同期
   useEffect(() => {
     if (disableGlobalToLocal) return;
 
@@ -67,7 +55,6 @@ export function useSyncState<T>(
     }
   }, [globalState, isEqual, debug, disableGlobalToLocal]);
 
-  // ローカル→グローバルの同期
   useEffect(() => {
     if (disableLocalToGlobal) return;
 

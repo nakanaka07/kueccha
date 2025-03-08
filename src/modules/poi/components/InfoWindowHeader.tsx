@@ -1,4 +1,13 @@
-// components/InfoWindowHeader.tsx
+/*
+ * 機能: 情報ウィンドウのヘッダー部分を表示するReactコンポーネント
+ * 依存関係:
+ *   - React
+ *   - InfoWindow.module.css (スタイリング)
+ * 注意点:
+ *   - タイトルと閉じるボタンを含む
+ *   - アクセシビリティ対応のためのaria属性を実装
+ */
+
 import React from 'react';
 import styles from './InfoWindow.module.css';
 

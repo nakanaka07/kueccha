@@ -1,4 +1,15 @@
-// components/layout/AppLayout.tsx
+/*
+ * 機能: アプリケーションのメインレイアウトを提供し、マップ、ローディング状態、エラー表示を管理します
+ * 依存関係:
+ *   - React
+ *   - AppLayout.module.cssスタイル
+ *   - ErrorBoundary、LoadingIndicators、LocationWarning、Map、MapControlsコンポーネント
+ *   - Poi型定義
+ * 注意点:
+ *   - マップの読み込み状態に応じて表示内容が変わります
+ *   - エラーハンドリングとリトライ機能を備えています
+ *   - アクセシビリティ対応のため、スクリーンリーダー用の要素があります
+ */
 import React from 'react';
 import styles from './AppLayout.module.css';
 import { ErrorBoundary, LoadingIndicators, LocationWarning, Map, MapControls } from '../../../common';

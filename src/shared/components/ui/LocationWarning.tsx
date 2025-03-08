@@ -1,3 +1,14 @@
+/*
+ * 機能: 位置情報の制限に関する警告メッセージを表示するプレゼンテーショナルコンポーネント
+ * 依存関係:
+ *   - React (useState, useEffectフック)
+ *   - LocationWarning.module.css スタイルシート
+ *   - LocationWarningProps型 ('../../types/feedback'から)
+ * 注意点:
+ *   - 閉じる時にフェードアウトアニメーションを実行（300ms）
+ *   - onClosプロパティとしてコールバック関数が必要
+ *   - アクセシビリティ対応のaria-label属性を含む
+ */
 import React, { useState, useEffect } from 'react';
 import styles from './LocationWarning.module.css';
 import type { LocationWarningProps } from '../../types/feedback';
@@ -28,7 +39,7 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
       </button>
 
       <div className={styles.message}>
-        ブラウザ環境によっては正しい位置情報を取得できない場合がございます。 ご了承ください。
+        環境によっては正しい位置情報を取得できない場合がございます。 ご了承ください。
       </div>
     </div>
   );

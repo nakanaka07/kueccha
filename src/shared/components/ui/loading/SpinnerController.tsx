@@ -1,3 +1,14 @@
+/*
+ * 機能: ローディングスピナーの表示制御ロジックを担当するコンテナコンポーネント
+ * 依存関係:
+ *   - React（useState, useEffect, memo）
+ *   - SpinnerViewコンポーネント
+ *   - useLoadingStateフック
+ * 注意点:
+ *   - 遅延表示（delayMs）機能によりちらつき防止が可能
+ *   - isLoadingとisLoadedプロパティを使用することでローディング状態を制御できます
+ *   - ローディング完了時にフェードアウト効果を適用可能（fadeDuration）
+ */
 import React, { useState, useEffect } from 'react';
 import { SpinnerView } from './SpinnerView';
 import { useLoadingState } from '../core/hooks/useLoadingState';

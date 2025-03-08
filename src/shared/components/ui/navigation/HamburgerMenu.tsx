@@ -1,3 +1,14 @@
+/*
+ * 機能: ハンバーガーメニューのメインコンポーネント（開閉状態管理とサブコンポーネントの統合）
+ * 依存関係:
+ *   - React（useState, useEffect, useRef, useCallback, useMemo）
+ *   - HamburgerMenu.module.cssスタイルシート
+ *   - MenuItems, MenuToggleButton, SearchContainerコンポーネント
+ *   - HamburgerMenuProps型定義
+ * 注意点:
+ *   - メニュー外のクリックでメニューが閉じる動作があります
+ *   - 検索バー表示とメニュー表示は排他的な関係です（検索バー表示時にメニューは閉じる）
+ */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import styles from './HamburgerMenu.module.css';
 import { MenuItems } from './MenuItems';

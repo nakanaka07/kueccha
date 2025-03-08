@@ -1,3 +1,16 @@
+/**
+ * 機能: アプリケーション全体の状態管理を統合するカスタムフック
+ * 依存関係:
+ *   - React hooks (useState, useCallback, useEffect)
+ *   - カスタムフック (useLoadingState, useLocationWarning, useAreaVisibility, useMapState, usePoiState)
+ *   - 設定関連 (CONFIG, ERROR_MESSAGES, LOADING_DELAY)
+ *   - 型定義 (Poi, AppError, LatLngLiteral)
+ * 注意点:
+ *   - 複数の状態管理フックを統合するため、レンダリングパフォーマンスに影響する可能性あり
+ *   - 位置情報APIの権限が必要
+ *   - エラーハンドリングがアプリケーション全体に影響
+ *   - マップ読み込みと位置情報取得のライフサイクルを管理
+ */
 import { useState, useCallback, useEffect } from 'react';
 import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
@@ -17,10 +30,8 @@ export const useAppState = (pois: Poi[]) => {
   const [error, setError] = useState<AppError | null>(null);
   const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
 
-  // 遅延時間を設定
   const { isVisible, isFading } = useLoadingState(mapState.isLoading, mapState.isMapLoaded, LOADING_DELAY || 5000);
 
-  // CONFIG.maps.geolocationの設定を使用して位置情報を取得
   const getUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setError({
@@ -72,15 +83,11 @@ export const useAppState = (pois: Poi[]) => {
   const retryMapLoad = useCallback(() => {
     setError(null);
     if (mapState.isMapLoaded) {
-      // マップが読み込まれている場合は、位置情報の取得を試みる
       getUserLocation();
     } else {
-      // マップが読み込まれていない場合は、マップの再読み込みを試みる
-      // mapInstanceがある場合は引数として渡す
       if (mapState.mapInstance) {
         mapState.handleMapLoad(mapState.mapInstance);
       } else {
-        // mapInstanceがない場合はエラーを設定
         setError({
           message: ERROR_MESSAGES.MAP.LOAD_FAILED,
           code: 'MAP_INSTANCE_MISSING',
@@ -89,16 +96,13 @@ export const useAppState = (pois: Poi[]) => {
     }
   }, [mapState, getUserLocation]);
 
-  // マップの読み込み完了時に位置情報を取得
   useEffect(() => {
     if (mapState.isMapLoaded && !currentLocation && !error) {
       getUserLocation();
     }
   }, [mapState.isMapLoaded, currentLocation, getUserLocation, error]);
 
-  // エラー状態の監視
   useEffect(() => {
-    // マップ読み込み中にエラーが発生した場合の処理
     if (!mapState.isMapLoaded && !mapState.isLoading && !error) {
       setError({
         message: ERROR_MESSAGES.MAP.LOAD_FAILED,

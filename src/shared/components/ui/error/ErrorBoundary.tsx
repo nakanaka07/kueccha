@@ -1,3 +1,15 @@
+/*
+ * 機能: Reactコンポーネントツリー内でのエラーをキャッチし、フォールバックUIを表示するエラーバウンダリー
+ * 依存関係:
+ *   - React
+ *   - ErrorBoundary.module.cssスタイルシート
+ *   - ERROR_MESSAGESオブジェクト
+ *   - ErrorBoundaryProps, ErrorBoundaryState型定義
+ * 注意点:
+ *   - このコンポーネントはレンダリングフェーズのエラーのみをキャッチします
+ *   - イベントハンドラ内のエラーはキャッチされません
+ *   - フォールバックUIをカスタマイズするにはfallbackプロパティを使用します
+ */
 import React, { Component, ErrorInfo } from 'react';
 import styles from './ErrorBoundary.module.css';
 import { ERROR_MESSAGES } from '../constants/messages';

@@ -1,4 +1,13 @@
-// components/InfoItem.tsx
+/*
+ * 機能: 情報ウィンドウ内の個別情報項目を表示するコンポーネント
+ * 依存関係:
+ *   - React
+ *   - InfoWindow.module.css (スタイリング)
+ * 注意点:
+ *   - タイトル付きまたはタイトルなしのコンテンツに対応
+ *   - 内容はReactNodeとして柔軟に指定可能
+ */
+
 import React, { ReactNode } from 'react';
 import styles from './InfoWindow.module.css';
 

@@ -1,4 +1,16 @@
-// useFeedbackForm.ts
+/*
+ * 機能: フィードバックフォームのロジックを管理するReactカスタムフック
+ * 依存関係:
+ *   - emailjs: メール送信機能
+ *   - React hooks (useState, useEffect)
+ *   - ERROR_MESSAGES定数
+ *   - 環境変数: VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, VITE_EMAILJS_PUBLIC_KEY
+ * 注意点:
+ *   - 適切な環境変数設定が必要（EmailJS API情報）
+ *   - フォームバリデーションを含む
+ *   - 非同期処理によるエラーハンドリングを実装
+ */
+
 import emailjs from '@emailjs/browser';
 import { useState, useEffect } from 'react';
 import { ERROR_MESSAGES } from '../../../constants/messages';
@@ -62,7 +74,6 @@ export function useFeedbackForm() {
     }
   };
 
-  // 送信後にフォームをリセット
   useEffect(() => {
     if (isSubmitted) {
       setName('');
@@ -71,7 +82,6 @@ export function useFeedbackForm() {
     }
   }, [isSubmitted]);
 
-  // フィールド変更時のエラークリア
   const handleChange =
     (setter: React.Dispatch<React.SetStateAction<string>>) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -1,3 +1,15 @@
+/*
+ * 機能: Google Maps上にPOIマーカーを表示するReactコンポーネント
+ * 依存関係:
+ *   - React
+ *   - useMarkerElement, useMarkerInstance, useMarkerInteractionフック
+ *   - MarkerProps型定義
+ * 注意点:
+ *   - React.memoでパフォーマンス最適化
+ *   - このコンポーネントはDOM要素を直接レンダリングしない
+ *   - 選択状態やz-indexをプロパティとして受け取る
+ */
+
 import React from 'react';
 import { useMarkerElement } from '../hooks/useMarkerElement';
 import { useMarkerInstance } from '../hooks/useMarkerInstance';
@@ -6,10 +18,8 @@ import type { MarkerProps } from '../../../types/poi';
 
 const Marker = React.memo(
   ({ poi, onClick, map, isSelected, zIndex }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
-    // マーカー要素の作成
     const markerElement = useMarkerElement(poi.area, poi.name);
 
-    // マーカーインスタンスの管理
     const markerRef = useMarkerInstance({
       position: poi.location,
       map,
@@ -18,7 +28,6 @@ const Marker = React.memo(
       content: markerElement,
     });
 
-    // イベントとインタラクションの処理
     useMarkerInteraction({
       marker: markerRef.current,
       poi,
@@ -26,7 +35,6 @@ const Marker = React.memo(
       isSelected,
     });
 
-    // このコンポーネントはDOM要素をレンダリングしない
     return null;
   },
 );

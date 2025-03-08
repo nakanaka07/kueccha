@@ -1,4 +1,15 @@
-// useAreaFilters.ts
+/*
+ * 機能: エリアフィルタリング機能を提供するカスタムフック
+ * 依存関係:
+ *   - React useEffect
+ *   - AREAS, MARKERS 定数
+ *   - Poi, AreaType 型定義
+ * 注意点:
+ *   - このフックはPOIデータをエリアごとにフィルタリングし、UI表示用のデータを生成します
+ *   - CURRENT_LOCATIONは特別なエリアとして扱われ、通常のエリア一覧からは除外されます
+ *   - 親コンポーネントとの状態同期が自動的に行われます
+ */
+
 import { useEffect } from 'react';
 import { AREAS } from '../../../constants/areas';
 import { MARKERS } from '../../../constants/markers';
@@ -9,7 +20,6 @@ export function useAreaFilters(
   localAreaVisibility: Record<AreaType, boolean>,
   setAreaVisibility: (visibility: Record<AreaType, boolean>) => void,
 ) {
-  // エリアごとのカウント集計
   const areaCounts = pois.reduce(
     (acc: Record<AreaType, number>, poi) => ({
       ...acc,
@@ -18,7 +28,6 @@ export function useAreaFilters(
     {} as Record<AreaType, number>,
   );
 
-  // 表示用エリアデータの構築
   const areas = Object.entries(AREAS)
     .filter(([area]) => area !== 'CURRENT_LOCATION')
     .map(([area, name]) => ({
@@ -30,7 +39,6 @@ export function useAreaFilters(
       icon: MARKERS.icons[area as AreaType],
     }));
 
-  // 親コンポーネントとの状態同期
   useEffect(() => {
     const sortedAreaVisibility = Object.keys(localAreaVisibility)
       .sort((a, b) => (a === 'RECOMMEND' ? 1 : b === 'RECOMMEND' ? -1 : 0))

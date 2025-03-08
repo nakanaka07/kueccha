@@ -1,13 +1,19 @@
-// コンポーネントのエクスポート
+/*
+ * 機能: フィードバックモジュールのエントリーポイント。公開コンポーネント、フック、型定義をエクスポートする
+ * 依存関係:
+ *   - FeedbackFormContainer、FeedbackFormUI、FeedbackSuccessコンポーネント
+ *   - useFeedbackFormフック
+ *   - 型定義（FeedbackFormProps、TemplateParams）
+ * 注意点:
+ *   - このファイルは外部モジュールへの公開APIを定義するため、変更時には互換性を考慮する必要がある
+ */
+
 export { default as FeedbackForm } from './components/FeedbackFormContainer';
 
-// 内部コンポーネント（必要に応じて公開）
 export { FeedbackFormUI } from './components/FeedbackFormUI';
 export { FeedbackSuccess } from './components/FeedbackSuccess';
 
-// フックのエクスポート
 export { useFeedbackForm } from './hooks/useFeedbackForm';
 
-// 型定義のエクスポート（必要に応じて）
 export type { FeedbackFormProps, TemplateParams } from '../../types/feedback';
 export * from './hooks/useFeedbackForm';

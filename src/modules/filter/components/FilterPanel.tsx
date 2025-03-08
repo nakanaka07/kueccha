@@ -1,3 +1,17 @@
+/*
+ * 機能: フィルターパネルコンポーネント - エリア表示/非表示の操作UIを提供
+ * 依存関係:
+ *   - React
+ *   - FilterItem コンポーネント
+ *   - useAreaFilters フック
+ *   - FilterPanel.module.css スタイル
+ *   - AreaType, FilterPanelProps 型定義
+ * 注意点:
+ *   - isFilterPanelOpenプロパティによって表示/非表示が切り替わります
+ *   - 各エリアの表示状態はlocalAreaVisibilityで管理し、setAreaVisibilityで親コンポーネントに伝達します
+ *   - レスポンシブデザインに対応しています
+ */
+
 import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
 import styles from './FilterPanel.module.css';
@@ -14,10 +28,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // カスタムフックを使用してデータ処理ロジックを分離
   const { areas, currentLocationData } = useAreaFilters(pois, localAreaVisibility, setAreaVisibility);
 
-  // チェックボックス変更のハンドラー
   const handleAreaChange = (area: AreaType, isVisible: boolean) => {
     setLocalAreaVisibility((prev) => ({
       ...prev,
@@ -39,7 +51,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <h2>表示エリア</h2>
 
         <div className={styles.filterList}>
-          {/* エリア一覧をマッピング */}
           {areas.map(({ area, name, count, isVisible, color, icon }) => (
             <FilterItem
               key={area}
@@ -53,7 +64,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             />
           ))}
 
-          {/* 現在地のフィルター項目 */}
           <FilterItem
             area="CURRENT_LOCATION"
             label="現在地"

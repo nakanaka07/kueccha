@@ -1,6 +1,16 @@
-// 更新されたインポートパス
-import { APP } from '../../constants'; // './constants'から変更
-import type { Config } from '../types/common'; // './types'から変更
+/**
+ * 機能: アプリケーション設定の検証と初期化を行う設定管理モジュール
+ * 依存関係:
+ *   - ../../constants (APPオブジェクト)
+ *   - ../types/common (Config型定義)
+ *   - Vite環境変数 (VITE_GOOGLE_MAPS_API_KEY、VITE_GOOGLE_SHEETS_API_KEYなど)
+ * 注意点:
+ *   - 必要な環境変数が設定されていない場合、アプリケーションの起動時にエラーをスローします
+ *   - 設定値の検証に失敗した場合もエラーがスローされるため、正しい設定が必須です
+ *   - Google Maps APIとGoogle Sheets APIキーが有効である必要があります
+ */
+import { APP } from '../../constants';
+import type { Config } from '../types/common';
 
 const validateEnvironmentVariables = () => {
   const requiredEnvVars = {
@@ -20,28 +30,23 @@ const validateEnvironmentVariables = () => {
 };
 
 export const validateConfig = (config: Config): void => {
-  // マップ設定のバリデーション
   if (!config.maps.apiKey || !config.maps.mapId) {
     throw new Error('Google Maps API KeyとMap IDが必要です');
   }
 
-  // シート設定のバリデーション
   if (!config.sheets.apiKey || !config.sheets.spreadsheetId) {
     throw new Error('Google Sheets API KeyとSpreadsheet IDが必要です');
   }
 
-  // マーカー色設定のバリデーション
   if (!config.markers.colors || Object.keys(config.markers.colors).length === 0) {
     throw new Error('マーカーの色設定が必要です');
   }
 
-  // geolocationプロパティの検証を追加
   if (!config.maps.geolocation) {
     throw new Error('位置情報設定が必要です');
   }
 };
 
-// 型の互換性を確保するために安全に変換
 export const CONFIG: Config = {
   maps: {
     apiKey: APP.config.maps.apiKey,
@@ -52,7 +57,7 @@ export const CONFIG: Config = {
     defaultCenter: APP.config.maps.defaultCenter,
     defaultZoom: APP.config.maps.defaultZoom,
     style: APP.config.maps.style,
-    geolocation: APP.config.maps.geolocation, // geolocationプロパティを追加
+    geolocation: APP.config.maps.geolocation,
     options: {
       ...APP.config.maps.options,
       mapTypeControlOptions: {
@@ -67,10 +72,8 @@ export const CONFIG: Config = {
   },
 };
 
-// 環境変数のバリデーション
 validateEnvironmentVariables();
 
-// 設定値のバリデーション
 try {
   validateConfig(CONFIG);
 } catch (error) {

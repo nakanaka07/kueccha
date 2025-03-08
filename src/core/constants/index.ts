@@ -1,19 +1,17 @@
-// エリア関連
+/**
+ * 機能: 定数モジュールの中央エクスポートハブとして機能し、すべての定数を一箇所からアクセス可能にする
+ * 依存関係:
+ *   - ./areas, ./markers, ./config, ./messages, ./ui モジュール
+ * 注意点:
+ *   - APPオブジェクトは後方互換性のために維持されているが、新しいコードでは直接のimportを使用することを推奨
+ *   - require()を使用している部分は、将来的にはimport文に置き換えるべき
+ */
 export * from './areas';
-
-// マーカー関連
 export * from './markers';
-
-// 設定関連
 export * from './config';
-
-// メッセージ関連
 export * from './messages';
-
-// UI関連
 export * from './ui';
 
-// APP定数（後方互換性のため）
 export const APP = {
   areas: require('./areas').AREAS,
   markers: require('./markers').MARKERS,

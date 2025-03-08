@@ -1,4 +1,15 @@
-// SearchResultItem.tsx
+/*
+ * 機能: 検索結果の個別アイテムを表示するReactコンポーネント
+ * 依存関係:
+ *   - React (useCallback)
+ *   - SearchResults.module.css (スタイリング)
+ *   - Poi型定義
+ * 注意点:
+ *   - クリックとキーボード操作（EnterとSpace）に対応
+ *   - POIに詳細情報がない場合の代替テキスト表示対応
+ *   - アクセシビリティに配慮した実装（tabIndex、role属性等）
+ */
+
 import React, { useCallback } from 'react';
 import styles from './SearchResults.module.css';
 import type { Poi } from '../../../types/poi';

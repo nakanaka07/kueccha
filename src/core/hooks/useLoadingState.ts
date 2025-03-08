@@ -1,22 +1,22 @@
+/**
+ * 機能: ローディング状態の表示とフェードアウト効果を管理するカスタムフック
+ * 依存関係:
+ *   - React hooks (useState, useEffect)
+ *   - BACKGROUND_HIDE_DELAY 定数 (UI定数)
+ * 注意点:
+ *   - isLoading と isLoaded の2つのフラグで状態を制御
+ *   - フェードアウト効果のタイミングはfadeDurationで調整可能
+ *   - アニメーションにはCSSトランジションと連携することを想定
+ *   - コンポーネントがアンマウントされる前にタイマーをクリアする
+ */
 import { useState, useEffect } from 'react';
 import { BACKGROUND_HIDE_DELAY } from '../../constants/ui';
 
-/**
- * ローディング状態とフェードアウト処理を管理するカスタムフック
- *
- * @param isLoading - ロード中かどうかを示すフラグ
- * @param isLoaded - 読み込みが完了したかどうかを示すフラグ
- * @param fadeDuration - フェードアウトにかかる時間（ミリ秒）
- * @returns オブジェクト { isVisible, isFading }
- */
 export function useLoadingState(isLoading: boolean, isLoaded: boolean, fadeDuration: number = BACKGROUND_HIDE_DELAY) {
-  // 表示状態を管理（ロード中は表示する）
   const [isVisible, setIsVisible] = useState(isLoading);
-  // フェードアウト中かどうかを管理
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // ロード完了時（isLoading=false & isLoaded=true）にフェードアウト処理を実行
     if (!isLoading && isLoaded) {
       setIsFading(true);
 
@@ -27,7 +27,6 @@ export function useLoadingState(isLoading: boolean, isLoaded: boolean, fadeDurat
 
       return () => clearTimeout(timer);
     } else {
-      // ロード中またはデータが未ロードの場合は表示
       setIsFading(false);
       setIsVisible(true);
     }

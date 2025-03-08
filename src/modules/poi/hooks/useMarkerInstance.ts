@@ -1,4 +1,15 @@
-// hooks/useMarkerInstance.ts
+/*
+ * 機能: Google Mapsのマーカーインスタンスを作成・管理するフック
+ * 依存関係:
+ *   - React useRef, useEffect
+ *   - Google Maps JavaScript API (marker.AdvancedMarkerElement)
+ *   - LatLngLiteral型定義
+ * 注意点:
+ *   - Google Maps APIが初期化されていることが前提
+ *   - マーカーのライフサイクル管理（生成・更新・削除）を担当
+ *   - マウント解除時にマーカーの参照を適切にクリーンアップ
+ */
+
 import { useRef, useEffect } from 'react';
 import type { LatLngLiteral } from '../../../../types/map';
 
@@ -17,13 +28,11 @@ export function useMarkerInstance({ position, map, title, zIndex, content }: Use
     if (!map || !window.google?.maps) return;
 
     try {
-      // 既存マーカーの位置更新
       if (markerRef.current) {
         markerRef.current.position = position;
         return;
       }
 
-      // 新規マーカー作成
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position,
         map,
@@ -37,7 +46,6 @@ export function useMarkerInstance({ position, map, title, zIndex, content }: Use
       console.error('マーカー作成中にエラーが発生しました:', error);
     }
 
-    // クリーンアップ
     return () => {
       if (markerRef.current) {
         google.maps.event.clearInstanceListeners(markerRef.current);

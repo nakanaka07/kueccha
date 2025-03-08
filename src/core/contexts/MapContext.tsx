@@ -1,3 +1,17 @@
+/**
+ * 機能: Google Maps関連の状態と操作を管理するReactコンテキスト
+ * 依存関係:
+ *   - React (createContext, useContext, useCallback, useState, useReducer, useEffect)
+ *   - ../../constants/config からのCONFIG設定
+ *   - ../../constants/messages からのERROR_MESSAGES
+ *   - ../../types/common からのLatLngLiteral, AppError型
+ *   - @google/maps JavaScript API
+ * 注意点:
+ *   - マップのロード状態、マップインスタンス、中心座標、ズームレベルを管理
+ *   - マップのロードに20秒以上かかる場合はタイムアウトエラーを表示
+ *   - マップインスタンスが変更されたときに自動的に中心座標とズームレベルを適用
+ *   - エラーハンドリングと再試行機能を提供
+ */
 import React, { createContext, useContext, useCallback, useState, useReducer, useEffect } from 'react';
 import { CONFIG } from '../../constants/config';
 import { ERROR_MESSAGES } from '../../constants/messages';

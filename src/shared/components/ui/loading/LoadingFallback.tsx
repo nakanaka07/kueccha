@@ -1,3 +1,18 @@
+/*
+ * 機能: ローディング状態、エラー状態、完了状態を管理し、適切なUI表示を行うコンポーネント
+ * 依存関係:
+ *   - React（memo）
+ *   - ErrorDisplayコンポーネント
+ *   - LoadingFallback.module.cssスタイルシート
+ *   - LoadingVariantコンポーネント
+ *   - ERROR_MESSAGESオブジェクト
+ *   - useLoadingStateフック
+ * 注意点:
+ *   - ローディング状態とエラー状態のどちらも扱えます
+ *   - フェードアウト効果のアニメーション時間を調整可能
+ *   - リトライ機能を提供（onRetryプロパティ）
+ *   - アクセシビリティのためのaria属性を適切に設定
+ */
 import React, { memo } from 'react';
 import { ErrorDisplay } from './ErrorDisplay';
 import styles from './LoadingFallback.module.css';

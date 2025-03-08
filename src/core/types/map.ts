@@ -1,3 +1,15 @@
+/**
+ * 機能: Google Maps連携と地図表示に関する型定義
+ * 依存関係:
+ *   - @react-google-maps/api ライブラリ
+ *   - common.ts (BaseProps, LatLngLiteral型を使用)
+ *   - poi.ts (Poi型を使用)
+ *   - Google Maps API
+ * 注意点:
+ *   - MapConfig型はGoogle Maps APIの初期化パラメータに直接対応
+ *   - 地図スタイルやコントロールのカスタマイズオプションを含む
+ *   - 位置情報機能の設定パラメータも定義
+ */
 import { LoadScriptProps } from '@react-google-maps/api';
 import { BaseProps, LatLngLiteral } from './common';
 import { Poi } from './poi';

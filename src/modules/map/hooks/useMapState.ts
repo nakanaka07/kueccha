@@ -1,3 +1,16 @@
+/*
+ * 機能: Googleマップの状態管理を担当するカスタムフック
+ * 依存関係:
+ *   - React Hooks (useState, useCallback, useEffect)
+ *   - CONFIG（マップデフォルト設定）
+ *   - ERROR_MESSAGES（エラーメッセージ定数）
+ *   - 型定義: LatLngLiteral, AppError
+ * 注意点:
+ *   - マップインスタンスのライフサイクル管理を行う
+ *   - エラーハンドリングとタイムアウト処理を実装
+ *   - マップが読み込まれない場合20秒後にエラーを表示
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import { CONFIG } from '../../../constants/config';
 import { ERROR_MESSAGES } from '../../../constants/messages';
@@ -24,7 +37,6 @@ export const useMapState = (): MapState => {
   const [center, setCenter] = useState<LatLngLiteral>(CONFIG.maps.defaultCenter);
   const [zoom, setZoom] = useState<number>(CONFIG.maps.defaultZoom);
 
-  // マップロード時の処理
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     try {
       setMapInstance(map);
@@ -41,19 +53,16 @@ export const useMapState = (): MapState => {
     }
   }, []);
 
-  // マップのビューをリセットする
   const resetView = useCallback(() => {
     setCenter(CONFIG.maps.defaultCenter);
     setZoom(CONFIG.maps.defaultZoom);
 
-    // マップインスタンスが存在する場合は直接更新
     if (mapInstance) {
       mapInstance.setCenter(CONFIG.maps.defaultCenter);
       mapInstance.setZoom(CONFIG.maps.defaultZoom);
     }
   }, [mapInstance]);
 
-  // マップインスタンスが変更されたときに中心とズームを適用
   useEffect(() => {
     if (mapInstance && isMapLoaded) {
       mapInstance.setCenter(center);
@@ -61,7 +70,6 @@ export const useMapState = (): MapState => {
     }
   }, [mapInstance, isMapLoaded, center, zoom]);
 
-  // 読み込みが長引いた場合のタイムアウト処理
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && !isMapLoaded) {
@@ -71,7 +79,7 @@ export const useMapState = (): MapState => {
         });
         setIsLoading(false);
       }
-    }, 20000); // 20秒のタイムアウト
+    }, 20000);
 
     return () => clearTimeout(timer);
   }, [isLoading, isMapLoaded]);

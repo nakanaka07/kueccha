@@ -1,11 +1,16 @@
-// コンポーネントのエクスポート
+/*
+ * 機能: POIモジュールのエントリーポイント
+ * 依存関係:
+ *   - POI関連コンポーネント (Marker, InfoWindow)
+ *   - POI管理用フック (usePoiState, useCombinedPois, useCurrentLocationPoi)
+ * 注意点:
+ *   - このファイルはPOIモジュールの公開APIを定義します
+ *   - 外部からはここでエクスポートされた要素のみアクセス可能です
+ */
+
 export { default as Marker } from './components/Marker';
 export { default as InfoWindow } from './components/InfoWindowContainer';
 
-// フックのエクスポート
 export { usePoiState } from './hooks/usePoiState';
 export { useCombinedPois, createCurrentLocationPoi } from './hooks/useCombinedPois';
 export { useCurrentLocationPoi } from './hooks/useCurrentLocationPoi';
-
-// 型定義の再エクスポート（必要に応じて）
-// PoiState型などの内部で定義されている型をエクスポートする場合

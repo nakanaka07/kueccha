@@ -1,4 +1,14 @@
-// components/SearchInput.tsx
+/*
+ * 機能: 検索入力フィールドを提供するReactコンポーネント
+ * 依存関係:
+ *   - React
+ *   - SearchBar.module.css (スタイリング)
+ * 注意点:
+ *   - アクセシビリティ対応のためのaria-label属性を実装
+ *   - プレースホルダーテキストとしてデフォルト「検索...」を表示
+ *   - 親コンポーネントから渡される値と変更ハンドラに依存
+ */
+
 import React from 'react';
 import styles from './SearchBar.module.css';
 

@@ -1,10 +1,20 @@
+/**
+ * 機能: アプリケーション全体で使用するエラー処理サービス
+ * 依存関係:
+ *   - React hooks (useMemo)
+ *   - エラーメッセージ定数 (messages.ts)
+ *   - 共通型定義 (types/common.ts)
+ * 注意点:
+ *   - エラーオブジェクトは統一された形式で生成されます
+ *   - エラーの重大度に基づいてUI表示を変更可能
+ *   - 再試行可能なエラーを識別する機能があります
+ *   - エラーの種類によって適切なメッセージを提供します
+ *   - 複数ソースからのエラーを統合して処理できます
+ */
 import { useMemo } from 'react';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import type { AppError } from '../../types/common';
 
-/**
- * アプリケーションエラーを作成する関数
- */
 export const createError = (
   category: keyof typeof ERROR_MESSAGES,
   type: string,
@@ -22,9 +32,6 @@ export const createError = (
   };
 };
 
-/**
- * API関連エラーを処理する関数
- */
 export const handleApiError = (
   error: unknown,
   retryCount: number,
@@ -65,9 +72,6 @@ export const handleApiError = (
   );
 };
 
-/**
- * エラーが再試行可能かどうかを判定する関数
- */
 export const isRetryableError = (error: AppError | null): boolean => {
   if (!error || !error.code) return false;
 
@@ -84,9 +88,6 @@ export const isRetryableError = (error: AppError | null): boolean => {
   return retryableCodes.includes(error.code);
 };
 
-/**
- * エラーの重大度を取得する関数
- */
 export const getErrorSeverity = (error: AppError | null): 'critical' | 'warning' | 'info' | null => {
   if (!error) return null;
 
@@ -102,9 +103,6 @@ export const getErrorSeverity = (error: AppError | null): 'critical' | 'warning'
   return 'warning';
 };
 
-/**
- * エラー詳細情報をフォーマットする関数
- */
 export const formatErrorDetails = (error: AppError | null): string => {
   if (!error) return '';
 
@@ -114,14 +112,6 @@ export const formatErrorDetails = (error: AppError | null): string => {
     .join('\n');
 };
 
-/**
- * 複数ソースからのエラーを処理するカスタムフック
- * エラーの優先順位付け、メッセージ生成、再試行可能性の判定を行う
- *
- * @param mapError マップ関連のエラー
- * @param poisError POIデータ関連のエラー
- * @returns 統合されたエラー情報とエラーメッセージ、詳細、再試行可否
- */
 export function useErrorHandling(mapError: AppError | null, poisError: AppError | null) {
   const combinedError = useMemo<AppError | null>(() => {
     return mapError || poisError || null;

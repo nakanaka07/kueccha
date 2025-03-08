@@ -1,4 +1,14 @@
-// FeedbackFormUI.tsx
+/*
+ * 機能: フィードバックフォームの表示部分を担当するプレゼンテーショナルコンポーネント
+ * 依存関係:
+ *   - React
+ *   - FeedbackForm.module.css スタイルシート
+ * 注意点:
+ *   - ロジックを含まないUI表示専用コンポーネント
+ *   - アクセシビリティ対応（aria-label、フォームラベル等）
+ *   - 親コンポーネントから全ての状態とイベントハンドラを受け取る
+ */
+
 import React from 'react';
 import styles from './FeedbackForm.module.css';
 

@@ -1,3 +1,17 @@
+/**
+ * 機能: アプリケーション全体のコンテキストを統合管理するReactコンテキスト
+ * 依存関係:
+ *   - React (createContext, useContext, useEffect)
+ *   - 他のコンテキストプロバイダー (GeolocationProvider, LoadingProvider, MapProvider, PoiProvider)
+ *   - useAreaVisibility フック (エリア表示制御)
+ *   - Poi 型定義
+ * 注意点:
+ *   - すべての下位コンテキストを統合し、単一のアクセスポイント(useAppContext)を提供
+ *   - コンテキスト間の連携を自動的に処理（位置情報取得時のマップ中心更新など）
+ *   - コンポーネントのローディング状態を集中管理
+ *   - エリアフィルターの変更に応じてPOIを自動的にフィルタリング
+ *   - 必ずAppProvider内で使用する必要がある
+ */
 import React, { createContext, useContext } from 'react';
 import { GeolocationProvider, useGeolocationContext } from './GeolocationContext';
 import { LoadingProvider, useLoadingContext } from './LoadingContext';

@@ -1,3 +1,13 @@
+/*
+ * 機能: コンテンツ読み込み中に表示するスケルトンローダーコンポーネント
+ * 依存関係:
+ *   - React
+ *   - SkeletonLoader.module.cssスタイルシート
+ * 注意点:
+ *   - 複数のタイプ（rectangle, circle, text）をサポートしています
+ *   - width, heightプロパティでサイズをカスタマイズ可能
+ *   - countプロパティで複数のスケルトン要素を一度に生成できます
+ */
 import React from 'react';
 import styles from './SkeletonLoader.module.css';
 

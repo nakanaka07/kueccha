@@ -1,4 +1,13 @@
-// SearchContainer.tsx
+/*
+ * 機能: 検索バーと検索結果を表示するコンテナコンポーネントを提供します
+ * 依存関係:
+ *   - React
+ *   - SearchBar、SearchResultsコンポーネント
+ *   - Poi型定義
+ * 注意点:
+ *   - isVisibleプロパティがfalseの場合は何も表示されません
+ *   - 検索結果のクリックハンドリングが必要です
+ */
 import React from 'react';
 import { SearchBar } from '../modules/search/components/SearchBarContainer';
 import { SearchResults } from '../modules/search/components/SearchResults';

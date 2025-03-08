@@ -1,7 +1,18 @@
+/**
+ * 機能: アプリケーション全体の設定を定義（Google MapsとGoogle Sheetsの設定を含む）
+ * 依存関係:
+ *   - @react-google-maps/api ライブラリ（LoadScriptProps型を使用）
+ *   - ./markersからMARKERS定数をインポート
+ *   - 環境変数: VITE_GOOGLE_MAPS_API_KEY, VITE_GOOGLE_MAPS_MAP_ID, VITE_GOOGLE_SHEETS_API_KEY, VITE_GOOGLE_SPREADSHEET_ID
+ * 注意点:
+ *   - 環境変数が正しく設定されていることを確認
+ *   - Google Maps APIの使用にはAPIキーとMapIDが必要
+ *   - CONFIGはconst assertionで型安全性を確保
+ *   - APP_CONFIG, MAPS_CONFIG, SHEETS_CONFIGは後方互換性のために維持
+ */
 import { LoadScriptProps } from '@react-google-maps/api';
 import { MARKERS } from './markers';
 
-// アプリの設定
 export const CONFIG = {
   maps: {
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -58,7 +69,6 @@ export const CONFIG = {
   },
 } as const;
 
-// 後方互換性のためのエクスポート
 export const APP_CONFIG = {
   maps: CONFIG.maps,
   sheets: CONFIG.sheets,

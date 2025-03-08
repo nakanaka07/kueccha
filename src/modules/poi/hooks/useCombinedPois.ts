@@ -1,49 +1,43 @@
+/*
+ * 機能: 通常POIリストと現在地POIを統合管理するカスタムフック
+ * 依存関係:
+ *   - React useMemo
+ *   - CURRENT_LOCATION_POI定数 (現在地POIのテンプレート)
+ *   - Poi型定義
+ * 注意点:
+ *   - POIリストがない場合は現在地POIのみを表示（設定による）
+ *   - 現在地POIが既存POIと重複する場合は適切に上書き処理
+ *   - 設定により現在地POIの表示/非表示を切り替え可能
+ */
+
 import { useMemo } from 'react';
 import { CURRENT_LOCATION_POI } from '../../../constants/areas';
 import type { Poi } from '../../../types/poi';
 
-/**
- * POIリストと現在地POIを結合するカスタムフック
- *
- * @param pois - データソースから取得したPOIリスト
- * @param currentLocationPoi - 現在地POI（位置情報が更新された場合）
- * @param showCurrentLocation - 現在地POIを表示するかどうかのフラグ（オプション）
- * @returns 結合されたPOIリスト
- */
 export function useCombinedPois(
   pois: Poi[] | null | undefined,
   currentLocationPoi: Poi | null | undefined,
   showCurrentLocation = true,
 ): Poi[] {
   return useMemo(() => {
-    // POIリストが存在しない場合
     if (!pois || pois.length === 0) {
       return showCurrentLocation && currentLocationPoi ? [currentLocationPoi] : [];
     }
 
-    // 現在地POIが無効、または表示しない場合
     if (!showCurrentLocation || !currentLocationPoi) {
       return [...pois];
     }
 
-    // IDが重複している場合は、現在地POIで上書き
     const hasCurrentLocationId = pois.some((poi) => poi.id === currentLocationPoi.id);
 
     if (hasCurrentLocationId) {
       return pois.map((poi) => (poi.id === currentLocationPoi.id ? currentLocationPoi : poi));
     }
 
-    // 通常の結合処理
     return [currentLocationPoi, ...pois];
   }, [pois, currentLocationPoi, showCurrentLocation]);
 }
 
-/**
- * 現在地POIを作成/更新するユーティリティ関数
- *
- * @param location - 現在位置の座標
- * @returns 現在地のPOIオブジェクト
- */
 export function createCurrentLocationPoi(location: { lat: number; lng: number }): Poi {
   return {
     ...CURRENT_LOCATION_POI,

@@ -1,3 +1,14 @@
+/**
+ * 機能: フィルタリングとエリア表示制御に関する型定義
+ * 依存関係:
+ *   - React
+ *   - common.ts (BaseProps, AreaVisibility, LatLngLiteral型を使用)
+ *   - poi.ts (PoiManagementProps型を使用)
+ * 注意点:
+ *   - コンポーネント間でのエリア可視性状態共有のための型を定義
+ *   - 位置情報管理のPropsも含む
+ *   - FilterPanelとHamburgerMenuの共通基盤を提供
+ */
 import React from 'react';
 import { BaseProps, AreaVisibility, LatLngLiteral } from './common';
 import { PoiManagementProps } from './poi';
