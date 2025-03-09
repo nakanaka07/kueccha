@@ -84,7 +84,7 @@ const AppLayout = React.memo(AppLayoutOriginal as React.FC<AppLayoutProps>);
 
 const App: React.FC = () => {
   // データ取得ロジックの分離
-  const { data: pois, status: dataStatus, error: poisError } = useSheetData();
+  const { data: pois, error: poisError } = useSheetData();
   const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
 
   const currentLocationPoi = useCurrentLocationPoi(currentLocation);
