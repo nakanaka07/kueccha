@@ -17,7 +17,7 @@ import styles from './FeedbackForm.module.css';
 import { FeedbackFormUI } from './FeedbackFormUI';
 import { FeedbackSuccess } from './FeedbackSuccess';
 import { useFeedbackForm } from '../hooks/useFeedbackForm';
-import type { FeedbackFormProps } from '../../../types/feedback';
+import type { FeedbackFormProps } from '../../../core/types/feedback';
 
 const FeedbackFormContainer: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const { name, email, message, isSubmitted, error, isLoading, setName, setEmail, setMessage, sendFeedback } =

@@ -13,8 +13,16 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import styles from './HamburgerMenu.module.css';
 import { MenuItems } from './MenuItems';
 import { MenuToggleButton } from './MenuToggleButton';
-import { SearchContainer } from './SearchContainer';
-import type { HamburgerMenuProps } from '../../types/filter';
+import { SearchContainer } from '../../../components/layout/SearchContainer';
+import type { Poi } from '../../../../core/types/poi';
+
+// 修正されたprops型定義
+interface HamburgerMenuProps {
+  pois: Poi[];
+  search: (query: string) => void; // string型から関数型に変更
+  searchResults: Poi[];
+  handleSearchResultClick: (poi: Poi) => void;
+}
 
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResults, handleSearchResultClick }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,9 +67,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResul
           <SearchContainer
             isVisible={isSearchBarVisible}
             pois={pois}
-            search={search}
-            searchResults={searchResults}
-            handleSearchResultClick={handleSearchResultClick}
+            search={search} // これで型が一致
+            searchResults={searchResults} // これで型が一致
+            handleSearchResultClick={handleSearchResultClick} // これで型が一致
           />
         </nav>
       </div>

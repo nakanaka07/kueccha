@@ -13,7 +13,7 @@
 
 import React from 'react';
 import styles from './MapControls.module.css';
-import { MapControlsProps } from '../../../types/map';
+import { MapControlsProps } from '../../../core/types/map';
 import resetNorthIcon from '../../../utils/images/ano_icon04.png';
 import currentLocationIcon from '../../../utils/images/shi_icon04.png';
 

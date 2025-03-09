@@ -14,9 +14,9 @@ import { BaseProps, AreaVisibility, LatLngLiteral } from './common';
 import { PoiManagementProps } from './poi';
 
 export interface AreaVisibilityProps {
-  setAreaVisibility: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  localAreaVisibility: Record<string, boolean>;
-  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  setAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
+  localAreaVisibility: AreaVisibility;
+  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
 }
 
 // 位置情報管理用のProps基底

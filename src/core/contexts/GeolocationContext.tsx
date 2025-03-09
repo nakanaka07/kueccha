@@ -1,7 +1,7 @@
 /**
  * 機能: 位置情報サービスの状態と操作を管理するReactコンテキスト
  * 依存関係:
- *   - React (createContext, useContext, useState, useCallback, useEffect)
+ *   - React (createContext, useContext, useState, useCallback)
  *   - ../../constants/config からのCONFIG設定
  *   - ../../constants/messages からのERROR_MESSAGES
  *   - ../../types/common からのLatLngLiteral, AppError型
@@ -12,7 +12,7 @@
  *   - 権限拒否時は警告表示オプションあり
  *   - Geolocation APIがサポートされていない環境ではエラーを返す
  */
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { CONFIG } from '../../constants/config';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import type { LatLngLiteral, AppError } from '../../types/common';

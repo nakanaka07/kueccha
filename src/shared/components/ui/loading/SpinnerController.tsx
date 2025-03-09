@@ -11,7 +11,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { SpinnerView } from './SpinnerView';
-import { useLoadingState } from '../core/hooks/useLoadingState';
+import { useLoadingState } from '../../../../core/hooks/useLoadingState';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';

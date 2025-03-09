@@ -12,9 +12,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AREAS } from '../../../constants/areas';
-import { INITIAL_VISIBILITY } from '../../../constants/areas';
-import type { AreaType, AreaVisibility } from '../../../types/filter';
+import { AREAS } from '../../../core/constants/areas';
+import { INITIAL_VISIBILITY } from '../../../core/constants/areas';
+import type { AreaType, AreaVisibility } from '../../../core/types/common';
 
 const STORAGE_KEY = 'kueccha_area_visibility';
 
@@ -48,7 +48,7 @@ export const useAreaVisibility = (persistToStorage = true) => {
   }, [areaVisibility, persistToStorage]);
 
   const toggleArea = useCallback((area: AreaType) => {
-    setAreaVisibility((prev) => ({
+    setAreaVisibility((prev: Record<AreaType, boolean>) => ({
       ...prev,
       [area]: !prev[area],
     }));

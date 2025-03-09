@@ -14,11 +14,12 @@
  *   - アクセシビリティのためのaria属性を適切に設定
  */
 import React, { memo } from 'react';
-import { ErrorDisplay } from './ErrorDisplay';
+// 以下のインポートパスを修正
 import styles from './LoadingFallback.module.css';
-import { LoadingVariant } from './LoadingVariant';
-import { ERROR_MESSAGES } from '../constants/messages';
-import { useLoadingState } from '../core/hooks/useLoadingState';
+import { LoadingVariant } from './LoadingVariants';
+import { LOADING_MESSAGES, ERRORS } from '../../../../core/constants/messages';
+import { useLoadingState } from '../../../../core/hooks/useLoadingState';
+import { ErrorDisplay } from '../error/ErrorDisplay';
 
 interface LoadingFallbackProps {
   isLoading: boolean;
@@ -38,8 +39,8 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   isLoading,
   isLoaded,
   error = null,
-  message = ERROR_MESSAGES.LOADING.DATA,
-  errorMessage = ERROR_MESSAGES.DATA.LOADING_FAILED,
+  message = LOADING_MESSAGES.data,
+  errorMessage = ERRORS.dataLoading,
   fadeDuration = 7000,
   onRetry,
   variant = 'spinner',

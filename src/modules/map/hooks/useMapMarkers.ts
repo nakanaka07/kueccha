@@ -10,8 +10,9 @@
  */
 
 import { useCallback } from 'react';
-import type { AreaType } from '../../../types/map';
-import type { Poi } from '../../../types/poi';
+import type { AreaType } from '../../../core/types/map';
+// Poi型は使用されていないため、インポートを削除するか、コメントアウトします
+// import type { Poi } from '../../../core/types/poi';
 
 export function useMapMarkers() {
   const getMarkerZIndex = useCallback((areaType: AreaType): number => {

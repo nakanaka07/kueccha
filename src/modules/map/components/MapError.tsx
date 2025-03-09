@@ -12,7 +12,8 @@
 
 import React from 'react';
 import styles from './Map.module.css';
-import { MapErrorProps } from '../../../types/map';
+// インポートパスを修正
+import { MapErrorProps } from '../../../core/types/map';
 
 export const MapError: React.FC<MapErrorProps> = ({ message, details, onRetry }) => {
   return (

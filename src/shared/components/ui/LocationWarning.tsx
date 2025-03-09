@@ -11,7 +11,10 @@
  */
 import React, { useState, useEffect } from 'react';
 import styles from './LocationWarning.module.css';
-import type { LocationWarningProps } from '../../types/feedback';
+
+interface LocationWarningProps {
+  onClose: () => void;
+}
 
 const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
   const [isVisible, setIsVisible] = useState(true);

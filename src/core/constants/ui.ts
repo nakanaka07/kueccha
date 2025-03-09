@@ -6,6 +6,7 @@
  *   - メニュー項目のactionプロパティは文字列として定義されており、実行時に対応するハンドラーと関連付ける必要あり
  *   - const assertionを使用して型安全性を確保
  */
+
 export const LOADING_DELAY = 0;
 export const BACKGROUND_HIDE_DELAY = 1000;
 
@@ -20,20 +21,40 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '祝祭日', key: 'holiday' },
 ] as const;
 
-export const MENU_ITEMS = [
-  {
-    label: '表示するエリアを選択',
-    title: '表示するエリアを選択',
-    action: 'handleAreaClick',
-  },
-  {
-    label: 'フィードバック',
-    title: 'フィードバック',
-    action: 'handleFeedbackClick',
-  },
+/**
+ * UI関連の定数
+ */
+
+export interface MenuItem {
+  label: string;
+  title: string;
+  action: string;
+  icon?: string;
+  // onClick はオリジナルのMenuItemにはなく、後で追加されるプロパティ
+}
+
+// 拡張した型を定義
+export interface MenuItemWithHandler extends MenuItem {
+  onClick: () => void;
+}
+
+export const MENU_ITEMS: MenuItem[] = [
   {
     label: '検索',
-    title: '検索',
+    title: '場所を検索',
     action: 'toggleSearchBar',
+    icon: 'search',
   },
-] as const;
+  {
+    label: '現在地',
+    title: '現在地に移動',
+    action: 'getCurrentLocation',
+    icon: 'location',
+  },
+  {
+    label: '設定',
+    title: '設定を開く',
+    action: 'openSettings',
+    icon: 'settings',
+  },
+];

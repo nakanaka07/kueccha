@@ -12,9 +12,9 @@
  */
 
 import { useCallback } from 'react';
-import { CONFIG } from '../../../constants/config';
+import { CONFIG } from '../../../core/constants/config';
 import { GeolocationService } from '../../../core/services/geolocation';
-import type { GeolocationError, LatLngLiteral } from '../../../types/common';
+import type { GeolocationError, LatLngLiteral } from '../../../core/types/common';
 
 /**
  * 位置情報取得のカスタムフック

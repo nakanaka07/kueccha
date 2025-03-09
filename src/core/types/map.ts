@@ -91,3 +91,29 @@ export interface MapErrorProps {
   details?: string;
   onRetry?: () => void;
 }
+
+/**
+ * 地図関連の型定義
+ */
+
+// 地図インスタンスの基本インターフェース
+export interface MapInstance {
+  // Map型の必要なプロパティ
+  controls?: google.maps.MVCArray<google.maps.MVCObject>[];
+  data?: google.maps.Data;
+  fitBounds?: (bounds: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral) => void;
+  getBounds?: () => google.maps.LatLngBounds | null;
+  // その他の必要なプロパティ
+
+  // カスタムメソッド
+  initialize?: () => void;
+  cleanup?: () => void;
+}
+
+// 地図操作アクションのインターフェース
+export interface MapActions {
+  zoomIn?: () => void;
+  zoomOut?: () => void;
+  panTo?: (lat: number, lng: number) => void;
+  // その他のアクション
+}

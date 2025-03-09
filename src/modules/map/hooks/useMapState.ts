@@ -12,9 +12,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { CONFIG } from '../../../constants/config';
-import { ERROR_MESSAGES } from '../../../constants/messages';
-import { LatLngLiteral, AppError } from '../../../types/common';
+import { CONFIG } from '../../../core/constants/config';
+import { ERROR_MESSAGES } from '../../../core/constants/messages';
+import { LatLngLiteral, AppError } from '../../../core/types/common';
 
 export interface MapState {
   isMapLoaded: boolean;

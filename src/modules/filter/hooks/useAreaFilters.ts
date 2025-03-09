@@ -11,17 +11,25 @@
  */
 
 import { useEffect } from 'react';
-import { AREAS } from '../../../constants/areas';
-import { MARKERS } from '../../../constants/markers';
-import type { Poi, AreaType } from '../../../types/common';
+import { AREAS } from '../../../core/constants/areas';
+import { MARKERS } from '../../../core/constants/markers';
+// ここをプロジェクト内の正しい場所から型をインポートするように修正
+import type { AreaType } from '../../../core/types/common';
+
+// Poi型をローカルで定義する場合
+interface Poi {
+  area: AreaType;
+  // 他に必要なプロパティがあれば追加
+}
 
 export function useAreaFilters(
   pois: Poi[],
   localAreaVisibility: Record<AreaType, boolean>,
   setAreaVisibility: (visibility: Record<AreaType, boolean>) => void,
 ) {
-  const areaCounts = pois.reduce(
-    (acc: Record<AreaType, number>, poi) => ({
+  // 型アサーションを明示的に行う
+  const areaCounts = pois.reduce<Record<AreaType, number>>(
+    (acc, poi) => ({
       ...acc,
       [poi.area]: (acc[poi.area] || 0) + 1,
     }),

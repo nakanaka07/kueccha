@@ -1,7 +1,7 @@
 /**
  * 機能: Google Maps関連の状態と操作を管理するReactコンテキスト
  * 依存関係:
- *   - React (createContext, useContext, useCallback, useState, useReducer, useEffect)
+ *   - React (createContext, useContext, useCallback, useReducer, useEffect)
  *   - ../../constants/config からのCONFIG設定
  *   - ../../constants/messages からのERROR_MESSAGES
  *   - ../../types/common からのLatLngLiteral, AppError型
@@ -12,7 +12,7 @@
  *   - マップインスタンスが変更されたときに自動的に中心座標とズームレベルを適用
  *   - エラーハンドリングと再試行機能を提供
  */
-import React, { createContext, useContext, useCallback, useState, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useCallback, useReducer, useEffect } from 'react';
 import { CONFIG } from '../../constants/config';
 import { ERROR_MESSAGES } from '../../constants/messages';
 import type { LatLngLiteral, AppError } from '../../types/common';

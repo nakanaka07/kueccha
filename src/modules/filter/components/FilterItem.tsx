@@ -12,7 +12,7 @@
 
 import React from 'react';
 import styles from './FilterPanel.module.css';
-import type { AreaType } from '../../../types/common';
+import type { AreaType } from '../../../core/types/common';
 
 interface FilterItemProps {
   label: string;

@@ -11,8 +11,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { MAPS_CONFIG } from '../../../constants/config';
-import { ERROR_MESSAGES } from '../../../constants/messages';
+import { MAPS_CONFIG } from '../../../core/constants/config';
+import { ERROR_MESSAGES } from '../../../core/constants/messages';
 
 export function useMapConfig() {
   const [configError, setConfigError] = useState<Error | null>(null);

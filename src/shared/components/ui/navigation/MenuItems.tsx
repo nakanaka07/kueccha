@@ -9,24 +9,26 @@
  *   - メニュー項目の追加・削除はMENU_ITEMS定数の変更で行います
  */
 import React from 'react';
-import styles from './HamburgerMenu.module.css';
-import { MENU_ITEMS } from '../constants/ui';
+import styles from './MenuItems.module.css';
+import { MENU_ITEMS, MenuItem, MenuItemWithHandler } from '../../../../core/constants/ui';
 
 interface MenuItemsProps {
   menuActions: Record<string, () => void>;
 }
 
 export const MenuItems: React.FC<MenuItemsProps> = ({ menuActions }) => {
-  const items = MENU_ITEMS.map((item) => ({
+  // ここで型を明確にする
+  const items: MenuItemWithHandler[] = MENU_ITEMS.map((item: MenuItem) => ({
     ...item,
-    onClick: menuActions[item.action as keyof typeof menuActions],
+    onClick: menuActions[item.action as keyof typeof menuActions] || (() => {}),
   }));
 
   return (
-    <ul>
+    <ul className={styles.menuList}>
       {items.map((item, index) => (
-        <li key={index}>
-          <button onClick={item.onClick} title={item.title}>
+        <li key={index} className={styles.menuItem}>
+          <button onClick={item.onClick} title={item.title} className={styles.menuButton}>
+            {item.icon && <span className={`${styles.icon} ${styles[item.icon]}`} />}
             {item.label}
           </button>
         </li>

@@ -9,9 +9,9 @@
  *   - 検索結果のクリックハンドリングが必要です
  */
 import React from 'react';
-import { SearchBar } from '../modules/search/components/SearchBarContainer';
-import { SearchResults } from '../modules/search/components/SearchResults';
-import type { Poi } from '../../types/poi';
+import SearchBar from '../../../modules/search/components/SearchBarContainer';
+import SearchResults from '../../../modules/search/components/SearchResults';
+import type { Poi } from '../../../core/types/poi';
 
 interface SearchContainerProps {
   isVisible: boolean;

@@ -16,7 +16,8 @@ import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
 import styles from './FilterPanel.module.css';
 import { useAreaFilters } from '../hooks/useAreaFilters';
-import type { AreaType, FilterPanelProps } from '../../../types/filter';
+import type { AreaType } from '../../../core/types/common';
+import type { FilterPanelProps } from '../../../core/types/filter';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
   pois,
@@ -31,7 +32,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const { areas, currentLocationData } = useAreaFilters(pois, localAreaVisibility, setAreaVisibility);
 
   const handleAreaChange = (area: AreaType, isVisible: boolean) => {
-    setLocalAreaVisibility((prev) => ({
+    setLocalAreaVisibility((prev: Record<string, boolean>) => ({
       ...prev,
       [area]: isVisible,
     }));
@@ -68,8 +69,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             area="CURRENT_LOCATION"
             label="現在地"
             isVisible={currentLocationData.isVisible}
-            color={currentLocationData.color}
-            icon={currentLocationData.icon}
+            color={currentLocationData.color || ''}
+            icon={currentLocationData.icon || ''}
             onChange={handleAreaChange}
           />
         </div>

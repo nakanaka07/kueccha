@@ -11,7 +11,7 @@
  */
 
 import { useCallback } from 'react';
-import { CONFIG } from '../../../constants/config';
+import { CONFIG } from '../../../core/constants/config';
 
 /**
  * マップの向きを北に戻すためのカスタムフック

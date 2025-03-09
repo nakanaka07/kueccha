@@ -4,8 +4,7 @@
  *   - React
  *   - BusinessHoursSection, InfoItemコンポーネント
  *   - InfoWindow.module.css (スタイリング)
- *   - AREAS定数
- *   - formatInformation, isValidPhoneNumber関数
+ *   - isValidPhoneNumber関数
  *   - useInfoWindowInteractionフック
  *   - InfoWindowProps, LatLngLiteral型定義
  * 注意点:
@@ -19,10 +18,10 @@ import { BusinessHoursSection } from './BusinessHoursSection';
 import { InfoItem } from './InfoItem';
 import styles from './InfoWindow.module.css';
 import { InfoWindowHeader } from './InfoWindowHeader';
-import { AREAS } from '../../../constants/areas';
-import { formatInformation, isValidPhoneNumber } from '../../../core/utils/formatters';
+// 使用していないインポートを削除
+import { isValidPhoneNumber } from '../../../core/utils/formatters';
 import { useInfoWindowInteraction } from '../hooks/useInfoWindowInteraction';
-import type { InfoWindowProps, LatLngLiteral } from '../../../types/poi';
+import type { InfoWindowProps, LatLngLiteral } from '../../../core/types/poi';
 
 const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const { windowRef } = useInfoWindowInteraction(onCloseClick);

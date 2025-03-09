@@ -20,7 +20,8 @@ import MapError from './MapError';
 import MapLoading from './MapLoading';
 import MarkerList from './MarkerList';
 import { useMapConfig } from '../hooks/useMapConfig';
-import type { ExtendedMapProps } from '../../../types/map';
+// 正しいインポートパスを使用
+import type { ExtendedMapProps } from '../../../core/types/map';
 
 const MAP_ARIA_LABEL = '地図コンテンツ';
 

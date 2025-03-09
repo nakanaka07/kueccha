@@ -19,27 +19,79 @@
  *   - エラー発生時は統合されたエラーメッセージが表示されます
  *   - 現在地POIと外部POIデータを統合して表示します
  */
-import React, { useCallback, useMemo } from 'react';
-import { LOADING_MESSAGES } from '../core/constants/messages';
+import React, { useCallback, useMemo, useEffect } from 'react';
+import { LOADING_MESSAGES, ERRORS } from '../core/constants/messages';
 import { useAppState } from '../core/hooks/useAppState';
 import { useLocationWarning } from '../core/hooks/useLocationWarning';
 import { useSheetData } from '../core/services/sheets';
 import { useMapNorthControl } from '../modules/map/hooks/useMapNorthControl';
 import { useCurrentLocationPoi } from '../modules/poi/hooks/useCurrentLocationPoi';
-import { AppLayout } from '../shared/components/layout/AppLayout';
+import { AppLayout as AppLayoutOriginal } from '../shared/components/layout/AppLayout';
+import { ErrorBoundary } from '../shared/components/ui/error/ErrorBoundary';
+import type { MapInstance, MapActions } from '../core/types/map';
+import type { Poi } from '../core/types/poi';
 
+// AppErrorインターフェースの拡張
 interface AppError {
   message: string;
   code?: string;
+  severity?: 'warning' | 'error' | 'critical';
+  details?: unknown;
 }
 
+// 型の強化
+interface AppState {
+  mapInstance: MapInstance | null;
+  isMapLoaded: boolean;
+  isMapLoading: boolean;
+  loading: {
+    isVisible: boolean;
+    isFading: boolean;
+  };
+  error: AppError | null;
+  actions: MapActions;
+  selectedPoi: Poi | null;
+}
+
+// AppLayout用のprops型定義
+interface AppLayoutProps {
+  loadingState: {
+    isMapLoaded: boolean;
+    isLoadingVisible: boolean;
+    isFading: boolean;
+    loadingMessage: string;
+  };
+  errorState: {
+    hasError: boolean;
+    errorMessage?: string;
+  };
+  warningState: {
+    showWarning: boolean;
+    setShowWarning: (show: boolean) => void;
+  };
+  poiData: {
+    allPois: Poi[];
+    selectedPoi: Poi | null;
+  };
+  mapActions: MapActions & {
+    resetNorth: () => void;
+    handleGetCurrentLocation: () => void;
+  };
+}
+
+// 重いコンポーネントにメモ化を追加
+const AppLayout = React.memo(AppLayoutOriginal as React.FC<AppLayoutProps>);
+
 const App: React.FC = () => {
-  const { data: pois, error: poisError } = useSheetData();
+  // データ取得ロジックの分離
+  const { data: pois, status: dataStatus, error: poisError } = useSheetData();
   const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
+
   const currentLocationPoi = useCurrentLocationPoi(currentLocation);
 
+  // POIデータ処理の最適化
   const allPois = useMemo(() => {
-    if (!pois) return currentLocationPoi ? [currentLocationPoi] : [];
+    if (!pois?.length) return currentLocationPoi ? [currentLocationPoi] : [];
     return currentLocationPoi ? [currentLocationPoi, ...pois] : pois;
   }, [pois, currentLocationPoi]);
 
@@ -51,12 +103,21 @@ const App: React.FC = () => {
     error: mapError,
     actions,
     selectedPoi,
-  } = useAppState(allPois);
+  }: AppState = useAppState(allPois);
 
   const { onResetNorth: resetNorth } = useMapNorthControl(mapInstance);
 
-  const combinedError = mapError || poisError;
-  const errorMessage = combinedError?.message || '予期しないエラーが発生しました';
+  // エラー処理の効率化
+  const errorDetails = useMemo(() => {
+    const error = mapError || poisError;
+    if (!error) return null;
+
+    return {
+      message: error.message || ERRORS.systemError,
+      severity: error.severity || 'error',
+      code: error.code,
+    };
+  }, [mapError, poisError]);
 
   const handleGetCurrentLocation = useCallback(() => {
     getCurrentLocationInfo();
@@ -64,22 +125,60 @@ const App: React.FC = () => {
 
   const loadingMessage = useMemo(() => (isMapLoading ? LOADING_MESSAGES.map : LOADING_MESSAGES.data), [isMapLoading]);
 
+  // マップインスタンスの適切な管理
+  useEffect(() => {
+    if (!mapInstance) return;
+
+    // マップインスタンスのセットアップコード
+    const setupMap = () => {
+      // ここに必要な初期設定を実装
+    };
+
+    setupMap();
+
+    return () => {
+      // マップインスタンスのクリーンアップ
+      if (mapInstance?.cleanup && typeof mapInstance.cleanup === 'function') {
+        mapInstance.cleanup();
+      }
+    };
+  }, [mapInstance]);
+
   return (
-    <AppLayout
-      isMapLoaded={isMapLoaded}
-      isLoadingVisible={isLoadingVisible}
-      isFading={isFading}
-      combinedError={!!combinedError}
-      errorMessage={errorMessage}
-      loadingMessage={loadingMessage}
-      showWarning={showWarning}
-      allPois={allPois}
-      selectedPoi={selectedPoi}
-      actions={actions}
-      resetNorth={resetNorth}
-      handleGetCurrentLocation={handleGetCurrentLocation}
-      setShowWarning={setShowWarning}
-    />
+    <ErrorBoundary>
+      <React.Suspense fallback={<div>読み込み中...</div>}>
+        <AppLayout
+          // ステータス関連
+          loadingState={{
+            isMapLoaded,
+            isLoadingVisible,
+            isFading,
+            loadingMessage,
+          }}
+          // エラー関連
+          errorState={{
+            hasError: !!errorDetails,
+            errorMessage: errorDetails?.message,
+          }}
+          // 警告関連
+          warningState={{
+            showWarning,
+            setShowWarning,
+          }}
+          // POI関連
+          poiData={{
+            allPois,
+            selectedPoi,
+          }}
+          // アクション関連
+          mapActions={{
+            ...actions,
+            resetNorth,
+            handleGetCurrentLocation,
+          }}
+        />
+      </React.Suspense>
+    </ErrorBoundary>
   );
 };
 

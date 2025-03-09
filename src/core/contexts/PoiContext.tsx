@@ -2,7 +2,6 @@
  * 機能: POI（Points of Interest）データを管理するReactコンテキスト
  * 依存関係:
  *   - React (createContext, useContext, useReducer, useCallback, useEffect)
- *   - ../constants/areas からのCURRENT_LOCATION_POI
  *   - ../constants/messages からのERROR_MESSAGES
  *   - ../types/common からのPoi, AreaType型
  * 注意点:
@@ -12,7 +11,6 @@
  *   - 初期POIデータはプロバイダーコンポーネントに渡す必要あり
  */
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
-import { CURRENT_LOCATION_POI } from '../../../constants/areas';
 import { ERROR_MESSAGES } from '../../../constants/messages';
 import type { Poi, AreaType } from '../../../types/common';
 

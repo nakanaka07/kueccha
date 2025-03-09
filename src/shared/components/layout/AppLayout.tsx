@@ -12,8 +12,12 @@
  */
 import React from 'react';
 import styles from './AppLayout.module.css';
-import { ErrorBoundary, LoadingIndicators, LocationWarning, Map, MapControls } from '../../../common';
-import type { Poi } from '../../types/poi';
+import MapContainer from '../../../modules/map/components/MapContainer';
+import MapControls from '../../../modules/map/components/MapControls';
+import { ErrorBoundary } from '../ui/error/ErrorBoundary';
+import { LoadingFallback } from '../ui/loading/LoadingFallback';
+import { LocationWarning } from '../ui/LocationWarning';
+import type { Poi } from '../../../core/types/poi';
 
 interface AppLayoutProps {
   isMapLoaded: boolean;
@@ -54,7 +58,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <ErrorBoundary>
         <div className={styles.appContainer}>
           {isLoadingVisible && (
-            <LoadingIndicators.Fallback
+            <LoadingFallback
               isLoading={!combinedError}
               isLoaded={false}
               error={combinedError ? new Error(errorMessage) : null}
@@ -72,7 +76,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </div>
           )}
 
-          <Map onLoad={actions.handleMapLoad} pois={allPois} selectedPoi={selectedPoi} />
+          <MapContainer onLoad={actions.handleMapLoad} pois={allPois} selectedPoi={selectedPoi} />
 
           <MapControls onResetNorth={resetNorth} onGetCurrentLocation={handleGetCurrentLocation} />
 

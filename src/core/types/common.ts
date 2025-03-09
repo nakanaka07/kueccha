@@ -1,7 +1,6 @@
 /**
  * 機能: アプリケーション全体で使用される共通型定義
  * 依存関係:
- *   - React (ReactNode型を使用)
  *   - areas.ts定数ファイル (AREAS定数を使用)
  *   - ui.ts定数ファイル (INFO_WINDOW_BUSINESS_HOURS定数を使用)
  * 注意点:
@@ -9,7 +8,6 @@
  *   - 地理座標、エリア情報、設定、エラー処理など多岐にわたる型を含む
  *   - これらの型変更は広範な影響を及ぼす可能性があるため注意が必要
  */
-import { ReactNode } from 'react';
 import { AREAS } from '../constants/areas';
 import { INFO_WINDOW_BUSINESS_HOURS } from '../constants/ui';
 

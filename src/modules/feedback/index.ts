@@ -13,7 +13,8 @@ export { default as FeedbackForm } from './components/FeedbackFormContainer';
 export { FeedbackFormUI } from './components/FeedbackFormUI';
 export { FeedbackSuccess } from './components/FeedbackSuccess';
 
-export { useFeedbackForm } from './hooks/useFeedbackForm';
-
-export type { FeedbackFormProps, TemplateParams } from '../../types/feedback';
+// useFeedbackFormを1回だけエクスポート
 export * from './hooks/useFeedbackForm';
+
+// 正しいパスを使用
+export type { FeedbackFormProps, TemplateParams } from '../../core/types/feedback';
