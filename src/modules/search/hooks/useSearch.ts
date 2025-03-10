@@ -12,8 +12,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { AREAS } from '../../../constants/areas';
-import type { Poi, LatLngLiteral } from '../../../types/poi';
+import { AREAS } from '../../../core/constants/areas';
+import type { Poi, LatLngLiteral } from '../../../core/types/poi';
 
 const DEBOUNCE_DELAY = 300;
 

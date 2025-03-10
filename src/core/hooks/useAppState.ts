@@ -14,16 +14,18 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
-import { CONFIG } from '../../constants/config';
-import { ERROR_MESSAGES } from '../../constants/messages';
-import { LOADING_DELAY } from '../../constants/ui';
 import { useAreaVisibility } from '../../modules/filter/hooks/useAreaVisibility';
 import { useMapState } from '../../modules/map/hooks/useMapState';
-import { usePoiState } from '../modules/poi/hooks/usePoiState';
-import type { Poi, AppError, LatLngLiteral } from '../../types/common';
+import { usePoiState } from '../../modules/poi/hooks/usePoiState';
+import { CONFIG } from '../constants/config';
+import { ERROR_MESSAGES } from '../constants/messages';
+import { LOADING_DELAY } from '../constants/ui';
+import type { AppError, LatLngLiteral } from '../types/common';
+import type { Poi } from '../types/poi';
 
 export const useAppState = (pois: Poi[]) => {
   const mapState = useMapState();
+  // usePoiStateフックを使用する
   const poiState = usePoiState(pois);
   const { areaVisibility, setAreaVisibility } = useAreaVisibility();
   const locationWarning = useLocationWarning();

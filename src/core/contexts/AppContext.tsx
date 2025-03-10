@@ -18,7 +18,7 @@ import { LoadingProvider, useLoadingContext } from './LoadingContext';
 import { MapProvider, useMapContext } from './MapContext';
 import { PoiProvider, usePoiContext } from './PoiContext';
 import { useAreaVisibility } from '../../modules/filter/hooks/useAreaVisibility';
-import type { Poi } from '../../types/common';
+import { Poi } from '../types/poi';
 
 // コンテキストの型定義
 interface AppContextType {
@@ -37,14 +37,14 @@ export const AppProvider: React.FC<{
   children: React.ReactNode;
   initialPois: Poi[];
 }> = ({ children, initialPois }) => {
-  const { areaVisibility, setAreaVisibility } = useAreaVisibility();
+  const areaVisibilityContext = useAreaVisibility();
 
   return (
     <LoadingProvider>
       <GeolocationProvider>
         <MapProvider>
           <PoiProvider initialPois={initialPois}>
-            <AppContextConsumer areaVisibility={{ areaVisibility, setAreaVisibility }}>{children}</AppContextConsumer>
+            <AppContextConsumer areaVisibility={areaVisibilityContext}>{children}</AppContextConsumer>
           </PoiProvider>
         </MapProvider>
       </GeolocationProvider>

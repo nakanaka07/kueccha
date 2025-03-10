@@ -18,7 +18,7 @@ import styles from './SearchBar.module.css';
 import { SearchInput } from './SearchInput';
 import { SuggestionsList } from './SuggestionsList';
 import { useSearchLogic } from '../hooks/useSearchLogic';
-import type { SearchBarProps } from '../../../types/search';
+import type { SearchBarProps } from '../../../core/types/search';
 
 const SearchBarContainer: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   const { query, setQuery, suggestions, handleSearch, handleClear, handleShowAll, handleSuggestionClick } =

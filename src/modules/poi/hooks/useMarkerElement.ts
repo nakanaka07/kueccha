@@ -12,9 +12,9 @@
  */
 
 import { useMemo } from 'react';
-import { MARKER_ICONS } from '../../../../constants/markers';
+import { MARKER_ICONS } from '../../../core/constants/markers';
 import styles from '../components/Marker.module.css';
-import type { AreaType } from '../../../../types/common';
+import type { AreaType } from '../../../core/types/common';
 
 export function useMarkerElement(area: AreaType, name: string) {
   const createElement = useMemo(() => {

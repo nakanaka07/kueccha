@@ -16,7 +16,7 @@ import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
 import styles from './FilterPanel.module.css';
 import { useAreaFilters } from '../hooks/useAreaFilters';
-import type { AreaType } from '../../../core/types/common';
+import type { AreaType, AreaVisibility } from '../../../core/types/common';
 import type { FilterPanelProps } from '../../../core/types/filter';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -32,7 +32,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const { areas, currentLocationData } = useAreaFilters(pois, localAreaVisibility, setAreaVisibility);
 
   const handleAreaChange = (area: AreaType, isVisible: boolean) => {
-    setLocalAreaVisibility((prev: Record<string, boolean>) => ({
+    setLocalAreaVisibility((prev: AreaVisibility) => ({
       ...prev,
       [area]: isVisible,
     }));

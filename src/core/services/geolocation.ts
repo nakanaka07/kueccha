@@ -10,9 +10,9 @@
  *   - タイムアウトやエラー処理が実装されています
  *   - 屋内や地下では精度が低下する可能性があります
  */
-import { CONFIG } from '../../constants/config';
-import { ERROR_MESSAGES } from '../../constants/messages';
-import type { GeolocationError, LatLngLiteral } from '../../types/common';
+import { CONFIG } from '../../core/constants/config';
+import { ERROR_MESSAGES } from '../../core/constants/messages';
+import type { GeolocationError, LatLngLiteral } from '../../core/types/common';
 
 export const GeolocationService = {
   getCurrentPosition: (

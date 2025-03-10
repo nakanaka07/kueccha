@@ -13,10 +13,10 @@
  */
 import { useState, useEffect } from 'react';
 import { createError, handleApiError } from './errors';
-import { AREAS } from '../../constants/areas';
-import { CONFIG } from '../../constants/config';
-import { SheetData, FetchStatus } from '../types';
-import type { Poi, AreaType, AppError } from '../../types/common';
+import { AREAS } from '../../core/constants/areas';
+import { CONFIG } from '../../core/constants/config';
+import { Poi, AreaType, AppError } from '../types';
+import { SheetData, FetchStatus } from '../types/sheets';
 
 export const SHEETS_API_CONFIG = {
   MAX_RETRIES: 3,

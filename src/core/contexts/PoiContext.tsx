@@ -11,8 +11,9 @@
  *   - 初期POIデータはプロバイダーコンポーネントに渡す必要あり
  */
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
-import { ERROR_MESSAGES } from '../../../constants/messages';
-import type { Poi, AreaType } from '../../../types/common';
+import { ERROR_MESSAGES } from '../constants/messages';
+import type { AreaType } from '../types/common';
+import type { Poi } from '../types/poi';
 
 interface PoiState {
   pois: Poi[];

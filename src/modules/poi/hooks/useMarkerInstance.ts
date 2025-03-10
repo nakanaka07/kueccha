@@ -11,7 +11,7 @@
  */
 
 import { useRef, useEffect } from 'react';
-import type { LatLngLiteral } from '../../../../types/map';
+import type { LatLngLiteral } from '../../../core/types/common';
 
 interface UseMarkerInstanceProps {
   position: LatLngLiteral;

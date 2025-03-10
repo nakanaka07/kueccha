@@ -12,16 +12,18 @@
  *   - 複数ソースからのエラーを統合して処理できます
  */
 import { useMemo } from 'react';
-import { ERROR_MESSAGES } from '../../constants/messages';
-import type { AppError } from '../../types/common';
+import { ERROR_MESSAGES } from '../../core/constants/messages';
+import type { AppError } from '../../core/types/common';
 
 export const createError = (
   category: keyof typeof ERROR_MESSAGES,
-  type: string,
+  type: string, // 単純化
   details?: string,
   code?: string,
 ): AppError => {
-  const message = ERROR_MESSAGES[category]?.[type] || ERROR_MESSAGES.SYSTEM.UNKNOWN;
+  // 型キャストを使用して安全にプロパティアクセス
+  const message =
+    ERROR_MESSAGES[category]?.[type as keyof (typeof ERROR_MESSAGES)[typeof category]] || ERROR_MESSAGES.SYSTEM.UNKNOWN;
   const errorCode = code || `${category}_${type}`.toUpperCase();
 
   return {
@@ -85,11 +87,12 @@ export const isRetryableError = (error: AppError | null): boolean => {
     'GEOLOCATION_POSITION_UNAVAILABLE',
   ];
 
+  // エラーコードが存在することを確認済みなので安全に使用可能
   return retryableCodes.includes(error.code);
 };
 
 export const getErrorSeverity = (error: AppError | null): 'critical' | 'warning' | 'info' | null => {
-  if (!error) return null;
+  if (!error || !error.code) return null;
 
   const criticalErrors = ['CONFIG_MISSING', 'API_KEY_ERROR', 'MAP_CONFIG_MISSING'];
   if (criticalErrors.includes(error.code)) return 'critical';
@@ -107,7 +110,11 @@ export const formatErrorDetails = (error: AppError | null): string => {
   if (!error) return '';
 
   const { code, details, category } = error;
-  return [`エラーコード: ${code || '不明'}`, `カテゴリ: ${category || '不明'}`, details ? `詳細: ${details}` : '']
+  return [
+    code ? `エラーコード: ${code}` : 'エラーコード: 不明',
+    category ? `カテゴリ: ${String(category)}` : 'カテゴリ: 不明', // String()でラップ
+    details ? `詳細: ${details}` : '',
+  ]
     .filter(Boolean)
     .join('\n');
 };

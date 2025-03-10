@@ -11,8 +11,8 @@
  */
 
 import { useMemo } from 'react';
-import { CURRENT_LOCATION_POI } from '../../../constants/areas';
-import type { Poi } from '../../../types/poi';
+import { CURRENT_LOCATION_POI } from '../../../core/constants/areas';
+import type { Poi } from '../../../core/types/poi';
 
 export function useCombinedPois(
   pois: Poi[] | null | undefined,

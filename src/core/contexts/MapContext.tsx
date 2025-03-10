@@ -13,9 +13,9 @@
  *   - エラーハンドリングと再試行機能を提供
  */
 import React, { createContext, useContext, useCallback, useReducer, useEffect } from 'react';
-import { CONFIG } from '../../constants/config';
-import { ERROR_MESSAGES } from '../../constants/messages';
-import type { LatLngLiteral, AppError } from '../../types/common';
+import { CONFIG } from '../constants/config';
+import { ERROR_MESSAGES } from '../constants/messages';
+import type { LatLngLiteral, AppError } from '../types/common';
 
 // 状態の型定義
 interface MapState {

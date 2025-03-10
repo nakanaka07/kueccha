@@ -52,3 +52,5 @@ export interface PoiManagementProps {
   pois: Poi[];
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
 }
+
+export { LatLngLiteral };

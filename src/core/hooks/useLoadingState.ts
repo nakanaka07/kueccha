@@ -10,7 +10,7 @@
  *   - コンポーネントがアンマウントされる前にタイマーをクリアする
  */
 import { useState, useEffect } from 'react';
-import { BACKGROUND_HIDE_DELAY } from '../../constants/ui';
+import { BACKGROUND_HIDE_DELAY } from '../../core/constants/ui';
 
 export function useLoadingState(isLoading: boolean, isLoaded: boolean, fadeDuration: number = BACKGROUND_HIDE_DELAY) {
   const [isVisible, setIsVisible] = useState(isLoading);

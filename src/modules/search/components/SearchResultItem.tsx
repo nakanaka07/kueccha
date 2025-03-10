@@ -12,7 +12,7 @@
 
 import React, { useCallback } from 'react';
 import styles from './SearchResults.module.css';
-import type { Poi } from '../../../types/poi';
+import type { Poi } from '../../../core/types/poi';
 
 interface SearchResultItemProps {
   poi: Poi;

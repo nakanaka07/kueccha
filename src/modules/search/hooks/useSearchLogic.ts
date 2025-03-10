@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Poi } from '../../../types/poi';
+import type { Poi } from '../../../core/types/poi';
 
 interface UseSearchLogicProps {
   pois: Poi[];

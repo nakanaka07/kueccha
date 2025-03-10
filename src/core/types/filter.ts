@@ -11,7 +11,7 @@
  */
 import React from 'react';
 import { BaseProps, AreaVisibility, LatLngLiteral } from './common';
-import { PoiManagementProps } from './poi';
+import { PoiManagementProps, Poi } from './poi';
 
 export interface AreaVisibilityProps {
   setAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;

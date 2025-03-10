@@ -12,7 +12,7 @@
 
 import React from 'react';
 import styles from './SearchBar.module.css';
-import type { Poi } from '../../../types/poi';
+import type { Poi } from '../../../core/types/poi';
 
 interface SuggestionsListProps {
   suggestions: Poi[];

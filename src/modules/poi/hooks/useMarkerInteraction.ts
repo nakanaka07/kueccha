@@ -13,7 +13,7 @@
 
 import { useEffect } from 'react';
 import styles from '../components/Marker.module.css';
-import type { Poi } from '../../../../types/poi';
+import type { Poi } from '../../../core/types/poi';
 
 interface UseMarkerInteractionProps {
   marker: google.maps.marker.AdvancedMarkerElement | null;

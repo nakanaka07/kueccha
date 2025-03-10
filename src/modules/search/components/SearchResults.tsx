@@ -14,7 +14,7 @@
 import React from 'react';
 import { SearchResultItem } from './SearchResultItem';
 import styles from './SearchResults.module.css';
-import type { SearchResultsProps } from '../../../types/search';
+import type { SearchResultsProps } from '../../../core/types/search';
 
 const SearchResults: React.FC<SearchResultsProps> = ({ results, onResultClick }) => {
   if (results.length === 0) {

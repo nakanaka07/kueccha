@@ -10,7 +10,7 @@
  */
 
 import { useCallback } from 'react';
-import type { AreaType } from '../../../core/types/map';
+import type { AreaType } from '../../../core/types/common';
 // Poi型は使用されていないため、インポートを削除するか、コメントアウトします
 // import type { Poi } from '../../../core/types/poi';
 

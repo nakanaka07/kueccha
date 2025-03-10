@@ -12,8 +12,9 @@
 
 import React from 'react';
 import styles from './InfoWindow.module.css';
-import { INFO_WINDOW_BUSINESS_HOURS } from '../../../constants/ui';
-import type { Poi, BusinessHourKey } from '../../../types/poi';
+import { INFO_WINDOW_BUSINESS_HOURS } from '../../../core/constants/ui';
+import type { BusinessHourKey } from '../../../core/types/common';
+import type { Poi } from '../../../core/types/poi';
 
 interface BusinessHoursSectionProps {
   poi: Poi;
@@ -31,7 +32,7 @@ export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi 
           poi[hour.key as BusinessHourKey] && (
             <div key={hour.key}>
               <span className={styles.day}>{hour.day}</span>
-              <span className={styles.value}>{poi[hour.key as BusinessHourKey]}</span>
+              <span className={styles.value}>{String(poi[hour.key as BusinessHourKey])}</span>
             </div>
           ),
       )}

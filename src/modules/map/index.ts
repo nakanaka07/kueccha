@@ -9,7 +9,7 @@
  *   - モジュール間の依存関係を明示し、外部からのアクセスポイントを提供する
  */
 
-export { default as Map } from './components/Map';
+export { default as Map } from './components/MapContainer';
 export { default as MapError } from './components/MapError';
 export { default as MapControls } from './components/MapControls';
 

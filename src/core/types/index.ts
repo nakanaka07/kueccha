@@ -28,3 +28,6 @@ export * from './feedback';
 
 // フィルター関連型のエクスポート
 export * from './filter';
+
+// シート関連型のエクスポート
+export * from './sheets';

@@ -10,7 +10,7 @@
  *   - フェードアウト時間はpropsで設定可能（デフォルトはLOADING_DELAY）
  */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { LOADING_DELAY } from '../../constants/ui';
+import { LOADING_DELAY } from '../constants/ui';
 
 interface LoadingState {
   isVisible: boolean;

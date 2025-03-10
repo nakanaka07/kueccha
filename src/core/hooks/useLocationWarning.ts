@@ -12,7 +12,7 @@
  */
 import { useState, useCallback } from 'react';
 import { useGeolocation } from '../../modules/map';
-import type { LatLngLiteral, GeolocationError } from '../../types/common';
+import type { LatLngLiteral, GeolocationError } from '../../core/types/common';
 
 export const useLocationWarning = () => {
   const [locationState, setLocationState] = useState({

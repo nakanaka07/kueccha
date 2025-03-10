@@ -11,8 +11,8 @@
  */
 
 import { useMemo } from 'react';
-import { CURRENT_LOCATION_POI } from '../../../constants/areas';
-import type { Poi, LatLngLiteral } from '../../../types/poi';
+import { CURRENT_LOCATION_POI } from '../../../core/constants/areas';
+import type { Poi, LatLngLiteral } from '../../../core/types/poi';
 
 export function useCurrentLocationPoi(currentLocation: LatLngLiteral | null): Poi | null {
   return useMemo(() => {

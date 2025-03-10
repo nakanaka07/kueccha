@@ -9,7 +9,7 @@
  *   - 設定値の検証に失敗した場合もエラーがスローされるため、正しい設定が必須です
  *   - Google Maps APIとGoogle Sheets APIキーが有効である必要があります
  */
-import { APP } from '../../constants';
+import { APP } from '../../core/constants';
 import type { Config } from '../types/common';
 
 const validateEnvironmentVariables = () => {
@@ -51,7 +51,7 @@ export const CONFIG: Config = {
   maps: {
     apiKey: APP.config.maps.apiKey,
     mapId: APP.config.maps.mapId,
-    libraries: APP.config.maps.libraries,
+    libraries: APP.config.maps.libraries || [],
     version: APP.config.maps.version,
     language: APP.config.maps.language,
     defaultCenter: APP.config.maps.defaultCenter,

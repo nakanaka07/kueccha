@@ -1,3 +1,4 @@
+/* リセット */
 *,
 *::before,
 *::after {
@@ -6,58 +7,63 @@
   padding: 0;
 }
 
+/* カラーシステムとベース変数 */
 :root {
+  /* プライマリカラー */
   --color-primary: #4a6da7;
   --color-primary-light: #8ad8ec;
   --color-primary-dark: #3b5998;
   --color-primary-focus: #4285f4;
 
+  /* セカンダリカラー */
   --color-secondary: #6c757d;
   --color-secondary-light: #868e96;
   --color-secondary-dark: #5a6268;
 
+  /* アクセントカラー */
   --color-accent: #e63946;
   --color-accent-light: #ff6b6b;
   --color-accent-dark: #d32f2f;
 
+  /* テキストカラー */
   --color-text: #333333;
   --color-text-light: #666666;
   --color-text-dark: #eeeeee;
 
+  /* バックグラウンドカラー */
   --color-bg: #ffffff;
   --color-bg-light: #f8f9fa;
   --color-bg-dark: #121212;
 
+  /* ユーティリティカラー */
   --color-border: #dee2e6;
   --color-shadow: rgba(0, 0, 0, 0.1);
 
+  /* ステータスカラー */
   --color-error: #d32f2f;
   --color-error-light: #ffcdd2;
   --color-error-dark: #c62828;
-
   --color-success: #4caf50;
   --color-success-light: #a5d6a7;
   --color-success-dark: #388e3c;
-
   --color-warning: #ff9800;
   --color-warning-light: #ffcc80;
   --color-warning-dark: #f57c00;
 
+  /* コンポーネント変数 - ライトモード */
   --text-color: var(--color-text);
   --bg-color: var(--color-bg);
   --light-gray: var(--color-bg-light);
   --border-color: var(--color-border);
-
   --primary-color: var(--color-primary);
   --primary-hover: var(--color-primary-dark);
   --primary-focus: var(--color-primary-focus);
-
   --secondary-color: var(--color-secondary);
   --secondary-hover: var(--color-secondary-dark);
-
   --accent-color: var(--color-accent);
   --accent-hover: var(--color-accent-dark);
 
+  /* エラー状態 */
   --error-color: var(--color-error);
   --error-hover: var(--color-error-dark);
   --error-light: var(--color-error-light);
@@ -66,10 +72,12 @@
   --error-border: var(--color-error);
   --error-shadow: rgba(211, 47, 47, 0.3);
 
+  /* フォーカス状態 */
   --focus-outline-color: var(--primary-focus);
   --focus-outline-width: 3px;
   --focus-outline-offset: 2px;
 
+  /* マップコンポーネント */
   --map-bg: var(--bg-color);
   --map-loading-bg: var(--light-gray);
   --map-focus: var(--primary-focus);
@@ -77,12 +85,14 @@
   --map-dark-bg: var(--color-bg-dark);
   --map-dark-text: var(--color-text-dark);
 
+  /* フォームコンポーネント */
   --input-bg: var(--bg-color);
   --input-border: var(--border-color);
   --input-text: var(--text-color);
   --input-focus-border: var(--primary-color);
   --input-placeholder: var(--color-secondary-light);
 
+  /* ボタンコンポーネント */
   --button-primary-bg: var(--primary-color);
   --button-primary-text: white;
   --button-secondary-bg: var(--secondary-color);
@@ -90,6 +100,7 @@
   --button-disabled-bg: var(--light-gray);
   --button-disabled-text: var(--color-secondary);
 
+  /* タイポグラフィ */
   font-size: 16px;
   font-family: 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -97,6 +108,7 @@
   text-rendering: optimizeLegibility;
 }
 
+/* ベースレイアウト */
 html,
 body {
   width: 100%;
@@ -107,22 +119,15 @@ body {
   overflow-wrap: break-word;
 }
 
+/* 共通要素スタイル */
 img {
   max-width: 100%;
   height: auto;
   display: block;
 }
 
-:focus {
-  outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  outline-offset: var(--focus-outline-offset);
-}
-
-:focus-visible {
-  outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  outline-offset: var(--focus-outline-offset);
-}
-
+/* フォーカス状態の統合 */
+:focus-visible,
 button:focus,
 a:focus,
 input:focus,
@@ -134,6 +139,7 @@ textarea:focus,
   outline-offset: var(--focus-outline-offset);
 }
 
+/* フォームコントロール */
 button,
 input,
 select,
@@ -142,6 +148,7 @@ textarea {
   color: inherit;
 }
 
+/* リンクスタイル */
 a {
   color: var(--primary-color);
   text-decoration: none;
@@ -154,6 +161,7 @@ a:focus {
   text-decoration: underline;
 }
 
+/* アプリケーションコンテナ */
 #app {
   width: 100%;
   height: 100%;
@@ -161,6 +169,7 @@ a:focus {
   flex-direction: column;
 }
 
+/* アクセシビリティ */
 .srOnly {
   position: absolute;
   width: 1px;
@@ -173,6 +182,7 @@ a:focus {
   border-width: 0;
 }
 
+/* エラーコンポーネント */
 .errorContainer {
   background-color: var(--error-bg);
   color: var(--error-text);
@@ -192,12 +202,27 @@ a:focus {
   font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
+/* ダークモード */
+@media (prefers-color-scheme: dark) {
   :root {
-    font-size: 14px;
+    --text-color: var(--color-text-dark);
+    --bg-color: var(--color-bg-dark);
+    --light-gray: #1e1e1e;
+    --border-color: #555555;
+    --error-bg: rgba(211, 47, 47, 0.2);
+    --error-text: var(--color-error-light);
+    --error-border: #d32f2f;
+    --error-shadow: rgba(211, 47, 47, 0.2);
+    --focus-outline-color: var(--color-primary-light);
+    --input-bg: #2d2d2d;
+    --input-border: #555555;
+    --input-placeholder: #888888;
+    --button-disabled-bg: #2d2d2d;
+    --button-disabled-text: #888888;
   }
 }
 
+/* 印刷スタイル - パフォーマンス向上のために最後に配置 */
 @media print {
   body {
     background-color: white;
@@ -211,29 +236,5 @@ a:focus {
 
   @page {
     margin: 2cm;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-color: var(--color-text-dark);
-    --bg-color: var(--color-bg-dark);
-    --light-gray: #1e1e1e;
-    --border-color: #555555;
-    --text-light: var(--color-text-light);
-
-    --error-bg: rgba(211, 47, 47, 0.2);
-    --error-text: var(--color-error-light);
-    --error-border: #d32f2f;
-    --error-shadow: rgba(211, 47, 47, 0.2);
-
-    --focus-outline-color: var(--color-primary-light);
-
-    --input-bg: #2d2d2d;
-    --input-border: #555555;
-    --input-placeholder: #888888;
-
-    --button-disabled-bg: #2d2d2d;
-    --button-disabled-text: #888888;
   }
 }
