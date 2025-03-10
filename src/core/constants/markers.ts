@@ -1,12 +1,12 @@
-import publicToiletIcon from '../utils/images/ano_icon01.png';
-import recommendIcon from '../utils/images/ano_icon_recommend.png';
-import ryotsuAikawaIcon from '../utils/images/icon_map01.png';
-import kanaiSawadaNiiboHatanoManoIcon from '../utils/images/icon_map02.png';
-import akadomariHamochiOgiIcon from '../utils/images/icon_map03.png';
-import defaultIcon from '../utils/images/row2.png';
-import parkingIcon from '../utils/images/shi_icon01.png';
-import snackIcon from '../utils/images/shi_icon02.png';
-import currentLocationIcon from '../utils/images/shi_icon04.png';
+import publicToiletIcon from '../../assets/images/icons/ano_icon01.png';
+import recommendIcon from '../../assets/images/icons/ano_icon_recommend.png';
+import ryotsuAikawaIcon from '../../assets/images/icons/icon_map01.png';
+import kanaiSawadaNiiboHatanoManoIcon from '../../assets/images/icons/icon_map02.png';
+import akadomariHamochiOgiIcon from '../../assets/images/icons/icon_map03.png';
+import parkingIcon from '../../assets/images/icons/shi_icon01.png';
+import snackIcon from '../../assets/images/icons/shi_icon02.png';
+import currentLocationIcon from '../../assets/images/icons/shi_icon04.png';
+import defaultIcon from '../../assets/images/logos/row2.png';
 
 export const MARKERS = {
   colors: {

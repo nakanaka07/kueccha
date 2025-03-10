@@ -1,7 +1,7 @@
 import React from 'react';
+import resetNorthIcon from '../../../assets/images/icons/ano_icon04.png';
+import currentLocationIcon from '../../../assets/images/icons/shi_icon04.png';
 import { MapControlsProps } from '../../../core/types/map';
-import resetNorthIcon from '../../../utils/images/ano_icon04.png';
-import currentLocationIcon from '../../../utils/images/shi_icon04.png';
 
 export const MapControls: React.FC<MapControlsProps> = ({ onResetNorth, onGetCurrentLocation }) => (
   <div className="mapControlsContainer">

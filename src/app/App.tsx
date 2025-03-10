@@ -3,8 +3,8 @@ import { LOADING_MESSAGES, ERRORS } from '@core/constants/messages';
 import { useAppState } from '@core/hooks/useAppState';
 import { useLocationWarning } from '@core/hooks/useLocationWarning';
 import { useSheetData } from '@core/services/sheets';
-import { useMapNorthControl } from '@modules/map/hooks/useMapNorthControl';
-import { useCurrentLocationPoi } from '@modules/poi/hooks/useCurrentLocationPoi';
+import { useMapNorthControl } from '@/modules/map/hooks/useMapNorthControl';
+import { useCurrentLocationPoi } from '@/modules/poi/hooks/useCurrentLocationPoi';
 import { AppLayout } from '@shared/components/layout/AppLayout';
 import { ErrorBoundary } from '@shared/components/ui/error/ErrorBoundary';
 
