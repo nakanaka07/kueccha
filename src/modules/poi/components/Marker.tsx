@@ -1,15 +1,3 @@
-/*
- * 機能: Google Maps上にPOIマーカーを表示するReactコンポーネント
- * 依存関係:
- *   - React
- *   - useMarkerElement, useMarkerInstance, useMarkerInteractionフック
- *   - MarkerProps型定義
- * 注意点:
- *   - React.memoでパフォーマンス最適化
- *   - このコンポーネントはDOM要素を直接レンダリングしない
- *   - 選択状態やz-indexをプロパティとして受け取る
- */
-
 import React from 'react';
 import { useMarkerElement } from '../hooks/useMarkerElement';
 import { useMarkerInstance } from '../hooks/useMarkerInstance';

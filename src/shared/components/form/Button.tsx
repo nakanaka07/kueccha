@@ -1,12 +1,3 @@
-/*
- * 機能: カスタマイズ可能なReactボタンコンポーネントを提供します
- * 依存関係:
- *   - React
- *   - CSSクラス (btn, btn-variant, btn-size)
- * 注意点:
- *   - variantとsizeに応じたCSSクラスが必要です
- *   - ボタンのスタイリングには外部CSSが必要です
- */
 import React from 'react';
 
 interface ButtonProps {

@@ -1,16 +1,3 @@
-/**
- * 機能: アプリケーション全体の状態管理を統合するカスタムフック
- * 依存関係:
- *   - React hooks (useState, useCallback, useEffect)
- *   - カスタムフック (useLoadingState, useLocationWarning, useAreaVisibility, useMapState, usePoiState)
- *   - 設定関連 (CONFIG, ERROR_MESSAGES, LOADING_DELAY)
- *   - 型定義 (Poi, AppError, LatLngLiteral)
- * 注意点:
- *   - 複数の状態管理フックを統合するため、レンダリングパフォーマンスに影響する可能性あり
- *   - 位置情報APIの権限が必要
- *   - エラーハンドリングがアプリケーション全体に影響
- *   - マップ読み込みと位置情報取得のライフサイクルを管理
- */
 import { useState, useCallback, useEffect } from 'react';
 import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
@@ -25,7 +12,6 @@ import type { Poi } from '../types/poi';
 
 export const useAppState = (pois: Poi[]) => {
   const mapState = useMapState();
-  // usePoiStateフックを使用する
   const poiState = usePoiState(pois);
   const { areaVisibility, setAreaVisibility } = useAreaVisibility();
   const locationWarning = useLocationWarning();

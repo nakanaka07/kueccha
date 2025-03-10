@@ -1,14 +1,3 @@
-/**
- * 機能: グローバル状態とローカル状態を双方向に同期するカスタムフック
- * 依存関係:
- *   - React hooks (useState, useEffect, useRef)
- *   - React 16.8以上 (フックをサポートするバージョン)
- * 注意点:
- *   - 循環参照の可能性があるため、isEqualオプションで適切な比較関数を指定する
- *   - デバッグモードで同期の流れを確認可能
- *   - 同期方向を一方向に制限することも可能
- *   - パフォーマンス考慮: 複雑なオブジェクトの場合はカスタム比較関数を実装すべき
- */
 import { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
 
 export function useSyncState<T>(

@@ -1,13 +1,3 @@
-/**
- * 機能: 佐渡島のエリア区分、表示設定、位置情報に関する定数を定義
- * 依存関係:
- *   - ../types/poi からのPoi型
- *   - ../types/common からのAreaType型
- * 注意点:
- *   - CURRENT_LOCATION_POIのlocation座標はデフォルト値(0,0)で、実際の使用時にはuseCurrentLocationPoiフックで上書きされる
- *   - INITIAL_VISIBILITYはSNACK、PUBLIC_TOILET、PARKING、CURRENT_LOCATIONを除き初期表示が有効
- *   - エリア名は定数として定義され、型安全性のためにconst assertionを使用
- */
 import { Poi } from '../types/poi';
 import type { AreaType } from '../types/common';
 

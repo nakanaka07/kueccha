@@ -1,16 +1,3 @@
-/*
- * 機能: POIデータの高度な検索機能を提供するカスタムフック
- * 依存関係:
- *   - React (useState, useCallback, useRef, useEffect)
- *   - AREAS定数（エリア名のマッピング）
- *   - Poi, LatLngLiteral型定義
- * 注意点:
- *   - 複数検索オプションをサポート（AND/OR検索、フィールド指定、距離ソート等）
- *   - パフォーマンス向上のための検索結果キャッシュ機構を実装
- *   - デバウンス処理によるパフォーマンス最適化
- *   - 位置情報に基づく距離計算と結果のソートが可能
- */
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AREAS } from '../../../core/constants/areas';
 import type { Poi, LatLngLiteral } from '../../../core/types/poi';

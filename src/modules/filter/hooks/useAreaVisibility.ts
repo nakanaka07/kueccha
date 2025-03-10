@@ -1,16 +1,3 @@
-/*
- * 機能: エリアの表示/非表示状態を管理するカスタムフック
- * 依存関係:
- *   - React (useCallback, useEffect, useMemo, useState)
- *   - AREAS定数
- *   - INITIAL_VISIBILITY定数
- *   - AreaType, AreaVisibilityタイプ定義
- * 注意点:
- *   - ローカルストレージに設定が保存されるため、異なるコンポーネント間で設定が共有されます
- *   - persistToStorage=falseにすると、ローカルストレージへの保存を無効化できます
- *   - ローカルストレージ読み込み時にエラーが発生した場合、初期値にフォールバックします
- */
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AREAS } from '../../../core/constants/areas';
 import { INITIAL_VISIBILITY } from '../../../core/constants/areas';

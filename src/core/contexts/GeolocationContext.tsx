@@ -1,17 +1,3 @@
-/**
- * 機能: 位置情報サービスの状態と操作を管理するReactコンテキスト
- * 依存関係:
- *   - React (createContext, useContext, useState, useCallback)
- *   - ../constants/config からのCONFIG設定
- *   - ../constants/messages からのERROR_MESSAGES
- *   - ../types/common からのLatLngLiteral, AppError型
- *   - Geolocation Web API
- * 注意点:
- *   - 位置情報の取得には利用者の許可が必要
- *   - エラーの種類（権限拒否、位置情報取得不可、タイムアウトなど）に応じた処理を提供
- *   - 権限拒否時は警告表示オプションあり
- *   - Geolocation APIがサポートされていない環境ではエラーを返す
- */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { CONFIG } from '../constants/config';
 import { ERROR_MESSAGES } from '../constants/messages';

@@ -1,12 +1,3 @@
-/**
- * 機能: テキストフォーマットと検証のためのユーティリティ関数
- * 依存関係:
- *   - React (ReactElement作成のため)
- * 注意点:
- *   - formatInformation: URLの検出と分離を行いますが、すべてのURL形式に対応していない可能性があります
- *   - 古いブラウザでは URL APIの互換性に問題がある場合があります
- *   - isValidPhoneNumber: 国際的な電話番号形式の一部をサポートしていますが、完全網羅ではありません
- */
 import React from 'react';
 
 export const formatInformation = (text: string | null): React.ReactElement | null => {

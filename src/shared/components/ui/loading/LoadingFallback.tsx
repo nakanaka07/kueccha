@@ -1,21 +1,4 @@
-/*
- * 機能: ローディング状態、エラー状態、完了状態を管理し、適切なUI表示を行うコンポーネント
- * 依存関係:
- *   - React（memo）
- *   - ErrorDisplayコンポーネント
- *   - LoadingFallback.module.cssスタイルシート
- *   - LoadingVariantコンポーネント
- *   - ERROR_MESSAGESオブジェクト
- *   - useLoadingStateフック
- * 注意点:
- *   - ローディング状態とエラー状態のどちらも扱えます
- *   - フェードアウト効果のアニメーション時間を調整可能
- *   - リトライ機能を提供（onRetryプロパティ）
- *   - アクセシビリティのためのaria属性を適切に設定
- */
 import React, { memo } from 'react';
-// 以下のインポートパスを修正
-import styles from './LoadingFallback.module.css';
 import { LoadingVariant } from './LoadingVariants';
 import { LOADING_MESSAGES, ERRORS } from '../../../../core/constants/messages';
 import { useLoadingState } from '../../../../core/hooks/useLoadingState';
@@ -44,25 +27,16 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   fadeDuration = 7000,
   onRetry,
   variant = 'spinner',
-  showOverlay = false,
-  spinnerClassName = '',
-  isFading: externalFading,
 }) => {
-  const { isVisible, isFading: internalFading } = useLoadingState(isLoading, isLoaded, fadeDuration);
-  const isFading = externalFading !== undefined ? externalFading : internalFading;
+  const { isVisible } = useLoadingState(isLoading, isLoaded, fadeDuration);
 
   if (!isVisible) return null;
 
   return (
-    <div
-      className={`${styles.loadingFallback} ${isFading ? styles.fading : ''} ${showOverlay ? styles.overlay : ''}`}
-      style={isFading ? { animationDuration: `${fadeDuration}ms` } : undefined}
-      role={error ? 'alert' : 'status'}
-      aria-live={error ? 'assertive' : 'polite'}
-    >
-      <div className={styles.loadingContent}>
+    <div role={error ? 'alert' : 'status'} aria-live={error ? 'assertive' : 'polite'}>
+      <div>
         {!error ? (
-          <LoadingVariant variant={variant} message={message} spinnerClassName={spinnerClassName} />
+          <LoadingVariant variant={variant} message={message} />
         ) : (
           <ErrorDisplay message={errorMessage || error.message} onRetry={onRetry} />
         )}

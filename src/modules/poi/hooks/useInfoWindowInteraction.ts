@@ -1,13 +1,3 @@
-/*
- * 機能: 情報ウィンドウのインタラクション処理を管理するフック
- * 依存関係:
- *   - React useEffect, useRef
- * 注意点:
- *   - ウィンドウサイズ変更時の高さ調整
- *   - ウィンドウ外クリックでの閉じる機能
- *   - イベントリスナーの適切なクリーンアップ
- */
-
 import { useEffect, useRef } from 'react';
 
 export function useInfoWindowInteraction(onCloseClick: () => void) {

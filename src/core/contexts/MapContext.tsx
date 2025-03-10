@@ -1,23 +1,8 @@
-/**
- * 機能: Google Maps関連の状態と操作を管理するReactコンテキスト
- * 依存関係:
- *   - React (createContext, useContext, useCallback, useReducer, useEffect)
- *   - ../../constants/config からのCONFIG設定
- *   - ../../constants/messages からのERROR_MESSAGES
- *   - ../../types/common からのLatLngLiteral, AppError型
- *   - @google/maps JavaScript API
- * 注意点:
- *   - マップのロード状態、マップインスタンス、中心座標、ズームレベルを管理
- *   - マップのロードに20秒以上かかる場合はタイムアウトエラーを表示
- *   - マップインスタンスが変更されたときに自動的に中心座標とズームレベルを適用
- *   - エラーハンドリングと再試行機能を提供
- */
 import React, { createContext, useContext, useCallback, useReducer, useEffect } from 'react';
 import { CONFIG } from '../constants/config';
 import { ERROR_MESSAGES } from '../constants/messages';
 import type { LatLngLiteral, AppError } from '../types/common';
 
-// 状態の型定義
 interface MapState {
   isMapLoaded: boolean;
   isLoading: boolean;
@@ -27,7 +12,6 @@ interface MapState {
   error: AppError | null;
 }
 
-// アクションの型定義
 type MapAction =
   | { type: 'SET_MAP_INSTANCE'; payload: google.maps.Map }
   | { type: 'SET_MAP_LOADED'; payload: boolean }
@@ -37,7 +21,6 @@ type MapAction =
   | { type: 'SET_ZOOM'; payload: number }
   | { type: 'RESET_VIEW' };
 
-// 初期状態
 const initialMapState: MapState = {
   isMapLoaded: false,
   isLoading: true,
@@ -47,7 +30,6 @@ const initialMapState: MapState = {
   error: null,
 };
 
-// リデューサー関数
 const mapReducer = (state: MapState, action: MapAction): MapState => {
   switch (action.type) {
     case 'SET_MAP_INSTANCE':
@@ -73,7 +55,6 @@ const mapReducer = (state: MapState, action: MapAction): MapState => {
   }
 };
 
-// コンテキストの型定義
 interface MapContextType {
   state: MapState;
   handleMapLoad: (map: google.maps.Map) => void;
@@ -83,14 +64,11 @@ interface MapContextType {
   retryMapLoad: () => void;
 }
 
-// コンテキストの作成
 export const MapContext = createContext<MapContextType | null>(null);
 
-// コンテキストプロバイダーコンポーネント
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(mapReducer, initialMapState);
 
-  // マップロード処理
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     try {
       dispatch({ type: 'SET_MAP_INSTANCE', payload: map });
@@ -110,28 +88,23 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // 中心座標の設定
   const setCenter = useCallback((center: LatLngLiteral) => {
     dispatch({ type: 'SET_CENTER', payload: center });
   }, []);
 
-  // ズームレベルの設定
   const setZoom = useCallback((zoom: number) => {
     dispatch({ type: 'SET_ZOOM', payload: zoom });
   }, []);
 
-  // 表示のリセット
   const resetView = useCallback(() => {
     dispatch({ type: 'RESET_VIEW' });
 
-    // マップインスタンスが存在する場合は直接更新
     if (state.mapInstance) {
       state.mapInstance.setCenter(CONFIG.maps.defaultCenter);
       state.mapInstance.setZoom(CONFIG.maps.defaultZoom);
     }
   }, [state.mapInstance]);
 
-  // マップロードの再試行
   const retryMapLoad = useCallback(() => {
     dispatch({ type: 'SET_ERROR', payload: null });
 
@@ -148,7 +121,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state.mapInstance, handleMapLoad]);
 
-  // マップインスタンスが変更されたときに中心とズームを適用
   useEffect(() => {
     if (state.mapInstance && state.isMapLoaded) {
       state.mapInstance.setCenter(state.center);
@@ -156,7 +128,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state.mapInstance, state.isMapLoaded, state.center, state.zoom]);
 
-  // タイムアウト処理
   useEffect(() => {
     const timer = setTimeout(() => {
       if (state.isLoading && !state.isMapLoaded) {
@@ -169,7 +140,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    }, 20000); // 20秒のタイムアウト
+    }, 20000);
 
     return () => clearTimeout(timer);
   }, [state.isLoading, state.isMapLoaded]);
@@ -190,7 +161,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
-// フック
 export const useMapContext = () => {
   const context = useContext(MapContext);
   if (!context) {

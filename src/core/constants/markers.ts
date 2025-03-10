@@ -1,12 +1,3 @@
-/**
- * 機能: Google Maps用のマーカーアイコンと色の定義
- * 依存関係:
- *   - ../utils/imagesディレクトリ内の各種アイコン画像ファイル
- * 注意点:
- *   - アイコンファイルへのパスが正確であることを確認
- *   - const assertionを使用して型安全性を確保
- *   - MARKER_ICONSは直接アクセス用にMARKERS.iconsをエクスポート
- */
 import publicToiletIcon from '../utils/images/ano_icon01.png';
 import recommendIcon from '../utils/images/ano_icon_recommend.png';
 import ryotsuAikawaIcon from '../utils/images/icon_map01.png';

@@ -1,24 +1,7 @@
-/*
- * 機能: POI詳細情報を表示する情報ウィンドウコンポーネント
- * 依存関係:
- *   - React
- *   - BusinessHoursSection, InfoItemコンポーネント
- *   - InfoWindow.module.css (スタイリング)
- *   - isValidPhoneNumber関数
- *   - useInfoWindowInteractionフック
- *   - InfoWindowProps, LatLngLiteral型定義
- * 注意点:
- *   - POIの詳細情報を構造化して表示
- *   - 各情報項目は条件付きでレンダリング（存在する場合のみ表示）
- *   - 外部クリックで閉じる機能を実装
- */
-
 import React from 'react';
 import { BusinessHoursSection } from './BusinessHoursSection';
 import { InfoItem } from './InfoItem';
-import styles from './InfoWindow.module.css';
 import { InfoWindowHeader } from './InfoWindowHeader';
-// 使用していないインポートを削除
 import { isValidPhoneNumber } from '../../../core/utils/formatters';
 import { useInfoWindowInteraction } from '../hooks/useInfoWindowInteraction';
 import type { InfoWindowProps, LatLngLiteral } from '../../../core/types/poi';
@@ -31,18 +14,18 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
   };
 
   return (
-    <div className={styles.infoWindow} ref={windowRef} onClick={(e) => e.stopPropagation()}>
+    <div className="infoWindow" ref={windowRef} onClick={(e) => e.stopPropagation()}>
       <InfoWindowHeader title={poi.name} onClose={onCloseClick} />
 
-      <div className={styles.infoContent}>
+      <div className="infoContent">
         <BusinessHoursSection poi={poi} />
 
-        <div className={styles.infoHorizontal}>
+        <div className="infoHorizontal">
           {poi.location && (
             <InfoItem
               title="位置"
               content={
-                <span className={styles.value}>
+                <span className="value">
                   {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
                 </span>
               }
@@ -58,7 +41,7 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
               title="問い合わせ"
               content={
                 isValidPhoneNumber(poi.phone) ? (
-                  <a href={`tel:${poi.phone}`} className={styles.infoLink}>
+                  <a href={`tel:${poi.phone}`} className="infoLink">
                     {poi.phone}
                   </a>
                 ) : (
@@ -71,7 +54,7 @@ const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) =
           {poi.view && (
             <InfoItem
               content={
-                <a href={poi.view} target="_blank" rel="noopener noreferrer" className={styles.infoButton}>
+                <a href={poi.view} target="_blank" rel="noopener noreferrer" className="infoButton">
                   Google マップで写真を見る
                 </a>
               }

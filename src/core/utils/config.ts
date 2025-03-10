@@ -1,14 +1,3 @@
-/**
- * 機能: アプリケーション設定の検証と初期化を行う設定管理モジュール
- * 依存関係:
- *   - ../../constants (APPオブジェクト)
- *   - ../types/common (Config型定義)
- *   - Vite環境変数 (VITE_GOOGLE_MAPS_API_KEY、VITE_GOOGLE_SHEETS_API_KEYなど)
- * 注意点:
- *   - 必要な環境変数が設定されていない場合、アプリケーションの起動時にエラーをスローします
- *   - 設定値の検証に失敗した場合もエラーがスローされるため、正しい設定が必須です
- *   - Google Maps APIとGoogle Sheets APIキーが有効である必要があります
- */
 import { APP } from '../../core/constants';
 import type { Config } from '../types/common';
 

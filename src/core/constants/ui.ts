@@ -1,12 +1,3 @@
-/**
- * 機能: UIに関連する定数を定義（ローディング遅延、背景非表示遅延、営業時間表示形式、メニュー項目）
- * 依存関係:
- *   - なし
- * 注意点:
- *   - メニュー項目のactionプロパティは文字列として定義されており、実行時に対応するハンドラーと関連付ける必要あり
- *   - const assertionを使用して型安全性を確保
- */
-
 export const LOADING_DELAY = 0;
 export const BACKGROUND_HIDE_DELAY = 1000;
 
@@ -21,19 +12,12 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '祝祭日', key: 'holiday' },
 ] as const;
 
-/**
- * UI関連の定数
- */
-
 export interface MenuItem {
   label: string;
   title: string;
   action: string;
   icon?: string;
-  // onClick はオリジナルのMenuItemにはなく、後で追加されるプロパティ
 }
-
-// 拡張した型を定義
 export interface MenuItemWithHandler extends MenuItem {
   onClick: () => void;
 }

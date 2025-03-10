@@ -1,15 +1,3 @@
-/**
- * 機能: ブラウザの位置情報APIをラップした位置情報サービス
- * 依存関係:
- *   - Web Geolocation API
- *   - CONFIG設定 (config.ts)
- *   - エラーメッセージ定数 (messages.ts)
- * 注意点:
- *   - ユーザーが位置情報の使用を許可する必要があります
- *   - モバイルデバイスでは精度が向上しますが、バッテリー消費が増加します
- *   - タイムアウトやエラー処理が実装されています
- *   - 屋内や地下では精度が低下する可能性があります
- */
 import { CONFIG } from '../../core/constants/config';
 import { ERROR_MESSAGES } from '../../core/constants/messages';
 import type { GeolocationError, LatLngLiteral } from '../../core/types/common';

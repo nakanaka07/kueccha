@@ -1,16 +1,4 @@
-/*
- * 機能: フィードバックフォームの表示部分を担当するプレゼンテーショナルコンポーネント
- * 依存関係:
- *   - React
- *   - FeedbackForm.module.css スタイルシート
- * 注意点:
- *   - ロジックを含まないUI表示専用コンポーネント
- *   - アクセシビリティ対応（aria-label、フォームラベル等）
- *   - 親コンポーネントから全ての状態とイベントハンドラを受け取る
- */
-
 import React from 'react';
-import styles from './FeedbackForm.module.css';
 
 interface FeedbackFormUIProps {
   name: string;
@@ -38,11 +26,7 @@ export const FeedbackFormUI: React.FC<FeedbackFormUIProps> = ({
   return (
     <form onSubmit={onSubmit} noValidate>
       <h2 id="feedback-title">フィードバック</h2>
-      {error && (
-        <div className={styles.errorMessage} role="alert">
-          {error}
-        </div>
-      )}
+      {error && <div role="alert">{error}</div>}
       <label htmlFor="name">
         名前:
         <input id="name" type="text" value={name} onChange={onNameChange} aria-label="名前" />

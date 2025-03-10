@@ -1,11 +1,3 @@
-/*
- * 機能: フォーム入力用のInputコンポーネントを提供します
- * 依存関係:
- *   - React
- * 注意点:
- *   - アクセシビリティに配慮したラベル付きの入力フィールド
- *   - 各種入力タイプをサポート
- */
 import React from 'react';
 
 interface InputProps {

@@ -1,14 +1,3 @@
-/**
- * 機能: ローディング状態の表示とフェードアウト効果を管理するカスタムフック
- * 依存関係:
- *   - React hooks (useState, useEffect)
- *   - BACKGROUND_HIDE_DELAY 定数 (UI定数)
- * 注意点:
- *   - isLoading と isLoaded の2つのフラグで状態を制御
- *   - フェードアウト効果のタイミングはfadeDurationで調整可能
- *   - アニメーションにはCSSトランジションと連携することを想定
- *   - コンポーネントがアンマウントされる前にタイマーをクリアする
- */
 import { useState, useEffect } from 'react';
 import { BACKGROUND_HIDE_DELAY } from '../../core/constants/ui';
 

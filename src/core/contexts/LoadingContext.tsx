@@ -1,14 +1,3 @@
-/**
- * 機能: アプリケーション全体のローディング状態を管理するReactコンテキスト
- * 依存関係:
- *   - React (createContext, useContext, useState, useCallback, useEffect)
- *   - ../../constants/ui からのLOADING_DELAY
- * 注意点:
- *   - 複数のコンポーネントのロード状態を追跡
- *   - すべてのコンポーネントがロード完了すると自動的にフェードアウト処理を実行
- *   - キーごとにロード状態と完了状態を個別に管理
- *   - フェードアウト時間はpropsで設定可能（デフォルトはLOADING_DELAY）
- */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { LOADING_DELAY } from '../constants/ui';
 

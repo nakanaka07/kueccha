@@ -1,16 +1,3 @@
-/**
- * 機能: Google Sheets APIを使用したPOI（観光地点）データの取得サービス
- * 依存関係:
- *   - React hooks (useState, useEffect)
- *   - errors.ts (エラーハンドリング機能)
- *   - 定数ファイル (areas.ts, config.ts)
- *   - Google Sheets API v4
- * 注意点:
- *   - API使用量の制限に注意 (レート制限あり)
- *   - キャッシュは10分間有効、大量リクエストを避けるために使用
- *   - タイムアウトは30秒に設定
- *   - 佐渡島の地理的範囲外の座標は無視される
- */
 import { useState, useEffect } from 'react';
 import { createError, handleApiError } from './errors';
 import { AREAS } from '../../core/constants/areas';

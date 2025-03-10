@@ -1,15 +1,3 @@
-/*
- * 機能: マップ設定の検証と提供を行うカスタムフック
- * 依存関係:
- *   - React (useState, useEffect)
- *   - MAPS_CONFIG（マップ設定定数）
- *   - ERROR_MESSAGES（エラーメッセージ定数）
- * 注意点:
- *   - 必須設定（apiKey, mapId）が欠けている場合エラーを生成
- *   - マップ設定をアプリケーション全体で一貫して利用できるよう正規化
- *   - 設定値のフォールバック処理が含まれる
- */
-
 import { useState, useEffect } from 'react';
 import { MAPS_CONFIG } from '../../../core/constants/config';
 import { ERROR_MESSAGES } from '../../../core/constants/messages';

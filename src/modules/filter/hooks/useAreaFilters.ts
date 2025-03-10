@@ -1,25 +1,10 @@
-/*
- * 機能: エリアフィルタリング機能を提供するカスタムフック
- * 依存関係:
- *   - React useEffect
- *   - AREAS, MARKERS 定数
- *   - Poi, AreaType 型定義
- * 注意点:
- *   - このフックはPOIデータをエリアごとにフィルタリングし、UI表示用のデータを生成します
- *   - CURRENT_LOCATIONは特別なエリアとして扱われ、通常のエリア一覧からは除外されます
- *   - 親コンポーネントとの状態同期が自動的に行われます
- */
-
 import { useEffect } from 'react';
 import { AREAS } from '../../../core/constants/areas';
 import { MARKERS } from '../../../core/constants/markers';
-// ここをプロジェクト内の正しい場所から型をインポートするように修正
 import type { AreaType } from '../../../core/types/common';
 
-// Poi型をローカルで定義する場合
 interface Poi {
   area: AreaType;
-  // 他に必要なプロパティがあれば追加
 }
 
 export function useAreaFilters(
@@ -27,7 +12,6 @@ export function useAreaFilters(
   localAreaVisibility: Record<AreaType, boolean>,
   setAreaVisibility: (visibility: Record<AreaType, boolean>) => void,
 ) {
-  // 型アサーションを明示的に行う
   const areaCounts = pois.reduce<Record<AreaType, number>>(
     (acc, poi) => ({
       ...acc,

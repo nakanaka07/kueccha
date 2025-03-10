@@ -1,20 +1,5 @@
-/*
- * 機能: フィルターパネルコンポーネント - エリア表示/非表示の操作UIを提供
- * 依存関係:
- *   - React
- *   - FilterItem コンポーネント
- *   - useAreaFilters フック
- *   - FilterPanel.module.css スタイル
- *   - AreaType, FilterPanelProps 型定義
- * 注意点:
- *   - isFilterPanelOpenプロパティによって表示/非表示が切り替わります
- *   - 各エリアの表示状態はlocalAreaVisibilityで管理し、setAreaVisibilityで親コンポーネントに伝達します
- *   - レスポンシブデザインに対応しています
- */
-
 import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
-import styles from './FilterPanel.module.css';
 import { useAreaFilters } from '../hooks/useAreaFilters';
 import type { AreaType, AreaVisibility } from '../../../core/types/common';
 import type { FilterPanelProps } from '../../../core/types/filter';
@@ -39,19 +24,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   if (!isFilterPanelOpen) {
-    return <div className={styles.filterpanelContainer} />;
+    return <div className="filterpanelContainer" />;
   }
 
   return (
-    <div className={`${styles.filterpanelContainer} ${styles.open}`}>
-      <div ref={panelRef} className={styles.filterPanel}>
-        <button onClick={onCloseClick} className={styles.closeButton} aria-label="閉じる">
+    <div className="filterpanelContainer open">
+      <div ref={panelRef} className="filterPanel">
+        <button onClick={onCloseClick} className="closeButton" aria-label="閉じる">
           ×
         </button>
 
         <h2>表示エリア</h2>
 
-        <div className={styles.filterList}>
+        <div className="filterList">
           {areas.map(({ area, name, count, isVisible, color, icon }) => (
             <FilterItem
               key={area}

@@ -1,11 +1,3 @@
-/*
- * 機能: 複数行テキスト入力用のTextareaコンポーネントを提供します
- * 依存関係:
- *   - React
- * 注意点:
- *   - リサイズ機能のサポート
- *   - アクセシビリティに配慮したデザイン
- */
 import React from 'react';
 
 interface TextareaProps {

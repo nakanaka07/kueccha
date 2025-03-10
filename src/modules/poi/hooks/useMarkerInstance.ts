@@ -1,15 +1,3 @@
-/*
- * 機能: Google Mapsのマーカーインスタンスを作成・管理するフック
- * 依存関係:
- *   - React useRef, useEffect
- *   - Google Maps JavaScript API (marker.AdvancedMarkerElement)
- *   - LatLngLiteral型定義
- * 注意点:
- *   - Google Maps APIが初期化されていることが前提
- *   - マーカーのライフサイクル管理（生成・更新・削除）を担当
- *   - マウント解除時にマーカーの参照を適切にクリーンアップ
- */
-
 import { useRef, useEffect } from 'react';
 import type { LatLngLiteral } from '../../../core/types/common';
 

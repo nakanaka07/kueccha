@@ -1,16 +1,3 @@
-/*
- * 機能: Googleマップの状態管理を担当するカスタムフック
- * 依存関係:
- *   - React Hooks (useState, useCallback, useEffect)
- *   - CONFIG（マップデフォルト設定）
- *   - ERROR_MESSAGES（エラーメッセージ定数）
- *   - 型定義: LatLngLiteral, AppError
- * 注意点:
- *   - マップインスタンスのライフサイクル管理を行う
- *   - エラーハンドリングとタイムアウト処理を実装
- *   - マップが読み込まれない場合20秒後にエラーを表示
- */
-
 import { useState, useCallback, useEffect } from 'react';
 import { CONFIG } from '../../../core/constants/config';
 import { ERROR_MESSAGES } from '../../../core/constants/messages';

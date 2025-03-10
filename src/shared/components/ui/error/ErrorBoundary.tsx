@@ -1,20 +1,5 @@
-/*
- * 機能: Reactコンポーネントツリー内でのエラーをキャッチし、フォールバックUIを表示するエラーバウンダリー
- * 依存関係:
- *   - React
- *   - ErrorBoundary.module.cssスタイルシート
- *   - ERROR_MESSAGESオブジェクト
- *   - ErrorBoundaryProps, ErrorBoundaryState型定義
- * 注意点:
- *   - このコンポーネントはレンダリングフェーズのエラーのみをキャッチします
- *   - イベントハンドラ内のエラーはキャッチされません
- *   - フォールバックUIをカスタマイズするにはfallbackプロパティを使用します
- */
 import React, { Component, ErrorInfo } from 'react';
-import styles from './ErrorBoundary.module.css';
-// パスを修正：アプリケーションのcore/constants内のmessagesを参照
 import { ERRORS } from '../../../../core/constants/messages';
-// パスを修正：適切なUIタイプ定義の場所を参照
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../../../core/types/ui';
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -57,8 +42,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     return (
-      <div className={styles.errorBoundary} role="alert" aria-live="assertive">
-        <div className={styles.errorContent}>
+      <div role="alert" aria-live="assertive">
+        <div>
           <h1>{ERRORS.errorBoundary.unknownError}</h1>
           <p>{error?.message || ERRORS.errorBoundary.unknownError}</p>
           <p>問題が解決しない場合は、サポートにお問い合わせください。</p>
