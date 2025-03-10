@@ -1,12 +1,14 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
+import { useMapNorthControl } from '@/modules/map/hooks/useMapNorthControl';
 import { LOADING_MESSAGES, ERRORS } from '@core/constants/messages';
 import { useAppState } from '@core/hooks/useAppState';
-import { useLocationWarning } from '@core/hooks/useLocationWarning';
 import { useSheetData } from '@core/services/sheets';
-import { useMapNorthControl } from '@/modules/map/hooks/useMapNorthControl';
-import { useCurrentLocationPoi } from '@/modules/poi/hooks/useCurrentLocationPoi';
 import { AppLayout } from '@shared/components/layout/AppLayout';
 import { ErrorBoundary } from '@shared/components/ui/error/ErrorBoundary';
+import { useAreaFiltering } from '../core/hooks/useAreaFiltering';
+import { useCurrentLocation } from '../core/hooks/useCurrentLocation';
+import { useErrorHandling } from '../core/hooks/useErrorHandling';
+import { createError } from '../core/utils/errorHandling';
 
 /**
  * メインアプリケーションコンポーネント
@@ -18,10 +20,7 @@ const App: React.FC = () => {
   const { data: pois, status: poisStatus } = useSheetData();
 
   // 位置情報の管理
-  const { currentLocation, showWarning, setShowWarning, getCurrentLocationInfo } = useLocationWarning();
-
-  // 現在地をPOIとして扱う
-  const currentLocationPoi = useCurrentLocationPoi(currentLocation);
+  const { currentLocationPoi, showWarning, setShowWarning, getCurrentLocationInfo } = useCurrentLocation();
 
   // POIデータの統合（現在地 + スプレッドシートデータ）
   const allPois = useMemo(() => {
@@ -61,21 +60,11 @@ const App: React.FC = () => {
   }, [mapInstance]);
 
   // ----- エラー状態の統合 -----
-  // POIデータのエラーハンドリング
-  // dataFetchErrorが存在しないため、正しいエラープロパティに変更
-  const poisError = poisStatus === 'error' ? { message: ERRORS.dataFetch, severity: 'error' as const } : null;
+  // POIデータのエラーハンドリング - createErrorを使用して標準化
+  const poisError = poisStatus === 'error' ? createError('DATA', 'FETCH_FAILED', ERRORS.dataFetch) : null;
 
-  // エラー情報の統合
-  const errorDetails = useMemo(() => {
-    const error = mapError || poisError;
-    if (!error) return null;
-
-    return {
-      message: error.message || ERRORS.systemError,
-      severity: error.severity || 'error',
-      code: 'code' in error ? error.code : undefined,
-    };
-  }, [mapError, poisError]);
+  // 統合エラーハンドリングフックの使用
+  const { combinedError, errorMessage, errorDetails, isRetryable, severity } = useErrorHandling(mapError, poisError);
 
   // ----- イベントハンドラ -----
   const handleGetCurrentLocation = useCallback(() => {
@@ -85,6 +74,9 @@ const App: React.FC = () => {
   // ローディングメッセージの判定
   const loadingMessage = useMemo(() => (isMapLoading ? LOADING_MESSAGES.map : LOADING_MESSAGES.data), [isMapLoading]);
 
+  // エリアフィルタリングの統合使用
+  const { filteredPois } = useAreaFiltering(allPois || []);
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<div>読み込み中...</div>}>
@@ -93,12 +85,20 @@ const App: React.FC = () => {
           isFading={isFading}
           isMapLoaded={isMapLoaded}
           loadingMessage={loadingMessage}
-          combinedError={!!errorDetails}
-          errorMessage={errorDetails?.message || ''}
+          // エラー情報を適切に渡す
+          combinedError={!!combinedError}
+          errorMessage={errorMessage}
+          errorDetails={errorDetails}
+          errorSeverity={severity}
+          isRetryable={isRetryable}
+          // 警告表示の管理
           showWarning={showWarning}
           setShowWarning={setShowWarning}
+          // POIデータ管理
           allPois={allPois}
+          filteredPois={filteredPois} // filteredPois を直接渡す
           selectedPoi={selectedPoi}
+          // アクション
           actions={actions}
           resetNorth={resetNorth}
           handleGetCurrentLocation={handleGetCurrentLocation}

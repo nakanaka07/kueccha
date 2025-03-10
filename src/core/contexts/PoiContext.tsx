@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import { ERROR_MESSAGES } from '../constants/messages';
+import { useAreaFiltering } from '../hooks/useAreaFiltering';
+import { createError } from '../utils/errorHandling';
 import type { AreaType } from '../types/common';
+import type { AppError } from '../types/common';
 import type { Poi } from '../types/poi';
 
 interface PoiState {
@@ -9,7 +12,7 @@ interface PoiState {
   selectedPoi: Poi | null;
   isLoading: boolean;
   isLoaded: boolean;
-  error: Error | null;
+  error: AppError | null; // ErrorからAppErrorに変更
   showCurrentLocation: boolean;
 }
 
@@ -19,7 +22,7 @@ type PoiAction =
   | { type: 'SET_SELECTED_POI'; payload: Poi | null }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_LOADED'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: Error | null }
+  | { type: 'SET_ERROR'; payload: AppError | null }
   | { type: 'SET_SHOW_CURRENT_LOCATION'; payload: boolean };
 
 const initialPoiState: PoiState = {
@@ -73,6 +76,8 @@ export const PoiProvider: React.FC<{
     filteredPois: initialPois,
   });
 
+  const { filteredPois } = useAreaFiltering(state.pois);
+
   useEffect(() => {
     try {
       if (Array.isArray(initialPois)) {
@@ -88,26 +93,27 @@ export const PoiProvider: React.FC<{
         throw new Error(ERROR_MESSAGES.DATA.LOADING_FAILED);
       }
     } catch (err) {
-      dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err : new Error(String(err)) });
+      const error =
+        err instanceof Error
+          ? createError('DATA', 'LOADING_FAILED', err.message)
+          : createError('DATA', 'LOADING_FAILED', String(err));
+      dispatch({ type: 'SET_ERROR', payload: error });
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, [initialPois]);
+
+  useEffect(() => {
+    dispatch({ type: 'SET_FILTERED_POIS', payload: filteredPois });
+  }, [filteredPois]);
 
   const setSelectedPoi = useCallback((poi: Poi | null) => {
     dispatch({ type: 'SET_SELECTED_POI', payload: poi });
   }, []);
 
-  const filterPois = useCallback(
-    (areaVisibility: Record<AreaType, boolean>) => {
-      const filtered = state.pois.filter((poi) => {
-        if (!poi.area) return true;
-        return areaVisibility[poi.area as AreaType];
-      });
-
-      dispatch({ type: 'SET_FILTERED_POIS', payload: filtered });
-    },
-    [state.pois],
-  );
+  const filterPois = useCallback((areaVisibility: Record<AreaType, boolean>) => {
+    console.warn('PoiContext.filterPois は非推奨です。useAreaFiltering を使用してください');
+    // 実際のフィルタリングはuseAreaFilteringが行う
+  }, []);
 
   const clearSelectedPoi = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_POI', payload: null });

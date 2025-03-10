@@ -3,6 +3,7 @@ import { GeolocationProvider, useGeolocationContext } from './GeolocationContext
 import { LoadingProvider, useLoadingContext } from './LoadingContext';
 import { MapProvider, useMapContext } from './MapContext';
 import { PoiProvider, usePoiContext } from './PoiContext';
+import { useAreaFiltering } from '../../modules/filter/hooks/useAreaFiltering';
 import { useAreaVisibility } from '../../modules/filter/hooks/useAreaVisibility';
 import { Poi } from '../types/poi';
 
@@ -20,14 +21,14 @@ export const AppProvider: React.FC<{
   children: React.ReactNode;
   initialPois: Poi[];
 }> = ({ children, initialPois }) => {
-  const areaVisibilityContext = useAreaVisibility();
+  const { areaVisibility, filteredPois } = useAreaFiltering([]);
 
   return (
     <LoadingProvider>
       <GeolocationProvider>
         <MapProvider>
           <PoiProvider initialPois={initialPois}>
-            <AppContextConsumer areaVisibility={areaVisibilityContext}>{children}</AppContextConsumer>
+            <AppContextConsumer areaFiltering={{ areaVisibility, filteredPois }}>{children}</AppContextConsumer>
           </PoiProvider>
         </MapProvider>
       </GeolocationProvider>
@@ -37,8 +38,11 @@ export const AppProvider: React.FC<{
 
 const AppContextConsumer: React.FC<{
   children: React.ReactNode;
-  areaVisibility: ReturnType<typeof useAreaVisibility>;
-}> = ({ children, areaVisibility }) => {
+  areaFiltering: {
+    areaVisibility: ReturnType<typeof useAreaVisibility>;
+    filteredPois: Poi[];
+  };
+}> = ({ children, areaFiltering }) => {
   const map = useMapContext();
   const poi = usePoiContext();
   const geolocation = useGeolocationContext();
@@ -55,10 +59,6 @@ const AppContextConsumer: React.FC<{
   }, [poi.state.isLoading, poi.state.isLoaded, loading]);
 
   React.useEffect(() => {
-    poi.filterPois(areaVisibility.areaVisibility);
-  }, [areaVisibility.areaVisibility, poi]);
-
-  React.useEffect(() => {
     if (geolocation.state.currentLocation && map.state.isMapLoaded) {
       map.setCenter(geolocation.state.currentLocation);
     }
@@ -71,7 +71,7 @@ const AppContextConsumer: React.FC<{
         poi,
         geolocation,
         loading,
-        areaVisibility,
+        areaVisibility: areaFiltering.areaVisibility,
       }}
     >
       {children}

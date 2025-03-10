@@ -47,10 +47,10 @@ export interface Config {
 
 export interface AppError {
   message: string;
-  code?: string;
+  code: string;
   details?: string;
-  severity?: 'critical' | 'warning' | 'info';
-  category?: keyof typeof ERROR_MESSAGES;
+  category?: string;
+  severity?: 'critical' | 'warning' | 'info' | null;
 }
 
 export interface GeolocationError {

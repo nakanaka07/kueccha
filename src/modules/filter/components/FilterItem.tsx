@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
+import { useCurrentLocation } from '../../../core/hooks/useCurrentLocation';
 import type { AreaType } from '../../../core/types/common';
 
 interface FilterItemProps {
@@ -11,8 +12,16 @@ interface FilterItemProps {
   onChange: (area: AreaType, isVisible: boolean) => void;
 }
 
-export const FilterItem: React.FC<FilterItemProps> = ({ label, area, count, isVisible, icon, onChange }) => {
-  const handleChange = () => onChange(area, !isVisible);
+export function FilterItem({ label, area, count, isVisible, icon, onChange }: FilterItemProps) {
+  const { currentLocationPoi } = useCurrentLocation();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (area === 'CURRENT_LOCATION' && e.target.checked) {
+      onChange(area, e.target.checked);
+    } else {
+      onChange(area, e.target.checked);
+    }
+  };
 
   return (
     <label>
@@ -27,4 +36,4 @@ export const FilterItem: React.FC<FilterItemProps> = ({ label, area, count, isVi
       </div>
     </label>
   );
-};
+}

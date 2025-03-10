@@ -2,10 +2,40 @@ import React from 'react';
 import { BaseProps, AreaVisibility, LatLngLiteral } from './common';
 import { PoiManagementProps, Poi } from './poi';
 
+/**
+ * @deprecated AreaFilteringPropsを使用してください
+ */
 export interface AreaVisibilityProps {
   setAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
   localAreaVisibility: AreaVisibility;
   setLocalAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
+}
+
+export interface AreaFilteringProps {
+  areaVisibility: AreaVisibility;
+  localAreaVisibility: AreaVisibility;
+  filteredPois: Poi[];
+  areaFilters: {
+    areas: Array<{
+      area: AreaType;
+      name: string;
+      count: number;
+      isVisible: boolean;
+      color: string;
+      icon: string;
+    }>;
+    currentLocationData: {
+      isVisible: boolean;
+      color: string;
+      icon: string;
+    };
+  };
+  handleAreaChange: (area: AreaType, isVisible: boolean) => void;
+  commitChanges: () => void;
+  discardChanges: () => void;
+  showAllAreas: () => void;
+  hideAllAreas: () => void;
+  resetToDefaults: () => void;
 }
 
 export interface LocationManagementProps {

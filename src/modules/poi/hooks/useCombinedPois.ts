@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CURRENT_LOCATION_POI } from '../../../core/constants/areas';
+import { useCurrentLocation } from '../../../core/hooks/useCurrentLocation';
 import type { Poi } from '../../../core/types/poi';
 
 export function useCombinedPois(
@@ -26,12 +26,4 @@ export function useCombinedPois(
   }, [pois, currentLocationPoi, showCurrentLocation]);
 }
 
-export function createCurrentLocationPoi(location: { lat: number; lng: number }): Poi {
-  return {
-    ...CURRENT_LOCATION_POI,
-    location: {
-      lat: location.lat,
-      lng: location.lng,
-    },
-  };
-}
+// createCurrentLocationPoi関数は削除し、代わりにuseCurrentLocation.tsのcurrentLocationPoiを使用する

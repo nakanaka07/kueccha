@@ -1,3 +1,5 @@
+export * from './geolocation';
+
 export * from './common';
 
 export * from './map';

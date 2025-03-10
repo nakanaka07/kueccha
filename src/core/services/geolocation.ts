@@ -1,6 +1,6 @@
-import { CONFIG } from '../../core/constants/config';
-import { ERROR_MESSAGES } from '../../core/constants/messages';
-import type { GeolocationError, LatLngLiteral } from '../../core/types/common';
+import { CONFIG } from '../constants/config';
+import { handleGeolocationError } from '../utils/errorHandling';
+import type { GeolocationError, LatLngLiteral } from '../types/common';
 
 export const GeolocationService = {
   getCurrentPosition: (
@@ -34,30 +34,8 @@ export const GeolocationService = {
         callbacks.onSuccess(location);
       },
       (error) => {
-        let message: string;
-        let details: string | undefined;
-
-        switch (error.code) {
-          case GeolocationPositionError.PERMISSION_DENIED:
-            message = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
-            details = '位置情報の使用が許可されていません。ブラウザの設定を確認してください。';
-            break;
-          case GeolocationPositionError.POSITION_UNAVAILABLE:
-            message = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
-            details = '位置情報を取得できませんでした。ネットワーク接続を確認してください。';
-            break;
-          case GeolocationPositionError.TIMEOUT:
-            message = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
-            details = `位置情報の取得がタイムアウトしました（${CONFIG.maps.geolocation.timeout}ms）。`;
-            break;
-          default:
-            message = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
-            details = error.message || '詳細不明のエラーが発生しました。';
-            break;
-        }
-
-        console.warn(`位置情報エラー [${error.code}]: ${message}`, error);
-        callbacks.onError({ code: error.code, message, details });
+        console.warn(`位置情報エラー [${error.code}]`, error);
+        callbacks.onError(handleGeolocationError(error));
       },
       geolocationOptions,
     );
@@ -94,30 +72,8 @@ export const GeolocationService = {
         callbacks.onSuccess(location);
       },
       (error) => {
-        let message: string;
-        let details: string | undefined;
-
-        switch (error.code) {
-          case GeolocationPositionError.PERMISSION_DENIED:
-            message = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
-            details = '位置情報の使用が許可されていません。ブラウザの設定を確認してください。';
-            break;
-          case GeolocationPositionError.POSITION_UNAVAILABLE:
-            message = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
-            details = '位置情報を取得できませんでした。ネットワーク接続を確認してください。';
-            break;
-          case GeolocationPositionError.TIMEOUT:
-            message = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
-            details = `位置情報の取得がタイムアウトしました（${CONFIG.maps.geolocation.timeout}ms）。`;
-            break;
-          default:
-            message = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
-            details = error.message || '詳細不明のエラーが発生しました。';
-            break;
-        }
-
-        console.warn(`位置情報エラー [${error.code}]: ${message}`, error);
-        callbacks.onError({ code: error.code, message, details });
+        console.warn(`位置情報エラー [${error.code}]`, error);
+        callbacks.onError(handleGeolocationError(error));
       },
       geolocationOptions,
     );

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useCurrentLocation } from './useCurrentLocation';
 import { useLoadingState } from './useLoadingState';
 import { useLocationWarning } from './useLocationWarning';
 import { useAreaVisibility } from '../../modules/filter/hooks/useAreaVisibility';
@@ -16,79 +17,24 @@ export const useAppState = (pois: Poi[]) => {
   const { areaVisibility, setAreaVisibility } = useAreaVisibility();
   const locationWarning = useLocationWarning();
   const [error, setError] = useState<AppError | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
 
   const { isVisible, isFading } = useLoadingState(mapState.isLoading, mapState.isMapLoaded, LOADING_DELAY || 5000);
 
-  const getUserLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError({
-        message: ERROR_MESSAGES.GEOLOCATION.UNKNOWN,
-        code: 'GEOLOCATION_NOT_SUPPORTED',
-      });
-      return;
-    }
-
-    const geolocationOptions = {
-      timeout: CONFIG.maps.geolocation.timeout,
-      maximumAge: CONFIG.maps.geolocation.maxAge,
-      enableHighAccuracy: CONFIG.maps.geolocation.highAccuracy,
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (geoError) => {
-        let errorMessage: string = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
-        let errorCode = 'GEOLOCATION_UNKNOWN_ERROR';
-
-        switch (geoError.code) {
-          case geoError.PERMISSION_DENIED:
-            errorMessage = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
-            errorCode = 'GEOLOCATION_PERMISSION_DENIED';
-            locationWarning.setShowWarning(true);
-            break;
-          case geoError.POSITION_UNAVAILABLE:
-            errorMessage = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
-            errorCode = 'GEOLOCATION_POSITION_UNAVAILABLE';
-            break;
-          case geoError.TIMEOUT:
-            errorMessage = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
-            errorCode = 'GEOLOCATION_TIMEOUT';
-            break;
-        }
-
-        setError({ message: errorMessage, code: errorCode });
-      },
-      geolocationOptions,
-    );
-  }, [locationWarning]);
+  const { currentLocation, isLocating, locationError, getCurrentLocationInfo } = useCurrentLocation();
 
   const retryMapLoad = useCallback(() => {
-    setError(null);
-    if (mapState.isMapLoaded) {
-      getUserLocation();
-    } else {
-      if (mapState.mapInstance) {
-        mapState.handleMapLoad(mapState.mapInstance);
-      } else {
-        setError({
-          message: ERROR_MESSAGES.MAP.LOAD_FAILED,
-          code: 'MAP_INSTANCE_MISSING',
-        });
-      }
+    if (!mapState.isMapLoaded && mapState.mapInstance) {
+      mapState.handleMapLoad(mapState.mapInstance);
+    } else if (mapState.isMapLoaded) {
+      getCurrentLocationInfo();
     }
-  }, [mapState, getUserLocation]);
+  }, [mapState, getCurrentLocationInfo]);
 
   useEffect(() => {
     if (mapState.isMapLoaded && !currentLocation && !error) {
-      getUserLocation();
+      getCurrentLocationInfo();
     }
-  }, [mapState.isMapLoaded, currentLocation, getUserLocation, error]);
+  }, [mapState.isMapLoaded, currentLocation, getCurrentLocationInfo, error]);
 
   useEffect(() => {
     if (!mapState.isMapLoaded && !mapState.isLoading && !error) {
@@ -109,6 +55,8 @@ export const useAppState = (pois: Poi[]) => {
     isMapLoading: mapState.isLoading,
     error,
     currentLocation,
+    locationError,
+    isLocating,
     loading: {
       isVisible,
       isFading,
@@ -117,7 +65,7 @@ export const useAppState = (pois: Poi[]) => {
       handleMapLoad: mapState.handleMapLoad,
       setSelectedPoi: poiState.setSelectedPoi,
       retryMapLoad,
-      getUserLocation,
+      getUserLocation: getCurrentLocationInfo,
     },
   };
 };
