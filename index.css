@@ -1,240 +1,101 @@
-/* リセット */
+/* Modern Reset CSS */
+
+/* Box sizing rules */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Remove default margin and padding */
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
   margin: 0;
   padding: 0;
 }
 
-/* カラーシステムとベース変数 */
-:root {
-  /* プライマリカラー */
-  --color-primary: #4a6da7;
-  --color-primary-light: #8ad8ec;
-  --color-primary-dark: #3b5998;
-  --color-primary-focus: #4285f4;
+/* Set core root defaults */
+html:focus-within {
+  scroll-behavior: smooth;
+}
 
-  /* セカンダリカラー */
-  --color-secondary: #6c757d;
-  --color-secondary-light: #868e96;
-  --color-secondary-dark: #5a6268;
-
-  /* アクセントカラー */
-  --color-accent: #e63946;
-  --color-accent-light: #ff6b6b;
-  --color-accent-dark: #d32f2f;
-
-  /* テキストカラー */
-  --color-text: #333333;
-  --color-text-light: #666666;
-  --color-text-dark: #eeeeee;
-
-  /* バックグラウンドカラー */
-  --color-bg: #ffffff;
-  --color-bg-light: #f8f9fa;
-  --color-bg-dark: #121212;
-
-  /* ユーティリティカラー */
-  --color-border: #dee2e6;
-  --color-shadow: rgba(0, 0, 0, 0.1);
-
-  /* ステータスカラー */
-  --color-error: #d32f2f;
-  --color-error-light: #ffcdd2;
-  --color-error-dark: #c62828;
-  --color-success: #4caf50;
-  --color-success-light: #a5d6a7;
-  --color-success-dark: #388e3c;
-  --color-warning: #ff9800;
-  --color-warning-light: #ffcc80;
-  --color-warning-dark: #f57c00;
-
-  /* コンポーネント変数 - ライトモード */
-  --text-color: var(--color-text);
-  --bg-color: var(--color-bg);
-  --light-gray: var(--color-bg-light);
-  --border-color: var(--color-border);
-  --primary-color: var(--color-primary);
-  --primary-hover: var(--color-primary-dark);
-  --primary-focus: var(--color-primary-focus);
-  --secondary-color: var(--color-secondary);
-  --secondary-hover: var(--color-secondary-dark);
-  --accent-color: var(--color-accent);
-  --accent-hover: var(--color-accent-dark);
-
-  /* エラー状態 */
-  --error-color: var(--color-error);
-  --error-hover: var(--color-error-dark);
-  --error-light: var(--color-error-light);
-  --error-bg: var(--error-light);
-  --error-text: var(--error-color);
-  --error-border: var(--color-error);
-  --error-shadow: rgba(211, 47, 47, 0.3);
-
-  /* フォーカス状態 */
-  --focus-outline-color: var(--primary-focus);
-  --focus-outline-width: 3px;
-  --focus-outline-offset: 2px;
-
-  /* マップコンポーネント */
-  --map-bg: var(--bg-color);
-  --map-loading-bg: var(--light-gray);
-  --map-focus: var(--primary-focus);
-  --map-text: var(--text-color);
-  --map-dark-bg: var(--color-bg-dark);
-  --map-dark-text: var(--color-text-dark);
-
-  /* フォームコンポーネント */
-  --input-bg: var(--bg-color);
-  --input-border: var(--border-color);
-  --input-text: var(--text-color);
-  --input-focus-border: var(--primary-color);
-  --input-placeholder: var(--color-secondary-light);
-
-  /* ボタンコンポーネント */
-  --button-primary-bg: var(--primary-color);
-  --button-primary-text: white;
-  --button-secondary-bg: var(--secondary-color);
-  --button-secondary-text: white;
-  --button-disabled-bg: var(--light-gray);
-  --button-disabled-text: var(--color-secondary);
-
-  /* タイポグラフィ */
-  font-size: 16px;
-  font-family: 'Roboto', sans-serif;
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-/* ベースレイアウト */
-html,
-body {
-  width: 100%;
-  height: 100%;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  line-height: 1.5;
-  overflow-wrap: break-word;
+/* Remove list styles */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-/* 共通要素スタイル */
-img {
+/* Make images easier to work with */
+img,
+picture {
   max-width: 100%;
-  height: auto;
   display: block;
 }
 
-/* フォーカス状態の統合 */
-:focus-visible,
-button:focus,
-a:focus,
-input:focus,
-select:focus,
-textarea:focus,
-[role='button']:focus,
-[tabindex]:focus {
-  outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  outline-offset: var(--focus-outline-offset);
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+  font: inherit;
 }
 
-/* フォームコントロール */
+/* Remove all animations, transitions and smooth scroll for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Remove text decoration from links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Reset form element styling */
 button,
 input,
 select,
 textarea {
-  font: inherit;
-  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  padding: 0.5em;
 }
 
-/* リンクスタイル */
-a {
-  color: var(--primary-color);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-a:hover,
-a:focus {
-  color: var(--accent-color);
-  text-decoration: underline;
-}
-
-/* アプリケーションコンテナ */
-#app {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* アクセシビリティ */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-/* エラーコンポーネント */
-.errorContainer {
-  background-color: var(--error-bg);
-  color: var(--error-text);
-  border: 1px solid var(--error-border);
-  border-radius: 4px;
-  padding: 12px;
-  margin: 8px 0;
-  box-shadow: 0 2px 4px var(--error-shadow);
-}
-
-.errorTitle {
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.errorMessage {
-  font-size: 0.9rem;
-}
-
-/* ダークモード */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-color: var(--color-text-dark);
-    --bg-color: var(--color-bg-dark);
-    --light-gray: #1e1e1e;
-    --border-color: #555555;
-    --error-bg: rgba(211, 47, 47, 0.2);
-    --error-text: var(--color-error-light);
-    --error-border: #d32f2f;
-    --error-shadow: rgba(211, 47, 47, 0.2);
-    --focus-outline-color: var(--color-primary-light);
-    --input-bg: #2d2d2d;
-    --input-border: #555555;
-    --input-placeholder: #888888;
-    --button-disabled-bg: #2d2d2d;
-    --button-disabled-text: #888888;
-  }
-}
-
-/* 印刷スタイル - パフォーマンス向上のために最後に配置 */
-@media print {
-  body {
-    background-color: white;
-    color: black;
-  }
-
-  a {
-    color: black;
-    text-decoration: underline;
-  }
-
-  @page {
-    margin: 2cm;
-  }
+button {
+  cursor: pointer;
 }
