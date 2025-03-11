@@ -1,5 +1,3 @@
-import { BaseProps, LatLngLiteral, AreaType } from '@/common';
-
 export interface Poi {
   id: string;
   name: string;

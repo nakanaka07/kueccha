@@ -1,6 +1,3 @@
-import { Poi } from '@core/types/poi';
-import type { AreaType } from '@/common';
-
 export const AREAS = {
   RYOTSU_AIKAWA: '両津・相川地区',
   KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',

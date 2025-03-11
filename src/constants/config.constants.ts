@@ -1,8 +1,3 @@
-import { LoadScriptProps } from '@react-google-maps/api';
-import { MARKERS } from './markers';
-import type { Config } from '@/common';
-
-// 環境変数の検証（元のファイルから移植）
 const validateEnvironmentVariables = () => {
   const requiredEnvVars = {
     VITE_GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -20,7 +15,6 @@ const validateEnvironmentVariables = () => {
   }
 };
 
-// 設定の検証（元のファイルから移植）
 export const validateConfig = (config: Config): void => {
   if (!config.maps.apiKey || !config.maps.mapId) {
     throw new Error('Google Maps API KeyとMap IDが必要です');
@@ -39,7 +33,6 @@ export const validateConfig = (config: Config): void => {
   }
 };
 
-// 既存のCONFIG定義
 export const CONFIG = {
   maps: {
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -105,7 +98,6 @@ export const APP_CONFIG = {
   markers: MARKERS,
 };
 
-// 検証を実行（元のファイルから移植）
 validateEnvironmentVariables();
 
 try {

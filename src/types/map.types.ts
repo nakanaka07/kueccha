@@ -1,7 +1,3 @@
-import { LoadScriptProps } from '@react-google-maps/api';
-import { BaseProps, LatLngLiteral } from '@/common';
-import { Poi } from '@/pois';
-
 export interface MapConfig {
   apiKey: string;
   mapId: string;

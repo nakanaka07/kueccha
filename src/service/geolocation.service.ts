@@ -1,7 +1,3 @@
-import { handleGeolocationError } from '@core/utils/errorHandling';
-import { CONFIG } from '@/config';
-import type { GeolocationError, LatLngLiteral } from '@/common';
-
 export const GeolocationService = {
   getCurrentPosition: (
     callbacks: {

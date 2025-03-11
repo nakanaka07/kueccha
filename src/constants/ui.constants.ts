@@ -12,16 +12,6 @@ export const INFO_WINDOW_BUSINESS_HOURS = [
   { day: '祝祭日', key: 'holiday' },
 ] as const;
 
-export interface MenuItem {
-  label: string;
-  title: string;
-  action: string;
-  icon?: string;
-}
-export interface MenuItemWithHandler extends MenuItem {
-  onClick: () => void;
-}
-
 export const MENU_ITEMS: MenuItem[] = [
   {
     label: '検索',

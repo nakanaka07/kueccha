@@ -1,16 +1,3 @@
-import React from 'react';
-import { BaseProps, AreaVisibility, LatLngLiteral, AreaType } from '@/common';
-import { PoiManagementProps, Poi } from '@/pois';
-
-/**
- * @deprecated AreaFilteringPropsを使用してください
- */
-export interface AreaVisibilityProps {
-  setAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
-  localAreaVisibility: AreaVisibility;
-  setLocalAreaVisibility: React.Dispatch<React.SetStateAction<AreaVisibility>>;
-}
-
 export interface AreaFilteringProps {
   areaVisibility: AreaVisibility;
   localAreaVisibility: AreaVisibility;

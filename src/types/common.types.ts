@@ -1,6 +1,3 @@
-import { AREAS } from '@/areas';
-import { INFO_WINDOW_BUSINESS_HOURS } from '@/ui';
-
 export interface BaseProps {
   className?: string;
   style?: React.CSSProperties;

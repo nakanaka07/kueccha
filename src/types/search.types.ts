@@ -1,6 +1,3 @@
-import { Poi, LatLngLiteral } from '@core/types/poi';
-import { BaseProps } from '@/common';
-
 export interface SearchBarProps extends BaseProps {
   onSearch: (query: string) => void;
   pois: Poi[];

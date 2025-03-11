@@ -47,16 +47,6 @@ export default defineConfig(({ mode, command }) => {
   return {
     base: mode === 'production' ? '/kueccha/' : '/',
     plugins: [react(), tsconfigPaths()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@core': path.resolve(__dirname, './src/core'),
-        '@features': path.resolve(__dirname, './src/features'),
-        '@shared': path.resolve(__dirname, './src/shared'),
-        '@assets': path.resolve(__dirname, './src/assets'),
-        '@app': path.resolve(__dirname, './src/app'),
-      },
-    },
     build: {
       outDir: 'dist',
       sourcemap: false,
