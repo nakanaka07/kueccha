@@ -1,8 +1,8 @@
 // src/modules/filter/hooks/useAreaFiltering.ts
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { AREAS, INITIAL_VISIBILITY } from '../../../core/constants/areas';
-import { MARKERS } from '../../../core/constants/markers';
-import type { AreaType, AreaVisibility, Poi } from '../../../core/types';
+import { AREAS, INITIAL_VISIBILITY } from '@core/constants/areas';
+import { MARKERS } from '@core/constants/markers';
+import type { AreaType, AreaVisibility, Poi } from '@core/types';
 
 const STORAGE_KEY = 'kueccha_area_visibility';
 

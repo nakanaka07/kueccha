@@ -1,6 +1,6 @@
-import { AREAS } from '../constants/areas';
-import { ERROR_MESSAGES } from '../constants/messages';
-import { INFO_WINDOW_BUSINESS_HOURS } from '../constants/ui';
+import { AREAS } from '@core/constants/areas';
+import { ERROR_MESSAGES } from '@core/constants/messages';
+import { INFO_WINDOW_BUSINESS_HOURS } from '@core/constants/ui';
 
 export interface BaseProps {
   className?: string;

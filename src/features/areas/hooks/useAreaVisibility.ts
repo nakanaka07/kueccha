@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AREAS } from '@core/constants/areas';
+import { INITIAL_VISIBILITY } from '@core/constants/areas';
 import { useAreaFiltering } from './useAreaFiltering';
-import { AREAS } from '../../../core/constants/areas';
-import { INITIAL_VISIBILITY } from '../../../core/constants/areas';
-import type { Poi } from '../../../core/types';
-import type { AreaType, AreaVisibility } from '../../../core/types/common';
+import type { Poi } from '@core/types';
+import type { AreaType, AreaVisibility } from '@core/types/common';
 
 // 後方互換性のためのラッパー
 export const useAreaVisibility = (persistToStorage = true, pois: Poi[] = []) => {

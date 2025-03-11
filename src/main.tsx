@@ -1,11 +1,11 @@
+import { createError } from '@core/utils/errorHandling';
 import React, { Suspense, StrictMode, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ERRORS } from './core/constants/messages';
-import { createError } from './core/utils/errorHandling';
-import { ErrorDisplay } from './shared/components/ui/error/ErrorDisplay';
+import { ERRORS } from '@core/constants/messages';
+import { ErrorDisplay } from '@shared/components/ui/error/ErrorDisplay';
 
 // 遅延ロード
-const App = lazy(() => import('./app/App'));
+const App = lazy(() => import('@app/App'));
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 

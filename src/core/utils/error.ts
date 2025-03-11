@@ -1,5 +1,5 @@
-import { ERROR_MESSAGES } from '../constants/messages';
-import type { AppError, GeolocationError } from '../types/common';
+import { ERROR_MESSAGES } from '@core/constants/messages';
+import type { AppError, GeolocationError } from '@core/types/common';
 
 /**
  * アプリケーションエラーオブジェクトを作成する

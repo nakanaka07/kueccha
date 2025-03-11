@@ -1,6 +1,6 @@
-import { useMemo, useState, useCallback } from 'react';
-import { formatErrorDetails, isRetryableError, getErrorSeverity } from '../utils/errorHandling';
-import type { AppError } from '../types/common';
+import React, { useMemo, useState, useCallback } from 'react';
+import { formatErrorDetails, isRetryableError, getErrorSeverity } from '@core/utils/errorHandling';
+import type { AppError } from '@core/types/common';
 
 /**
  * 複数のエラーソースを組み合わせ、エラー状態を管理するフック
@@ -79,9 +79,17 @@ export function useErrorState() {
   };
 }
 
-// ErrorComponent生成ユーティリティ - 循環インポート防止のためフックファイルに移動
+/**
+ * エラー表示コンポーネントを生成するユーティリティ関数
+ * 循環インポート防止のためフックファイルに配置
+ *
+ * @param ErrorDisplayComponent エラー表示コンポーネント
+ * @returns エラー表示関数を返す高階関数
+ */
 export function createErrorComponent(ErrorDisplayComponent: React.ComponentType<any>) {
   return function getErrorComponent(error: AppError | null, onRetry?: () => void) {
-    return () => <ErrorDisplayComponent error={error} onRetry={onRetry} />;
+    return () => (
+      <ErrorDisplayComponent error={error} onRetry={onRetry} />
+    );
   };
 }

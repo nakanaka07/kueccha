@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
 import { useAreaFiltering } from '../hooks/useAreaFiltering';
-import type { FilterPanelProps } from '../../../core/types/filter';
+import type { FilterPanelProps } from '@core/types/filter';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ pois, isFilterPanelOpen, onCloseClick }) => {
   const panelRef = useRef<HTMLDivElement>(null);

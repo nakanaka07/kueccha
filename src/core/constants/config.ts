@@ -1,6 +1,6 @@
 import { LoadScriptProps } from '@react-google-maps/api';
 import { MARKERS } from './markers';
-import type { Config } from '../../shared/types/common';
+import type { Config } from '@core/types/common';
 
 // 環境変数の検証（元のファイルから移植）
 const validateEnvironmentVariables = () => {

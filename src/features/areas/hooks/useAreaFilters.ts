@@ -1,6 +1,6 @@
 import { useAreaFiltering } from './useAreaFiltering';
-import type { AreaType } from '../../../core/types/common';
-import type { Poi } from '../../../core/types/poi';
+import type { AreaType } from '@core/types/common';
+import type { Poi } from '@core/types/poi';
 
 /**
  * @deprecated このフックは非推奨です。代わりに useAreaFiltering を使用してください。

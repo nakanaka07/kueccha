@@ -1,9 +1,9 @@
 // src/core/hooks/useCurrentLocation.ts
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { CURRENT_LOCATION_POI } from '../constants/areas';
-// 以下の重要なインポートが不足しています
-import { GeolocationService } from '../services/geolocation';
-import type { LatLngLiteral, Poi, GeolocationError } from '../types';
+import { CURRENT_LOCATION_POI } from '@core/constants/areas';
+import { CONFIG } from '@core/constants/config';
+import { GeolocationService } from '@core/services/geolocation';
+import type { LatLngLiteral, GeolocationError } from '@core/types';
 
 export function useCurrentLocation(options?: {
   autoRequest?: boolean; // 自動的に位置情報を取得するか

@@ -1,6 +1,6 @@
 import React from 'react';
-import { BaseProps, AreaVisibility, LatLngLiteral } from './common';
-import { PoiManagementProps, Poi } from './poi';
+import { BaseProps, AreaVisibility, LatLngLiteral } from '@core/types/common';
+import { PoiManagementProps, Poi } from '@core/types/pois';
 
 /**
  * @deprecated AreaFilteringPropsを使用してください

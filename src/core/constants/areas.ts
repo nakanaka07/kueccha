@@ -1,5 +1,5 @@
-import { Poi } from '../types/poi';
-import type { AreaType } from '../types/common';
+import { Poi } from '@core/types/poi';
+import type { AreaType } from '@core/types/common';
 
 export const AREAS = {
   RYOTSU_AIKAWA: '両津・相川地区',

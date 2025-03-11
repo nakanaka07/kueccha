@@ -1,4 +1,4 @@
-import { BaseProps, LatLngLiteral, AreaType } from './common';
+import { BaseProps, LatLngLiteral, AreaType } from '@core/types/common';
 
 export type Location = LatLngLiteral;
 

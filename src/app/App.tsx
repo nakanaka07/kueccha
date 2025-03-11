@@ -1,14 +1,14 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
-import { useMapNorthControl } from '@/modules/map/hooks/useMapNorthControl';
-import { LOADING_MESSAGES, ERRORS } from '@core/constants/messages';
 import { useAppState } from '@core/hooks/useAppState';
+import { useAreaFiltering } from '@core/hooks/useAreaFiltering';
+import { createError } from '@core/utils/errorHandling';
+import React, { useCallback, useMemo, useEffect } from 'react';
+import { LOADING_MESSAGES, ERRORS } from '@core/constants/messages';
+import { useCurrentLocation } from '@core/hooks/useCurrentLocation';
+import { useErrorHandling } from '@core/hooks/useErrorHandling';
 import { useSheetData } from '@core/services/sheets';
+import { useMapNorthControl } from '@features/maps/hooks/useMapNorthControl';
 import { AppLayout } from '@shared/components/layout/AppLayout';
 import { ErrorBoundary } from '@shared/components/ui/error/ErrorBoundary';
-import { useAreaFiltering } from '../core/hooks/useAreaFiltering';
-import { useCurrentLocation } from '../core/hooks/useCurrentLocation';
-import { useErrorHandling } from '../core/hooks/useErrorHandling';
-import { createError } from '../core/utils/errorHandling';
 
 /**
  * メインアプリケーションコンポーネント

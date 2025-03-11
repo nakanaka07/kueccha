@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { CONFIG } from '../../../core/constants/config';
-import { GeolocationService } from '../../../core/services/geolocation';
-import type { GeolocationError, LatLngLiteral } from '../../../core/types/common';
+import { CONFIG } from '@core/constants/config';
+import { GeolocationService } from '@core/services/geolocation';
+import type { GeolocationError, LatLngLiteral } from '@core/types/common';
 
 export const useGeolocation = () => {
   const getCurrentPosition = useCallback(

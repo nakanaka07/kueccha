@@ -1,4 +1,4 @@
-import { ModalBaseProps } from './ui';
+import { ModalBaseProps } from '@core/types/ui';
 
 export interface FeedbackFormProps extends ModalBaseProps {
   templateParams?: Record<string, unknown>;

@@ -1,10 +1,10 @@
+import { SheetData, FetchStatus } from '@core/types/sheets';
+import { handleApiError } from '@core/utils/errorHandling';
 import { useState, useEffect } from 'react';
+import { AREAS } from '@core/constants/areas';
+import { CONFIG } from '@core/constants/config';
+import { Poi, AreaType, AppError } from '@core/types';
 import { createError } from './errors';
-import { AREAS } from '../../core/constants/areas';
-import { CONFIG } from '../../core/constants/config';
-import { Poi, AreaType, AppError } from '../types';
-import { SheetData, FetchStatus } from '../types/sheets';
-import { handleApiError } from '../utils/errorHandling';
 
 export const SHEETS_API_CONFIG = {
   MAX_RETRIES: 3,

@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
-import { useCurrentLocation } from '../../../core/hooks/useCurrentLocation';
-import type { AreaType } from '../../../core/types/common';
+import { useCurrentLocation } from '@core/hooks/useCurrentLocation';
+import type { AreaType } from '@core/types/common';
 
 interface FilterItemProps {
   label: string;
