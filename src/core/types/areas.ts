@@ -1,5 +1,5 @@
 import React from 'react';
-import { BaseProps, AreaVisibility, LatLngLiteral } from '@core/types/common';
+import { BaseProps, AreaVisibility, LatLngLiteral, AreaType } from '@core/types/common';
 import { PoiManagementProps, Poi } from '@core/types/pois';
 
 /**

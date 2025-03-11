@@ -1,7 +1,5 @@
 import { BaseProps, LatLngLiteral, AreaType } from '@core/types/common';
 
-export type Location = LatLngLiteral;
-
 export interface Poi {
   id: string;
   name: string;
@@ -42,5 +40,3 @@ export interface PoiManagementProps {
   pois: Poi[];
   setSelectedPoi: React.Dispatch<React.SetStateAction<Poi | null>>;
 }
-
-export type { LatLngLiteral };

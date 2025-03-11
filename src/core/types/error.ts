@@ -6,9 +6,14 @@ export interface AppError {
   severity?: 'critical' | 'warning' | 'info';
 }
 
-// ErrorBoundaryStateを拡張型として定義
 export interface ErrorBoundaryState {
   hasError: boolean;
   appError: AppError | null;
   componentStack?: string;
+}
+
+export interface GeolocationError {
+  code: number;
+  message: string;
+  details?: string;
 }

@@ -1,7 +1,7 @@
-import { createError } from '@core/utils/errorHandling';
 import React, { Suspense, StrictMode, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ERRORS } from '@core/constants/messages';
+import { createError } from '@core/error';
 import { ErrorDisplay } from '@shared/components/ui/error/ErrorDisplay';
 
 // 遅延ロード

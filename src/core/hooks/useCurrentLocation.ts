@@ -4,6 +4,7 @@ import { CURRENT_LOCATION_POI } from '@core/constants/areas';
 import { CONFIG } from '@core/constants/config';
 import { GeolocationService } from '@core/services/geolocation';
 import type { LatLngLiteral, GeolocationError } from '@core/types';
+import type { Poi } from '@core/types/poi';
 
 export function useCurrentLocation(options?: {
   autoRequest?: boolean; // 自動的に位置情報を取得するか
@@ -134,4 +135,49 @@ export function useCurrentLocation(options?: {
     stopWatchingLocation,
     clearError, // エラークリア関数を追加
   };
+}
+
+/**
+ * シンプルに現在位置のPOIのみを返すユーティリティフック
+ * @returns 現在位置のPOIオブジェクト、または位置情報がない場合はnull
+ */
+export function useCurrentLocationPoi() {
+  const { currentLocationPoi } = useCurrentLocation();
+  return currentLocationPoi;
+}
+
+/**
+ * 現在地のPOIとその他のPOIを適切に結合するフック
+ * @param pois 結合するPOIリスト
+ * @param currentLocationPoi 現在地POI（省略時はuseCurrentLocationから取得）
+ * @param showCurrentLocation 現在地を表示するかどうか
+ * @returns 結合されたPOIリスト
+ */
+export function useCombinedPois(
+  pois: Poi[] | null | undefined,
+  customCurrentLocationPoi?: Poi | null,
+  showCurrentLocation = true,
+): Poi[] {
+  // 現在地POIが明示的に渡されない場合はフックから取得
+  const { currentLocationPoi: defaultCurrentLocationPoi } = useCurrentLocation();
+  const actualCurrentLocationPoi = customCurrentLocationPoi ?? defaultCurrentLocationPoi;
+
+  return useMemo(() => {
+    // 既存の結合ロジック
+    if (!pois || pois.length === 0) {
+      return showCurrentLocation && actualCurrentLocationPoi ? [actualCurrentLocationPoi] : [];
+    }
+
+    if (!showCurrentLocation || !actualCurrentLocationPoi) {
+      return [...pois];
+    }
+
+    const hasCurrentLocationId = pois.some((poi) => poi.id === actualCurrentLocationPoi.id);
+
+    if (hasCurrentLocationId) {
+      return pois.map((poi) => (poi.id === actualCurrentLocationPoi.id ? actualCurrentLocationPoi : poi));
+    }
+
+    return [actualCurrentLocationPoi, ...pois];
+  }, [pois, actualCurrentLocationPoi, showCurrentLocation]);
 }

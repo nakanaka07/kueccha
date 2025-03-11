@@ -6,7 +6,7 @@ import type { AreaType, AreaVisibility, Poi } from '@core/types';
 
 const STORAGE_KEY = 'kueccha_area_visibility';
 
-export function useAreaFiltering(pois: Poi[], persistToStorage = true) {
+export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
   // 保存された表示設定の復元
   const getSavedVisibility = useCallback((): AreaVisibility => {
     if (!persistToStorage) return INITIAL_VISIBILITY;
@@ -140,4 +140,24 @@ export function useAreaFiltering(pois: Poi[], persistToStorage = true) {
     commitChanges,
     discardChanges,
   };
+}
+
+/**
+ * @deprecated このフックは後方互換性のためにのみ維持されています。代わりに useAreaFiltering を使用してください。
+ */
+export const useAreaVisibility = (persistToStorage = true, pois: Poi[] = []) => {
+  return useAreaFiltering(pois, persistToStorage);
+};
+
+/**
+ * @deprecated このフックは非推奨です。代わりに useAreaFiltering を使用してください。
+ */
+export function useAreaFilters(
+  pois: Poi[],
+  localAreaVisibility?: Record<AreaType, boolean>,
+  setAreaVisibility?: (visibility: Record<AreaType, boolean>) => void,
+) {
+  console.warn('useAreaFilters は非推奨です。useAreaFiltering を使用してください。');
+  const { areaFilters } = useAreaFiltering(pois);
+  return areaFilters;
 }

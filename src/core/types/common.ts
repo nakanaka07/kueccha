@@ -1,5 +1,4 @@
 import { AREAS } from '@core/constants/areas';
-import { ERROR_MESSAGES } from '@core/constants/messages';
 import { INFO_WINDOW_BUSINESS_HOURS } from '@core/constants/ui';
 
 export interface BaseProps {
@@ -43,20 +42,6 @@ export interface Config {
   markers: {
     colors: Record<string, string>;
   };
-}
-
-export interface AppError {
-  message: string;
-  code: string;
-  details?: string;
-  category?: string;
-  severity?: 'critical' | 'warning' | 'info' | null;
-}
-
-export interface GeolocationError {
-  code: number;
-  message: string;
-  details?: string;
 }
 
 export type MenuActionType = {
