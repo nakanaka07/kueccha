@@ -49,10 +49,11 @@ export default defineConfig(({ mode, command }) => {
     plugins: [react(), tsconfigPaths()],
     resolve: {
       alias: {
-        '@': '/src',
+        '@': path.resolve(__dirname, './src'),
         '@core': path.resolve(__dirname, './src/core'),
-        '@modules': path.resolve(__dirname, './src/modules'),
+        '@features': path.resolve(__dirname, './src/features'),
         '@shared': path.resolve(__dirname, './src/shared'),
+        '@assets': path.resolve(__dirname, './src/assets'),
         '@app': path.resolve(__dirname, './src/app'),
       },
     },
