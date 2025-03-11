@@ -1,7 +1,7 @@
 import React from 'react';
 import { FeedbackFormUI } from './FeedbackFormUI';
 import { FeedbackSuccess } from './FeedbackSuccess';
-import { useFeedbackForm } from './useFeedbackForm';
+import { useFeedbackForm } from './use/useFeedbackForm';
 import type { FeedbackFormProps } from '@/feedback';
 
 const FeedbackFormContainer: React.FC<FeedbackFormProps> = ({ onClose }) => {

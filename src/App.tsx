@@ -2,10 +2,10 @@ import React, { useCallback, useMemo, useEffect } from 'react';
 import { LOADING_MESSAGES, ERRORS } from '@/messages';
 import { useErrorHandling } from '@/index';
 import { createError } from '@/index';
-import { useAppState } from '@/useAppState';
-import { useCurrentLocation } from '@/useCurrentLocation';
-import { useMapNorthControl } from '@/useMapNorthControl';
-import { usePoiStore } from '@/usePoiStore';
+import { useAppState } from '@/use/useAppState';
+import { useCurrentLocation } from '@/use/useCurrentLocation';
+import { useMapNorthControl } from '@/use/useMapNorthControl';
+import { usePoiStore } from '@/use/usePoiStore';
 import { AppLayout } from '@/AppLayout';
 import { ErrorBoundary } from '@/ErrorBoundary';
 

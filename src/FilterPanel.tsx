@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { FilterItem } from './FilterItem';
-import { useAreaFiltering } from './useAreaFiltering';
+import { useAreaFiltering } from './use/useAreaFiltering';
 import type { FilterPanelProps } from '@core/types/filter';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ pois, isFilterPanelOpen, onCloseClick }) => {

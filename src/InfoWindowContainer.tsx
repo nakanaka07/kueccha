@@ -3,7 +3,7 @@ import { BusinessHoursSection } from './BusinessHoursSection';
 import { InfoItem } from './InfoItem';
 import { InfoWindowHeader } from './InfoWindowHeader';
 import { isValidPhoneNumber } from '../../../core/utils/formatters';
-import { useInfoWindowInteraction } from './useInfoWindowInteraction';
+import { useInfoWindowInteraction } from './use/useInfoWindowInteraction';
 import type { InfoWindowProps, LatLngLiteral } from '../../../core/types/poi';
 
 const InfoWindowContainer: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {

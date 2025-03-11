@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SpinnerView } from './SpinnerView';
-import { useLoadingState } from './useLoadingState';
+import { useLoadingState } from './use/useLoadingState';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';

@@ -1,6 +1,6 @@
-import { useCurrentLocation } from '@/useCurrentLocation';
+import { useCurrentLocation } from '@/use/useCurrentLocation';
 import { useSheetData } from '@/sheets';
-import { useAreaFiltering } from '@/useAreaFiltering';
+import { useAreaFiltering } from '@/use/useAreaFiltering';
 import { useState, useCallback, useMemo } from 'react';
 import type { Poi } from '@/index';
 import type { AreaType } from '@/index';

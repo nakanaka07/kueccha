@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { useCurrentLocation } from '@/useCurrentLocation';
+import { useCurrentLocation } from '@/use/useCurrentLocation';
 import type { AreaType } from '@/common';
 
 interface FilterItemProps {
