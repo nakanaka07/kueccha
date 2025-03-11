@@ -36,7 +36,7 @@
     },
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js", "env.d.ts", "css.d.ts", "src/common"],
+  "include": ["src/**/*", "server.ts", "vite.config.js", "eslint.config.js", "env.d.ts", "css.d.ts", "src/common", "main.tsx"],
   "exclude": ["dist", "node_modules"],
   "ts-node": {
     "transpileOnly": true,
