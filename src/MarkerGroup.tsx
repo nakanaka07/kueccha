@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Marker } from '../../poi/components/Marker';
-import { useMapMarkers } from './use/useMapMarkers';
+import { useMapMarkers } from './hooks/useMapMarkers';
 import type { Poi } from '../../../core/types/poi';
 
 interface MarkerListProps {

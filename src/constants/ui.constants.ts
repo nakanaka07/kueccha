@@ -1,3 +1,10 @@
+/**
+ * UIコンポーネントで使用される定数を定義
+ * - ローディングやアニメーションの遅延時間
+ * - 営業時間表示用の曜日情報
+ * - アプリのメニューアイテム定義
+ */
+import { MenuItem } from '../types/ui.types';
 export const LOADING_DELAY = 0;
 export const BACKGROUND_HIDE_DELAY = 1000;
 

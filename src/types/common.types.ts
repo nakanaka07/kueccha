@@ -1,3 +1,12 @@
+/**
+ * アプリケーション全体で共通して使用される型定義
+ * - 基本コンポーネントプロパティ
+ * - 位置情報の表現
+ * - エリアタイプと表示状態
+ * - アプリケーション設定の型
+ */
+import { AREAS } from '../constants/area.constants';
+import { INFO_WINDOW_BUSINESS_HOURS } from '../constants/business-hours.constants';
 export interface BaseProps {
   className?: string;
   style?: React.CSSProperties;

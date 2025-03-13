@@ -1,3 +1,14 @@
+/**
+ * エリア機能に関する型定義
+ * - エリアフィルタリングのインターフェース
+ * - 位置情報管理のプロパティ
+ * - フィルターパネルとメニューコンポーネントの型
+ * - エリア表示/非表示の状態管理
+ */
+import React from 'react';
+import { BaseProps, LatLngLiteral, AreaType, AreaVisibility } from './common.types';
+import { Poi, PoiManagementProps } from './poi.types';
+
 export interface AreaFilteringProps {
   areaVisibility: AreaVisibility;
   localAreaVisibility: AreaVisibility;

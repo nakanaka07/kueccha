@@ -1,11 +1,20 @@
-import { SheetData, FetchStatus } from '@core/types/sheets';
-import { handleApiError } from '@core/utils/errorHandling';
 import { useState, useEffect } from 'react';
-import { AREAS } from '@/areas';
-import { CONFIG } from '@/config';
-import { Poi, AreaType, AppError } from '@/index';
-import { createError } from './errors';
+import { createError } from './errorUtils';
+import { handleApiError } from './errorUtils';
+import { AREAS } from '../constants/area.constants';
+import { CONFIG } from '../constants/config.constants';
+import type { SheetData, FetchStatus } from '../types/api.types';
+import type { AreaType } from '../types/common.types';
+import type { Poi } from '../types/poi.types';
 
+/**
+ * Google Sheets APIとの連携サービス
+ * - スプレッドシートからPOIデータの取得
+ * - WKT形式の位置情報の解析と変換
+ * - データキャッシュ管理による効率化
+ * - エリア別データの取得と統合
+ * - エラー処理と自動再試行機能
+ */
 export const SHEETS_API_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,

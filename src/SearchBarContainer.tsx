@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { SearchActionButtons } from './SearchActionButtons';
 import { SearchInput } from './SearchInput';
 import { SuggestionsList } from './SuggestionsList';
-import { useSearchLogic } from './use/useSearchLogic';
+import { useSearchLogic } from './hooks/useSearchLogic';
 import type { SearchBarProps } from './search';
 
 const SearchBarContainer: React.FC<SearchBarProps> = ({ onSearch, pois }) => {

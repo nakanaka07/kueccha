@@ -1,3 +1,11 @@
+/**
+ * 検索機能に関する型定義
+ * - 検索バーコンポーネントのプロパティ
+ * - 検索結果表示のプロパティ
+ * - 検索オプション（フィールド、モード、ソート順など）
+ */
+import { Poi } from './poi.types';
+import { BaseProps, LatLngLiteral } from './common.types';
 export interface SearchBarProps extends BaseProps {
   onSearch: (query: string) => void;
   pois: Poi[];

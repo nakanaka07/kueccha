@@ -1,6 +1,6 @@
 import React from 'react';
 import { SkeletonLoader } from './SkeletonLoader';
-import { Spinner } from './SpinnerController';
+import { Spinner } from './Spinner';
 
 interface LoadingVariantProps {
   variant: 'spinner' | 'skeleton' | 'progress';

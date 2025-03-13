@@ -1,7 +1,7 @@
 import React from 'react';
-import { useMarkerElement } from './use/useMarkerElement';
-import { useMarkerInstance } from './use/useMarkerInstance';
-import { useMarkerInteraction } from './use/useMarkerInteraction';
+import { useMarkerElement } from './hooks/useMarkerElement';
+import { useMarkerInstance } from './hooks/useMarkerInstance';
+import { useMarkerInteraction } from './hooks/useMarkerInteraction';
 import type { MarkerProps } from '../../../core/types/poi';
 
 const Marker = React.memo(

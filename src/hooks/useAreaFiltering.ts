@@ -1,13 +1,12 @@
-// src/modules/filter/hooks/useAreaFiltering.ts
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { AREAS, INITIAL_VISIBILITY } from '@/areas';
-import { MARKERS } from '@/markers';
-import type { AreaType, AreaVisibility, Poi } from '@/index';
+import { AREAS, INITIAL_VISIBILITY } from '../constants/area.constants';
+import { MARKERS } from '../constants/markers.constants';
+import type { AreaType, AreaVisibility } from '../types/common.types';
+import type { Poi } from '../types/poi.types';
 
 const STORAGE_KEY = 'kueccha_area_visibility';
 
 export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
-  // 保存された表示設定の復元
   const getSavedVisibility = useCallback((): AreaVisibility => {
     if (!persistToStorage) return INITIAL_VISIBILITY;
 
@@ -25,13 +24,10 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     return INITIAL_VISIBILITY;
   }, [persistToStorage]);
 
-  // メインの表示設定状態
   const [areaVisibility, setAreaVisibility] = useState<AreaVisibility>(getSavedVisibility());
 
-  // フィルターパネルで一時的に使用する表示設定状態
   const [localAreaVisibility, setLocalAreaVisibility] = useState<AreaVisibility>(areaVisibility);
 
-  // 設定をLocalStorageに保存
   useEffect(() => {
     if (persistToStorage) {
       try {
@@ -42,7 +38,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     }
   }, [areaVisibility, persistToStorage]);
 
-  // フィルタリングされたPOI
   const filteredPois = useMemo(() => {
     return pois.filter((poi) => {
       if (!poi.area) return true;
@@ -50,7 +45,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     });
   }, [pois, areaVisibility]);
 
-  // 個別のエリア表示切替
   const handleAreaChange = useCallback((area: AreaType, isVisible: boolean) => {
     setLocalAreaVisibility((prev) => ({
       ...prev,
@@ -58,40 +52,32 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     }));
   }, []);
 
-  // フィルターパネルでの変更を適用
   const commitChanges = useCallback(() => {
     setAreaVisibility(localAreaVisibility);
   }, [localAreaVisibility]);
 
-  // フィルターパネルでの変更を破棄
   const discardChanges = useCallback(() => {
     setLocalAreaVisibility(areaVisibility);
   }, [areaVisibility]);
 
-  // すべてのエリアを表示
   const showAllAreas = useCallback(() => {
     const allVisible = Object.keys(AREAS).reduce((acc, area) => ({ ...acc, [area]: true }), {} as AreaVisibility);
     setLocalAreaVisibility(allVisible);
   }, []);
 
-  // すべてのエリアを非表示
   const hideAllAreas = useCallback(() => {
     const allHidden = Object.keys(AREAS).reduce((acc, area) => ({ ...acc, [area]: false }), {} as AreaVisibility);
     setLocalAreaVisibility(allHidden);
   }, []);
 
-  // デフォルト設定にリセット
   const resetToDefaults = useCallback(() => {
     setAreaVisibility(INITIAL_VISIBILITY);
     setLocalAreaVisibility(INITIAL_VISIBILITY);
   }, []);
 
-  // 表示エリア数
   const visibleAreaCount = useMemo(() => Object.values(areaVisibility).filter(Boolean).length, [areaVisibility]);
 
-  // フィルターUI用のエリア情報
   const areaFilters = useMemo(() => {
-    // エリア別POI数集計
     const areaCounts = pois.reduce<Record<AreaType, number>>(
       (acc, poi) => ({
         ...acc,
@@ -100,7 +86,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
       {} as Record<AreaType, number>,
     );
 
-    // エリア情報の整形（現在地以外）
     const areas = Object.entries(AREAS)
       .filter(([area]) => area !== 'CURRENT_LOCATION')
       .map(([area, name]) => ({
@@ -112,7 +97,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
         icon: MARKERS.icons[area as AreaType],
       }));
 
-    // 現在地情報
     const currentLocationData = {
       isVisible: localAreaVisibility.CURRENT_LOCATION,
       color: MARKERS.colors.CURRENT_LOCATION,
@@ -123,7 +107,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
   }, [pois, localAreaVisibility]);
 
   return {
-    // 状態
     areaVisibility,
     setAreaVisibility,
     localAreaVisibility,
@@ -132,7 +115,6 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     areaFilters,
     visibleAreaCount,
 
-    // アクション
     handleAreaChange,
     showAllAreas,
     hideAllAreas,
@@ -140,24 +122,4 @@ export function useAreaFiltering(pois: Poi[] = [], persistToStorage = true) {
     commitChanges,
     discardChanges,
   };
-}
-
-/**
- * @deprecated このフックは後方互換性のためにのみ維持されています。代わりに useAreaFiltering を使用してください。
- */
-export const useAreaVisibility = (persistToStorage = true, pois: Poi[] = []) => {
-  return useAreaFiltering(pois, persistToStorage);
-};
-
-/**
- * @deprecated このフックは非推奨です。代わりに useAreaFiltering を使用してください。
- */
-export function useAreaFilters(
-  pois: Poi[],
-  localAreaVisibility?: Record<AreaType, boolean>,
-  setAreaVisibility?: (visibility: Record<AreaType, boolean>) => void,
-) {
-  console.warn('useAreaFilters は非推奨です。useAreaFiltering を使用してください。');
-  const { areaFilters } = useAreaFiltering(pois);
-  return areaFilters;
 }

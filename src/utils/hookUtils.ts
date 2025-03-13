@@ -1,7 +1,14 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { formatErrorDetails, isRetryableError, getErrorSeverity } from './utils';
-import type { AppError } from './types';
+import { useMemo } from 'react';
+import { formatErrorDetails, isRetryableError, getErrorSeverity } from './errorUtils';
+import type { AppError, ErrorSeverity } from '../types/error.types';
 
+/**
+ * エラー処理のためのReactカスタムフック
+ * - 複数のエラーソースの集約と統合
+ * - エラーメッセージと詳細情報の整形
+ * - エラータイプの判別と重要度の評価
+ * - 再試行可能なエラーの識別
+ */
 export function useErrorHandling(...errorSources: (AppError | null)[]) {
   const combinedError = useMemo<AppError | null>(() => {
     return errorSources.find((error) => error !== null) || null;
@@ -43,8 +50,6 @@ export function useErrorHandling(...errorSources: (AppError | null)[]) {
   };
 }
 
-export function useErrorState() {
-}
+export function useErrorState() {}
 
-export function createErrorComponent(ErrorDisplayComponent: React.ComponentType<any>) {
-}
+export function createErrorComponent(ErrorDisplayComponent: React.ComponentType<any>) {}

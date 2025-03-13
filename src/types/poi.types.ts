@@ -1,3 +1,11 @@
+/**
+ * POI (Point of Interest) に関する型定義
+ * - POIデータ構造（位置情報、営業時間、詳細情報など）
+ * - 地図マーカーコンポーネントのプロパティ
+ * - 情報ウィンドウコンポーネントのプロパティ
+ * - POI管理機能のプロパティ
+ */
+import { BaseProps, LatLngLiteral, AreaType } from './common.types';
 export interface Poi {
   id: string;
   name: string;

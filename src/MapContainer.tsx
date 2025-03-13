@@ -1,9 +1,9 @@
 import { useLoadScript, GoogleMap } from '@react-google-maps/api';
 import React, { useCallback, useRef } from 'react';
 import MapError from './MapError';
-import MapLoading from './MapLoading';
-import MarkerList from './MarkerList';
-import { useMapConfig } from './use/useMapConfig';
+import MapLoading from './MapLoadingIndicator';
+import MarkerList from './MarkerGroup';
+import { useMapConfig } from './hooks/useMapConfig';
 import type { ExtendedMapProps } from '../../../core/types/map';
 
 const MAP_ARIA_LABEL = '地図コンテンツ';

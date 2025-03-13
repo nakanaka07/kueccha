@@ -1,3 +1,15 @@
+import { handleGeolocationError } from './errorUtils';
+import { CONFIG } from '../constants/config.constants';
+import type { LatLngLiteral } from '../types/common.types';
+import type { GeolocationError } from '../types/error.types';
+
+/**
+ * 位置情報サービス
+ * - ブラウザのGeolocation APIのラッピング
+ * - 現在位置の取得と監視機能
+ * - 位置情報エラーのハンドリングと変換
+ * - 高精度モードや位置情報取得のタイムアウト設定
+ */
 export const GeolocationService = {
   getCurrentPosition: (
     callbacks: {

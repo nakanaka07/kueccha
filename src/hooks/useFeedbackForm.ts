@@ -1,7 +1,7 @@
 import emailjs from '@emailjs/browser';
 import { useState, useEffect } from 'react';
-import { ERROR_MESSAGES } from '@/messages';
-import type { TemplateParams } from '@/feedback';
+import { ERROR_MESSAGES } from '../constants/message.constants';
+import type { TemplateParams } from '../feedback';
 
 export function useFeedbackForm() {
   const [name, setName] = useState('');

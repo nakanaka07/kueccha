@@ -2,7 +2,7 @@ import React from 'react';
 import MapContainer from '../../../modules/map/components/MapContainer';
 import MapControls from '../../../modules/map/components/MapControls';
 import { ErrorBoundary } from './ErrorBoundary';
-import { LoadingFallback } from './LoadingFallback';
+import { LoadingFallback } from './LoadingIndicator';
 import { LocationWarning } from '../ui/LocationWarning';
 import type { Poi } from '../../../core/types/poi';
 

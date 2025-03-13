@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BACKGROUND_HIDE_DELAY } from '@/ui';
+import { BACKGROUND_HIDE_DELAY } from '
 
 export function useLoadingState(isLoading: boolean, isLoaded: boolean, fadeDuration: number = BACKGROUND_HIDE_DELAY) {
   const [isVisible, setIsVisible] = useState(isLoading);

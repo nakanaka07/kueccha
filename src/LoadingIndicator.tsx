@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { ErrorDisplay } from './ErrorDisplay';
 import { LoadingVariant } from './LoadingVariants';
 import { LOADING_MESSAGES, ERRORS } from './messages';
-import { useLoadingState } from './use/useLoadingState';
+import { useLoadingState } from './hooks/useLoadingState';
 
 interface LoadingFallbackProps {
   isLoading: boolean;

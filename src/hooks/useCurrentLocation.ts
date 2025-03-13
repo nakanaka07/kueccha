@@ -1,15 +1,15 @@
-// src/core/hooks/useCurrentLocation.ts
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { CURRENT_LOCATION_POI } from '@/areas';
-import { CONFIG } from '@/config';
-import { GeolocationService } from '@/geolocation';
-import type { LatLngLiteral, GeolocationError } from '@/index';
-import type { Poi } from '@core/types/poi';
+import { CURRENT_LOCATION_POI } from '../constants/area.constants';
+import { CONFIG } from '../constants/config.constants';
+import { GeolocationService } from '../service/geolocation.service';
+import type { LatLngLiteral } from '../types/common.types';
+import type { GeolocationError } from '../types/error.types';
+import type { Poi } from '../types/poi.types';
 
 export function useCurrentLocation(options?: {
-  autoRequest?: boolean; // 自動的に位置情報を取得するか
-  watchPosition?: boolean; // 位置情報を監視するか
-  geolocationOptions?: Partial<typeof CONFIG.maps.geolocation>; // 詳細オプション
+  autoRequest?: boolean;
+  watchPosition?: boolean;
+  geolocationOptions?: Partial<typeof CONFIG.maps.geolocation>;
 }) {
   const opts = {
     autoRequest: false,
@@ -24,7 +24,6 @@ export function useCurrentLocation(options?: {
   const [locationError, setLocationError] = useState<GeolocationError | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
 
-  // 位置情報取得の関数（既存コードを少し強化）
   const getCurrentLocationInfo = useCallback(() => {
     setIsLocating(true);
 
@@ -69,7 +68,6 @@ export function useCurrentLocation(options?: {
     }
   }, [watchId]);
 
-  // 現在地POIの生成（既存コード）
   const currentLocationPoi = useMemo(() => {
     if (!currentLocation) return null;
     return {
@@ -78,7 +76,6 @@ export function useCurrentLocation(options?: {
     };
   }, [currentLocation]);
 
-  // ユーザー設定の読み込み
   useEffect(() => {
     try {
       const savedSetting = localStorage.getItem('location_enabled');
@@ -90,7 +87,6 @@ export function useCurrentLocation(options?: {
     }
   }, [getCurrentLocationInfo]);
 
-  // 位置情報の有効/無効を設定する関数
   const setLocationEnabled = useCallback(
     (enabled: boolean) => {
       try {
@@ -105,7 +101,6 @@ export function useCurrentLocation(options?: {
     [getCurrentLocationInfo],
   );
 
-  // オプションに基づいて初期化
   useEffect(() => {
     if (opts.autoRequest) {
       getCurrentLocationInfo();
@@ -133,37 +128,24 @@ export function useCurrentLocation(options?: {
     setLocationEnabled,
     startWatchingLocation,
     stopWatchingLocation,
-    clearError, // エラークリア関数を追加
+    clearError,
   };
 }
 
-/**
- * シンプルに現在位置のPOIのみを返すユーティリティフック
- * @returns 現在位置のPOIオブジェクト、または位置情報がない場合はnull
- */
 export function useCurrentLocationPoi() {
   const { currentLocationPoi } = useCurrentLocation();
   return currentLocationPoi;
 }
 
-/**
- * 現在地のPOIとその他のPOIを適切に結合するフック
- * @param pois 結合するPOIリスト
- * @param currentLocationPoi 現在地POI（省略時はuseCurrentLocationから取得）
- * @param showCurrentLocation 現在地を表示するかどうか
- * @returns 結合されたPOIリスト
- */
 export function useCombinedPois(
   pois: Poi[] | null | undefined,
   customCurrentLocationPoi?: Poi | null,
   showCurrentLocation = true,
 ): Poi[] {
-  // 現在地POIが明示的に渡されない場合はフックから取得
   const { currentLocationPoi: defaultCurrentLocationPoi } = useCurrentLocation();
   const actualCurrentLocationPoi = customCurrentLocationPoi ?? defaultCurrentLocationPoi;
 
   return useMemo(() => {
-    // 既存の結合ロジック
     if (!pois || pois.length === 0) {
       return showCurrentLocation && actualCurrentLocationPoi ? [actualCurrentLocationPoi] : [];
     }

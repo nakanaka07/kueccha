@@ -1,3 +1,13 @@
+
+/**
+ * 地域情報に関する定数を定義
+ * - 佐渡島の地域区分（両津・相川地区など）
+ * - 施設タイプ（スナック、公共トイレ、駐車場など）
+ * - エリアの表示/非表示の初期状態
+ * - 現在地表示用の特殊POI定義
+ */
+import { AreaType } from '../types/common.types';
+import { Poi } from '../types/poi.types';
 export const AREAS = {
   RYOTSU_AIKAWA: '両津・相川地区',
   KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',

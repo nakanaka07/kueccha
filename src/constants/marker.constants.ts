@@ -1,3 +1,9 @@
+/**
+ * 地図マーカーに関する定数を定義
+ * - 地域・施設タイプ別のマーカーカラーコード
+ * - マーカーアイコン画像のインポートと割り当て
+ * - マーカー表示スタイルの一元管理
+ */
 import publicToiletIcon from '@assets/images/icons/ano_icon01.png';
 import recommendIcon from '@assets/images/icons/ano_icon_recommend.png';
 import ryotsuAikawaIcon from '@assets/images/icons/icon_map01.png';

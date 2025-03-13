@@ -1,3 +1,13 @@
+/**
+ * アプリケーション全体の設定を管理
+ * - 環境変数のバリデーション機能
+ * - Google Maps APIとGoogle Sheets APIの設定
+ * - マップの初期表示設定やコントロールオプション
+ * - 外部サービスとの連携に必要な設定の集約
+ */
+import { LoadScriptProps } from '@react-google-maps/api';
+import { Config } from '../types/common.types';
+import { MARKERS } from './marker.constants';
 const validateEnvironmentVariables = () => {
   const requiredEnvVars = {
     VITE_GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,

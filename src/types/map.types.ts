@@ -1,3 +1,13 @@
+/**
+ * 地図機能に関する型定義
+ * - Google Maps設定オプション
+ * - 地図コンポーネントのプロパティ
+ * - 地図コントロールとアクション
+ * - エラー表示用インターフェース
+ */
+import { LoadScriptProps } from '@react-google-maps/api';
+import { BaseProps, LatLngLiteral } from './common.types';
+import { Poi } from './poi.types';
 export interface MapConfig {
   apiKey: string;
   mapId: string;
