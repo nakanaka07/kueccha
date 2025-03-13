@@ -1,20 +1,11 @@
-// Reactと必要なフックをインポート
 import React, { useEffect, useRef, useMemo } from 'react';
-// CSSファイルをインポート
-import './InfoWindow.module.css';
-// 定数をインポート
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
-// フォーマット関数とバリデーション関数をインポート
 import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
-// 型定義をインポート
 import type { InfoWindowProps, LatLngLiteral, BusinessHourKey } from '../../utils/types';
 
-// InfoWindowコンポーネントを定義
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
-  // InfoWindowのDOM要素を参照するためのrefを作成
   const infoWindowRef = useRef<HTMLDivElement>(null);
 
-  // ウィンドウのリサイズ時にInfoWindowの最大高さを調整する関数
   const handleResize = () => {
     if (infoWindowRef.current) {
       const windowHeight = window.innerHeight;
@@ -23,14 +14,12 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     }
   };
 
-  // InfoWindowの外側をクリックしたときに閉じる関数
   const handleClickOutside = (event: MouseEvent) => {
     if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
       onCloseClick();
     }
   };
 
-  // コンポーネントのマウント時とアンマウント時にリサイズイベントリスナーを追加/削除
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     handleResize();
@@ -40,7 +29,6 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     };
   }, []);
 
-  // コンポーネントのマウント時とアンマウント時にクリックイベントリスナーを追加/削除
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
 
@@ -49,20 +37,18 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     };
   }, [handleClickOutside]);
 
-  // 緯度と経度をフォーマットする関数
   const formatLocation = (location: LatLngLiteral) => {
     return `緯度: ${location.lat}, 経度: ${location.lng}`;
   };
 
-  // 営業時間の情報をメモ化してパフォーマンスを最適化
   const businessHoursContent = useMemo(
     () =>
       INFO_WINDOW_BUSINESS_HOURS.map(
         (hour) =>
           poi[hour.key as BusinessHourKey] && (
             <div key={hour.key}>
-              <span className="day">{hour.day}</span>
-              <span className="value">{poi[hour.key as BusinessHourKey]}</span>
+              <span>{hour.day}</span>
+              <span>{poi[hour.key as BusinessHourKey]}</span>
             </div>
           ),
       ),
@@ -70,34 +56,28 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   );
 
   return (
-    // InfoWindowのコンテナ
-    <div className="info-window" ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
-      {/* ヘッダー部分 */}
-      <div className="info-header">
+    <div ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
+      <div>
         <h2 id="info-window-title">{poi.name}</h2>
         <button
-          onClick={() => {
-            onCloseClick();
-          }}
+          onClick={onCloseClick}
           aria-label="閉じる"
-          className="modal-close-button"
           title="閉じます。"
         >
           ×
         </button>
       </div>
 
-      {/* コンテンツ部分 */}
-      <div className="info-content">
+      <div>
         {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
-          <div className="info-section">{businessHoursContent}</div>
+          <div>{businessHoursContent}</div>
         )}
 
-        <div className="info-horizontal">
+        <div>
           {poi.location && (
-            <div className="info-section">
-              <span className="day">位置</span>
-              <span className="value">
+            <div>
+              <span>位置</span>
+              <span>
                 {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
               </span>
             </div>
@@ -151,7 +131,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               title: '問い合わせ',
               content:
                 poi.phone && isValidPhoneNumber(poi.phone) ? (
-                  <a href={`tel:${poi.phone}`} className="info-link">
+                  <a href={`tel:${poi.phone}`}>
                     {poi.phone}
                   </a>
                 ) : (
@@ -171,7 +151,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.information,
               title: '関連情報',
               content: (
-                <div className="info-related">{poi.information ? formatInformation(poi.information) : null}</div>
+                <div>{poi.information ? formatInformation(poi.information) : null}</div>
               ),
               description: 'この場所に関連する追加情報です。',
             },
@@ -180,7 +160,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               condition: poi.view,
               title: '',
               content: (
-                <a href={poi.view} target="_blank" rel="noopener noreferrer" className="info-button">
+                <a href={poi.view} target="_blank" rel="noopener noreferrer">
                   Google マップで写真を見る
                 </a>
               ),
@@ -188,7 +168,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
             },
           ].map((item) =>
             item.condition ? (
-              <div className="info-section" key={item.key}>
+              <div key={item.key}>
                 {item.title && <h3>{item.title}</h3>}
                 {item.content}
               </div>
@@ -200,9 +180,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   );
 };
 
-// コンポーネントの表示名を設定
 InfoWindow.displayName = 'InfoWindow';
 
-// コンポーネントをエクスポート
 export { InfoWindow };
 export default InfoWindow;
