@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 // CONFIGとvalidateConfigをインポートします。Google Sheets APIの設定とその検証に使用します。
 import { CONFIG, validateConfig } from '../utils/config';
 // AREASとERROR_MESSAGESをインポートします。エリアの定数とエラーメッセージに使用します。
-import { AREAS, ERROR_MESSAGES } from '../utils/constants';
+import { AREAS, ERROR_MESSAGES } from '../constants/constants';
 // Poi型とAreaType型をインポートします。ポイントオブインタレストとエリアの型定義に使用します。
-import type { Poi, AreaType } from '../utils/types';
+import type { Poi, AreaType } from '../types/types';
 
 // FetchErrorインターフェースを定義します。エラーメッセージとエラーコードを含みます。
 interface FetchError {

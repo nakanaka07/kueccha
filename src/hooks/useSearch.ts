@@ -5,7 +5,7 @@
 // useEffect: 副作用を処理するためのフック
 import { useState, useCallback, useRef, useEffect } from 'react';
 // POI（ポイントオブインタレスト）の型定義をインポートします。
-import type { Poi } from '../utils/types';
+import type { Poi } from '../types/types';
 
 // デバウンスの遅延時間を定義します（ミリ秒単位）。
 const DEBOUNCE_DELAY = 300;

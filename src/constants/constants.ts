@@ -22,7 +22,7 @@ import parkingIcon from './images/shi_icon01.png'; // 駐車場用アイコン
 import snackIcon from './images/shi_icon02.png'; // スナック用アイコン
 import currentLocationIcon from './images/shi_icon04.png'; // 現在地用アイコン
 // アプリケーションで使用する型定義をインポート
-import type { AreaType, Poi, MenuItem } from './types'; // エリアタイプ、観光地情報、メニュー項目の型定義
+import type { AreaType, Poi, MenuItem } from '../types/types'; // エリアタイプ、観光地情報、メニュー項目の型定義
 
 /**
  * エリア定義

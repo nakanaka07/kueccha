@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ERROR_MESSAGES } from '../utils/constants';
+import { ERROR_MESSAGES } from '../constants/constants';
 
 const useCurrentLocation = (setShowWarning: (show: boolean) => void) => {
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);

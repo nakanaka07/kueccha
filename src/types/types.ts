@@ -9,7 +9,7 @@
 // 必要なライブラリと定数のインポート
 import { LoadScriptProps } from '@react-google-maps/api'; // Google Maps APIの読み込みに必要なプロパティ型
 import { ReactNode } from 'react'; // Reactコンポーネントの子要素の型
-import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from './constants'; // エリア情報と営業時間の定数
+import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../constants/constants'; // エリア情報と営業時間の定数
 
 /**
  * 共通のプロパティを持つ基本的なプロパティ型。

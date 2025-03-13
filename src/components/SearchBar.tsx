@@ -21,7 +21,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './SearchBar.module.css';
 // このCSSファイルには検索バーの視覚的なデザイン（入力フィールド、ボタン、候補リストなど）が定義されています。
 // アプリケーション全体で使用される型定義をインポートします。
-import { Poi, SearchBarProps } from '../../utils/types';
+import { Poi, SearchBarProps } from '../types/types';
 // Poi: 地図上の位置情報（名前、座標、ID、エリアなど）を表す型定義です。
 // SearchBarProps: SearchBarコンポーネントが受け取るプロパティの型を定義します。
 

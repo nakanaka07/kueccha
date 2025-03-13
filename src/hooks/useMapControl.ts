@@ -1,7 +1,7 @@
 // useCallbackフックをインポートします。メモ化されたコールバック関数を作成するために使用します。
 import { useCallback } from 'react';
 // LatLngLiteral型をインポートします。緯度と経度を表すオブジェクトの型です。
-import type { LatLngLiteral } from '../utils/types';
+import type { LatLngLiteral } from '../types/types';
 
 // useMapControlフックを定義します。Googleマップのコントロールを提供します。
 // 引数としてGoogleマップのインスタンスを受け取ります。

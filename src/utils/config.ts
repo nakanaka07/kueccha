@@ -7,9 +7,9 @@
  */
 
 // 定数ファイルから設定のデフォルト値とエラーメッセージをインポート
-import { MAPS_CONFIG, SHEETS_CONFIG, MARKER_CONFIG, ERROR_MESSAGES } from './constants';
+import { MAPS_CONFIG, SHEETS_CONFIG, MARKER_CONFIG, ERROR_MESSAGES } from '../constants/constants';
 // 型定義ファイルから設定の型をインポート
-import type { Config } from './types';
+import type { Config } from '../types/types';
 
 /**
  * 環境変数の存在を検証する関数

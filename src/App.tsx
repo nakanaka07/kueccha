@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 import styles from './App.module.css';
 import { ErrorBoundary } from './components/errorboundary/ErrorBoundary';
 import Map from './components/map/Map';
-import { ERROR_MESSAGES } from './utils/constants';
+import { ERROR_MESSAGES } from './constants/constants';
 
 // メインのAppコンポーネント
 const App: React.FC = () => {
