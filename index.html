@@ -16,14 +16,15 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="佐渡で食えっちゃ" />
-    <meta property="og:image" content="./src/assets/images/logos/ogp.png" />
+    <meta property="og:image" content="/images/logos/ogp.png" />
     <meta property="og:locale" content="ja_JP" />
+    <meta property="og:url" content="https://nakanaka07.github.io/sadodekueccha/" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://yourdomain.com/kueccha/" />
+    <link rel="canonical" href="https://nakanaka07.github.io/sadodekueccha/" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com;"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com https://api.emailjs.com; object-src 'none';"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <script type="application/ld+json">
@@ -43,35 +44,34 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="#4a6da7" />
     <meta name="apple-mobile-web-app-title" content="佐渡で食えっちゃ" />
     <title>佐渡で食えっちゃ by INTX</title>
-    <link rel="preload" href="./src/assets/images/logos/row2.png" as="image" type="image/png" />
-    <link rel="preload" href="./index.css" as="style" />
-    <link rel="preload" href="./src/index.tsx" as="script" type="module" />
-    <link rel="icon" href="./src/assets/images/logos/favicon.ico" sizes="any" />
-    <link rel="icon" href="./src/assets/images/logos/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./src/assets/images/logos/apple-touch-icon.png" />
-    <link rel="manifest" href="./manifest.json" />
+    <!-- リソースのプリロードを統一パス形式で記述 -->
+    <link rel="preload" href="/images/logos/row2.png" as="image" type="image/png" />
+    <link rel="preload" href="/index.css" as="style" />
+    <link rel="preload" href="/src/main.tsx" as="script" type="module" />
+    <link rel="icon" href="/images/favicon.ico" sizes="any" />
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Googleフォント読み込みの最適化 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="preload"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      as="style"
-    />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      media="print"
-      onload="this.media='all'"
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" as="style" />
+    <link 
+      rel="stylesheet" 
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" 
+      media="print" 
+      onload="this.media='all'" 
     />
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
     </noscript>
-    <link rel="stylesheet" href="./index.css" />
+    
+    <link rel="stylesheet" href="/index.css" />
   </head>
   <body>
     <div id="app"></div>
     <noscript>このアプリケーションを利用するにはJavaScriptを有効にしてください。</noscript>
-    <script type="module" src="./main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -7,6 +7,15 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
+  // vite.config.jsに環境変数のバリデーションを追加
+  const requiredEnvVars = ['VITE_GOOGLE_MAPS_API_KEY'];
+  requiredEnvVars.forEach(key => {
+    if (!env[key]) {
+      console.error(`Missing required environment variable: ${key}`);
+      process.exit(1);
+    }
+  });
+
   const envVariables = [
     'VITE_GOOGLE_MAPS_API_KEY',
     'VITE_GOOGLE_MAPS_MAP_ID',
@@ -52,9 +61,9 @@ export default defineConfig(({ mode, command }) => {
       sourcemap: false,
       rollupOptions: {
         output: {
-          entryFileNames: 'assets/[name].[hash].js',
-          chunkFileNames: 'assets/[name].[hash].js',
-          assetFileNames: 'assets/[name].[hash].[ext]',
+          entryFileNames: '[name].[hash].js',
+          chunkFileNames: '[name].[hash].js',
+          assetFileNames: '[name].[hash].[ext]',
         },
         onwarn(warning, warn) {
           if (warning.code === 'SOURCEMAP_ERROR') return;

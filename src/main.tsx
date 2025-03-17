@@ -1,11 +1,11 @@
 import React, { Suspense, StrictMode, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ERRORS } from '@/messages';
-import { createError } from '@/index';
-import { ErrorDisplay } from '@/ErrorDisplay';
+import { ERROR_MESSAGES } from './constants/constants';
+import { createError } from './utils/errors';
+import { ErrorDisplay } from './components/ErrorDisplay';
 
-// 遅延ロード
-const App = lazy(() => import('@/App'));
+// 遅延ロードでAppコンポーネントをインポート
+const App = lazy(() => import('./App'));
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -14,16 +14,13 @@ const isDevelopment = process.env.NODE_ENV === 'development';
  */
 function renderApp() {
   try {
-    // コンテナ要素の取得
     const container = document.getElementById('app');
     if (!container) {
-      throw createError('SYSTEM', 'DOM_ERROR', ERRORS.containerNotFound);
+      throw createError('SYSTEM', 'DOM_ERROR', ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
     }
 
-    // Reactルートの作成
     const root = createRoot(container);
-
-    // アプリケーションレンダリング
+    
     root.render(
       <>
         {isDevelopment ? (
@@ -33,10 +30,9 @@ function renderApp() {
         ) : (
           <RenderWithErrorHandling />
         )}
-      </>,
+      </>
     );
   } catch (error) {
-    // 致命的なエラーの場合はフォールバック処理
     handleFatalError(error);
   }
 }
@@ -55,24 +51,20 @@ const RenderWithErrorHandling: React.FC = () => (
  */
 function handleFatalError(error: unknown) {
   console.error('アプリケーションの初期化に失敗しました:', error);
-
-  // エラーコンテナの取得またはフォールバック
+  
   const errorContainer = document.getElementById('app') || document.body;
-
-  // 標準化されたエラーオブジェクトの作成
+  
   const appError = createError(
     'SYSTEM',
     'INIT_FAILED',
     error instanceof Error ? error.message : '予期せぬエラーが発生しました',
-    'FATAL_STARTUP_ERROR',
+    'FATAL_STARTUP_ERROR'
   );
 
-  // create-root APIを使用してエラー表示をレンダリング
   try {
     const errorRoot = createRoot(errorContainer);
     errorRoot.render(<ErrorDisplay error={appError} onRetry={() => location.reload()} />);
   } catch {
-    // 最後の手段としてのプレーンHTMLフォールバック
     errorContainer.innerHTML = `
       <div class="error-container">
         <h2>エラーが発生しました</h2>

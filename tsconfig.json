@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "jsx": "react",
 
@@ -26,6 +26,9 @@
     "skipLibCheck": true,
 
     "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
@@ -35,8 +38,7 @@
     "eslint.config.js",
     "env.d.ts",
     "css.d.ts",
-    "src/common",
-    "main.tsx"
+    "src/main.tsx"
   ],
   "exclude": ["dist", "node_modules"],
   "ts-node": {
