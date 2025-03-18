@@ -1,6 +1,8 @@
 import emailjs from '@emailjs/browser';
 import React, { useState, useEffect } from 'react';
+
 import { ERROR_MESSAGES } from '../../utils/constants';
+
 import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
 
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
@@ -16,17 +18,17 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       setError(ERROR_MESSAGES.FORM.EMPTY_NAME);
       return false;
     }
-    
+
     if (!message.trim()) {
       setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
       return false;
     }
-    
+
     if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setError(ERROR_MESSAGES.FORM.INVALID_EMAIL);
       return false;
     }
-    
+
     setError('');
     return true;
   };
@@ -34,9 +36,9 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
   const sendFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const templateParams: TemplateParams = {
         name: name || '匿名',
@@ -50,7 +52,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
         templateParams as Record<string, unknown>,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
       );
-      
+
       setIsSubmitted(true);
       setError('');
     } catch {
@@ -78,11 +80,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       ) : (
         <form onSubmit={sendFeedback} noValidate>
           <h2 id="feedback-title">フィードバック</h2>
-          {error && (
-            <div role="alert">
-              {error}
-            </div>
-          )}
+          {error && <div role="alert">{error}</div>}
           <label htmlFor="name">
             名前:
             <input

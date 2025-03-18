@@ -1,12 +1,12 @@
 /**
  * アプリケーション共通定数ファイル
- * 
+ *
  * アプリケーション全体で使用される基本設定や定数を定義します。
  * アプリ名、バージョン、言語設定などの基本情報を含みます。
  */
 
-import { getEnvValue, getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './i18n.constants';
+import { getEnvValue, getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
 
 /**
  * アプリケーション基本情報

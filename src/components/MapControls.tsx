@@ -1,4 +1,5 @@
 import React from 'react';
+
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
 import recommendIcon from '../../utils/images/ano_icon_recommend.png';
 import currentLocationIcon from '../../utils/images/shi_icon04.png';
@@ -16,10 +17,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
     <button onClick={onGetCurrentLocation} title="現在地を取得します。">
       <img src={currentLocationIcon} alt="現在地を取得" />
     </button>
-    <button
-      onClick={onToggleRecommendations}
-      title="おすすめエリアの表示を切り替えます。"
-    >
+    <button onClick={onToggleRecommendations} title="おすすめエリアの表示を切り替えます。">
       <img src={recommendIcon} alt="おすすめエリアの表示を切り替え" />
     </button>
   </div>

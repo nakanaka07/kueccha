@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
+
 import type { InfoWindowProps, LatLngLiteral, BusinessHourKey } from '../../utils/types';
 
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
@@ -59,27 +61,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
     <div ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
       <div>
         <h2 id="info-window-title">{poi.name}</h2>
-        <button
-          onClick={onCloseClick}
-          aria-label="閉じる"
-          title="閉じます。"
-        >
+        <button onClick={onCloseClick} aria-label="閉じる" title="閉じます。">
           ×
         </button>
       </div>
 
       <div>
-        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
-          <div>{businessHoursContent}</div>
-        )}
+        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && <div>{businessHoursContent}</div>}
 
         <div>
           {poi.location && (
             <div>
               <span>位置</span>
-              <span>
-                {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
-              </span>
+              <span>{typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}</span>
             </div>
           )}
           {[
@@ -131,9 +125,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               title: '問い合わせ',
               content:
                 poi.phone && isValidPhoneNumber(poi.phone) ? (
-                  <a href={`tel:${poi.phone}`}>
-                    {poi.phone}
-                  </a>
+                  <a href={`tel:${poi.phone}`}>{poi.phone}</a>
                 ) : (
                   <span>{poi.phone}</span>
                 ),
@@ -150,9 +142,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
               key: 'information',
               condition: poi.information,
               title: '関連情報',
-              content: (
-                <div>{poi.information ? formatInformation(poi.information) : null}</div>
-              ),
+              content: <div>{poi.information ? formatInformation(poi.information) : null}</div>,
               description: 'この場所に関連する追加情報です。',
             },
             {

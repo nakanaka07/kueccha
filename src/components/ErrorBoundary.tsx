@@ -1,5 +1,7 @@
 import React, { Component, ErrorInfo } from 'react';
+
 import { ERROR_MESSAGES } from '../../utils/constants';
+
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {

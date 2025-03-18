@@ -1,19 +1,20 @@
 /**
  * 位置情報関連の定数ファイル
- * 
+ *
  * 地理的な位置情報と地図表示に関する定数値を定義します。
  * 地図の初期表示位置や境界、距離計算のデフォルト値などを含みます。
  */
 
 /// <reference types="@types/google.maps" />
 import { getEnvValueAsNumber } from '../utils/env.utils';
-import type { 
-  LatLngLiteral, 
-  Bounds, 
-  Distance, 
-  MapTypeId, 
+
+import type {
+  LatLngLiteral,
+  Bounds,
+  Distance,
+  MapTypeId,
   ControlPosition,
-  MapTypeControlStyle
+  MapTypeControlStyle,
 } from '../types/geo.types';
 
 // ============================================================================
@@ -22,18 +23,16 @@ import type {
 
 /**
  * Google Maps APIが利用可能かを確認する
- * 
+ *
  * @returns Google Maps APIが利用可能な場合はtrue、そうでない場合はfalse
  */
 function isGoogleMapsAvailable(): boolean {
-  return typeof google !== 'undefined' && 
-         typeof google.maps !== 'undefined' &&
-         typeof google.maps.MapTypeId !== 'undefined';
+  return typeof google !== 'undefined' && typeof google.maps.MapTypeId !== 'undefined';
 }
 
 /**
  * マップタイプIDを安全に取得する
- * 
+ *
  * @param type マップタイプの識別子
  * @returns Google Maps APIのマップタイプIDまたは文字列リテラル
  */
@@ -51,14 +50,14 @@ function getMapTypeId(type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain'): Map
         return google.maps.MapTypeId.ROADMAP;
     }
   }
-  
+
   // APIが利用できない場合は文字列を返す
   return type;
 }
 
 /**
  * コントロールの位置を安全に取得する
- * 
+ *
  * @param position ポジション名
  * @returns Google Maps APIのコントロールポジションまたは数値
  */
@@ -71,14 +70,14 @@ function getControlPosition(position: 'TOP_RIGHT'): ControlPosition {
         return google.maps.ControlPosition.TOP_RIGHT;
     }
   }
-  
+
   // APIが利用できない場合は数値を返す (Google Mapsの実装に基づく)
   return 3; // TOP_RIGHT = 3
 }
 
 /**
  * マップタイプコントロールスタイルを安全に取得する
- * 
+ *
  * @param style スタイル名
  * @returns Google Maps APIのマップタイプコントロールスタイルまたは数値
  */
@@ -91,7 +90,7 @@ function getMapTypeControlStyle(style: 'DROPDOWN_MENU'): MapTypeControlStyle {
         return google.maps.MapTypeControlStyle.DROPDOWN_MENU;
     }
   }
-  
+
   // APIが利用できない場合は数値を返す (Google Mapsの実装に基づく)
   return 2; // DROPDOWN_MENU = 2
 }
@@ -106,7 +105,7 @@ function getMapTypeControlStyle(style: 'DROPDOWN_MENU'): MapTypeControlStyle {
  */
 export const SADO_CENTER: LatLngLiteral = {
   lat: 38.0307,
-  lng: 138.3716
+  lng: 138.3716,
 };
 
 /**
@@ -114,14 +113,14 @@ export const SADO_CENTER: LatLngLiteral = {
  * 地図の表示範囲を制限するために使用されます
  */
 export const SADO_BOUNDS: Bounds = {
-  northeast: { 
-    lat: 38.3198, 
-    lng: 138.5811 
+  northeast: {
+    lat: 38.3198,
+    lng: 138.5811,
   },
-  southwest: { 
-    lat: 37.7960, 
-    lng: 138.1623 
-  }
+  southwest: {
+    lat: 37.796,
+    lng: 138.1623,
+  },
 };
 
 /**
@@ -149,7 +148,7 @@ export const DEFAULT_ZOOM_LEVEL = getEnvValueAsNumber('VITE_DEFAULT_ZOOM_LEVEL',
 /**
  * 安全なマップオプションを生成する
  * Google Maps APIの可用性に依存しないマップオプションを作成
- * 
+ *
  * @returns Google Maps APIのマップオプション
  */
 function createSafeMapOptions(): google.maps.MapOptions {
@@ -165,10 +164,10 @@ function createSafeMapOptions(): google.maps.MapOptions {
     zoomControl: true,
     mapTypeControlOptions: {
       style: getMapTypeControlStyle('DROPDOWN_MENU'),
-      position: getControlPosition('TOP_RIGHT')
-    }
+      position: getControlPosition('TOP_RIGHT'),
+    },
   };
-  
+
   return mapOptions as google.maps.MapOptions;
 }
 
@@ -186,7 +185,7 @@ export const MOBILE_MAP_OPTIONS: Partial<google.maps.MapOptions> = {
   streetViewControl: false,
   mapTypeControl: false,
   zoomControl: false,
-  fullscreenControl: false
+  fullscreenControl: false,
 };
 
 // ============================================================================
@@ -201,7 +200,7 @@ export const DISTANCE_UNIT_FACTORS: Record<Distance['unit'], number> = {
   m: 1,
   km: 0.001,
   mi: 0.000621371,
-  ft: 3.28084
+  ft: 3.28084,
 };
 
 /**
@@ -227,7 +226,7 @@ export const EARTH_RADIUS_METERS = 6371000;
 export const DEFAULT_GEOLOCATION_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
   timeout: getEnvValueAsNumber('VITE_GEOLOCATION_TIMEOUT', 10000),
-  maximumAge: getEnvValueAsNumber('VITE_GEOLOCATION_MAX_AGE', 60000)
+  maximumAge: getEnvValueAsNumber('VITE_GEOLOCATION_MAX_AGE', 60000),
 };
 
 /**

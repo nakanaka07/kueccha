@@ -1,5 +1,6 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import React, { useCallback, useRef, useState } from 'react';
+
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
 import { MapComponentProps } from '../../utils/types';

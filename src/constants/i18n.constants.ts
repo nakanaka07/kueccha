@@ -1,6 +1,6 @@
 /**
  * 国際化関連の定数ファイル
- * 
+ *
  * アプリケーション全体で使用される言語設定や国際化関連の定数を定義します。
  * 言語の切り替えやメッセージのローカライズ機能を提供します。
  */
@@ -21,7 +21,7 @@ export const SUPPORTED_LANGUAGES = ['ja', 'en'] as const;
  * サポートされている言語の型
  * 型チェックとコード補完を可能にします
  */
-export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
  * デフォルト言語設定
@@ -75,33 +75,30 @@ export function resetLanguageCache(): void {
  * 環境がブラウザかどうかを判定
  * SSRなどのNode環境でエラーを避けるために使用
  */
-const isBrowser = typeof window !== 'undefined' && 
-                  typeof localStorage !== 'undefined' &&
-                  typeof navigator !== 'undefined';
+const isBrowser =
+  typeof window !== 'undefined' && typeof localStorage !== 'undefined' && typeof navigator !== 'undefined';
 
 /**
  * 現在の言語を取得する関数
- * 
+ *
  * 以下の優先順位で言語を決定します:
  * 1. キャッシュされた言語設定（存在し、有効期限内の場合）
  * 2. ローカルストレージの設定
  * 3. ブラウザの言語設定
  * 4. デフォルト言語
- * 
+ *
  * @param skipCache キャッシュを無視して再評価するか
  * @returns 現在の言語
  */
 export function getCurrentLanguage(skipCache: boolean = false): SupportedLanguage {
   // キャッシュが有効なら使用
   const now = Date.now();
-  if (!skipCache && 
-      cachedLanguage && 
-      now - cacheTimestamp < LANGUAGE_CACHE_TTL) {
+  if (!skipCache && cachedLanguage && now - cacheTimestamp < LANGUAGE_CACHE_TTL) {
     return cachedLanguage;
   }
-  
+
   let selectedLanguage = DEFAULT_LANGUAGE;
-  
+
   if (isBrowser) {
     try {
       // 1. ローカルストレージからユーザー設定を確認
@@ -119,24 +116,24 @@ export function getCurrentLanguage(skipCache: boolean = false): SupportedLanguag
       // エラーログを詳細に
       console.warn(
         '言語設定の取得中にエラーが発生しました。デフォルト言語を使用します。',
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
     }
   } else {
     // ブラウザ環境以外（SSRなど）ではデフォルト言語を使用
     console.debug('ブラウザ環境ではないため、デフォルト言語を使用します。');
   }
-  
+
   // キャッシュを更新
   cachedLanguage = selectedLanguage;
   cacheTimestamp = now;
-  
+
   return selectedLanguage;
 }
 
 /**
  * 言語設定を保存する関数
- * 
+ *
  * @param language 保存する言語設定
  * @returns 保存に成功したかどうか
  */
@@ -145,38 +142,35 @@ export function setLanguage(language: SupportedLanguage): boolean {
     console.warn(`言語 "${language}" はサポートされていません。`);
     return false;
   }
-  
+
   if (!isBrowser) {
     console.warn('ブラウザ環境でないため、言語設定を保存できません。');
     return false;
   }
-  
+
   try {
     localStorage.setItem('userLanguage', language);
-    
+
     // キャッシュを更新
     cachedLanguage = language;
     cacheTimestamp = Date.now();
-    
+
     // 言語変更イベントを発行（オプション）
     if (typeof window.dispatchEvent === 'function') {
       const event = new CustomEvent('languagechange', { detail: { language } });
       window.dispatchEvent(event);
     }
-    
+
     return true;
   } catch (error) {
-    console.error(
-      '言語設定の保存中にエラーが発生しました',
-      error instanceof Error ? error.message : String(error)
-    );
+    console.error('言語設定の保存中にエラーが発生しました', error instanceof Error ? error.message : String(error));
     return false;
   }
 }
 
 /**
  * ローカライズされたメッセージを取得する関数
- * 
+ *
  * @param message ローカライズされたメッセージオブジェクトまたは文字列
  * @param language 使用する言語（省略時は現在の言語）
  * @param params メッセージ内のプレースホルダーを置き換えるパラメータ
@@ -185,52 +179,52 @@ export function setLanguage(language: SupportedLanguage): boolean {
 export function getLocalizedMessage(
   message: LocalizedMessage | string,
   language: SupportedLanguage = getCurrentLanguage(),
-  params?: Record<string, string | number>
+  params?: Record<string, string | number>,
 ): string {
   // メッセージが undefined または null の場合
   if (message === undefined || message === null) {
     console.warn('getLocalizedMessage: メッセージがnullまたはundefinedです。');
     return '';
   }
-  
+
   // 文字列の場合はそのまま返す
   if (typeof message === 'string') {
     return params ? formatMessage(message, params) : message;
   }
-  
+
   // 指定された言語のメッセージがない場合はデフォルト言語を使用
   const rawMessage = message[language] || message[DEFAULT_LANGUAGE] || Object.values(message)[0] || '';
-  
+
   // パラメータがあればフォーマット
   return params ? formatMessage(rawMessage, params) : rawMessage;
 }
 
 /**
  * 指定した言語の日付フォーマット用オブジェクトを取得
- * 
+ *
  * @param language 言語コード
  * @returns 言語に適したDateTimeFormatオブジェクト
  */
 export function getDateFormatter(
   language: SupportedLanguage = getCurrentLanguage(),
-  options: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  }
+  options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  },
 ): Intl.DateTimeFormat {
   return new Intl.DateTimeFormat(language, options);
 }
 
 /**
  * 指定した言語の数値フォーマット用オブジェクトを取得
- * 
+ *
  * @param language 言語コード
  * @returns 言語に適したNumberFormatオブジェクト
  */
 export function getNumberFormatter(
   language: SupportedLanguage = getCurrentLanguage(),
-  options: Intl.NumberFormatOptions = {}
+  options: Intl.NumberFormatOptions = {},
 ): Intl.NumberFormat {
   return new Intl.NumberFormat(language, options);
 }

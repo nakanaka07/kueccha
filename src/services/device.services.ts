@@ -48,6 +48,6 @@ export function isMobileExperience(): boolean {
 export const DeviceConfig = {
   isMobile: isMobileExperience(),
   breakpoints: BREAKPOINTS,
-  isTouch: typeof window !== 'undefined' && ('ontouchstart' in window),
+  isTouch: typeof window !== 'undefined' && 'ontouchstart' in window,
   isMobileCheck: isMobileExperience,
 };

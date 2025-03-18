@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import type { LocationWarningProps } from '../../utils/types';
 
 const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
@@ -13,10 +14,7 @@ const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {
 
   return (
     <div>
-      <button
-        onClick={() => setIsVisible(false)}
-        aria-label="警告メッセージを閉じる"
-      >
+      <button onClick={() => setIsVisible(false)} aria-label="警告メッセージを閉じる">
         ×
       </button>
       <div>

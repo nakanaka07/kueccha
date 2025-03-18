@@ -1,6 +1,6 @@
 /**
  * ローディング関連の型定義ファイル
- * 
+ *
  * アプリケーションのローディング状態を管理するための型を定義します。
  * これらの型はローディングコンポーネントやローディング状態の管理に使用されます。
  */
@@ -29,7 +29,7 @@ export enum LoadingStatus {
   /** エラー発生 */
   ERROR = 'error',
   /** タイムアウト発生 */
-  TIMEOUT = 'timeout'
+  TIMEOUT = 'timeout',
 }
 
 /**
@@ -45,13 +45,13 @@ export type ProgressPercentage = number & { readonly __brand: unique symbol };
 export interface AppError {
   /** エラーメッセージ */
   message: string;
-  
+
   /** エラーコード */
   code?: string;
-  
+
   /** 元のエラーオブジェクト */
   originalError?: Error;
-  
+
   /** エラーに関連する追加コンテキスト情報 */
   context?: Record<string, unknown>;
 }
@@ -63,16 +63,16 @@ export interface AppError {
 export interface LoadingState {
   /** 現在のローディング状態 */
   status: LoadingStatus;
-  
+
   /** 0-100の間の進捗率（オプション） */
   progress?: ProgressPercentage;
-  
+
   /** ローディング開始時間（ミリ秒） */
   startTime?: number;
-  
+
   /** ローディングのタイムアウト時間（ミリ秒） */
   timeout?: number;
-  
+
   /** ローディング操作の識別子（複数のローディングを管理する場合に使用） */
   id?: string;
 }
@@ -90,48 +90,48 @@ export interface LoadingFallbackProps extends BaseProps {
    * 現在ローディング中かどうか。true の場合はローディング表示、false の場合はフェードアウト
    */
   isLoading: boolean;
-  
+
   /**
    * ローディング中に表示するメッセージ
    * @default 'データを読み込んでいます...'
    */
   message?: string;
-  
+
   /**
    * ローディングスピナーに適用するCSSクラス名
    * @default 'spinner-border text-primary'
    */
   spinnerClassName?: string;
-  
+
   /**
    * フェードアウトアニメーションの時間（ミリ秒）
    * @default 1000
    */
   fadeDuration?: number;
-  
+
   /**
    * 進捗率を表示するかどうか
    * @default false
    */
   showProgress?: boolean;
-  
+
   /**
    * 現在の進捗率（0-100）
    */
   progress?: ProgressPercentage;
-  
+
   /**
    * タイムアウト時間（ミリ秒）
    * この時間を超えるとタイムアウト表示になります
    * @default 30000
    */
   timeout?: number;
-  
+
   /**
    * タイムアウト時に表示するメッセージ
    */
   timeoutMessage?: string;
-  
+
   /**
    * 再試行ボタンのクリックハンドラ
    */
@@ -149,16 +149,16 @@ export interface LoadingFallbackProps extends BaseProps {
 export interface LoadingResult<T> {
   /** 取得したデータまたはnull */
   data: T | null;
-  
+
   /** 現在のローディング状態 */
   status: LoadingStatus;
-  
+
   /** 0-100の間の進捗率（オプション） */
   progress?: ProgressPercentage;
-  
+
   /** エラー情報または成功時はnull */
   error: AppError | null;
-  
+
   /** 最終更新時間 */
   updatedAt?: number;
 }
@@ -181,7 +181,7 @@ export function createInitialLoadingState(timeout: number = 30000): LoadingState
   return {
     status: LoadingStatus.IDLE,
     progress: validateProgress(0),
-    timeout
+    timeout,
   };
 }
 
@@ -194,6 +194,6 @@ export function createInitialLoadingResult<T>(): LoadingResult<T> {
     data: null,
     status: LoadingStatus.IDLE,
     progress: validateProgress(0),
-    error: null
+    error: null,
   };
 }

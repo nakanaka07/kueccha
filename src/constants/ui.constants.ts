@@ -1,18 +1,12 @@
 /**
  * UI関連定数ファイル
- * 
+ *
  * ユーザーインターフェース要素に関する設定や表示内容を定義します。
  */
 
 /// <reference types="@types/google.maps" />
-import type { 
-  MenuItem, 
-  MenuItemAction,
-  MenuActionType, 
-  InfoWindowConfig,
-  PixelOffset 
-} from '../types/ui.types';
 import type { BusinessHourDayMapping } from '../types/poi.types';
+import type { MenuItem, MenuItemAction, MenuActionType, InfoWindowConfig, PixelOffset } from '../types/ui.types';
 
 // ============================================================================
 // ヘルパー関数
@@ -20,18 +14,16 @@ import type { BusinessHourDayMapping } from '../types/poi.types';
 
 /**
  * Google Maps APIが利用可能かをチェックする
- * 
+ *
  * @returns Google Maps APIが利用可能な場合はtrue
  */
 function isGoogleMapsAvailable(): boolean {
-  return typeof google !== 'undefined' && 
-         typeof google.maps !== 'undefined' &&
-         typeof google.maps.Size === 'function';
+  return typeof google !== 'undefined' && typeof google.maps !== 'undefined' && typeof google.maps.Size === 'function';
 }
 
 /**
  * Google Maps のSize オブジェクトを安全に作成する
- * 
+ *
  * @param width - 幅
  * @param height - 高さ
  * @returns Google Maps Size オブジェクトまたは互換性のあるオブジェクト
@@ -40,7 +32,7 @@ function createSafePixelOffset(width: number, height: number): PixelOffset {
   if (isGoogleMapsAvailable()) {
     return new google.maps.Size(width, height);
   }
-  
+
   // フォールバック: Google Maps APIが利用できない場合は互換性のあるオブジェクトを返す
   return { width, height, equals: () => false, toString: () => `(${width}, ${height})` };
 }
@@ -76,8 +68,8 @@ function createInfoWindowConfig(): InfoWindowConfig {
     closeOnMapClick: true,
     mobileAdjustment: {
       maxWidth: 280,
-      scale: 0.9
-    }
+      scale: 0.9,
+    },
   };
 }
 
@@ -160,5 +152,5 @@ export const GEOLOCATION_ERROR_MESSAGES = {
   PERMISSION_DENIED: '位置情報へのアクセスが拒否されました。設定から許可してください。',
   POSITION_UNAVAILABLE: '現在地を取得できませんでした。',
   TIMEOUT: '位置情報の取得がタイムアウトしました。',
-  UNKNOWN: '位置情報の取得中に不明なエラーが発生しました。'
+  UNKNOWN: '位置情報の取得中に不明なエラーが発生しました。',
 };

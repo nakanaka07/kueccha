@@ -1,12 +1,13 @@
 /**
  * POI（ポイントオブインタレスト）関連の定数ファイル
- * 
+ *
  * マップ上のPOI表示や検索に関する定数値を定義します。
  * POIのジャンル、表示スタイル、多言語表示名などを含みます。
  */
 
-import { getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
 import { getCurrentLanguage } from './i18n.constants';
+import { getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
+
 import type { PoiGenre, BusinessHourKey, MarkerDisplayOptions, Poi } from '../types/poi.types';
 
 // ============================================================================
@@ -20,38 +21,38 @@ import type { PoiGenre, BusinessHourKey, MarkerDisplayOptions, Poi } from '../ty
 export const POI_GENRE_DISPLAY_NAMES: Record<PoiGenre, Record<string, string>> = {
   restaurant: {
     ja: '飲食店',
-    en: 'Restaurant'
+    en: 'Restaurant',
   },
   cafe: {
     ja: 'カフェ',
-    en: 'Cafe'
+    en: 'Cafe',
   },
   shop: {
     ja: 'ショップ',
-    en: 'Shop'
+    en: 'Shop',
   },
   attraction: {
     ja: '観光スポット',
-    en: 'Attraction'
+    en: 'Attraction',
   },
   facility: {
     ja: '公共施設',
-    en: 'Facility'
+    en: 'Facility',
   },
   current_location: {
     ja: '現在地',
-    en: 'Current Location'
+    en: 'Current Location',
   },
   other: {
     ja: 'その他',
-    en: 'Other'
-  }
+    en: 'Other',
+  },
 };
 
 /**
  * ジャンル表示名を取得する
  * 現在の言語設定に基づいて適切な表示名を返します
- * 
+ *
  * @param genre ジャンル識別子
  * @returns ローカライズされたジャンル名
  */
@@ -71,7 +72,7 @@ export const POI_GENRE_PRIORITY: Record<PoiGenre, number> = {
   shop: 80,
   facility: 70,
   current_location: 110, // 通常は検索対象外だが、最高優先度
-  other: 50
+  other: 50,
 };
 
 // ============================================================================
@@ -84,7 +85,7 @@ export const POI_GENRE_PRIORITY: Record<PoiGenre, number> = {
 export const MARKER_ANIMATIONS = {
   NONE: 'NONE',
   BOUNCE: 'BOUNCE',
-  DROP: 'DROP'
+  DROP: 'DROP',
 } as const;
 
 /**
@@ -97,50 +98,50 @@ export const DEFAULT_MARKER_OPTIONS: Record<PoiGenre, MarkerDisplayOptions> = {
     color: '#FF5722',
     opacity: 0.9,
     animation: 'NONE',
-    zIndex: 10
+    zIndex: 10,
   },
   cafe: {
     icon: '/assets/icons/cafe.png',
     color: '#795548',
     opacity: 0.9,
     animation: 'NONE',
-    zIndex: 10
+    zIndex: 10,
   },
   shop: {
     icon: '/assets/icons/shop.png',
     color: '#3F51B5',
     opacity: 0.9,
     animation: 'NONE',
-    zIndex: 10
+    zIndex: 10,
   },
   attraction: {
     icon: '/assets/icons/attraction.png',
     color: '#4CAF50',
     opacity: 0.9,
     animation: 'NONE',
-    zIndex: 20
+    zIndex: 20,
   },
   facility: {
     icon: '/assets/icons/facility.png',
     color: '#9E9E9E',
     opacity: 0.9,
     animation: 'NONE',
-    zIndex: 5
+    zIndex: 5,
   },
   current_location: {
     icon: '/assets/icons/current_location.png',
     color: '#2196F3',
     opacity: 1.0,
     animation: 'NONE',
-    zIndex: 100
+    zIndex: 100,
   },
   other: {
     icon: '/assets/icons/other.png',
     color: '#607D8B',
     opacity: 0.8,
     animation: 'NONE',
-    zIndex: 1
-  }
+    zIndex: 1,
+  },
 };
 
 /**
@@ -150,24 +151,24 @@ export const DEFAULT_MARKER_OPTIONS: Record<PoiGenre, MarkerDisplayOptions> = {
 export const SELECTED_MARKER_OPTIONS: Partial<MarkerDisplayOptions> = {
   opacity: 1.0,
   animation: 'BOUNCE',
-  zIndex: 1000
+  zIndex: 1000,
 };
 
 /**
  * POIジャンルに基づいてマーカー設定を取得
  * デフォルト設定と個別設定をマージします
- * 
+ *
  * @param genre POIジャンル
  * @param customOptions オプションの個別設定
  * @returns マージされたマーカー表示設定
  */
 export function getMarkerOptionsForGenre(
-  genre: PoiGenre, 
-  customOptions?: Partial<MarkerDisplayOptions>
+  genre: PoiGenre,
+  customOptions?: Partial<MarkerDisplayOptions>,
 ): MarkerDisplayOptions {
   return {
     ...DEFAULT_MARKER_OPTIONS[genre],
-    ...customOptions
+    ...customOptions,
   };
 }
 
@@ -187,7 +188,7 @@ export const BUSINESS_HOUR_DISPLAY_ORDER: BusinessHourKey[] = [
   'friday',
   'saturday',
   'sunday',
-  'holiday'
+  'holiday',
 ];
 
 /**
@@ -201,7 +202,7 @@ export const BUSINESS_HOUR_LABELS_JA: Record<BusinessHourKey, string> = {
   friday: '金曜日',
   saturday: '土曜日',
   sunday: '日曜日',
-  holiday: '祝日'
+  holiday: '祝日',
 };
 
 /**
@@ -215,21 +216,19 @@ export const BUSINESS_HOUR_LABELS_EN: Record<BusinessHourKey, string> = {
   friday: 'Friday',
   saturday: 'Saturday',
   sunday: 'Sunday',
-  holiday: 'Holidays'
+  holiday: 'Holidays',
 };
 
 /**
  * 曜日キーから表示名を取得
  * 現在の言語設定に基づいて適切な表示名を返します
- * 
+ *
  * @param key 曜日キー
  * @returns ローカライズされた曜日名
  */
 export function getBusinessHourLabel(key: BusinessHourKey): string {
   const lang = getCurrentLanguage();
-  return lang === 'ja' 
-    ? BUSINESS_HOUR_LABELS_JA[key]
-    : BUSINESS_HOUR_LABELS_EN[key];
+  return lang === 'ja' ? BUSINESS_HOUR_LABELS_JA[key] : BUSINESS_HOUR_LABELS_EN[key];
 }
 
 /**
@@ -237,9 +236,9 @@ export function getBusinessHourLabel(key: BusinessHourKey): string {
  * 表示用の営業時間項目を現在の言語設定で生成します
  */
 export function createBusinessHourItems(): { day: string; key: BusinessHourKey }[] {
-  return BUSINESS_HOUR_DISPLAY_ORDER.map(key => ({
+  return BUSINESS_HOUR_DISPLAY_ORDER.map((key) => ({
     day: getBusinessHourLabel(key),
-    key
+    key,
   }));
 }
 
@@ -261,7 +260,7 @@ export const POI_DETAIL_DISPLAY_ORDER: (keyof Poi)[] = [
   'parking',
   'payment',
   'information',
-  'detailUrl'
+  'detailUrl',
 ];
 
 /**
@@ -279,7 +278,7 @@ export const POI_FIELD_LABELS_JA: Partial<Record<keyof Poi, string>> = {
   information: '追加情報',
   detailUrl: '詳細情報',
   genre: 'ジャンル',
-  area: 'エリア'
+  area: 'エリア',
 };
 
 /**
@@ -297,13 +296,13 @@ export const POI_FIELD_LABELS_EN: Partial<Record<keyof Poi, string>> = {
   information: 'Additional Info',
   detailUrl: 'More Details',
   genre: 'Genre',
-  area: 'Area'
+  area: 'Area',
 };
 
 /**
  * POIフィールドの表示ラベルを取得
  * 現在の言語設定に基づいて適切なラベルを返します
- * 
+ *
  * @param field POIフィールド名
  * @returns ローカライズされたフィールドラベル
  */
@@ -340,7 +339,7 @@ export const SEARCH_FIELD_WEIGHTS: Partial<Record<keyof Poi, number>> = {
   address: 40,
   information: 30,
   genre: 60,
-  area: 50
+  area: 50,
 };
 
 /**
@@ -355,7 +354,7 @@ export const CURRENT_LOCATION_POI_TEMPLATE: Omit<Poi, 'location'> = {
   category: getCurrentLanguage() === 'ja' ? '現在地' : 'Current Location',
   createdAt: new Date(),
   updatedAt: new Date(),
-  markerOptions: DEFAULT_MARKER_OPTIONS.current_location
+  markerOptions: DEFAULT_MARKER_OPTIONS.current_location,
 };
 
 /**

@@ -1,22 +1,23 @@
 /**
  * マップ関連の型定義ファイル
- * 
+ *
  * Google Maps APIに関連するコンポーネントや設定の型を定義します。
  * ここには設定、プロパティ、イベントハンドラなどの型が含まれています。
  */
 
 /// <reference types="@types/google.maps" />
 import { LoadScriptProps, MapOptions } from '@react-google-maps/api';
+
 import { BaseProps } from './base.types';
-import { Poi } from './poi.types';
-import { 
-  LatLngLiteral, 
-  ControlPosition, 
+import {
+  LatLngLiteral,
+  ControlPosition,
   ControlPositionString,
   MapTypeControlStyle,
-  MapStyleOptions, 
-  MapTypeId 
+  MapStyleOptions,
+  MapTypeId,
 } from './geo.types';
+import { Poi } from './poi.types';
 
 // ============================================================================
 // マップ表示モード関連の型定義
@@ -30,7 +31,7 @@ export enum MapDisplayMode {
   STANDARD = 'standard',
   SATELLITE = 'satellite',
   ACCESSIBLE = 'accessible', // 高コントラスト、シンプル表示など
-  NIGHT = 'night'           // 夜間モード
+  NIGHT = 'night', // 夜間モード
 }
 
 /**
@@ -39,7 +40,7 @@ export enum MapDisplayMode {
 export interface MapDisplayModeOptions {
   /** マップタイプID */
   mapTypeId: MapTypeId;
-  
+
   /** マップスタイル配列 */
   styles: google.maps.MapTypeStyle[];
 }
@@ -59,7 +60,7 @@ export type MapDisplayModes = Record<MapDisplayMode, MapDisplayModeOptions>;
 export interface ExtendedMapOptions extends MapOptions {
   /** カメラコントロールの表示/非表示 */
   cameraControl?: boolean;
-  
+
   /** カメラコントロールの設定オプション */
   cameraControlOptions?: {
     position: ControlPosition | ControlPositionString;
@@ -73,7 +74,7 @@ export interface ExtendedMapOptions extends MapOptions {
 export interface MapStyle {
   /** マップの幅 (CSSの値: '100%', '500px'など) */
   width: string;
-  
+
   /** マップの高さ (CSSの値: '100%', '500px'など) */
   height: string;
 }
@@ -85,40 +86,40 @@ export interface MapStyle {
 export interface MapConfig {
   /** Google Maps API キー */
   apiKey: string;
-  
+
   /** Google Maps Map ID (クラウドベースのマップスタイルに必要) */
   mapId: string;
-  
+
   /** マップの初期中心座標 */
   defaultCenter: LatLngLiteral;
-  
+
   /** マップの初期ズームレベル (1-20) */
   defaultZoom: number;
-  
+
   /** 使用するGoogle Maps APIのライブラリ */
   libraries: LoadScriptProps['libraries'];
-  
+
   /** マップの表示言語 */
   language: string;
-  
+
   /** Google Maps API バージョン (例: 'weekly', 'quarterly', 'beta') */
   version: string;
-  
+
   /** マップのコンテナスタイル設定 */
   style: MapStyle;
-  
+
   /** Google Maps の詳細なオプション設定 */
   options: ExtendedMapOptions;
-  
+
   /** モバイルデバイス用の追加マップオプション */
   mobileOptions?: Partial<ExtendedMapOptions>;
-  
+
   /** マーカーの周囲の余白（ピクセル） */
   boundsPadding?: number;
-  
+
   /** マーカーのクラスタリングしきい値 */
   clusteringThreshold?: number;
-  
+
   /** 情報ウィンドウのデフォルト最大幅 */
   defaultInfoWindowMaxWidth?: number;
 }
@@ -134,10 +135,10 @@ export interface MapConfig {
 export interface MapLoadError {
   /** エラーコード */
   code: 'API_KEY_INVALID' | 'NETWORK_ERROR' | 'SCRIPT_LOAD_ERROR' | 'UNKNOWN';
-  
+
   /** エラーメッセージ */
   message: string;
-  
+
   /** 追加の詳細情報（オプション） */
   details?: unknown;
 }
@@ -146,9 +147,7 @@ export interface MapLoadError {
  * マップ読み込み結果を表す型
  * 成功時はマップオブジェクト、失敗時はエラー情報を含みます
  */
-export type MapLoadResult = 
-  | { success: true; map: google.maps.Map }
-  | { success: false; error: MapLoadError };
+export type MapLoadResult = { success: true; map: google.maps.Map } | { success: false; error: MapLoadError };
 
 // ============================================================================
 // マップイベント関連の型定義
@@ -161,16 +160,16 @@ export type MapLoadResult =
 export interface MapEventHandlers {
   /** マップクリック時の処理 */
   onClick?: (event: google.maps.MapMouseEvent) => void;
-  
+
   /** マップドラッグ終了時の処理 */
   onDragEnd?: () => void;
-  
+
   /** ズーム変更時の処理 */
   onZoomChanged?: (newZoom: number) => void;
-  
+
   /** 表示範囲変更時の処理 */
   onBoundsChanged?: (newBounds: google.maps.LatLngBounds) => void;
-  
+
   /** アイドル状態（操作完了後）になった時の処理 */
   onIdle?: () => void;
 }
@@ -186,7 +185,7 @@ export interface MapEventHandlers {
 export interface MapProps extends BaseProps {
   /** マップ上に表示するPOI(Point of Interest)の配列 */
   pois: Poi[];
-  
+
   /** マップイベントハンドラ */
   eventHandlers?: MapEventHandlers;
 }
@@ -201,7 +200,7 @@ export interface MapComponentProps {
    * @param result マップロード結果（成功時はマップオブジェクト、失敗時はエラー情報）
    */
   onMapLoad: (result: MapLoadResult) => void;
-  
+
   /** マップイベントハンドラ */
   eventHandlers?: MapEventHandlers;
 }
@@ -217,7 +216,7 @@ export interface MapComponentProps {
 export interface MapErrorProps {
   /** エラー情報 */
   error: MapLoadError;
-  
+
   /**
    * マップの再読み込みを試みる関数
    */
@@ -231,17 +230,17 @@ export interface MapErrorProps {
 export interface MapControlsProps {
   /** マップインスタンス */
   map: google.maps.Map;
-  
+
   /**
    * マップを北向きにリセットする関数
    */
   onResetNorth: () => void;
-  
+
   /**
    * ユーザーの現在位置を取得してマップを中心に表示する関数
    */
   onGetCurrentLocation: () => void;
-  
+
   /**
    * おすすめエリアの表示/非表示を切り替える関数
    */

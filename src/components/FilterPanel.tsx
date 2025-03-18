@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+
 import useCurrentLocation from '../../hooks/useCurrentLocation';
 import { MARKER_CONFIG, AREAS } from '../../utils/constants';
+
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -31,26 +33,32 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   }, [localAreaVisibility, setAreaVisibility]);
 
-  const areaCounts = useMemo(() => 
-    pois.reduce(
-      (acc: Record<AreaType, number>, poi) => ({
-        ...acc,
-        [poi.area]: (acc[poi.area] || 0) + 1,
-      }),
-      {} as Record<AreaType, number>,
-    ), [pois]);
+  const areaCounts = useMemo(
+    () =>
+      pois.reduce(
+        (acc: Record<AreaType, number>, poi) => ({
+          ...acc,
+          [poi.area]: (acc[poi.area] || 0) + 1,
+        }),
+        {} as Record<AreaType, number>,
+      ),
+    [pois],
+  );
 
-  const areas = useMemo(() => 
-    Object.entries(AREAS)
-      .filter(([area]) => area !== 'CURRENT_LOCATION')
-      .map(([area, name]) => ({
-        area: area as AreaType,
-        name,
-        count: areaCounts[area as AreaType] ?? 0,
-        isVisible: localAreaVisibility[area as AreaType],
-        color: MARKER_CONFIG.colors[area as AreaType],
-        icon: MARKER_CONFIG.icons[area as AreaType],
-      })), [areaCounts, localAreaVisibility]);
+  const areas = useMemo(
+    () =>
+      Object.entries(AREAS)
+        .filter(([area]) => area !== 'CURRENT_LOCATION')
+        .map(([area, name]) => ({
+          area: area as AreaType,
+          name,
+          count: areaCounts[area as AreaType] ?? 0,
+          isVisible: localAreaVisibility[area as AreaType],
+          color: MARKER_CONFIG.colors[area as AreaType],
+          icon: MARKER_CONFIG.icons[area as AreaType],
+        })),
+    [areaCounts, localAreaVisibility],
+  );
 
   if (!isFilterPanelOpen) {
     return null;
@@ -77,12 +85,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 }
                 aria-label={`${name}を表示`}
               />
-              <span></span>
+              <span />
               <div>
                 <img src={icon} alt={`${name}のアイコン`} aria-hidden="true" />
-                <span title={name}>
-                  {name}
-                </span>
+                <span title={name}>{name}</span>
                 <span>({count})</span>
               </div>
             </label>
@@ -94,24 +100,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onChange={(e) => handleCurrentLocationChange(e.target.checked)}
               aria-label="現在地を表示"
             />
-            <span></span>
+            <span />
             <div>
-              <img
-                src={MARKER_CONFIG.icons.CURRENT_LOCATION}
-                alt="現在地のアイコン"
-                aria-hidden="true"
-              />
-              <span title="現在地">
-                現在地
-              </span>
+              <img src={MARKER_CONFIG.icons.CURRENT_LOCATION} alt="現在地のアイコン" aria-hidden="true" />
+              <span title="現在地">現在地</span>
             </div>
           </label>
         </div>
-        {locationError && (
-          <div role="alert">
-            {locationError}
-          </div>
-        )}
+        {locationError && <div role="alert">{locationError}</div>}
       </div>
     </div>
   );

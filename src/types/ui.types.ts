@@ -1,20 +1,14 @@
 /**
  * UI関連の型定義ファイル
- * 
+ *
  * アプリケーションのUIコンポーネントで使用される型を定義します。
  */
 
 /// <reference types="@types/google.maps" />
+import { AreaType, AreaVisibility as AreaVisibilityMap, AreaInfo, AreasByCategory, AreaCategory } from './areas.types';
 import { BaseProps } from './base.types';
-import { Poi } from './poi.types';
 import { LatLngLiteral } from './geo.types';
-import { 
-  AreaType, 
-  AreaVisibility as AreaVisibilityMap, 
-  AreaInfo,
-  AreasByCategory,
-  AreaCategory
-} from './areas.types';
+import { Poi } from './poi.types';
 
 // ============================================================================
 // Google Maps関連の型定義
@@ -27,13 +21,13 @@ import {
 export interface PixelOffset {
   /** 幅 */
   width: number;
-  
+
   /** 高さ */
   height: number;
-  
+
   /** 等価性比較メソッド */
   equals?: (other: any) => boolean;
-  
+
   /** 文字列表現メソッド */
   toString?: () => string;
 }
@@ -65,27 +59,27 @@ export type MenuItemAction = keyof MenuActionType;
 export interface InfoWindowConfig {
   /** 最大の幅（ピクセル） */
   maxWidth: number;
-  
+
   /** 座標からのオフセット位置 */
   pixelOffset: google.maps.Size | PixelOffset;
-  
+
   /** マップクリック時に閉じるかどうか */
   closeOnMapClick: boolean;
-  
+
   /** モバイルでの表示調整 */
   mobileAdjustment?: {
     /** モバイル用の最大幅 */
     maxWidth?: number;
-    
+
     /** スケーリング係数 */
     scale?: number;
   };
-  
+
   /** アニメーション設定 */
   animation?: {
     /** アニメーション種類 */
     type?: 'fade' | 'slide';
-    
+
     /** アニメーション時間（ミリ秒） */
     duration?: number;
   };
@@ -102,25 +96,25 @@ export interface InfoWindowConfig {
 export interface AreaFilteringProps {
   /** フィルター対象のすべてのPOI（ポイントオブインタレスト） */
   pois: Poi[];
-  
+
   /** 選択されたPOIを設定する関数 */
   setSelectedPoi: (poi: Poi | null) => void;
-  
+
   /** エリア表示状態を設定する関数 */
   setAreaVisibility: (visibility: StateUpdater<AreaVisibilityMap>) => void;
-  
+
   /** ローカルなエリア表示状態 */
   localAreaVisibility: AreaVisibilityMap;
-  
+
   /** ローカルなエリア表示状態を設定する関数 */
   setLocalAreaVisibility: (visibility: StateUpdater<AreaVisibilityMap>) => void;
-  
+
   /** ユーザーの現在位置 */
   currentLocation: LatLngLiteral | null;
-  
+
   /** 現在位置を設定する関数 */
   setCurrentLocation: (location: StateUpdater<LatLngLiteral | null>) => void;
-  
+
   /** 位置情報の警告表示を制御する関数 */
   setShowWarning: (show: boolean) => void;
 }
@@ -136,19 +130,19 @@ export interface AreaFilteringProps {
 export interface AreaSelectorProps extends BaseProps {
   /** 利用可能なすべてのエリア情報 */
   areas: AreaInfo[];
-  
+
   /** カテゴリごとにグループ化されたエリア */
   areasByCategory: AreasByCategory;
-  
+
   /** 現在の表示状態 */
   visibility: AreaVisibilityMap;
-  
+
   /** 表示状態変更ハンドラ */
   onVisibilityChange: (areaId: AreaType, isVisible: boolean) => void;
-  
+
   /** すべてのエリアの表示/非表示を切り替える */
   onToggleAll: (isVisible: boolean) => void;
-  
+
   /** カテゴリ内のすべてのエリアの表示/非表示を切り替える */
   onToggleCategory: (category: AreaCategory, isVisible: boolean) => void;
 }
@@ -164,13 +158,13 @@ export interface AreaSelectorProps extends BaseProps {
 export interface InfoWindowProps extends BaseProps {
   /** 表示する詳細情報のPOIオブジェクト */
   poi: Poi;
-  
+
   /** 情報ウィンドウを閉じるときに呼び出される関数 */
   onClose: () => void;
-  
+
   /** 情報ウィンドウの設定オプション */
   config?: Partial<InfoWindowConfig>;
-  
+
   /** モバイルデバイス表示かどうか */
   isMobile?: boolean;
 }
@@ -183,10 +177,10 @@ export interface InfoWindowProps extends BaseProps {
 export interface LocationWarningProps extends BaseProps {
   /** 警告を閉じるときに呼び出される関数 */
   onClose: () => void;
-  
+
   /** 位置情報へのアクセスを再試行する関数 */
   onRetry?: () => void;
-  
+
   /** エラーメッセージ（エラー発生時） */
   errorMessage?: string;
 }
@@ -202,10 +196,10 @@ export interface LocationWarningProps extends BaseProps {
 export interface HamburgerMenuProps extends AreaFilteringProps, BaseProps {
   /** 検索クエリが送信されたときに呼び出される関数 */
   onSearch: (query: string) => void;
-  
+
   /** 現在の検索結果 */
   searchResults: Poi[];
-  
+
   /** 検索結果の項目がクリックされたときに呼び出される関数 */
   onSearchResultClick: (poi: Poi) => void;
 }
@@ -217,10 +211,10 @@ export interface HamburgerMenuProps extends AreaFilteringProps, BaseProps {
 export type MenuActionType = {
   /** エリア選択メニューを表示する関数 */
   onAreaSelect: () => void;
-  
+
   /** フィードバックフォームを表示する関数 */
   onFeedbackRequest: () => void;
-  
+
   /** 検索バーの表示/非表示を切り替える関数 */
   onToggleSearchBar: () => void;
 };
@@ -232,13 +226,13 @@ export type MenuActionType = {
 export interface MenuItem {
   /** メニュー項目の表示ラベル */
   label: string;
-  
+
   /** メニュー項目のアクセシビリティ用タイトル */
   title: string;
-  
+
   /** 実行するアクションのキー */
   action: MenuItemAction;
-  
+
   /** メニュー項目のアイコン識別子 */
   icon: string;
 }
@@ -254,7 +248,7 @@ export interface MenuItem {
 export interface FilterPanelProps extends AreaFilteringProps, BaseProps {
   /** フィルターパネルの表示/非表示状態 */
   isFilterPanelOpen: boolean;
-  
+
   /** パネルを閉じるときに呼び出される関数 */
   onClose: () => void;
 }
@@ -270,16 +264,16 @@ export interface FilterPanelProps extends AreaFilteringProps, BaseProps {
 export interface SearchBarProps extends BaseProps {
   /** 検索クエリが送信されたときに呼び出される関数 */
   onSearch: (query: string) => void;
-  
+
   /** 検索対象となるPOIの配列 */
   pois: Poi[];
-  
+
   /** プレースホルダーテキスト */
   placeholder?: string;
-  
+
   /** 検索ボタンのラベル */
   searchButtonLabel?: string;
-  
+
   /** 検索中の状態 */
   isSearching?: boolean;
 }
@@ -294,7 +288,7 @@ export interface SearchResultsProps extends BaseProps {
 
   /** 検索結果の項目がクリックされたときに呼び出されるコールバック関数 */
   onResultClick: (poi: Poi) => void;
-  
+
   /** 結果が空の場合のメッセージ */
   noResultsMessage?: string;
 }
@@ -310,10 +304,10 @@ export interface SearchResultsProps extends BaseProps {
 export interface FeedbackFormProps extends BaseProps {
   /** フォームを閉じるときに呼び出される関数 */
   onClose: () => void;
-  
+
   /** フォーム送信時に呼び出される関数 */
   onSubmit?: (formData: Record<string, unknown>) => void;
-  
+
   /** 初期フォームデータ（オプション） */
   initialData?: Record<string, unknown>;
 }

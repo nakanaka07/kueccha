@@ -1,15 +1,12 @@
 /**
  * ローディング関連定数ファイル
- * 
+ *
  * ローディング表示や遷移に関連する時間設定やデフォルト値を定義します。
  * これらの値はアプリケーション全体でローディング状態の視覚的表現を一貫させるために使用されます。
  */
 import { getEnvValue } from '../utils/env.utils';
-import type { 
-  LoadingState, 
-  validateProgress, 
-  createInitialLoadingState 
-} from '../types/loading.types';
+
+import type { LoadingState, validateProgress, createInitialLoadingState } from '../types/loading.types';
 
 // ============================================================================
 // 型定義
@@ -64,12 +61,12 @@ type AnimationConstantsType = {
 export const TimingConstants: TimingConstantsType = {
   // 即時表示（値を増やすことでローディング表示の開始を遅延させることが可能）
   LOADING_DELAY: getEnvValue<number>('VITE_LOADING_DELAY', 0, Number, {
-    logErrors: false
+    logErrors: false,
   }),
 
   // ローディング完了後、背景要素を非表示にするまでの遅延時間（ミリ秒）
   BACKGROUND_HIDE_DELAY: getEnvValue<number>('VITE_BACKGROUND_HIDE_DELAY', 1000, Number, {
-    logErrors: false
+    logErrors: false,
   }),
 
   // フェードエフェクトのデフォルト時間
@@ -79,8 +76,8 @@ export const TimingConstants: TimingConstantsType = {
 
   // ローディングのタイムアウト時間（ミリ秒）
   DEFAULT_LOADING_TIMEOUT: getEnvValue<number>('VITE_LOADING_TIMEOUT', 30000, Number, {
-    logErrors: false
-  })
+    logErrors: false,
+  }),
 };
 
 /**
@@ -90,14 +87,14 @@ export const TimingConstants: TimingConstantsType = {
 export const UIConstants: UIConstantsType = {
   // ローディング中に表示するデフォルトメッセージ
   DEFAULT_LOADING_MESSAGE: getEnvValue<string>('VITE_LOADING_MESSAGE', 'データを読み込んでいます...', String, {
-    logErrors: false
+    logErrors: false,
   }),
 
   // ローディングスピナーのデフォルトスタイルクラス
   DEFAULT_SPINNER_CLASS: 'spinner-border text-primary',
-  
+
   // モバイル用ローディングスピナーのスタイルクラス
-  MOBILE_SPINNER_CLASS: 'spinner-border spinner-border-sm text-primary'
+  MOBILE_SPINNER_CLASS: 'spinner-border spinner-border-sm text-primary',
 };
 
 /**
@@ -110,9 +107,9 @@ export const AnimationConstants: AnimationConstantsType = {
 
   // フェードイン/アウトのイージング関数
   FADE_TIMING_FUNCTION: 'ease-in-out',
-  
+
   // モバイル用のスピナーアニメーション時間（より速い）
-  MOBILE_ANIMATION_DURATION: '0.5s'
+  MOBILE_ANIMATION_DURATION: '0.5s',
 };
 
 // ============================================================================
@@ -133,16 +130,18 @@ export const DEFAULT_LOADING_TIMEOUT = TimingConstants.DEFAULT_LOADING_TIMEOUT;
 
 /**
  * デバイスに応じたローディング設定を提供する関数
- * 
+ *
  * @param isMobile モバイルデバイスかどうか
  * @returns デバイスに最適化されたローディング設定
  */
 export function getDeviceSpecificLoadingSettings(isMobile: boolean = false) {
   return {
     spinnerClass: isMobile ? UIConstants.MOBILE_SPINNER_CLASS : UIConstants.DEFAULT_SPINNER_CLASS,
-    animationDuration: isMobile ? AnimationConstants.MOBILE_ANIMATION_DURATION : AnimationConstants.SPINNER_ANIMATION_DURATION,
+    animationDuration: isMobile
+      ? AnimationConstants.MOBILE_ANIMATION_DURATION
+      : AnimationConstants.SPINNER_ANIMATION_DURATION,
     loadingDelay: isMobile ? 0 : TimingConstants.LOADING_DELAY, // モバイルではより早く表示
-    fadeTimingFunction: AnimationConstants.FADE_TIMING_FUNCTION
+    fadeTimingFunction: AnimationConstants.FADE_TIMING_FUNCTION,
   };
 }
 
@@ -155,13 +154,13 @@ export const LoadingConfig = {
   ui: UIConstants,
   animation: AnimationConstants,
   getDeviceSettings: getDeviceSpecificLoadingSettings,
-  
+
   // よく使用される組み合わせ設定
   default: {
     delay: TimingConstants.LOADING_DELAY,
     message: UIConstants.DEFAULT_LOADING_MESSAGE,
     spinnerClass: UIConstants.DEFAULT_SPINNER_CLASS,
     animationDuration: AnimationConstants.SPINNER_ANIMATION_DURATION,
-    timeout: TimingConstants.DEFAULT_LOADING_TIMEOUT
-  }
+    timeout: TimingConstants.DEFAULT_LOADING_TIMEOUT,
+  },
 };

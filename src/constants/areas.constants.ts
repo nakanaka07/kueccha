@@ -1,6 +1,6 @@
 /**
  * エリア関連定数ファイル
- * 
+ *
  * マップ上で表示される地区やカテゴリの定義、および初期表示設定を含みます。
  */
 
@@ -11,8 +11,9 @@ import {
   SpecialAreaType,
   AreaCategory,
   AreaCategoryFilter,
-  GetAreaCategoryFn
+  GetAreaCategoryFn,
 } from '../types/areas.types';
+
 import type { Poi } from '../types/poi.types';
 
 // ============================================================================
@@ -21,15 +22,10 @@ import type { Poi } from '../types/poi.types';
 
 /**
  * デフォルトで非表示のエリア
- * 
+ *
  * マップ初期表示時に非表示にするエリアのリスト。
  */
-const INITIALLY_HIDDEN_AREAS: readonly AreaType[] = [
-  'SNACK', 
-  'PUBLIC_TOILET', 
-  'PARKING', 
-  'CURRENT_LOCATION'
-] as const;
+const INITIALLY_HIDDEN_AREAS: readonly AreaType[] = ['SNACK', 'PUBLIC_TOILET', 'PARKING', 'CURRENT_LOCATION'] as const;
 
 /**
  * 地理的エリアの定義
@@ -38,10 +34,10 @@ const INITIALLY_HIDDEN_AREAS: readonly AreaType[] = [
 export const GEOGRAPHIC_AREAS: Record<RegionAreaType, string> = {
   // 佐渡島北東部
   RYOTSU_AIKAWA: '両津・相川地区',
-  
+
   // 佐渡島中部
   KANAI_SAWADA_NIIBO_HATANO_MANO: '金井・佐和田・新穂・畑野・真野地区',
-  
+
   // 佐渡島南西部
   AKADOMARI_HAMOCHI_OGI: '赤泊・羽茂・小木地区',
 } as const;
@@ -55,7 +51,7 @@ export const FACILITY_CATEGORIES: Record<FacilityAreaType | SpecialAreaType, str
   SNACK: 'スナック',
   PUBLIC_TOILET: '公共トイレ',
   PARKING: '駐車場',
-  
+
   // 特殊表示タイプ
   RECOMMEND: 'おすすめ',
   CURRENT_LOCATION: '現在地',
@@ -67,7 +63,7 @@ export const FACILITY_CATEGORIES: Record<FacilityAreaType | SpecialAreaType, str
  */
 export const SPECIAL_AREAS: Record<SpecialAreaType, string> = {
   RECOMMEND: FACILITY_CATEGORIES.RECOMMEND,
-  CURRENT_LOCATION: FACILITY_CATEGORIES.CURRENT_LOCATION
+  CURRENT_LOCATION: FACILITY_CATEGORIES.CURRENT_LOCATION,
 } as const;
 
 /**
@@ -76,7 +72,7 @@ export const SPECIAL_AREAS: Record<SpecialAreaType, string> = {
  */
 export const AREAS: Record<AreaType, string> = {
   ...GEOGRAPHIC_AREAS,
-  ...FACILITY_CATEGORIES
+  ...FACILITY_CATEGORIES,
 } as const;
 
 // ============================================================================
@@ -99,7 +95,7 @@ export const CURRENT_LOCATION_POI: Omit<Poi, 'location'> = {
 
 /**
  * 環境変数または設定から初期表示設定を取得
- * 
+ *
  * @param area エリア識別子
  * @returns そのエリアが初期表示されるかどうか
  */
@@ -108,7 +104,7 @@ function getInitialVisibility(area: AreaType): boolean {
   // const envKey = `VITE_INITIAL_VISIBILITY_${area}`;
   // const envValue = import.meta.env[envKey];
   // return envValue !== undefined ? envValue === 'true' : !INITIALLY_HIDDEN_AREAS.includes(area);
-  
+
   return !INITIALLY_HIDDEN_AREAS.includes(area);
 }
 
@@ -118,10 +114,7 @@ function getInitialVisibility(area: AreaType): boolean {
  * マップ初期表示時に、どのエリアのマーカーを表示するかの設定です。
  */
 export const INITIAL_VISIBILITY = Object.fromEntries(
-  (Object.keys(AREAS) as Array<AreaType>).map(area => [
-    area, 
-    getInitialVisibility(area)
-  ])
+  (Object.keys(AREAS) as Array<AreaType>).map((area) => [area, getInitialVisibility(area)]),
 ) as Record<AreaType, boolean>;
 
 // ============================================================================
@@ -134,58 +127,58 @@ export const INITIAL_VISIBILITY = Object.fromEntries(
 export const AreasUtil = {
   /**
    * エリアが初期表示されるかを確認
-   * 
+   *
    * @param area 確認するエリア
    * @returns 初期表示されるならtrue、そうでなければfalse
    */
   isInitiallyVisible(area: AreaType): boolean {
     return INITIAL_VISIBILITY[area];
   },
-  
+
   /**
    * 地理的エリアかどうかを確認
-   * 
+   *
    * @param area 確認するエリア
    * @returns 地理的エリアならtrue、そうでなければfalse
    */
   isGeographicArea(area: AreaType): boolean {
     return area in GEOGRAPHIC_AREAS;
   },
-  
+
   /**
    * 施設カテゴリかどうかを確認
-   * 
+   *
    * @param area 確認するエリア
    * @returns 施設カテゴリならtrue、そうでなければfalse
    */
   isFacilityCategory(area: AreaType): boolean {
     return area in FACILITY_CATEGORIES && !(area in SPECIAL_AREAS);
   },
-  
+
   /**
    * 特殊表示エリアかどうかを確認
-   * 
+   *
    * @param area 確認するエリア
    * @returns 特殊表示エリアならtrue、そうでなければfalse
    */
   isSpecialArea(area: AreaType): boolean {
     return area in SPECIAL_AREAS;
   },
-  
+
   /**
    * エリア名を取得
-   * 
+   *
    * @param area エリア
    * @returns エリアの表示名
    */
   getAreaName(area: AreaType): string {
     return AREAS[area];
   },
-  
+
   /**
    * エリアからカテゴリを取得
    * types.tsで定義されたインターフェースの実装
-   * 
+   *
    * @param area エリア識別子
    * @returns そのエリアのカテゴリ
    */
@@ -198,10 +191,10 @@ export const AreasUtil = {
       return AreaCategory.SPECIAL;
     }
   }) as GetAreaCategoryFn,
-  
+
   /**
    * エリア一覧を取得
-   * 
+   *
    * @param categoryFilter カテゴリでのフィルタリング（任意）
    * @returns エリアの配列
    */
@@ -211,25 +204,25 @@ export const AreasUtil = {
     } else if (categoryFilter === 'facility') {
       // 施設カテゴリのみ（特殊エリアを除く）
       return Object.keys(FACILITY_CATEGORIES).filter(
-        area => !AreasUtil.isSpecialArea(area as AreaType)
+        (area) => !AreasUtil.isSpecialArea(area as AreaType),
       ) as FacilityAreaType[];
     } else if (categoryFilter === 'special') {
       return Object.keys(SPECIAL_AREAS) as SpecialAreaType[];
     }
-    
+
     // フィルターなしの場合はすべてのエリアを返す
     return Object.keys(AREAS) as AreaType[];
   },
-  
+
   /**
    * 表示/非表示を切り替えた初期設定を取得
-   * 
+   *
    * @param overrides 上書きする値のオブジェクト
    * @returns 更新された表示設定
    */
   getVisibilityWithOverrides(overrides: Partial<Record<AreaType, boolean>>): Record<AreaType, boolean> {
     return { ...INITIAL_VISIBILITY, ...overrides };
-  }
+  },
 };
 
 export const getAreaCategory = AreasUtil.getAreaCategory;

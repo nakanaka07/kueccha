@@ -1,49 +1,79 @@
 import fs from 'fs';
 import path from 'path';
+
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isProd = mode === 'production';
+  const isDev = command === 'serve';
 
-  // vite.config.jsに環境変数のバリデーションを追加
-  const requiredEnvVars = ['VITE_GOOGLE_MAPS_API_KEY'];
-  requiredEnvVars.forEach(key => {
-    if (!env[key]) {
-      console.error(`Missing required environment variable: ${key}`);
-      process.exit(1);
+  // 環境変数の構成
+  const envVariables = {
+    required: ['VITE_GOOGLE_MAPS_API_KEY'],
+    optional: [
+      'VITE_GOOGLE_MAPS_MAP_ID',
+      'VITE_GOOGLE_SHEETS_API_KEY',
+      'VITE_GOOGLE_SPREADSHEET_ID',
+      'VITE_EMAILJS_SERVICE_ID',
+      'VITE_EMAILJS_TEMPLATE_ID',
+      'VITE_EMAILJS_PUBLIC_KEY',
+    ],
+  };
+
+  // 必須環境変数のバリデーション
+  const missingRequired = envVariables.required.filter((key) => !env[key]);
+  if (missingRequired.length > 0) {
+    console.error(`Missing required environment variables: ${missingRequired.join(', ')}`);
+    process.exit(1);
+  }
+
+  // オプション環境変数のバリデーション（警告のみ）
+  const missingOptional = envVariables.optional.filter((key) => !env[key]);
+  if (missingOptional.length > 0) {
+    console.warn(`Missing optional environment variables: ${missingOptional.join(', ')}`);
+  }
+
+  // 全ての環境変数をdefineに設定
+  const allEnvVars = [...envVariables.required, ...envVariables.optional];
+  const defineEnv = allEnvVars.reduce((acc, key) => {
+    if (env[key]) {
+      acc[`process.env.${key}`] = JSON.stringify(env[key]);
     }
-  });
-
-  const envVariables = [
-    'VITE_GOOGLE_MAPS_API_KEY',
-    'VITE_GOOGLE_MAPS_MAP_ID',
-    'VITE_GOOGLE_SHEETS_API_KEY',
-    'VITE_GOOGLE_SPREADSHEET_ID',
-    'VITE_EMAILJS_SERVICE_ID',
-    'VITE_EMAILJS_TEMPLATE_ID',
-    'VITE_EMAILJS_PUBLIC_KEY',
-  ];
-
-  const defineEnv = envVariables.reduce((acc, key) => {
-    acc[`process.env.${key}`] = JSON.stringify(env[key]);
     return acc;
   }, {});
 
-  const isDev = command === 'serve';
+  // SSL証明書の安全な読み込み
+  let httpsConfig = {};
+  if (isDev) {
+    try {
+      const keyPath = path.resolve(__dirname, 'localhost.key');
+      const certPath = path.resolve(__dirname, 'localhost.crt');
 
+      if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+        httpsConfig = {
+          key: fs.readFileSync(keyPath),
+          cert: fs.readFileSync(certPath),
+        };
+      } else {
+        console.warn('SSL certificates not found. Running in HTTP mode.');
+      }
+    } catch (error) {
+      console.error('Error loading SSL certificates:', error.message);
+    }
+  }
+
+  // サーバー設定
   const serverConfig = isDev
     ? {
-        https: {
-          key: fs.readFileSync(path.resolve(__dirname, 'localhost.key')),
-          cert: fs.readFileSync(path.resolve(__dirname, 'localhost.crt')),
-        },
+        https: Object.keys(httpsConfig).length ? httpsConfig : false,
         headers: {
           'Cache-Control': 'public, max-age=3600',
         },
         hmr: {
-          protocol: 'wss',
+          protocol: Object.keys(httpsConfig).length ? 'wss' : 'ws',
           host: 'localhost',
           port: 5173,
           clientPort: 5173,
@@ -53,12 +83,21 @@ export default defineConfig(({ mode, command }) => {
       }
     : {};
 
+  // Google Maps関連の依存関係を整理
+  const googleMapsPackages = [
+    '@googlemaps/js-api-loader',
+    '@react-google-maps/api',
+    // 以下のどちらかのみ使用する（プロジェクトの実際の使用状況に基づいて選択）
+    '@react-google-maps/marker-clusterer',
+    // '@googlemaps/markerclusterer',
+  ];
+
   return {
-    base: mode === 'production' ? '/kueccha/' : '/',
+    base: isProd ? '/kueccha/' : '/',
     plugins: [react(), tsconfigPaths()],
     build: {
       outDir: 'dist',
-      sourcemap: false,
+      sourcemap: isProd ? 'hidden' : true, // 本番環境でも限定的にソースマップを生成
       rollupOptions: {
         output: {
           entryFileNames: '[name].[hash].js',
@@ -72,15 +111,9 @@ export default defineConfig(({ mode, command }) => {
       },
     },
     optimizeDeps: {
-      include: [
-        '@googlemaps/js-api-loader',
-        '@react-google-maps/api',
-        '@react-google-maps/marker-clusterer',
-        '@react-google-maps/infobox',
-        '@googlemaps/markerclusterer',
-      ],
+      include: googleMapsPackages,
       esbuildOptions: {
-        sourcemap: false,
+        sourcemap: true,
         logOverride: {
           'this-is-undefined-in-esm': 'silent',
         },

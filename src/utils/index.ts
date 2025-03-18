@@ -1,6 +1,6 @@
 /**
  * ユーティリティ関数のバレルファイル
- * 
+ *
  * 純粋なユーティリティ関数を一元的にエクスポートします。
  * アプリケーション基盤を支える汎用的な関数を提供し、
  * 実装の詳細を抽象化します。
@@ -28,8 +28,8 @@ export * from './geo.utils';
 
 import * as EnvUtils from './env.utils';
 import * as ErrorsUtils from './errors.utils';
-import * as StringUtils from './string.utils';
 import * as GeoUtils from './geo.utils';
+import * as StringUtils from './string.utils';
 
 // ============================================================================
 // 名前空間によるグループ化
@@ -37,7 +37,7 @@ import * as GeoUtils from './geo.utils';
 
 /**
  * 環境変数操作ユーティリティ
- * 
+ *
  * 環境変数の安全な取得と検証のための関数群
  */
 export const Env = {
@@ -55,7 +55,7 @@ export const Env = {
 
 /**
  * エラー処理ユーティリティ
- * 
+ *
  * 標準化されたエラー処理と多言語対応メッセージの取得
  */
 export const Errors = {
@@ -73,7 +73,7 @@ export const Errors = {
 
 /**
  * 文字列操作ユーティリティ
- * 
+ *
  * 文字列のフォーマットと操作のための関数群
  */
 export const Strings = {
@@ -85,7 +85,7 @@ export const Strings = {
 
 /**
  * 地理情報ユーティリティ
- * 
+ *
  * 位置情報の計算、検証、フォーマットのための関数群
  */
 export const Geo = {
@@ -111,7 +111,7 @@ export const Geo = {
 
 /**
  * 共通ユーティリティ関数
- * 
+ *
  * 頻繁に使用される関数へのショートカットアクセス
  */
 export const Utils = {
@@ -135,7 +135,7 @@ export const Utils = {
  *   import { CONFIG } from '../services/config';
  *   import { isMobileDevice } from '../services/device';
  *   import { formatPoiDetails } from '../services/formatters';
- * 
+ *
  * または、services バレルファイルを使用:
  *   import { Config, Device, Formatters } from '../services';
  */

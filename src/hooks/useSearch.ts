@@ -4,6 +4,7 @@
 // useRef: ミュータブルなrefオブジェクトを作成するためのフック
 // useEffect: 副作用を処理するためのフック
 import { useState, useCallback, useRef, useEffect } from 'react';
+
 // POI（ポイントオブインタレスト）の型定義をインポートします。
 import type { Poi } from '../types/types';
 

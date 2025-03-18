@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { ERROR_MESSAGES } from '../constants/constants';
 
 const useCurrentLocation = (setShowWarning: (show: boolean) => void) => {

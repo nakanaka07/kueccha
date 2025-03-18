@@ -1,6 +1,6 @@
 /**
  * 位置情報関連の型定義ファイル
- * 
+ *
  * 地理的な位置情報と座標データ構造を定義します。
  * Google Maps APIとの互換性を持ちつつ、型安全性を高めた実装です。
  */
@@ -31,7 +31,7 @@ export type Longitude = number & { readonly __brand: unique symbol };
 export interface LatLngLiteral {
   /** 緯度（-90〜90の範囲） */
   lat: Latitude | number;
-  
+
   /** 経度（-180〜180の範囲） */
   lng: Longitude | number;
 }
@@ -43,7 +43,7 @@ export interface LatLngLiteral {
 export interface Bounds {
   /** 北東端の座標 */
   northeast: LatLngLiteral;
-  
+
   /** 南西端の座標 */
   southwest: LatLngLiteral;
 }
@@ -69,7 +69,7 @@ export enum ControlPosition {
   RIGHT_BOTTOM = 9,
   BOTTOM_LEFT = 10,
   BOTTOM_CENTER = 11,
-  BOTTOM_RIGHT = 12
+  BOTTOM_RIGHT = 12,
 }
 
 /**
@@ -86,7 +86,7 @@ export type ControlPositionString = keyof typeof ControlPosition;
 export enum MapTypeControlStyle {
   DEFAULT = 0,
   HORIZONTAL_BAR = 1,
-  DROPDOWN_MENU = 2
+  DROPDOWN_MENU = 2,
 }
 
 // ============================================================================
@@ -100,7 +100,7 @@ export enum MapTypeControlStyle {
 export interface Distance {
   /** 距離の値 */
   value: number;
-  
+
   /** 距離の単位 */
   unit: 'km' | 'm' | 'mi' | 'ft';
 }
@@ -112,10 +112,10 @@ export interface Distance {
 export interface GeolocationAccuracy {
   /** 精度（メートル） */
   accuracy: number;
-  
+
   /** 高精度モードが使用されたか */
   isHighAccuracy: boolean;
-  
+
   /** タイムスタンプ */
   timestamp: number;
 }
@@ -136,10 +136,10 @@ export type MapTypeId = google.maps.MapTypeId | 'roadmap' | 'satellite' | 'hybri
 export interface MapStyleOptions {
   /** スタイルの名称 */
   name: string;
-  
+
   /** スタイルの説明 */
   description?: string;
-  
+
   /** Google Maps API用のスタイル配列 */
   styles: google.maps.MapTypeStyle[];
 }
@@ -183,7 +183,7 @@ export function createLongitude(value: number): Longitude {
 export function createLatLng(lat: number, lng: number): LatLngLiteral {
   return {
     lat: createLatitude(lat),
-    lng: createLongitude(lng)
+    lng: createLongitude(lng),
   };
 }
 
@@ -199,31 +199,19 @@ export function validateLatLng(location: LatLngLiteral): LatLngLiteral {
 /**
  * 2地点間の距離を計算する関数の型定義
  */
-export type DistanceCalculator = (
-  point1: LatLngLiteral,
-  point2: LatLngLiteral,
-  unit?: Distance['unit']
-) => Distance;
+export type DistanceCalculator = (point1: LatLngLiteral, point2: LatLngLiteral, unit?: Distance['unit']) => Distance;
 
 /**
  * 指定した座標が境界ボックス内にあるかを判定する関数の型定義
  */
-export type BoundsChecker = (
-  point: LatLngLiteral,
-  bounds: Bounds
-) => boolean;
+export type BoundsChecker = (point: LatLngLiteral, bounds: Bounds) => boolean;
 
 /**
  * 座標を文字列表現に変換する関数の型
  */
-export type LatLngFormatter = (
-  location: LatLngLiteral,
-  format?: 'dms' | 'dec'
-) => string;
+export type LatLngFormatter = (location: LatLngLiteral, format?: 'dms' | 'dec') => string;
 
 /**
  * 複数地点から境界を計算する関数の型
  */
-export type BoundsCalculator = (
-  points: LatLngLiteral[]
-) => Bounds | null;
+export type BoundsCalculator = (points: LatLngLiteral[]) => Bounds | null;

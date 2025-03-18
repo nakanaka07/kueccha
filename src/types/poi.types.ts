@@ -1,12 +1,12 @@
 /**
  * POI（ポイントオブインタレスト）関連の型定義ファイル
- * 
+ *
  * マップ上に表示される各地点のデータ構造を定義します。
  */
 
-import { LatLngLiteral } from './geo.types';
 import { AreaType } from './areas.types';
 import { BaseEntity } from './base.types';
+import { LatLngLiteral } from './geo.types';
 
 // ============================================================================
 // POIの基本分類と属性
@@ -16,27 +16,20 @@ import { BaseEntity } from './base.types';
  * POIのジャンルを表す型
  * 各POIの大分類カテゴリを識別するために使用されます。
  */
-export type PoiGenre = 
-  | 'restaurant' 
-  | 'cafe' 
-  | 'shop' 
-  | 'attraction' 
-  | 'facility' 
-  | 'current_location' 
-  | 'other';
+export type PoiGenre = 'restaurant' | 'cafe' | 'shop' | 'attraction' | 'facility' | 'current_location' | 'other';
 
 /**
  * 営業時間のキーを表す型
  * 営業時間の曜日や特定の時間帯を識別するために使用されます。
  */
-export type BusinessHourKey = 
-  | 'monday' 
-  | 'tuesday' 
-  | 'wednesday' 
-  | 'thursday' 
-  | 'friday' 
-  | 'saturday' 
-  | 'sunday' 
+export type BusinessHourKey =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
   | 'holiday';
 
 /**
@@ -52,16 +45,16 @@ export type MarkerAnimation = 'BOUNCE' | 'DROP' | 'NONE';
 export interface MarkerDisplayOptions {
   /** アイコンのURL または 識別子 */
   icon?: string;
-  
+
   /** マーカーの色 (CSS色形式) */
   color?: string;
-  
+
   /** 不透明度 (0.0-1.0) */
   opacity?: number;
-  
+
   /** アニメーション種類 */
   animation?: MarkerAnimation;
-  
+
   /** マーカーの優先表示順位 (高いほど前面に表示) */
   zIndex?: number;
 }
@@ -77,49 +70,49 @@ export interface MarkerDisplayOptions {
 export interface Poi extends BaseEntity {
   /** POIの名称 */
   name: string;
-  
+
   /** POIの位置（緯度・経度） */
   location: LatLngLiteral;
-  
+
   /** POIが属するエリア */
   area: AreaType;
-  
+
   /** POIのジャンル */
   genre: PoiGenre;
-  
+
   /** POIのカテゴリ（より詳細な分類） */
   category: string;
-  
+
   /** 営業時間情報 */
   businessHours?: Partial<Record<BusinessHourKey, string>>;
-  
+
   /** 定休日や特別営業日の情報 */
   holidayInfo?: string;
-  
+
   /** 駐車場の有無や情報 */
   parking?: string;
-  
+
   /** 利用可能な決済方法 */
   payment?: string;
-  
+
   /** その他の追加情報 */
   information?: string;
-  
+
   /** 外観表示用URL */
   view?: string;
-  
+
   /** 連絡先電話番号 */
   phone?: string;
-  
+
   /** 物理的な住所 */
   address?: string;
-  
+
   /** マーカー表示設定 */
   markerOptions?: MarkerDisplayOptions;
-  
+
   /** 検索用のキーワード */
   keywords?: string[];
-  
+
   /** 詳細情報URL */
   detailUrl?: string;
 }
@@ -135,7 +128,7 @@ export interface Poi extends BaseEntity {
 export interface BusinessHourItem {
   /** 表示用の曜日名（例：「月曜日」） */
   day: string;
-  
+
   /** データアクセス用のキー */
   key: BusinessHourKey;
 }
@@ -147,10 +140,10 @@ export interface BusinessHourItem {
 export interface PoiSearchResult {
   /** 検索結果のPOI */
   poi: Poi;
-  
+
   /** 検索クエリとの関連性スコア (0-100) */
   relevance: number;
-  
+
   /** クエリとマッチした部分 (ハイライト用) */
   matchedFields: string[];
 }
@@ -162,19 +155,19 @@ export interface PoiSearchResult {
 export interface PoiSearchParams {
   /** 検索クエリ文字列 */
   query?: string;
-  
+
   /** 特定のエリアに限定 */
   area?: AreaType | AreaType[];
-  
+
   /** 特定のジャンルに限定 */
   genre?: PoiGenre | PoiGenre[];
-  
+
   /** 特定のカテゴリに限定 */
   category?: string | string[];
-  
+
   /** 検索結果の最大数 */
   limit?: number;
-  
+
   /** 検索の最小関連性スコア */
   minRelevance?: number;
 }
@@ -184,19 +177,19 @@ export interface PoiSearchParams {
  * データ取得と検索機能を提供します
  */
 export interface PoiDataSource {
-  /** 
+  /**
    * すべてのPOIを取得
    * @returns POIの配列
    */
   getAllPois(): Promise<Poi[]>;
-  
+
   /**
    * IDでPOIを取得
    * @param id POIのID
    * @returns 指定されたIDのPOI、見つからない場合はnull
    */
   getPoiById(id: string): Promise<Poi | null>;
-  
+
   /**
    * 検索条件に一致するPOIを検索
    * @param params 検索パラメータ

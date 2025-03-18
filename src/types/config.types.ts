@@ -1,14 +1,14 @@
 /**
  * アプリケーション設定関連の型定義ファイル
- * 
+ *
  * アプリケーション全体の設定に関する型を定義します。
  * すべての設定パラメータの型安全な構造を提供します。
  */
 
 /// <reference types="@types/google.maps" />
+import { AreaType } from './areas.types';
 import { MapConfig } from './maps.types';
 import { SheetsConfig } from './sheets.types';
-import { AreaType } from './areas.types';
 
 // ============================================================================
 // 環境設定関連の型定義
@@ -25,13 +25,13 @@ export type EnvironmentName = 'development' | 'production' | 'test';
 export interface EnvironmentConfig {
   /** 環境名 */
   name: EnvironmentName;
-  
+
   /** デバッグモードを有効にするか */
   debug: boolean;
-  
+
   /** ログレベル */
   logLevel: 'error' | 'warn' | 'info' | 'debug';
-  
+
   /** API呼び出しのキャッシュを有効にするか */
   cacheEnabled: boolean;
 }
@@ -47,16 +47,16 @@ export interface EnvironmentConfig {
 export interface MarkerCustomOptions {
   /** デフォルトの不透明度（0.0-1.0） */
   defaultOpacity: number;
-  
+
   /** 選択時のアニメーション */
   selectedAnimation: google.maps.Animation | null;
-  
+
   /** デフォルトのマーカーサイズ */
   defaultSize?: {
     width: number;
     height: number;
   };
-  
+
   /** 選択時の強調表示設定 */
   highlight?: {
     zIndex: number;
@@ -71,10 +71,10 @@ export interface MarkerCustomOptions {
 export interface DisplayConfig {
   /** デフォルトで表示するエリア */
   defaultVisibleAreas: AreaType[];
-  
+
   /** マーカーのカスタム設定 */
   markerOptions: MarkerCustomOptions;
-  
+
   /** モバイルデバイスでの表示調整 */
   mobile: {
     /** メニューボタンの表示位置 */
@@ -94,13 +94,13 @@ export interface DisplayConfig {
 export interface ErrorHandlingConfig {
   /** API呼び出しの再試行回数 */
   retryCount: number;
-  
+
   /** 再試行間隔（ミリ秒） */
   retryInterval: number;
-  
+
   /** エラーレポートを送信するかどうか */
   reportErrors: boolean;
-  
+
   /** エラーログを表示するかどうか */
   showErrors: boolean;
 }
@@ -115,16 +115,16 @@ export interface ErrorHandlingConfig {
 export interface AppConfig {
   /** 環境設定 */
   environment: EnvironmentConfig;
-  
+
   /** Google Maps関連の設定 */
   maps: MapConfig;
-  
+
   /** Google Sheets関連の設定 */
   sheets: SheetsConfig;
-  
+
   /** エリアやマーカーの表示設定 */
   display: DisplayConfig;
-  
+
   /** エラー処理の設定 */
   errorHandling: ErrorHandlingConfig;
 }

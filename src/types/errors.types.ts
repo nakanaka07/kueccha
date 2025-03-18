@@ -1,11 +1,12 @@
 /**
  * エラー関連の型定義ファイル
- * 
+ *
  * エラー処理に関連する型を定義します。エラーバウンダリ、エラーコード、
  * エラーメッセージ、およびアプリケーションエラーの構造を含みます。
  */
 
 import { ReactNode, ErrorInfo } from 'react';
+
 import { BaseProps } from './base.types';
 
 // i18n関連の型をインポート
@@ -19,14 +20,14 @@ import { SupportedLanguage } from '../constants/i18n.constants';
  * エラーカテゴリを定義
  * エラーメッセージのトップレベルカテゴリ
  */
-export type ErrorCategory = 
+export type ErrorCategory =
   | 'CONFIG'
-  | 'DATA' 
-  | 'LOADING' 
-  | 'MAP' 
-  | 'SYSTEM' 
-  | 'FORM' 
-  | 'ERROR_BOUNDARY' 
+  | 'DATA'
+  | 'LOADING'
+  | 'MAP'
+  | 'SYSTEM'
+  | 'FORM'
+  | 'ERROR_BOUNDARY'
   | 'GEOLOCATION';
 
 /**
@@ -44,7 +45,7 @@ export type ErrorCode<T extends ErrorCategory> = string;
  */
 export enum CommonErrorCode {
   /** 不明なエラー */
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
 }
 
 // ============================================================================
@@ -58,7 +59,7 @@ export enum ConfigErrorCode {
   /** 設定が無効 */
   INVALID = 'INVALID',
   /** 必要な設定が見つからない */
-  MISSING = 'MISSING'
+  MISSING = 'MISSING',
 }
 
 /**
@@ -70,7 +71,7 @@ export enum DataErrorCode {
   /** データの読み込みに失敗 */
   LOADING_FAILED = 'LOADING_FAILED',
   /** データが見つからない */
-  NOT_FOUND = 'NOT_FOUND'
+  NOT_FOUND = 'NOT_FOUND',
 }
 
 /**
@@ -80,7 +81,7 @@ export enum LoadingErrorCode {
   /** データ読み込みエラー */
   DATA = 'DATA',
   /** マップ読み込みエラー */
-  MAP = 'MAP'
+  MAP = 'MAP',
 }
 
 /**
@@ -92,7 +93,7 @@ export enum MapErrorCode {
   /** マップ設定が見つからない */
   CONFIG_MISSING = 'CONFIG_MISSING',
   /** 再試行メッセージ */
-  RETRY_MESSAGE = 'RETRY_MESSAGE'
+  RETRY_MESSAGE = 'RETRY_MESSAGE',
 }
 
 /**
@@ -102,7 +103,7 @@ export enum SystemErrorCode {
   /** コンテナ要素が見つからない */
   CONTAINER_NOT_FOUND = 'CONTAINER_NOT_FOUND',
   /** 不明なシステムエラー */
-  UNKNOWN = CommonErrorCode.UNKNOWN
+  UNKNOWN = CommonErrorCode.UNKNOWN,
 }
 
 /**
@@ -122,7 +123,7 @@ export enum FormErrorCode {
   /** フィールドが短すぎる */
   FIELD_TOO_SHORT = 'FIELD_TOO_SHORT',
   /** フィールドが長すぎる */
-  FIELD_TOO_LONG = 'FIELD_TOO_LONG'
+  FIELD_TOO_LONG = 'FIELD_TOO_LONG',
 }
 
 /**
@@ -132,7 +133,7 @@ export enum ErrorBoundaryErrorCode {
   /** 不明なエラー */
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
   /** 再試行ボタン */
-  RETRY_BUTTON = 'RETRY_BUTTON'
+  RETRY_BUTTON = 'RETRY_BUTTON',
 }
 
 /**
@@ -146,7 +147,7 @@ export enum GeolocationErrorCode {
   /** 位置情報の取得がタイムアウトした */
   TIMEOUT = 'TIMEOUT',
   /** 不明な位置情報エラー */
-  UNKNOWN = CommonErrorCode.UNKNOWN
+  UNKNOWN = CommonErrorCode.UNKNOWN,
 }
 
 /**
@@ -161,7 +162,7 @@ export const ERROR_CODE_MAPPINGS = {
   SYSTEM: SystemErrorCode,
   FORM: FormErrorCode,
   ERROR_BOUNDARY: ErrorBoundaryErrorCode,
-  GEOLOCATION: GeolocationErrorCode
+  GEOLOCATION: GeolocationErrorCode,
 };
 
 /**
@@ -196,28 +197,28 @@ export type ErrorMessagesSchema = {
 export interface AppError<T = unknown> {
   /** エラーカテゴリ */
   category: ErrorCategory;
-  
+
   /** エラーコード */
   code: string;
-  
+
   /** エラーメッセージ */
   message: string;
-  
+
   /** 多言語対応メッセージ */
   localized?: Record<SupportedLanguage, string>;
-  
+
   /** エラー発生時刻 */
   timestamp: Date;
-  
+
   /** パラメータの値 */
   params?: Record<string, string | number>;
-  
+
   /** 追加の詳細情報 */
   details?: T;
-  
+
   /** 元のエラー */
   originalError?: Error;
-  
+
   /** エラーのコンテキスト情報 */
   context?: Record<string, unknown>;
 }
@@ -238,16 +239,16 @@ export type ResetKeyValue = string | number | boolean | object | null | undefine
 export interface ErrorBoundaryProps extends BaseProps {
   /** エラーバウンダリで保護する子コンポーネント */
   children: ReactNode;
-  
+
   /** エラー発生時に表示する代替UI */
   fallback?: ReactNode;
-  
+
   /** エラー通知コールバック */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  
+
   /** リセット時のコールバック */
   onReset?: () => void;
-  
+
   /** これらの値が変更されたらエラー状態をリセット */
   resetKeys?: Array<ResetKeyValue>;
 }
@@ -259,10 +260,10 @@ export interface ErrorBoundaryProps extends BaseProps {
 export interface ErrorBoundaryState {
   /** エラーが発生したかどうかのフラグ */
   hasError: boolean;
-  
+
   /** キャッチされたエラーオブジェクト */
   error: Error | null;
-  
+
   /** エラーが発生したコンポーネントのスタック情報 */
   errorInfo: ErrorInfo | null;
 }
@@ -273,7 +274,7 @@ export interface ErrorBoundaryState {
 
 /**
  * 値がAppErrorかどうかをチェックする型ガード関数
- * 
+ *
  * @param error - チェックする値
  * @returns AppError型かどうかを示すブール値
  */
@@ -290,28 +291,28 @@ export function isAppError(error: unknown): error is AppError {
 
 /**
  * エラーをAppError型に変換する
- * 
+ *
  * @param error - 変換する元のエラー
  * @param defaultCategory - デフォルトのエラーカテゴリ
  * @param defaultCode - デフォルトのエラーコード
  * @returns AppError型に変換されたエラー
  */
 export function toAppError(
-  error: unknown, 
-  defaultCategory: ErrorCategory = 'SYSTEM', 
-  defaultCode: string = CommonErrorCode.UNKNOWN
+  error: unknown,
+  defaultCategory: ErrorCategory = 'SYSTEM',
+  defaultCode: string = CommonErrorCode.UNKNOWN,
 ): AppError {
   if (isAppError(error)) {
     return error;
   }
-  
+
   const message = error instanceof Error ? error.message : String(error);
-  
+
   return {
     category: defaultCategory,
     code: defaultCode,
     message,
     timestamp: new Date(),
-    originalError: error instanceof Error ? error : undefined
+    originalError: error instanceof Error ? error : undefined,
   };
 }

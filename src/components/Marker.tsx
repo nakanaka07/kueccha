@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+
 import { MARKER_ICONS } from '../constants/constants';
 import { MarkerProps } from '../types/types';
 
@@ -7,7 +8,7 @@ const Marker = React.memo(
     const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
     useEffect(() => {
-      if (!map || !window.google?.maps) return;
+      if (!map || !window.google.maps) return;
 
       const iconUrl = MARKER_ICONS[poi.area] || MARKER_ICONS.DEFAULT;
       const iconElement = document.createElement('div');

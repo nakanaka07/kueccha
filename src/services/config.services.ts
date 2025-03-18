@@ -5,16 +5,10 @@
  * 環境変数の検証や必須設定の確認を行います。
  */
 
-import {
-  MAPS_CONFIG,
-  SHEETS_CONFIG,
-  MARKER_CONFIG,
-  ERROR_MESSAGES,
-  INITIAL_VISIBILITY,
-  AREAS
-} from '../constants';
-import type { AppConfig, AreaType } from '../types';
+import { MAPS_CONFIG, SHEETS_CONFIG, MARKER_CONFIG, ERROR_MESSAGES, INITIAL_VISIBILITY, AREAS } from '../constants';
 import { checkRequiredEnvVars } from '../utils/env.utils';
+
+import type { AppConfig, AreaType } from '../types';
 
 /**
  * アプリケーションの必須環境変数
@@ -23,7 +17,7 @@ const REQUIRED_ENV_VARS = [
   'VITE_GOOGLE_MAPS_API_KEY',
   'VITE_GOOGLE_MAPS_MAP_ID',
   'VITE_GOOGLE_SHEETS_API_KEY',
-  'VITE_GOOGLE_SPREADSHEET_ID'
+  'VITE_GOOGLE_SPREADSHEET_ID',
 ] as const;
 
 /**
@@ -48,25 +42,23 @@ export const CONFIG: AppConfig = {
     defaultVisibleAreas: getDefaultVisibleAreas(),
     markerOptions: {
       defaultOpacity: 1.0,
-      selectedAnimation: 'BOUNCE' as google.maps.Animation.BOUNCE
-    }
-  }
+      selectedAnimation: 'BOUNCE' as google.maps.Animation.BOUNCE,
+    },
+  },
 };
 
 /**
  * 設定を検証する関数
- * 
+ *
  * @param config - 検証する設定オブジェクト
  * @throws 環境変数や設定が不足している場合にエラーをスロー
  */
 export const validateConfig = (config: AppConfig): void => {
   // 環境変数の検証 - 改善されたenv.utilsの関数を使用
   const missingVars = checkRequiredEnvVars(REQUIRED_ENV_VARS);
-  
+
   if (missingVars.length > 0) {
-    throw new Error(
-      `${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`
-    );
+    throw new Error(`${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`);
   }
 
   // 設定値の検証
@@ -86,9 +78,7 @@ export const validateConfig = (config: AppConfig): void => {
   }
 
   // エリア識別子の検証 - 存在しないエリアが指定されていないかチェック
-  const invalidAreas = config.display.defaultVisibleAreas.filter(
-    area => !(area in AREAS)
-  );
+  const invalidAreas = config.display.defaultVisibleAreas.filter((area) => !(area in AREAS));
 
   if (invalidAreas.length > 0) {
     console.warn(`無効なエリア識別子が指定されています: ${invalidAreas.join(', ')}`);

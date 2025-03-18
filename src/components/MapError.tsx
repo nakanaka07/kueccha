@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { MapErrorProps } from '../types/types';
 
 export const MapError: React.FC<MapErrorProps> = ({ message, onRetry }) => {

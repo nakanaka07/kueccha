@@ -1,14 +1,14 @@
 /**
  * マーカー関連の型定義ファイル
- * 
+ *
  * マップ上に表示されるマーカーのプロパティやオプションを定義します。
  * このファイルにはマーカーの表示、イベント処理、スタイリングに関する型が含まれています。
  */
 
 /// <reference types="@types/google.maps" />
+import { AreaType } from './areas.types';
 import { BaseProps } from './base.types';
 import { Poi } from './poi.types';
-import { AreaType } from './areas.types';
 
 // ============================================================================
 // マーカーコンポーネントとイベント
@@ -21,13 +21,13 @@ import { AreaType } from './areas.types';
 export interface MarkerEvents {
   /** クリック時の処理 */
   onClick: (poi: Poi) => void;
-  
+
   /** マウスオーバー時の処理（オプション） */
   onMouseOver?: (poi: Poi) => void;
-  
+
   /** マウスアウト時の処理（オプション） */
   onMouseOut?: (poi: Poi) => void;
-  
+
   /** ドラッグ終了時の処理（オプション） */
   onDragEnd?: (poi: Poi, position: google.maps.LatLng) => void;
 }
@@ -37,24 +37,24 @@ export interface MarkerEvents {
  * マップ上のPOI位置を表示するマーカーを制御します
  */
 export interface MarkerProps extends BaseProps {
-  /** 
+  /**
    * マーカーで表示するPOI（地点情報）
    * マーカーの位置や追加情報として使用されます
    */
   poi: Poi;
-  
-  /** 
+
+  /**
    * マーカーイベントハンドラ
    * 少なくとも onClick ハンドラは必須です
    */
   events: MarkerEvents;
-  
-  /** 
+
+  /**
    * マーカーが配置されるマップインスタンス
    * マーカーが表示されるにはnull以外の値が必要です
    */
   map: google.maps.Map;
-  
+
   /**
    * マーカースタイル
    * 指定しない場合はデフォルトスタイルが適用されます
@@ -69,19 +69,19 @@ export interface MarkerProps extends BaseProps {
 export interface MarkerGroupProps extends BaseProps {
   /** 表示するPOIの配列 */
   pois: Poi[];
-  
+
   /** マーカーイベントハンドラ */
   events: MarkerEvents;
-  
+
   /** マーカーが配置されるマップインスタンス */
   map: google.maps.Map;
-  
+
   /** スタイル生成関数 */
   styleGenerator: MarkerStyleGenerator;
-  
+
   /** POIのフィルタリング関数（オプション） */
   filter?: (poi: Poi) => boolean;
-  
+
   /** クラスタリングオプション（オプション） */
   clusterOptions?: MarkerClusterOptions;
 }
@@ -97,7 +97,7 @@ export interface MarkerGroupProps extends BaseProps {
 export interface MarkerSize {
   /** 幅（ピクセル） */
   width: number;
-  
+
   /** 高さ（ピクセル） */
   height: number;
 }
@@ -115,13 +115,13 @@ export type MarkerAnimation = google.maps.Animation | null;
 export interface BaseMarkerStyle {
   /** マーカーのサイズ */
   size: MarkerSize;
-  
+
   /** マーカーの色（16進数カラーコードなど） */
   color: string;
-  
+
   /** マーカーの優先順位（高いほど前面に表示） */
   zIndex?: number;
-  
+
   /** マーカーのアニメーション */
   animation?: MarkerAnimation;
 }
@@ -133,13 +133,13 @@ export interface BaseMarkerStyle {
 export interface MarkerStyleOptions extends BaseMarkerStyle {
   /** マーカーのアイコンURL */
   iconUrl: string;
-  
+
   /** マーカーの不透明度（0.0〜1.0） */
   opacity?: number;
-  
+
   /** マーカーのラベル */
   label?: string | google.maps.MarkerLabel;
-  
+
   /** マーカーが選択状態かどうか */
   isSelected?: boolean;
 }
@@ -151,13 +151,13 @@ export interface MarkerStyleOptions extends BaseMarkerStyle {
 export interface MarkerConfigAttributes extends BaseMarkerStyle {
   /** マーカーのアイコン画像パス */
   icon: string;
-  
+
   /** スクリーンリーダー用の説明文 */
   accessibilityLabel: string;
-  
+
   /** モバイルデバイス用のサイズ調整 */
   mobileSize?: MarkerSize;
-  
+
   /** マーカー選択時のハイライト色 */
   highlightColor?: string;
 }
@@ -166,22 +166,16 @@ export interface MarkerConfigAttributes extends BaseMarkerStyle {
  * マーカーオプションを生成する関数の型
  * エリアタイプやPOIオブジェクトに基づいてマーカースタイルを決定します
  */
-export type MarkerStyleGenerator = (
-  areaOrPoi: AreaType | Poi, 
-  isSelected?: boolean
-) => MarkerStyleOptions;
+export type MarkerStyleGenerator = (areaOrPoi: AreaType | Poi, isSelected?: boolean) => MarkerStyleOptions;
 
 /**
  * 設定用マーカー属性からスタイルオプションへの変換関数
- * 
+ *
  * @param config マーカー設定属性
  * @param isSelected 選択状態かどうか
  * @returns Google Maps APIのマーカースタイルオプション
  */
-export function configToStyleOptions(
-  config: MarkerConfigAttributes, 
-  isSelected: boolean = false
-): MarkerStyleOptions {
+export function configToStyleOptions(config: MarkerConfigAttributes, isSelected: boolean = false): MarkerStyleOptions {
   return {
     iconUrl: config.icon,
     size: config.size,
@@ -189,7 +183,7 @@ export function configToStyleOptions(
     zIndex: config.zIndex,
     animation: config.animation,
     isSelected,
-    label: config.accessibilityLabel
+    label: config.accessibilityLabel,
   };
 }
 
@@ -203,19 +197,19 @@ export function configToStyleOptions(
 export interface ClusterIconStyle {
   /** クラスタアイコンの画像URL */
   url: string;
-  
+
   /** アイコンの高さ（ピクセル） */
   height: number;
-  
+
   /** アイコンの幅（ピクセル） */
   width: number;
-  
+
   /** クラスタ内のマーカー数を表示するテキストの色 */
   textColor?: string;
-  
+
   /** テキストサイズ（ピクセル） */
   textSize?: number;
-  
+
   /** 背景画像のアンカー位置（x, y座標） */
   anchor?: [number, number];
 }
@@ -226,19 +220,19 @@ export interface ClusterIconStyle {
 export interface MarkerClusterOptions {
   /** クラスタリングを有効にするかどうか */
   enabled: boolean;
-  
+
   /** クラスタ化する最小マーカー数 */
   minimumClusterSize?: number;
-  
+
   /** クラスタアイコンのスタイル配列（ズームレベルに応じた複数のスタイル） */
   styles?: ClusterIconStyle[];
-  
+
   /** クラスタの最大ズームレベル（これ以上ズームするとクラスタが解除される） */
   maxZoom?: number;
-  
+
   /** クラスタの平均中心を計算するかグリッド上に配置するか */
   gridSize?: number;
-  
+
   /** クラスタがクリックされたときのズーム動作 */
   zoomOnClick?: boolean;
 }

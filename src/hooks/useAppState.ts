@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import { INITIAL_VISIBILITY } from '../constants/constants';
+
 import type { Poi, AreaType, LatLngLiteral } from '../types/types';
 
 export const useAppState = (pois: Poi[]) => {

@@ -1,27 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import { MENU_ITEMS } from '../../utils/constants';
 import SearchBar from '../searchbar/SearchBar';
 import SearchResults from '../searchresults/SearchResults';
+
 import type { HamburgerMenuProps } from '../../utils/types';
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
-  pois,
-  search,
-  searchResults,
-  handleSearchResultClick,
-}) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResults, handleSearchResultClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   const menuActions = useMemo(
     () => ({
       toggleSearchBar: () => {
-        setIsSearchBarVisible(prev => !prev);
+        setIsSearchBarVisible((prev) => !prev);
         setIsOpen(false);
       },
     }),
@@ -53,15 +50,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   return (
     <div ref={menuRef}>
       <div>
-        <button
-          onClick={toggleMenu}
-          title="メニューを開閉"
-          aria-expanded={isOpen}
-          aria-controls="menu-content"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
+        <button onClick={toggleMenu} title="メニューを開閉" aria-expanded={isOpen} aria-controls="menu-content">
+          <span />
+          <span />
+          <span />
           <span>メニュー</span>
         </button>
         <nav id="menu-content" aria-hidden={!isOpen}>

@@ -1,8 +1,9 @@
 import React, { Suspense, StrictMode, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
+
+import { ErrorDisplay } from './components/ErrorDisplay';
 import { ERROR_MESSAGES } from './constants/constants';
 import { createError } from './utils/errors';
-import { ErrorDisplay } from './components/ErrorDisplay';
 
 // 遅延ロードでAppコンポーネントをインポート
 const App = lazy(() => import('./App'));
@@ -20,7 +21,7 @@ function renderApp() {
     }
 
     const root = createRoot(container);
-    
+
     root.render(
       <>
         {isDevelopment ? (
@@ -30,7 +31,7 @@ function renderApp() {
         ) : (
           <RenderWithErrorHandling />
         )}
-      </>
+      </>,
     );
   } catch (error) {
     handleFatalError(error);
@@ -51,14 +52,14 @@ const RenderWithErrorHandling: React.FC = () => (
  */
 function handleFatalError(error: unknown) {
   console.error('アプリケーションの初期化に失敗しました:', error);
-  
+
   const errorContainer = document.getElementById('app') || document.body;
-  
+
   const appError = createError(
     'SYSTEM',
     'INIT_FAILED',
     error instanceof Error ? error.message : '予期せぬエラーが発生しました',
-    'FATAL_STARTUP_ERROR'
+    'FATAL_STARTUP_ERROR',
   );
 
   try {

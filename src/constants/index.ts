@@ -1,6 +1,6 @@
 /**
  * 定数のバレルファイル
- * 
+ *
  * すべての定数を一箇所からエクスポートします。
  * 論理的なグループ分けと名前空間によって整理されており、名前の衝突を防ぎます。
  */
@@ -11,30 +11,27 @@
 
 // Core名前空間用のインポート
 import { AppInfo } from './app.constants';
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './i18n.constants';
+import { AreasUtil, AREAS } from './areas.constants';
+import { DEFAULT_CONFIG } from './config.constants';
+import { ERROR_MESSAGES } from './errors.constants';
 import { SADO_CENTER, SADO_BOUNDS } from './geo.constants';
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './i18n.constants';
 
 // UI名前空間用のインポート
 import { LoadingConfig } from './loading.constants';
-import { INFO_WINDOW_CONFIG, MENU_ITEMS } from './ui.constants';
 
 // データ名前空間用のインポート
-import { SHEETS_CONFIG, dataTransformHelpers } from './sheets.constants';
 
 // マップ名前空間用のインポート
 import { MAPS_CONFIG } from './maps.constants';
 import { MARKERS_BY_AREA } from './markers.constants';
-import { AreasUtil, AREAS } from './areas.constants';
-import { 
-  POI_GENRE_DISPLAY_NAMES, 
-  getMarkerOptionsForGenre 
-} from './poi.constants';
+import { POI_GENRE_DISPLAY_NAMES, getMarkerOptionsForGenre } from './poi.constants';
+import { SHEETS_CONFIG, dataTransformHelpers } from './sheets.constants';
+import { INFO_WINDOW_CONFIG, MENU_ITEMS } from './ui.constants';
 
 // エラー名前空間用のインポート
-import { ERROR_MESSAGES } from './errors.constants';
 
 // 設定名前空間用のインポート
-import { DEFAULT_CONFIG } from './config.constants';
 
 // ============================================================================
 // 名前空間によるグループ化
@@ -51,7 +48,7 @@ export const Core = {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   SADO_CENTER,
-  SADO_BOUNDS
+  SADO_BOUNDS,
 };
 
 /**
@@ -61,7 +58,7 @@ export const Core = {
 export const UI = {
   Loading: LoadingConfig,
   InfoWindow: INFO_WINDOW_CONFIG,
-  MenuItems: MENU_ITEMS
+  MenuItems: MENU_ITEMS,
 };
 
 /**
@@ -70,7 +67,7 @@ export const UI = {
  */
 export const Data = {
   SheetsConfig: SHEETS_CONFIG,
-  TransformHelpers: dataTransformHelpers
+  TransformHelpers: dataTransformHelpers,
 };
 
 /**
@@ -83,7 +80,7 @@ export const Map = {
   AreasList: AREAS,
   Markers: MARKERS_BY_AREA,
   POIGenres: POI_GENRE_DISPLAY_NAMES,
-  getMarkerForGenre: getMarkerOptionsForGenre
+  getMarkerForGenre: getMarkerOptionsForGenre,
 };
 
 /**
@@ -91,7 +88,7 @@ export const Map = {
  * アプリケーション全体のエラー処理に関する定数
  */
 export const Errors = {
-  MESSAGES: ERROR_MESSAGES
+  MESSAGES: ERROR_MESSAGES,
 };
 
 /**
@@ -99,7 +96,7 @@ export const Errors = {
  * 環境設定とデフォルト構成
  */
 export const Config = {
-  DEFAULT: DEFAULT_CONFIG
+  DEFAULT: DEFAULT_CONFIG,
 };
 
 // ============================================================================

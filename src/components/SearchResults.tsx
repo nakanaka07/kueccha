@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+
 import type { Poi, SearchResultsProps } from '../../utils/types';
 
 const SearchResults: React.FC<SearchResultsProps> = ({ results, onResultClick }) => {
@@ -34,10 +35,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onResultClick })
           }}
         >
           <h3>{poi.name}</h3>
-          
+
           {typeof poi.description === 'string' && <p>{poi.description}</p>}
           {!poi.description && <p>詳細情報なし</p>}
-          
+
           {poi.address && <p>{poi.address}</p>}
         </div>
       ))}

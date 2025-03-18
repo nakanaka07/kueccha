@@ -1,9 +1,11 @@
 // Reactのフックをインポートします。useStateとuseEffectは状態管理、useCallbackはメモ化された関数を作成するために使用します。
 import { useState, useEffect, useCallback } from 'react';
+
 // CONFIGとvalidateConfigをインポートします。Google Sheets APIの設定とその検証に使用します。
-import { CONFIG, validateConfig } from '../services/config.services';
-// AREASとERROR_MESSAGESをインポートします。エリアの定数とエラーメッセージに使用します。
 import { AREAS, ERROR_MESSAGES } from '../constants/constants';
+import { CONFIG, validateConfig } from '../services/config.services';
+
+// AREASとERROR_MESSAGESをインポートします。エリアの定数とエラーメッセージに使用します。
 // Poi型とAreaType型をインポートします。ポイントオブインタレストとエリアの型定義に使用します。
 import type { Poi, AreaType } from '../types/types';
 

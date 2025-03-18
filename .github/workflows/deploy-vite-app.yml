@@ -1,0 +1,78 @@
+name: Deploy Vite App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true # ビルドを高速化するために新しいビルドが来たら進行中のものをキャンセル
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # 常に最新のUbuntuを使用
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3 # 最新バージョンに更新
+        with:
+          version: 8 # 具体的なバージョンを指定（latest より安定）
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm' # pnpmキャッシュを有効化（こちらだけで十分）
+
+      # 重複するため actions/cache ステップは削除
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile # 厳密なバージョン管理のため
+
+      # 環境変数を.envファイルに書き出さず、直接ビルドコマンドに渡す
+      - name: Build
+        run: pnpm run build
+        env:
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.MAPS_MAP_ID }}
+          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.SHEETS_API_KEY }}
+          VITE_GOOGLE_SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+
+      # PWAのマニフェストファイルをdistディレクトリにコピー
+      - name: Copy PWA manifest
+        run: |
+          if [ -f "manifest.json" ]; then
+            cp manifest.json ./dist/
+            echo "Copied manifest.json to dist directory"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest # 最新バージョンを使用
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
