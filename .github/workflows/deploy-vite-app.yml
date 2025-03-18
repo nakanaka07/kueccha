@@ -13,32 +13,29 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: true # ビルドを高速化するために新しいビルドが来たら進行中のものをキャンセル
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest # 常に最新のUbuntuを使用
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3 # 最新バージョンに更新
+        uses: pnpm/action-setup@v3
         with:
-          version: 8 # 具体的なバージョンを指定（latest より安定）
+          version: 8
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm' # pnpmキャッシュを有効化（こちらだけで十分）
-
-      # 重複するため actions/cache ステップは削除
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile # 厳密なバージョン管理のため
+        run: pnpm install --frozen-lockfile
 
-      # 環境変数を.envファイルに書き出さず、直接ビルドコマンドに渡す
       - name: Build
         run: pnpm run build
         env:
@@ -50,12 +47,10 @@ jobs:
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
 
-      # PWAのマニフェストファイルをdistディレクトリにコピー
       - name: Copy PWA manifest
         run: |
           if [ -f "manifest.json" ]; then
             cp manifest.json ./dist/
-            echo "Copied manifest.json to dist directory"
           fi
 
       - name: Upload artifact
@@ -71,7 +66,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest # 最新バージョンを使用
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
