@@ -64,16 +64,16 @@ jobs:
           # Google Maps関連
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
           VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.MAPS_MAP_ID }}
-          
+
           # Google Sheets関連
           VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.SHEETS_API_KEY }}
           VITE_GOOGLE_SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          
+
           # EmailJS関連
           VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
-          
+
           # ビルド環境設定
           NODE_ENV: production
 
@@ -87,7 +87,7 @@ jobs:
           else
             echo "マニフェストファイルが見つかりません - スキップします"
           fi
-          
+
           # Service Workerの存在確認
           if [ -f "dist/sw.js" ]; then
             echo "Service Workerが正しく生成されました"
@@ -114,4 +114,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          timeout: 600000  # デプロイタイムアウトを10分に設定
+          timeout: 600000 # デプロイタイムアウトを10分に設定

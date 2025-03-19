@@ -151,4 +151,11 @@ export interface GeolocationAdapter {
 // 型インポート
 // ============================================================================
 
-import type { MapConfig, MarkerOptions, Marker, LatLngLiteral, Bounds, GeolocationOptions } from '../types';
+import type {
+  MapConfig,
+  MarkerOptions,
+  Marker,
+  LatLngLiteral,
+  Bounds,
+  GeolocationOptions,
+} from '../types';

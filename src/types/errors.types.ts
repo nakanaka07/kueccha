@@ -5,12 +5,11 @@
  * エラーメッセージ、およびアプリケーションエラーの構造を含みます。
  */
 
-import { ReactNode, ErrorInfo } from 'react';
-
-import { BaseProps } from './base.types';
+import type { BaseProps } from './base.types';
 
 // i18n関連の型をインポート
-import { SupportedLanguage } from '../constants/i18n.constants';
+import type { SupportedLanguage } from '../constants/i18n.constants';
+import type { ReactNode, ErrorInfo } from 'react';
 
 // ============================================================================
 // エラーカテゴリとコードの型定義

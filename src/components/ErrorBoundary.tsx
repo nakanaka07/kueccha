@@ -1,6 +1,9 @@
-import React, { Component, ErrorInfo } from 'react';
+import React, { Component } from 'react';
+
 import { ERROR_MESSAGES } from '../../utils/constants';
+
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../../utils/types';
+import type { ErrorInfo } from 'react';
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
@@ -46,7 +49,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
           <p>{error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}</p>
           <p>問題が解決しない場合は、サポートにお問い合わせください。</p>
-          <button onClick={this.handleReset} aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}>
+          <button
+            onClick={this.handleReset}
+            aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
+          >
             {ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
           </button>
         </div>

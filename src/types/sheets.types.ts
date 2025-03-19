@@ -5,7 +5,7 @@
  * シートの設定、リクエスト、レスポンス形式に関する型が含まれています。
  */
 
-import { BaseResponseError } from './base.types';
+import type { BaseResponseError } from './base.types';
 
 // ============================================================================
 // 基本型定義

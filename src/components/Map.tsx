@@ -1,8 +1,10 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import React, { useCallback, useRef, useState } from 'react';
+
 import MapError from './MapError';
 import { ERROR_MESSAGES, MAPS_CONFIG } from '../../utils/constants';
-import { MapComponentProps } from '../../utils/types';
+
+import type { MapComponentProps } from '../../utils/types';
 
 if (!(MAPS_CONFIG.apiKey && MAPS_CONFIG.mapId)) {
   throw new Error(ERROR_MESSAGES.MAP.CONFIG_MISSING);
@@ -19,10 +21,10 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => 
     version: MAPS_CONFIG.version,
     language: MAPS_CONFIG.language,
   });
-  
+
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState<Error | null>(null);
-  
+
   const handleMapLoad = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
@@ -31,12 +33,12 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => 
     },
     [onLoad, setIsMapLoaded],
   );
-  
+
   const handleRetry = useCallback(() => {
     setMapError(null);
     window.location.reload();
   }, []);
-  
+
   if (!isLoaded) {
     return (
       <div aria-label={LOADING_ARIA_LABEL} role="progressbar" aria-busy="true">
@@ -44,15 +46,25 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded }) => 
       </div>
     );
   }
-  
+
   if (loadError) {
-    return <MapError message={loadError.message || ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={handleRetry} />;
+    return (
+      <MapError
+        message={loadError.message || ERROR_MESSAGES.MAP.LOAD_FAILED}
+        onRetry={handleRetry}
+      />
+    );
   }
-  
+
   if (mapError) {
-    return <MapError message={mapError.message || ERROR_MESSAGES.MAP.LOAD_FAILED} onRetry={handleRetry} />;
+    return (
+      <MapError
+        message={mapError.message || ERROR_MESSAGES.MAP.LOAD_FAILED}
+        onRetry={handleRetry}
+      />
+    );
   }
-  
+
   return (
     <div>
       <GoogleMap

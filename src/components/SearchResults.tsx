@@ -39,7 +39,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onResultClick })
           {typeof poi.description === 'string' && <p>{poi.description}</p>}
           {!poi.description && <p>詳細情報なし</p>}
 
-          {poi.address && <p>{poi.address}</p>}
+          {poi.address ? <p>{poi.address}</p> : null}
         </div>
       ))}
     </div>

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+
 import { ERROR_MESSAGES } from '../../utils/constants';
+
 import type { LoadingFallbackProps } from '../../utils/types';
 
 const LoadingFallback: React.FC<LoadingFallbackProps> = ({
@@ -26,7 +28,7 @@ const LoadingFallback: React.FC<LoadingFallbackProps> = ({
   }, [isLoaded, isLoading, fadeDuration]);
 
   if (!isVisible) return null;
-  
+
   return (
     <div>
       <div>

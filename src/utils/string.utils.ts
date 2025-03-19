@@ -24,7 +24,10 @@ function escapeRegExp(str: string): string {
  * @example
  * formatMessage('こんにちは、{name}さん！', { name: '太郎' }) // => 'こんにちは、太郎さん！'
  */
-export function formatMessage(message: string, params?: Record<string, string | number | null | undefined>): string {
+export function formatMessage(
+  message: string,
+  params?: Record<string, string | number | null | undefined>,
+): string {
   if (!message) return '';
   if (!params || Object.keys(params).length === 0) return message;
 

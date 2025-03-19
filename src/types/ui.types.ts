@@ -5,10 +5,16 @@
  */
 
 /// <reference types="@types/google.maps" />
-import { AreaType, AreaVisibility as AreaVisibilityMap, AreaInfo, AreasByCategory, AreaCategory } from './areas.types';
-import { BaseProps } from './base.types';
-import { LatLngLiteral } from './geo.types';
-import { Poi } from './poi.types';
+import type {
+  AreaType,
+  AreaVisibility as AreaVisibilityMap,
+  AreaInfo,
+  AreasByCategory,
+  AreaCategory,
+} from './areas.types';
+import type { BaseProps } from './base.types';
+import type { LatLngLiteral } from './geo.types';
+import type { Poi } from './poi.types';
 
 // ============================================================================
 // Google Maps関連の型定義

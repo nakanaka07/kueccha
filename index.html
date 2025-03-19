@@ -1,7 +1,7 @@
-.html
 <!doctype html>
 <html lang="ja">
   <head>
+    <!-- 基本メタ情報 -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta
@@ -10,6 +10,9 @@
     />
     <meta name="keywords" content="佐渡,飲食店,駐車場,公共トイレ,旅行,観光,佐渡で食えっちゃ,INTX" />
     <meta name="theme-color" content="#4a6da7" />
+    <title>佐渡で食えっちゃ by INTX</title>
+
+    <!-- OGP設定 -->
     <meta property="og:title" content="佐渡で食えっちゃ by INTX" />
     <meta
       property="og:description"
@@ -21,13 +24,19 @@
     <meta property="og:locale" content="ja_JP" />
     <meta property="og:url" content="https://nakanaka07.github.io/sadodekueccha/" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- インデックス設定とカノニカルURL -->
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://nakanaka07.github.io/sadodekueccha/" />
+
+    <!-- セキュリティ設定 -->
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com https://api.emailjs.com; object-src 'none';"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+    <!-- 構造化データ -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -41,19 +50,29 @@
         }
       }
     </script>
+
+    <!-- PWA対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="#4a6da7" />
     <meta name="apple-mobile-web-app-title" content="佐渡で食えっちゃ" />
-    <title>佐渡で食えっちゃ by INTX</title>
-    <link rel="preload" href="/images/logos/row2.png" as="image" type="image/png" />
-    <link rel="preload" href="/index.css" as="style" />
-    <link rel="preload" href="/src/main.tsx" as="script" type="module" />
     <link rel="icon" href="/images/favicon.ico" sizes="any" />
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- リソース最適化：重要なリソースを先読み -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+
+    <!-- クリティカルリソースのプリロード -->
+    <link rel="preload" href="/images/logos/row2.png" as="image" type="image/png" />
+    <link rel="preload" href="/index.css" as="style" />
+
+    <!-- スタイルシート -->
+    <link rel="stylesheet" href="/index.css" />
+
+    <!-- フォント読み込みの最適化 -->
     <link
       rel="preload"
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
@@ -66,9 +85,11 @@
       onload="this.media='all'"
     />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
     </noscript>
-    <link rel="stylesheet" href="/index.css" />
   </head>
   <body>
     <div id="app"></div>

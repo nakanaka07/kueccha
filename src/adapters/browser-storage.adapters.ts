@@ -1,6 +1,7 @@
 import { isBrowser } from '../utils/env.utils';
 import { createError } from '../utils/error.utils';
-import { StorageAdapter } from './index';
+
+import type { StorageAdapter } from './index';
 
 export enum StorageType {
   LOCAL = 'local',
@@ -62,7 +63,9 @@ export class BrowserStorageAdapter implements StorageAdapter {
     try {
       return JSON.stringify(item);
     } catch (error) {
-      throw createError('DATA', 'SERIALIZATION_FAILED', 'データをシリアライズできませんでした', { value });
+      throw createError('DATA', 'SERIALIZATION_FAILED', 'データをシリアライズできませんでした', {
+        value,
+      });
     }
   }
 
@@ -70,7 +73,12 @@ export class BrowserStorageAdapter implements StorageAdapter {
     try {
       return JSON.parse(data) as StorageItem<T>;
     } catch (error) {
-      throw createError('DATA', 'DESERIALIZATION_FAILED', 'データをデシリアライズできませんでした', { data });
+      throw createError(
+        'DATA',
+        'DESERIALIZATION_FAILED',
+        'データをデシリアライズできませんでした',
+        { data },
+      );
     }
   }
 
@@ -96,7 +104,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
       const data = this.storage.getItem(key);
       if (!data) return defaultValue;
       const item = this.deserialize<T>(data);
-      
+
       if (this.isExpired(item)) {
         this.removeItem(key);
         return defaultValue;
@@ -134,7 +142,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
     if (!this.storage) return;
     try {
       const keysToRemove: string[] = [];
-      
+
       for (let i = 0; i < this.storage.length; i++) {
         const key = this.storage.key(i);
         if (!key) continue;
@@ -149,7 +157,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
           continue;
         }
       }
-      
+
       keysToRemove.forEach((key) => this.removeItem(key));
     } catch (error) {
       console.error('Failed to clean expired items:', error);
@@ -191,7 +199,7 @@ export function createSessionStorageAdapter(): StorageAdapter {
 
 export function createStorageAdapter(type: StorageType, fallback: boolean = true): StorageAdapter {
   const adapter = new BrowserStorageAdapter(type);
-  
+
   if (!adapter.isAvailable() && fallback) {
     console.warn(`${type} storage is not available, falling back to memory storage`);
     return new MemoryStorageAdapter();
@@ -201,7 +209,7 @@ export function createStorageAdapter(type: StorageType, fallback: boolean = true
 
 class MemoryStorageAdapter implements StorageAdapter {
   private storage: Map<string, string> = new Map();
-  
+
   setItem<T>(key: string, value: T): boolean {
     try {
       const item: StorageItem<T> = {
@@ -214,7 +222,7 @@ class MemoryStorageAdapter implements StorageAdapter {
       return false;
     }
   }
-  
+
   getItem<T>(key: string, defaultValue: T): T {
     try {
       const data = this.storage.get(key);
@@ -229,17 +237,17 @@ class MemoryStorageAdapter implements StorageAdapter {
       return defaultValue;
     }
   }
-  
+
   removeItem(key: string): boolean {
     this.storage.delete(key);
     return true;
   }
-  
+
   clear(): boolean {
     this.storage.clear();
     return true;
   }
-  
+
   isAvailable(): boolean {
     return true;
   }

@@ -6,7 +6,11 @@
  */
 import { getEnvValue } from '../utils/env.utils';
 
-import type { LoadingState, validateProgress, createInitialLoadingState } from '../types/loading.types';
+import type {
+  LoadingState,
+  validateProgress,
+  createInitialLoadingState,
+} from '../types/loading.types';
 
 // ============================================================================
 // 型定義
@@ -86,9 +90,14 @@ export const TimingConstants: TimingConstantsType = {
  */
 export const UIConstants: UIConstantsType = {
   // ローディング中に表示するデフォルトメッセージ
-  DEFAULT_LOADING_MESSAGE: getEnvValue<string>('VITE_LOADING_MESSAGE', 'データを読み込んでいます...', String, {
-    logErrors: false,
-  }),
+  DEFAULT_LOADING_MESSAGE: getEnvValue<string>(
+    'VITE_LOADING_MESSAGE',
+    'データを読み込んでいます...',
+    String,
+    {
+      logErrors: false,
+    },
+  ),
 
   // ローディングスピナーのデフォルトスタイルクラス
   DEFAULT_SPINNER_CLASS: 'spinner-border text-primary',

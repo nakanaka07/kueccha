@@ -6,8 +6,10 @@
 
 import { formatMessage } from './string.utils';
 import { ERROR_MESSAGES } from '../constants/errors.constants';
-import { DEFAULT_LANGUAGE, getCurrentLanguage, SupportedLanguage } from '../constants/i18n.constants';
-import { AppError, ErrorCategory, ErrorCode } from '../types/errors.types';
+import { DEFAULT_LANGUAGE, getCurrentLanguage } from '../constants/i18n.constants';
+
+import type { SupportedLanguage } from '../constants/i18n.constants';
+import type { AppError, ErrorCategory, ErrorCode } from '../types/errors.types';
 
 /**
  * エラーメッセージをカテゴリとコードから取得する内部ヘルパー関数
@@ -147,7 +149,10 @@ export function validateErrorMessages(): Array<string> {
       if (enumObj) {
         // 列挙型に定義されているが、メッセージにないコードをチェック
         Object.keys(enumObj).forEach((code) => {
-          if (typeof enumObj[code] === 'string' && !ERROR_MESSAGES[category as ErrorCategory][code]) {
+          if (
+            typeof enumObj[code] === 'string' &&
+            !ERROR_MESSAGES[category as ErrorCategory][code]
+          ) {
             missingMessages.push(`${category}.${code} にメッセージがありません`);
           }
         });
@@ -176,10 +181,16 @@ export function validateErrorMessages(): Array<string> {
  * @param code - 検証するコード
  * @returns コードが有効かどうかを示すブール値
  */
-export function isValidErrorCode<T extends ErrorCategory>(category: T, code: unknown): code is ErrorCode<T> {
+export function isValidErrorCode<T extends ErrorCategory>(
+  category: T,
+  code: unknown,
+): code is ErrorCode<T> {
   try {
     return (
-      category in ERROR_MESSAGES && code !== undefined && code !== null && String(code) in ERROR_MESSAGES[category]
+      category in ERROR_MESSAGES &&
+      code !== undefined &&
+      code !== null &&
+      String(code) in ERROR_MESSAGES[category]
     );
   } catch {
     return false;

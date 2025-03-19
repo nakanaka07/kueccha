@@ -33,13 +33,18 @@ export const validateLatLng: LatLngValidator = (lat, lng) => {
   const lang = getCurrentLanguage();
 
   if (lat < -90 || lat > 90) {
-    const message = lang === 'ja' ? '緯度は-90から90の間である必要があります' : 'Latitude must be between -90 and 90';
+    const message =
+      lang === 'ja'
+        ? '緯度は-90から90の間である必要があります'
+        : 'Latitude must be between -90 and 90';
     throw new Error(message);
   }
 
   if (lng < -180 || lng > 180) {
     const message =
-      lang === 'ja' ? '経度は-180から180の間である必要があります' : 'Longitude must be between -180 and 180';
+      lang === 'ja'
+        ? '経度は-180から180の間である必要があります'
+        : 'Longitude must be between -180 and 180';
     throw new Error(message);
   }
 
@@ -54,7 +59,11 @@ export const validateLatLng: LatLngValidator = (lat, lng) => {
  * @param unit - 距離の単位（デフォルト: km）
  * @returns 計算された距離
  */
-export const calculateDistance: DistanceCalculator = (point1, point2, unit = DEFAULT_DISTANCE_UNIT) => {
+export const calculateDistance: DistanceCalculator = (
+  point1,
+  point2,
+  unit = DEFAULT_DISTANCE_UNIT,
+) => {
   // 緯度と経度をラジアンに変換
   const lat1 = (point1.lat * Math.PI) / 180;
   const lat2 = (point2.lat * Math.PI) / 180;
@@ -65,7 +74,8 @@ export const calculateDistance: DistanceCalculator = (point1, point2, unit = DEF
   const dLat = lat2 - lat1;
   const dLon = lon2 - lon1;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   // メートル単位での距離

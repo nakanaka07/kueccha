@@ -76,7 +76,9 @@ export function resetLanguageCache(): void {
  * SSRなどのNode環境でエラーを避けるために使用
  */
 const isBrowser =
-  typeof window !== 'undefined' && typeof localStorage !== 'undefined' && typeof navigator !== 'undefined';
+  typeof window !== 'undefined' &&
+  typeof localStorage !== 'undefined' &&
+  typeof navigator !== 'undefined';
 
 /**
  * 現在の言語を取得する関数
@@ -163,7 +165,10 @@ export function setLanguage(language: SupportedLanguage): boolean {
 
     return true;
   } catch (error) {
-    console.error('言語設定の保存中にエラーが発生しました', error instanceof Error ? error.message : String(error));
+    console.error(
+      '言語設定の保存中にエラーが発生しました',
+      error instanceof Error ? error.message : String(error),
+    );
     return false;
   }
 }
@@ -193,7 +198,8 @@ export function getLocalizedMessage(
   }
 
   // 指定された言語のメッセージがない場合はデフォルト言語を使用
-  const rawMessage = message[language] || message[DEFAULT_LANGUAGE] || Object.values(message)[0] || '';
+  const rawMessage =
+    message[language] || message[DEFAULT_LANGUAGE] || Object.values(message)[0] || '';
 
   // パラメータがあればフォーマット
   return params ? formatMessage(rawMessage, params) : rawMessage;

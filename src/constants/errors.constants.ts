@@ -8,11 +8,11 @@
 import {
   SupportedLanguage,
   DEFAULT_LANGUAGE,
-  LocalizedMessage,
   getCurrentLanguage,
   getLocalizedMessage,
 } from './i18n.constants';
 
+import type { LocalizedMessage } from './i18n.constants';
 import type { ErrorCategory, ErrorCode, ErrorMessagesSchema } from '../types/errors.types';
 
 // ============================================================================

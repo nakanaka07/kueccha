@@ -54,7 +54,11 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
   /**
    * テキストまたはURLのReact要素を作成する関数
    */
-  const createElement = (type: 'text' | 'url', content: string, index: number): React.ReactElement | null => {
+  const createElement = (
+    type: 'text' | 'url',
+    content: string,
+    index: number,
+  ): React.ReactElement | null => {
     const elementKey = `${type}-${index}-${content.substring(0, 10)}`;
 
     try {

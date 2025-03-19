@@ -25,9 +25,15 @@ import type {
  * 現在の実行環境を取得
  * 環境変数から現在の環境名を取得します
  */
-export const CURRENT_ENVIRONMENT = getEnvValue<EnvironmentName>('VITE_ENVIRONMENT', 'development', (value) => {
-  return ['development', 'production', 'test'].includes(value as string) ? (value as EnvironmentName) : 'development';
-});
+export const CURRENT_ENVIRONMENT = getEnvValue<EnvironmentName>(
+  'VITE_ENVIRONMENT',
+  'development',
+  (value) => {
+    return ['development', 'production', 'test'].includes(value as string)
+      ? (value as EnvironmentName)
+      : 'development';
+  },
+);
 
 /**
  * 環境別の設定値
@@ -66,7 +72,10 @@ export const CURRENT_ENV_CONFIG: EnvironmentConfig = {
       ? (value as 'error' | 'warn' | 'info' | 'debug')
       : 'error';
   }),
-  cacheEnabled: getEnvValueAsBoolean('VITE_CACHE_ENABLED', ENV_CONFIGS[CURRENT_ENVIRONMENT].cacheEnabled),
+  cacheEnabled: getEnvValueAsBoolean(
+    'VITE_CACHE_ENABLED',
+    ENV_CONFIGS[CURRENT_ENVIRONMENT].cacheEnabled,
+  ),
 };
 
 // ============================================================================
@@ -80,7 +89,9 @@ export const CURRENT_ENV_CONFIG: EnvironmentConfig = {
 export function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
 
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(window.navigator.userAgent);
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    window.navigator.userAgent,
+  );
 }
 
 /**

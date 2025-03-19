@@ -6,9 +6,9 @@
  */
 
 /// <reference types="@types/google.maps" />
-import { AreaType } from './areas.types';
-import { BaseProps } from './base.types';
-import { Poi } from './poi.types';
+import type { AreaType } from './areas.types';
+import type { BaseProps } from './base.types';
+import type { Poi } from './poi.types';
 
 // ============================================================================
 // マーカーコンポーネントとイベント
@@ -166,7 +166,10 @@ export interface MarkerConfigAttributes extends BaseMarkerStyle {
  * マーカーオプションを生成する関数の型
  * エリアタイプやPOIオブジェクトに基づいてマーカースタイルを決定します
  */
-export type MarkerStyleGenerator = (areaOrPoi: AreaType | Poi, isSelected?: boolean) => MarkerStyleOptions;
+export type MarkerStyleGenerator = (
+  areaOrPoi: AreaType | Poi,
+  isSelected?: boolean,
+) => MarkerStyleOptions;
 
 /**
  * 設定用マーカー属性からスタイルオプションへの変換関数
@@ -175,7 +178,10 @@ export type MarkerStyleGenerator = (areaOrPoi: AreaType | Poi, isSelected?: bool
  * @param isSelected 選択状態かどうか
  * @returns Google Maps APIのマーカースタイルオプション
  */
-export function configToStyleOptions(config: MarkerConfigAttributes, isSelected: boolean = false): MarkerStyleOptions {
+export function configToStyleOptions(
+  config: MarkerConfigAttributes,
+  isSelected: boolean = false,
+): MarkerStyleOptions {
   return {
     iconUrl: config.icon,
     size: config.size,

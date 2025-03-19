@@ -6,18 +6,13 @@
  */
 
 /// <reference types="@types/google.maps" />
-import { LoadScriptProps, MapOptions } from '@react-google-maps/api';
 
-import { BaseProps } from './base.types';
-import {
-  LatLngLiteral,
-  ControlPosition,
-  ControlPositionString,
-  MapTypeControlStyle,
-  MapStyleOptions,
-  MapTypeId,
-} from './geo.types';
-import { Poi } from './poi.types';
+import { MapTypeControlStyle, MapStyleOptions } from './geo.types';
+
+import type { BaseProps } from './base.types';
+import type { LatLngLiteral, ControlPosition, ControlPositionString, MapTypeId } from './geo.types';
+import type { Poi } from './poi.types';
+import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
 
 // ============================================================================
 // マップ表示モード関連の型定義
@@ -147,7 +142,9 @@ export interface MapLoadError {
  * マップ読み込み結果を表す型
  * 成功時はマップオブジェクト、失敗時はエラー情報を含みます
  */
-export type MapLoadResult = { success: true; map: google.maps.Map } | { success: false; error: MapLoadError };
+export type MapLoadResult =
+  | { success: true; map: google.maps.Map }
+  | { success: false; error: MapLoadError };
 
 // ============================================================================
 // マップイベント関連の型定義

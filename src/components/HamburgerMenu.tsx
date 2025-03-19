@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import { MENU_ITEMS } from '../../utils/constants';
 import SearchBar from '../searchbar/SearchBar';
 import SearchResults from '../searchresults/SearchResults';
+
 import type { HamburgerMenuProps } from '../../utils/types';
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResults, handleSearchResultClick }) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+  pois,
+  search,
+  searchResults,
+  handleSearchResultClick,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -48,7 +55,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResul
   return (
     <div ref={menuRef}>
       <div>
-        <button onClick={toggleMenu} title="メニューを開閉" aria-expanded={isOpen} aria-controls="menu-content">
+        <button
+          onClick={toggleMenu}
+          title="メニューを開閉"
+          aria-expanded={isOpen}
+          aria-controls="menu-content"
+        >
           <span />
           <span />
           <span />
@@ -64,12 +76,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ pois, search, searchResul
               </li>
             ))}
           </ul>
-          {isSearchBarVisible && (
+          {isSearchBarVisible ? (
             <>
               <SearchBar onSearch={search} pois={pois} />
               <SearchResults results={searchResults} onResultClick={handleSearchResultClick} />
             </>
-          )}
+          ) : null}
         </nav>
       </div>
     </div>

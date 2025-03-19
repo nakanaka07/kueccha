@@ -1,6 +1,6 @@
 /**
  * Kuecchaアプリケーションサーバー
- * 
+ *
  * 静的ファイル配信と必要最小限のAPIエンドポイントを提供する
  * Node.js + Express.jsサーバー
  */
@@ -14,10 +14,14 @@ import { fileURLToPath } from 'node:url';
 
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express, { Request, Response, NextFunction } from 'express';
-import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import { createLogger, transports, format, Logger } from 'winston';
+import { createLogger, transports, format } from 'winston';
+
+import type { Request, Response, NextFunction } from 'express';
+import type { RateLimitRequestHandler } from 'express-rate-limit';
+import type { Logger } from 'winston';
 
 // ============================================================================
 // 定数と設定
@@ -49,10 +53,10 @@ const CONSTANTS = {
     404: 'リソースが見つかりません',
     429: 'リクエスト回数が上限を超えました',
     500: 'サーバーエラーが発生しました',
-    503: 'サービスが利用できません'
+    503: 'サービスが利用できません',
   },
   MIME_TYPES: {
-    TS: 'text/x-typescript'
+    TS: 'text/x-typescript',
   },
   GRACEFUL_SHUTDOWN_TIMEOUT: 30000, // 30秒
   EMERGENCY_SHUTDOWN_TIMEOUT: 60000, // 1分
@@ -168,9 +172,9 @@ function setupLogger(): Logger {
     format: format.combine(
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       format.errors({ stack: true }),
-      format.json()
+      format.json(),
     ),
-    defaultMeta: { 
+    defaultMeta: {
       service: 'kueccha-server',
       environment: ENV.NODE_ENV,
     },
@@ -179,25 +183,25 @@ function setupLogger(): Logger {
         format: format.combine(
           format.colorize(),
           format.printf(({ timestamp, level, message, service, environment, ...rest }) => {
-            const restString = Object.keys(rest).length 
-              ? JSON.stringify(rest, null, ENV_FLAGS.IS_DEV ? 2 : undefined) 
+            const restString = Object.keys(rest).length
+              ? JSON.stringify(rest, null, ENV_FLAGS.IS_DEV ? 2 : undefined)
               : '';
             return `${timestamp} [${service}:${environment}] ${level}: ${message} ${restString}`;
-          })
-        )
+          }),
+        ),
       }),
-      new transports.File({ 
-        filename: path.join(logDir, 'error.log'), 
+      new transports.File({
+        filename: path.join(logDir, 'error.log'),
         level: 'error',
         maxsize: 5 * 1024 * 1024, // 5MB
         maxFiles: 5,
       }),
-      new transports.File({ 
+      new transports.File({
         filename: path.join(logDir, 'combined.log'),
-        maxsize: 10 * 1024 * 1024, // 10MB 
+        maxsize: 10 * 1024 * 1024, // 10MB
         maxFiles: 5,
-      })
-    ]
+      }),
+    ],
   });
 }
 
@@ -222,8 +226,10 @@ function generateNonce(): string {
  * @returns ユーザーフレンドリーなエラーメッセージ
  */
 function getPublicErrorMessage(statusCode: number): string {
-  return CONSTANTS.ERROR_MESSAGES[statusCode as keyof typeof CONSTANTS.ERROR_MESSAGES] || 
-    'エラーが発生しました';
+  return (
+    CONSTANTS.ERROR_MESSAGES[statusCode as keyof typeof CONSTANTS.ERROR_MESSAGES] ||
+    'エラーが発生しました'
+  );
 }
 
 /**
@@ -234,19 +240,19 @@ function getPublicErrorMessage(statusCode: number): string {
  * @returns 構造化されたAppErrorオブジェクト
  */
 function createAppError(
-  message: string, 
-  statusCode: number = 500, 
-  options?: { code?: string; isOperational?: boolean; details?: Record<string, unknown> }
+  message: string,
+  statusCode: number = 500,
+  options?: { code?: string; isOperational?: boolean; details?: Record<string, unknown> },
 ): AppError {
   const error: AppError = new Error(message);
   error.statusCode = statusCode;
-  
+
   if (options) {
     error.code = options.code;
     error.isOperational = options.isOperational ?? true;
     error.details = options.details;
   }
-  
+
   return error;
 }
 
@@ -258,21 +264,21 @@ function loadHttpsConfig(): HttpsConfigResult {
   try {
     const keyPath = path.resolve(__dirname, 'localhost.key');
     const certPath = path.resolve(__dirname, 'localhost.crt');
-    
+
     if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
       return {
         config: {
           key: fs.readFileSync(keyPath),
           cert: fs.readFileSync(certPath),
         },
-        isAvailable: true
+        isAvailable: true,
       };
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     logger.error('SSL証明書の読み込みエラー', { error: err.message, stack: err.stack });
   }
-  
+
   return { config: {}, isAvailable: false };
 }
 
@@ -294,7 +300,7 @@ function configureRateLimit(): RateLimitRequestHandler {
     skip: (req: Request) => {
       // 静的アセットに対するリクエストはレート制限を適用しない
       return req.path.match(/\.(css|js|jpg|png|gif|ico|svg|woff2?)$/i) !== null;
-    }
+    },
   });
 }
 
@@ -307,28 +313,15 @@ function configureCSPDirectives(nonce: string): Record<string, Array<string>> {
   return {
     defaultSrc: ["'self'"],
     scriptSrc: [
-      "'self'", 
-      `'nonce-${nonce}'`, 
-      'https://maps.googleapis.com', 
-      'https://api.emailjs.com'
+      "'self'",
+      `'nonce-${nonce}'`,
+      'https://maps.googleapis.com',
+      'https://api.emailjs.com',
     ],
-    styleSrc: [
-      "'self'", 
-      `'nonce-${nonce}'`, 
-      'https://fonts.googleapis.com'
-    ],
+    styleSrc: ["'self'", `'nonce-${nonce}'`, 'https://fonts.googleapis.com'],
     fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-    imgSrc: [
-      "'self'", 
-      'https://*.googleapis.com', 
-      'https://*.gstatic.com', 
-      'data:'
-    ],
-    connectSrc: [
-      "'self'", 
-      'https://*.googleapis.com', 
-      'https://api.emailjs.com'
-    ],
+    imgSrc: ["'self'", 'https://*.googleapis.com', 'https://*.gstatic.com', 'data:'],
+    connectSrc: ["'self'", 'https://*.googleapis.com', 'https://api.emailjs.com'],
     objectSrc: ["'none'"],
     upgradeInsecureRequests: ENV_FLAGS.IS_DEV ? [] : [true],
   };
@@ -341,11 +334,11 @@ function configureCSPDirectives(nonce: string): Record<string, Array<string>> {
  */
 function getCacheControlHeader(filePath: string): string {
   const isStaticAsset = filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$/);
-  
+
   if (!isStaticAsset) {
     return CONSTANTS.CACHE_CONTROL.DYNAMIC;
   }
-  
+
   if (ENV_FLAGS.IS_PROD) {
     return CONSTANTS.CACHE_CONTROL.PROD;
   } else if (ENV_FLAGS.IS_STAGING) {
@@ -375,7 +368,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Helmetによるセキュリティヘッダー設定
 app.use((req: Request, res: Response, next: NextFunction) => {
   const nonce = res.locals.nonce;
-  
+
   helmet({
     contentSecurityPolicy: {
       directives: configureCSPDirectives(nonce),
@@ -395,42 +388,45 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // CORS設定
-app.use(cors({
-  origin: (origin, callback) => {
-    // オリジン未定義の場合（例：Postman、curl等）は許可
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // オリジン未定義の場合（例：Postman、curl等）は許可
+      if (!origin) return callback(null, true);
 
-    const currentAllowedOrigins = 
-      ALLOWED_ORIGINS[ENV.NODE_ENV] || ALLOWED_ORIGINS.production;
+      const currentAllowedOrigins = ALLOWED_ORIGINS[ENV.NODE_ENV] || ALLOWED_ORIGINS.production;
 
-    if (currentAllowedOrigins.includes(origin) || ENV_FLAGS.IS_DEV) {
-      callback(null, true);
-    } else {
-      logger.warn(`CORSリクエスト拒否`, { origin });
-      callback(createAppError('CORS policy violation', 403));
-    }
-  },
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'HEAD'],
-  credentials: true,
-}));
+      if (currentAllowedOrigins.includes(origin) || ENV_FLAGS.IS_DEV) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORSリクエスト拒否`, { origin });
+        callback(createAppError('CORS policy violation', 403));
+      }
+    },
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'HEAD'],
+    credentials: true,
+  }),
+);
 
 // JSON・URLエンコードボディパーサー
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // 静的ファイル配信設定
-app.use(express.static(path.join(__dirname, CONSTANTS.STATIC_DIR), {
-  setHeaders: (res: Response, filePath: string) => {
-    // 開発環境でのTypeScriptファイルのMIMEタイプ設定
-    if (ENV_FLAGS.IS_DEV && filePath.endsWith('.ts')) {
-      res.setHeader('Content-Type', CONSTANTS.MIME_TYPES.TS);
-    }
+app.use(
+  express.static(path.join(__dirname, CONSTANTS.STATIC_DIR), {
+    setHeaders: (res: Response, filePath: string) => {
+      // 開発環境でのTypeScriptファイルのMIMEタイプ設定
+      if (ENV_FLAGS.IS_DEV && filePath.endsWith('.ts')) {
+        res.setHeader('Content-Type', CONSTANTS.MIME_TYPES.TS);
+      }
 
-    // 適切なキャッシュコントロール設定
-    res.setHeader('Cache-Control', getCacheControlHeader(filePath));
-  },
-}));
+      // 適切なキャッシュコントロール設定
+      res.setHeader('Cache-Control', getCacheControlHeader(filePath));
+    },
+  }),
+);
 
 // ============================================================================
 // ルート設定
@@ -445,9 +441,9 @@ function authenticate(req: Request, res: Response, next: NextFunction): void {
 
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       status: 'error',
-      message: getPublicErrorMessage(401) 
+      message: getPublicErrorMessage(401),
     });
   }
 
@@ -458,10 +454,10 @@ function authenticate(req: Request, res: Response, next: NextFunction): void {
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     logger.warn('認証エラー', { error: err.message });
-    
-    return res.status(403).json({ 
+
+    return res.status(403).json({
       status: 'error',
-      message: getPublicErrorMessage(403) 
+      message: getPublicErrorMessage(403),
     });
   }
 }
@@ -471,10 +467,10 @@ const apiRouter = express.Router();
 
 // ここにAPI関連のエンドポイントを追加
 apiRouter.get('/health', (req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     status: 'ok',
     environment: ENV.NODE_ENV,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -492,11 +488,9 @@ app.get('*', (req: Request, res: Response) => {
 
 // 404エラーハンドラー
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const error = createAppError(
-    `リクエストされたパス ${req.originalUrl} が見つかりません`,
-    404,
-    { code: 'NOT_FOUND' }
-  );
+  const error = createAppError(`リクエストされたパス ${req.originalUrl} が見つかりません`, 404, {
+    code: 'NOT_FOUND',
+  });
   next(error);
 });
 
@@ -544,7 +538,7 @@ app.use((err: AppError, req: Request, res: Response, _next: NextFunction) => {
 
 // 未処理のPromise拒否をキャッチ
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('未処理のPromise拒否', { 
+  logger.error('未処理のPromise拒否', {
     reason: reason instanceof Error ? reason.stack : String(reason),
     promise: String(promise),
   });
@@ -553,12 +547,12 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // 未キャッチ例外をキャッチ
 process.on('uncaughtException', (error: Error) => {
-  logger.error('未キャッチの例外', { 
+  logger.error('未キャッチの例外', {
     message: error.message,
     stack: error.stack,
     timestamp: new Date().toISOString(),
   });
-  
+
   // 安全にサーバーをシャットダウン（1分後）
   setTimeout(() => {
     logger.info('未キャッチ例外により終了します');
@@ -585,7 +579,7 @@ async function startServer(): Promise<void> {
   // 開発環境ではHTTPSを試みる
   if (ENV_FLAGS.IS_DEV) {
     const { config: httpsOptions, isAvailable } = loadHttpsConfig();
-    
+
     if (isAvailable) {
       server = https.createServer(httpsOptions, app);
       server.listen(serverOptions.port, () => {
@@ -596,7 +590,7 @@ async function startServer(): Promise<void> {
       configureGracefulShutdown(server);
       return;
     }
-    
+
     logger.info('HTTPS証明書が見つからないため、HTTP接続で起動します');
   }
 
@@ -608,7 +602,7 @@ async function startServer(): Promise<void> {
       port: serverOptions.port,
     });
   });
-  
+
   configureGracefulShutdown(server);
 }
 
@@ -618,12 +612,12 @@ async function startServer(): Promise<void> {
 function configureGracefulShutdown(server: http.Server | https.Server): void {
   process.on('SIGTERM', () => {
     logger.info('サーバーをグレースフルシャットダウンしています...');
-    
+
     server.close(() => {
       logger.info('サーバー接続を終了しました');
       process.exit(0);
     });
-    
+
     // 強制終了タイムアウト
     setTimeout(() => {
       logger.error('グレースフルシャットダウンがタイムアウトしました、強制終了します');

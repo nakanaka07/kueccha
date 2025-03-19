@@ -4,9 +4,9 @@
  * マップ上に表示される各地点のデータ構造を定義します。
  */
 
-import { AreaType } from './areas.types';
-import { BaseEntity } from './base.types';
-import { LatLngLiteral } from './geo.types';
+import type { AreaType } from './areas.types';
+import type { BaseEntity } from './base.types';
+import type { LatLngLiteral } from './geo.types';
 
 // ============================================================================
 // POIの基本分類と属性
@@ -16,7 +16,14 @@ import { LatLngLiteral } from './geo.types';
  * POIのジャンルを表す型
  * 各POIの大分類カテゴリを識別するために使用されます。
  */
-export type PoiGenre = 'restaurant' | 'cafe' | 'shop' | 'attraction' | 'facility' | 'current_location' | 'other';
+export type PoiGenre =
+  | 'restaurant'
+  | 'cafe'
+  | 'shop'
+  | 'attraction'
+  | 'facility'
+  | 'current_location'
+  | 'other';
 
 /**
  * 営業時間のキーを表す型

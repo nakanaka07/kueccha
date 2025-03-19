@@ -199,7 +199,11 @@ export function validateLatLng(location: LatLngLiteral): LatLngLiteral {
 /**
  * 2地点間の距離を計算する関数の型定義
  */
-export type DistanceCalculator = (point1: LatLngLiteral, point2: LatLngLiteral, unit?: Distance['unit']) => Distance;
+export type DistanceCalculator = (
+  point1: LatLngLiteral,
+  point2: LatLngLiteral,
+  unit?: Distance['unit'],
+) => Distance;
 
 /**
  * 指定した座標が境界ボックス内にあるかを判定する関数の型定義

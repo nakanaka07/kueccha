@@ -4,16 +4,16 @@
  * マップ上で表示される地区やカテゴリの定義、および初期表示設定を含みます。
  */
 
-import {
+import { AreaCategory } from '../types/areas.types';
+
+import type {
   AreaType,
   RegionAreaType,
   FacilityAreaType,
   SpecialAreaType,
-  AreaCategory,
   AreaCategoryFilter,
   GetAreaCategoryFn,
 } from '../types/areas.types';
-
 import type { Poi } from '../types/poi.types';
 
 // ============================================================================
@@ -25,7 +25,12 @@ import type { Poi } from '../types/poi.types';
  *
  * マップ初期表示時に非表示にするエリアのリスト。
  */
-const INITIALLY_HIDDEN_AREAS: readonly AreaType[] = ['SNACK', 'PUBLIC_TOILET', 'PARKING', 'CURRENT_LOCATION'] as const;
+const INITIALLY_HIDDEN_AREAS: readonly AreaType[] = [
+  'SNACK',
+  'PUBLIC_TOILET',
+  'PARKING',
+  'CURRENT_LOCATION',
+] as const;
 
 /**
  * 地理的エリアの定義
@@ -220,7 +225,9 @@ export const AreasUtil = {
    * @param overrides 上書きする値のオブジェクト
    * @returns 更新された表示設定
    */
-  getVisibilityWithOverrides(overrides: Partial<Record<AreaType, boolean>>): Record<AreaType, boolean> {
+  getVisibilityWithOverrides(
+    overrides: Partial<Record<AreaType, boolean>>,
+  ): Record<AreaType, boolean> {
     return { ...INITIAL_VISIBILITY, ...overrides };
   },
 };

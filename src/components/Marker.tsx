@@ -1,9 +1,17 @@
 import React, { useEffect, useRef } from 'react';
+
 import { MARKER_ICONS } from '../constants/constants';
-import { MarkerProps } from '../types/types';
+
+import type { MarkerProps } from '../types/types';
 
 const Marker = React.memo(
-  ({ poi, onClick, map, isSelected, zIndex }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
+  ({
+    poi,
+    onClick,
+    map,
+    isSelected,
+    zIndex,
+  }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
     const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
     useEffect(() => {

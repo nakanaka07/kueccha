@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import type { LocationWarningProps } from '../../utils/types';
 
 const LocationWarning: React.FC<LocationWarningProps> = ({ onClose }) => {

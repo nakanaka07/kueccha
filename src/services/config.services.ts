@@ -5,7 +5,14 @@
  * 環境変数の検証や必須設定の確認を行います。
  */
 
-import { MAPS_CONFIG, SHEETS_CONFIG, MARKER_CONFIG, ERROR_MESSAGES, INITIAL_VISIBILITY, AREAS } from '../constants';
+import {
+  MAPS_CONFIG,
+  SHEETS_CONFIG,
+  MARKER_CONFIG,
+  ERROR_MESSAGES,
+  INITIAL_VISIBILITY,
+  AREAS,
+} from '../constants';
 import { checkRequiredEnvVars } from '../utils/env.utils';
 
 import type { AppConfig, AreaType } from '../types';
@@ -58,7 +65,9 @@ export const validateConfig = (config: AppConfig): void => {
   const missingVars = checkRequiredEnvVars(REQUIRED_ENV_VARS);
 
   if (missingVars.length > 0) {
-    throw new Error(`${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`);
+    throw new Error(
+      `${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`,
+    );
   }
 
   // 設定値の検証
@@ -90,7 +99,10 @@ try {
   validateConfig(CONFIG);
   console.info('アプリケーション設定の検証が完了しました');
 } catch (error) {
-  console.error('設定の検証に失敗しました:', error instanceof Error ? error.message : String(error));
+  console.error(
+    '設定の検証に失敗しました:',
+    error instanceof Error ? error.message : String(error),
+  );
   throw error;
 }
 

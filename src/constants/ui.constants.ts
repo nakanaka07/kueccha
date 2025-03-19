@@ -6,7 +6,13 @@
 
 /// <reference types="@types/google.maps" />
 import type { BusinessHourDayMapping } from '../types/poi.types';
-import type { MenuItem, MenuItemAction, MenuActionType, InfoWindowConfig, PixelOffset } from '../types/ui.types';
+import type {
+  MenuItem,
+  MenuItemAction,
+  MenuActionType,
+  InfoWindowConfig,
+  PixelOffset,
+} from '../types/ui.types';
 
 // ============================================================================
 // ヘルパー関数
@@ -18,7 +24,11 @@ import type { MenuItem, MenuItemAction, MenuActionType, InfoWindowConfig, PixelO
  * @returns Google Maps APIが利用可能な場合はtrue
  */
 function isGoogleMapsAvailable(): boolean {
-  return typeof google !== 'undefined' && typeof google.maps !== 'undefined' && typeof google.maps.Size === 'function';
+  return (
+    typeof google !== 'undefined' &&
+    typeof google.maps !== 'undefined' &&
+    typeof google.maps.Size === 'function'
+  );
 }
 
 /**

@@ -28,10 +28,13 @@ const typescriptRules = {
   '@typescript-eslint/no-unnecessary-condition': 'error',
   '@typescript-eslint/prefer-nullish-coalescing': 'warn',
   '@typescript-eslint/prefer-optional-chain': 'warn',
-  '@typescript-eslint/consistent-type-imports': ['warn', {
-    prefer: 'type-imports',
-    disallowTypeAnnotations: true,
-  }],
+  '@typescript-eslint/consistent-type-imports': [
+    'warn',
+    {
+      prefer: 'type-imports',
+      disallowTypeAnnotations: true,
+    },
+  ],
   '@typescript-eslint/no-non-null-assertion': 'warn',
 };
 
@@ -56,17 +59,23 @@ const reactRules = {
   'react/self-closing-comp': 'error',
   'react/jsx-fragments': ['warn', 'syntax'],
   'react/no-unstable-nested-components': 'error',
-  'react/jsx-no-leaked-render': ['error', {
-    validStrategies: ['ternary', 'coerce']
-  }],
+  'react/jsx-no-leaked-render': [
+    'error',
+    {
+      validStrategies: ['ternary', 'coerce'],
+    },
+  ],
   'react/jsx-no-useless-fragment': 'warn',
 };
 
 const reactHooksRules = {
   ...reactHooksPlugin.configs.recommended.rules,
-  'react-hooks/exhaustive-deps': ['warn', {
-    additionalHooks: '(use|useAction|useOptimistic|useFormStatus)'
-  }],
+  'react-hooks/exhaustive-deps': [
+    'warn',
+    {
+      additionalHooks: '(use|useAction|useOptimistic|useFormStatus)',
+    },
+  ],
 };
 
 const a11yRules = {
@@ -85,15 +94,7 @@ const importRules = {
   'import/order': [
     'error',
     {
-      groups: [
-        'builtin',
-        'external',
-        'internal',
-        ['parent', 'sibling'],
-        'index',
-        'object',
-        'type',
-      ],
+      groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'object', 'type'],
       pathGroups: [
         {
           pattern: '@/**',
@@ -123,12 +124,12 @@ const importRules = {
 
 const generalRules = {
   'prettier/prettier': 'error',
-  'camelcase': ['error', { properties: 'never' }],
+  camelcase: ['error', { properties: 'never' }],
   'id-length': ['warn', { min: 2, exceptions: ['i', 'j', 'k', 'x', 'y', 'z', '_', 'id'] }],
   'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
   'no-debugger': 'warn',
   'no-alert': 'warn',
-  'complexity': ['warn', 10],
+  complexity: ['warn', 10],
   'max-depth': ['warn', 4],
   'max-lines': ['warn', 500],
   'max-lines-per-function': ['warn', 100],
@@ -143,12 +144,12 @@ export default [
   // グローバルな無視パターン
   {
     ignores: [
-      'dist/**/*', 
-      'node_modules/**/*', 
-      'coverage/**/*', 
+      'dist/**/*',
+      'node_modules/**/*',
+      'coverage/**/*',
       '*.d.ts',
       '.vite/**/*',
-      'public/**/*'
+      'public/**/*',
     ],
   },
   // メインのコードベース設定
@@ -168,10 +169,10 @@ export default [
     plugins: {
       '@typescript-eslint': tsPlugin,
       'jsx-a11y': jsxA11yPlugin,
-      'prettier': prettierPlugin,
-      'react': reactPlugin,
+      prettier: prettierPlugin,
+      react: reactPlugin,
       'react-hooks': reactHooksPlugin,
-      'import': importPlugin,
+      import: importPlugin,
     },
     settings: {
       react: {
@@ -201,7 +202,15 @@ export default [
   },
   // テストファイル用の特別ルール
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx', '**/test/**', '**/tests/**', '**/mocks/**'],
+    files: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+      '**/test/**',
+      '**/tests/**',
+      '**/mocks/**',
+    ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',

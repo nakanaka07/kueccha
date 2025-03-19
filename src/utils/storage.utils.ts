@@ -682,7 +682,10 @@ export function saveMapPosition(position: { lat: number; lng: number }, zoom: nu
  * @param defaultPosition デフォルト位置
  * @returns 保存された位置または、デフォルト位置
  */
-export function getMapPosition(defaultPosition: { lat: number; lng: number }): { lat: number; lng: number } {
+export function getMapPosition(defaultPosition: { lat: number; lng: number }): {
+  lat: number;
+  lng: number;
+} {
   return getItem(STORAGE_KEYS.LAST_POSITION, defaultPosition);
 }
 

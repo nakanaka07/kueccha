@@ -111,7 +111,10 @@ export function remove<T>(array: T[], valueOrPredicate: T | ((item: T) => boolea
  * @param direction ソート方向（'asc'または'desc'）
  * @returns ソートされたPOI配列
  */
-export function sortById<T extends { id: string }>(pois: T[], direction: 'asc' | 'desc' = 'asc'): T[] {
+export function sortById<T extends { id: string }>(
+  pois: T[],
+  direction: 'asc' | 'desc' = 'asc',
+): T[] {
   if (!pois.length) return [];
 
   return [...pois].sort((a, b) => {
@@ -127,7 +130,10 @@ export function sortById<T extends { id: string }>(pois: T[], direction: 'asc' |
  * @param direction ソート方向（'asc'または'desc'）
  * @returns ソートされたPOI配列
  */
-export function sortByName<T extends { name: string }>(pois: T[], direction: 'asc' | 'desc' = 'asc'): T[] {
+export function sortByName<T extends { name: string }>(
+  pois: T[],
+  direction: 'asc' | 'desc' = 'asc',
+): T[] {
   if (!pois.length) return [];
 
   return [...pois].sort((a, b) => {
@@ -144,7 +150,11 @@ export function sortByName<T extends { name: string }>(pois: T[], direction: 'as
  * @param direction ソート方向（'asc'または'desc'）
  * @returns ソートされたPOI配列
  */
-export function sortByDistance(pois: Poi[], center: LatLngLiteral, direction: 'asc' | 'desc' = 'asc'): Poi[] {
+export function sortByDistance(
+  pois: Poi[],
+  center: LatLngLiteral,
+  direction: 'asc' | 'desc' = 'asc',
+): Poi[] {
   if (!pois.length || !center) return [];
 
   return [...pois].sort((a, b) => {
@@ -193,7 +203,10 @@ export function sortByGenrePriority(
  * @param getKey グループ化キーを取得する関数
  * @returns キーごとにグループ化されたオブジェクト
  */
-export function groupBy<T, K extends string | number | symbol>(array: T[], getKey: (item: T) => K): Record<K, T[]> {
+export function groupBy<T, K extends string | number | symbol>(
+  array: T[],
+  getKey: (item: T) => K,
+): Record<K, T[]> {
   if (!array.length) return {} as Record<K, T[]>;
 
   return array.reduce(

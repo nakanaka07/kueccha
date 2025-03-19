@@ -5,19 +5,18 @@
  * 型安全なインターフェースを提供します。
  */
 
-import {
+import { SheetRange, SheetsError } from '../types';
+import { getEnvValue } from '../utils/env.utils';
+import { createError } from '../utils/error.utils';
+
+import type {
   SheetCellValue,
   SheetRow,
   DataProcessingType,
   SheetsConfig,
-  SheetRange,
   SheetsRequestOptions,
-  SheetsError,
 } from '../types';
-import { getEnvValue } from '../utils/env.utils';
-import { createError } from '../utils/error.utils';
-
-import { SheetsAdapter } from './index';
+import type { SheetsAdapter } from './index';
 
 /**
  * Google Sheets APIのベースURL
@@ -207,7 +206,11 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
    * @param range 範囲（オプション）
    * @param options リクエストオプション
    */
-  async fetchData<T>(sheetName: string, range?: string, options: SheetsRequestOptions = {}): Promise<T[]> {
+  async fetchData<T>(
+    sheetName: string,
+    range?: string,
+    options: SheetsRequestOptions = {},
+  ): Promise<T[]> {
     try {
       const response = await this.fetchRawSheetData(sheetName, range, options);
 
@@ -316,7 +319,11 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
     // Google Sheets APIの書き込み機能は認証が必要で複雑なため
     // 当面は読み取り専用としています
 
-    throw createError('DATA', 'WRITE_NOT_SUPPORTED', 'データの書き込みはまだサポートされていません');
+    throw createError(
+      'DATA',
+      'WRITE_NOT_SUPPORTED',
+      'データの書き込みはまだサポートされていません',
+    );
   }
 
   /**

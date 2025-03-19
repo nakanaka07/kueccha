@@ -1,34 +1,68 @@
+/**
+ * 佐渡で食えっちゃ - メインスタイルシート
+ * 
+ * 目次:
+ * 1. CSS変数（カスタムプロパティ）
+ * 2. リセットと基本スタイル
+ * 3. タイポグラフィ
+ * 4. フォームと入力要素
+ * 5. ユーティリティクラス
+ * 6. アクセシビリティ
+ */
+
+/* ------------------------------------------
+   1. CSS変数（カスタムプロパティ）
+------------------------------------------ */
+:root {
+  /* カラーパレット */
+  --color-primary: #4a6da7;
+  --color-secondary: #6c8ac4;
+  --color-accent: #ff7e5f;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-background: #ffffff;
+  --color-border: #dddddd;
+
+  /* タイポグラフィ */
+  --font-size-base: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-large: 1.25rem;
+  --line-height: 1.5;
+
+  /* スペーシング */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+
+  /* その他 */
+  --border-radius: 4px;
+  --transition-speed: 0.3s;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ------------------------------------------
+   2. リセットと基本スタイル
+------------------------------------------ */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-html,
-body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-figure,
-blockquote,
-dl,
-dd {
   margin: 0;
   padding: 0;
 }
 
-html:focus-within {
+html {
+  font-size: 100%; /* 16px */
   scroll-behavior: smooth;
 }
 
 body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
-  line-height: 1.5;
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background-color: var(--color-background);
   font-family:
     'Roboto',
     -apple-system,
@@ -47,31 +81,105 @@ body {
 ul,
 ol {
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 img,
-picture {
-  max-width: 100%;
+picture,
+svg {
   display: block;
+  max-width: 100%;
+  height: auto;
 }
 
-input,
+/* ------------------------------------------
+   3. タイポグラフィ
+------------------------------------------ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-primary);
+  transition: color var(--transition-speed) ease;
+}
+
+a:hover,
+a:focus {
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+
+/* ------------------------------------------
+   4. フォームと入力要素
+------------------------------------------ */
 button,
-textarea,
-select {
+input,
+select,
+textarea {
   font: inherit;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm);
+}
+
+button {
+  cursor: pointer;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: background-color var(--transition-speed) ease;
+}
+
+button:hover,
+button:focus {
+  background-color: var(--color-secondary);
+}
+
+/* ------------------------------------------
+   5. ユーティリティクラス
+------------------------------------------ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* ------------------------------------------
+   6. アクセシビリティ
+------------------------------------------ */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html:focus-within {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
+  * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -79,21 +187,9 @@ select {
   }
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-button,
-input,
-select,
-textarea {
-  background: transparent;
-  border: 1px solid currentColor;
-  border-radius: 0;
-  padding: 0.5em;
-}
-
-button {
-  cursor: pointer;
+/* モバイルファースト: 基本スタイルはモバイル用、大きい画面はメディアクエリで対応 */
+@media (min-width: 768px) {
+  :root {
+    --font-size-base: 1.125rem;
+  }
 }

@@ -4,18 +4,20 @@
  * Google Maps APIの設定パラメータや初期設定値を定義します。
  */
 
-import { LoadScriptProps } from '@react-google-maps/api';
-
 import {
-  MapConfig,
-  ExtendedMapOptions,
   MapTypeControlStyle,
   ControlPosition,
-  MapDisplayMode,
-  MapDisplayModes,
-  MapDisplayModeOptions, // 不足していた型をインポート
+  MapDisplayMode, // 不足していた型をインポート
 } from '../types/maps.types';
 import { getEnvValue } from '../utils/env.utils';
+
+import type {
+  MapConfig,
+  ExtendedMapOptions,
+  MapDisplayModes,
+  MapDisplayModeOptions,
+} from '../types/maps.types';
+import type { LoadScriptProps } from '@react-google-maps/api';
 
 // ============================================================================
 // 環境変数処理
@@ -53,11 +55,16 @@ export const GOOGLE_MAPS_API_KEY = getEnvValue('VITE_GOOGLE_MAPS_API_KEY', '', S
  * Google Maps Map ID
  * カスタムスタイルのマップで使用します
  */
-export const GOOGLE_MAPS_MAP_ID = getEnvValue('VITE_GOOGLE_MAPS_MAP_ID', IS_DEV ? 'development-map-id' : '', String, {
-  required: true,
-  logErrors: true,
-  throwInProduction: !IS_DEV,
-});
+export const GOOGLE_MAPS_MAP_ID = getEnvValue(
+  'VITE_GOOGLE_MAPS_MAP_ID',
+  IS_DEV ? 'development-map-id' : '',
+  String,
+  {
+    required: true,
+    logErrors: true,
+    throwInProduction: !IS_DEV,
+  },
+);
 
 /**
  * デフォルトのマップ中心位置（佐渡島）
@@ -117,7 +124,12 @@ export const MAP_DISPLAY_MODES: MapDisplayModes = {
         {
           featureType: 'all',
           elementType: 'all',
-          stylers: [{ invert_lightness: true }, { hue: '#00aaff' }, { saturation: -50 }, { lightness: -10 }],
+          stylers: [
+            { invert_lightness: true },
+            { hue: '#00aaff' },
+            { saturation: -50 },
+            { lightness: -10 },
+          ],
         },
       ],
     };
@@ -278,7 +290,10 @@ export function getAreaBounds(areaType: string): google.maps.LatLngBounds {
     west: DEFAULT_CENTER.lng - 0.5,
   };
 
-  return new google.maps.LatLngBounds({ lat: bounds.south, lng: bounds.west }, { lat: bounds.north, lng: bounds.east });
+  return new google.maps.LatLngBounds(
+    { lat: bounds.south, lng: bounds.west },
+    { lat: bounds.north, lng: bounds.east },
+  );
 }
 
 /**

@@ -75,7 +75,11 @@ export function deepFreeze<T extends object>(obj: T): Readonly<T> {
   // オブジェクトのプロパティを再帰的に凍結
   Object.getOwnPropertyNames(obj).forEach((prop) => {
     const value = (obj as any)[prop];
-    if (value !== null && (typeof value === 'object' || typeof value === 'function') && !Object.isFrozen(value)) {
+    if (
+      value !== null &&
+      (typeof value === 'object' || typeof value === 'function') &&
+      !Object.isFrozen(value)
+    ) {
       deepFreeze(value);
     }
   });
@@ -128,7 +132,9 @@ export function isEqual(a: any, b: any): boolean {
 
     if (keysA.length !== keysB.length) return false;
 
-    return keysA.every((key) => Object.prototype.hasOwnProperty.call(b, key) && isEqual(a[key], b[key]));
+    return keysA.every(
+      (key) => Object.prototype.hasOwnProperty.call(b, key) && isEqual(a[key], b[key]),
+    );
   }
 
   // プリミティブ型は通常の比較で十分
@@ -204,7 +210,10 @@ export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Om
  * @param fn 各キーと値に適用する関数
  * @returns 変換後の新しいオブジェクト
  */
-export function mapObject<T, R>(obj: Record<string, T>, fn: (value: T, key: string) => R): Record<string, R> {
+export function mapObject<T, R>(
+  obj: Record<string, T>,
+  fn: (value: T, key: string) => R,
+): Record<string, R> {
   if (!obj) return {};
 
   const result: Record<string, R> = {};
@@ -350,7 +359,11 @@ export function deepMerge<T extends object>(target: T, ...sources: Partial<T>[])
  * updateIn({ a: { b: { c: 1 } } }, 'a.b.c', 2) // => { a: { b: { c: 2 } } }
  * updateIn({ a: { b: { c: 1 } } }, ['a', 'b', 'c'], 2) // => { a: { b: { c: 2 } } }
  */
-export function updateIn<T extends Record<string, any>, V>(obj: T, path: string | (string | number)[], value: V): T {
+export function updateIn<T extends Record<string, any>, V>(
+  obj: T,
+  path: string | (string | number)[],
+  value: V,
+): T {
   if (!obj) return { ...obj } as T;
 
   const pathArray = Array.isArray(path) ? path : path.split('.');
@@ -421,7 +434,10 @@ export function getIn<T, D = undefined>(
  * @param path チェックするプロパティのパス（ドット記法または配列）
  * @returns パスが存在する場合はtrue、そうでなければfalse
  */
-export function hasPath(obj: Record<string, any> | null | undefined, path: string | (string | number)[]): boolean {
+export function hasPath(
+  obj: Record<string, any> | null | undefined,
+  path: string | (string | number)[],
+): boolean {
   if (obj == null) return false;
 
   const pathArray = Array.isArray(path) ? path : path.split('.');

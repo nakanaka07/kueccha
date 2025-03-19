@@ -1,9 +1,9 @@
 /**
  * Prettier設定ファイル
- * 
+ *
  * このファイルはプロジェクト全体のコードフォーマット規則を定義します。
  * React/TypeScriptプロジェクト向けに最適化されています。
- * 
+ *
  * @see https://prettier.io/docs/en/options.html
  */
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
 
   // パーサーオプション
   embeddedLanguageFormatting: 'auto',
-  
+
   // ファイルタイプ別オーバーライド
   overrides: [
     {

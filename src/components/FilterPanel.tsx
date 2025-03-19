@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+
 import useCurrentLocation from '../../hooks/useCurrentLocation';
 import { MARKER_CONFIG, AREAS } from '../../utils/constants';
+
 import type { AreaType, FilterPanelProps } from '../../utils/types';
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -100,12 +102,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             />
             <span />
             <div>
-              <img src={MARKER_CONFIG.icons.CURRENT_LOCATION} alt="現在地のアイコン" aria-hidden="true" />
+              <img
+                src={MARKER_CONFIG.icons.CURRENT_LOCATION}
+                alt="現在地のアイコン"
+                aria-hidden="true"
+              />
               <span title="現在地">現在地</span>
             </div>
           </label>
         </div>
-        {locationError && <div role="alert">{locationError}</div>}
+        {locationError ? <div role="alert">{locationError}</div> : null}
       </div>
     </div>
   );

@@ -1,16 +1,16 @@
-import {
+import { MapEventHandlers, MapLoadError } from '../types';
+import { isBrowser } from '../utils/env.utils';
+import { createError } from '../utils/error.utils';
+
+import type {
   MapConfig,
   MarkerOptions,
   Marker,
   LatLngLiteral,
   Bounds,
-  MapEventHandlers,
-  MapLoadError,
   MarkerAnimation,
 } from '../types';
-import { isBrowser } from '../utils/env.utils';
-import { createError } from '../utils/error.utils';
-import { MapAdapter } from './index';
+import type { MapAdapter } from './index';
 
 function isGoogleMapsAvailable(): boolean {
   return isBrowser() && typeof google !== 'undefined' && typeof google.maps !== 'undefined';
@@ -18,23 +18,23 @@ function isGoogleMapsAvailable(): boolean {
 
 class GoogleMapMarker implements Marker {
   constructor(private googleMarker: google.maps.Marker) {}
-  
+
   setVisible(visible: boolean): void {
     this.googleMarker.setVisible(visible);
   }
-  
+
   setPosition(position: LatLngLiteral): void {
     this.googleMarker.setPosition(position);
   }
-  
+
   setAnimation(animation: MarkerAnimation): void {
     this.googleMarker.setAnimation(animation as google.maps.Animation);
   }
-  
+
   addListener(event: string, handler: Function): google.maps.MapsEventListener {
     return this.googleMarker.addListener(event, handler as any);
   }
-  
+
   remove(): void {
     this.googleMarker.setMap(null);
   }
@@ -54,14 +54,21 @@ export class GoogleMapsAdapter implements MapAdapter {
       }
 
       if (!isGoogleMapsAvailable()) {
-        throw createError('MAP', 'API_NOT_LOADED', 'Google Maps APIが読み込まれていません', { config });
+        throw createError('MAP', 'API_NOT_LOADED', 'Google Maps APIが読み込まれていません', {
+          config,
+        });
       }
 
       const container = document.getElementById(config.containerId);
       if (!container) {
-        throw createError('MAP', 'CONTAINER_NOT_FOUND', `マップコンテナ要素が見つかりません: ${config.containerId}`, {
-          config,
-        });
+        throw createError(
+          'MAP',
+          'CONTAINER_NOT_FOUND',
+          `マップコンテナ要素が見つかりません: ${config.containerId}`,
+          {
+            config,
+          },
+        );
       }
 
       const mapOptions: google.maps.MapOptions = {
@@ -112,14 +119,14 @@ export class GoogleMapsAdapter implements MapAdapter {
       animation: options.animation as google.maps.Animation,
       draggable: options.draggable ?? false,
     };
-    
+
     const googleMarker = new google.maps.Marker(markerOptions);
     const marker = new GoogleMapMarker(googleMarker);
-    
+
     if (options.id) {
       this.markers.set(options.id, marker);
     }
-    
+
     return marker;
   }
 
@@ -146,11 +153,11 @@ export class GoogleMapsAdapter implements MapAdapter {
   addEventListener(eventName: string, handler: Function): void {
     this.ensureInitialized();
     const listener = this.map!.addListener(eventName, handler as any);
-    
+
     if (!this.eventListeners.has(eventName)) {
       this.eventListeners.set(eventName, []);
     }
-    
+
     this.eventListeners.get(eventName)!.push(listener);
   }
 
@@ -158,9 +165,9 @@ export class GoogleMapsAdapter implements MapAdapter {
     if (!this.eventListeners.has(eventName)) {
       return;
     }
-    
+
     const listeners = this.eventListeners.get(eventName)!;
-    
+
     if (!handler) {
       listeners.forEach((listener) => {
         google.maps.event.removeListener(listener);

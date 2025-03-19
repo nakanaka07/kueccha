@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { Poi, SearchBarProps } from '../types/types';
+import type { Poi, SearchBarProps } from '../types/types';
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
   const [query, setQuery] = useState('');
@@ -37,7 +37,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, pois }) => {
 
   useEffect(() => {
     if (query) {
-      const filteredSuggestions = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
+      const filteredSuggestions = pois.filter((poi) =>
+        poi.name.toLowerCase().includes(query.toLowerCase()),
+      );
       setSuggestions(filteredSuggestions);
     } else {
       setSuggestions([]);

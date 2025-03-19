@@ -16,12 +16,13 @@ import defaultIcon from '../images/row2.png';
 import parkingIcon from '../images/shi_icon01.png';
 import snackIcon from '../images/shi_icon02.png';
 import currentLocationIcon from '../images/shi_icon04.png';
-import { AreaType } from '../types/areas.types';
-import {
+import { configToStyleOptions } from '../types/markers.types';
+
+import type { AreaType } from '../types/areas.types';
+import type {
   MarkerSize,
   MarkerConfigAttributes,
   MarkerStyleOptions,
-  configToStyleOptions,
   MarkerAnimation,
 } from '../types/markers.types';
 
@@ -156,7 +157,9 @@ export const MARKERS_BY_AREA = createMarkersConfig();
  * @param area - 検証するエリア識別子
  * @returns 有効なエリアキーまたはDEFAULT
  */
-function getSafeAreaKey(area: AreaType | keyof typeof MARKERS_BY_AREA): keyof typeof MARKERS_BY_AREA {
+function getSafeAreaKey(
+  area: AreaType | keyof typeof MARKERS_BY_AREA,
+): keyof typeof MARKERS_BY_AREA {
   return area in MARKERS_BY_AREA ? (area as keyof typeof MARKERS_BY_AREA) : 'DEFAULT';
 }
 
@@ -202,7 +205,10 @@ export function getMarkerIcon(area: AreaType | keyof typeof MARKERS_BY_AREA): st
  * @param isMobile モバイルデバイス用サイズを返すかどうか
  * @returns 対応するマーカーのサイズ（幅と高さ）
  */
-export function getMarkerSize(area: AreaType | keyof typeof MARKERS_BY_AREA, isMobile: boolean = false): MarkerSize {
+export function getMarkerSize(
+  area: AreaType | keyof typeof MARKERS_BY_AREA,
+  isMobile: boolean = false,
+): MarkerSize {
   const safeArea = getSafeAreaKey(area);
   const config = MARKERS_BY_AREA[safeArea];
 
@@ -216,7 +222,9 @@ export function getMarkerSize(area: AreaType | keyof typeof MARKERS_BY_AREA, isM
  * @param area エリアタイプ
  * @returns 対応するマーカーのアニメーション
  */
-export function getMarkerAnimationForArea(area: AreaType | keyof typeof MARKERS_BY_AREA): MarkerAnimation {
+export function getMarkerAnimationForArea(
+  area: AreaType | keyof typeof MARKERS_BY_AREA,
+): MarkerAnimation {
   const animation = getMarkerAttribute(area, 'animation');
 
   // アニメーションがnullの場合はそのまま返す

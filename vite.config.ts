@@ -1,10 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { defineConfig, loadEnv, UserConfig } from 'vite';
+
 import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
+import { defineConfig, loadEnv } from 'vite';
 import compression from 'vite-plugin-compression';
+import { VitePWA } from 'vite-plugin-pwa';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+import type { UserConfig } from 'vite';
+import type { VitePWAOptions } from 'vite-plugin-pwa';
 
 // ============================================================================
 // 型定義
@@ -17,7 +21,7 @@ enum EnvMode {
   Development = 'development',
   Production = 'production',
   Test = 'test',
-  Analyze = 'analyze'
+  Analyze = 'analyze',
 }
 
 /**
@@ -132,10 +136,7 @@ const MANUAL_CHUNKS: ManualChunks = {
     '@react-google-maps/api',
     '@googlemaps/markerclusterer',
   ],
-  'ui-vendor': [
-    '@emotion/react', 
-    '@emotion/styled'
-  ],
+  'ui-vendor': ['@emotion/react', '@emotion/styled'],
 };
 
 // ============================================================================
@@ -144,7 +145,7 @@ const MANUAL_CHUNKS: ManualChunks = {
 
 /**
  * 環境変数の検証と処理
- * 
+ *
  * @param env - 環境変数オブジェクト
  * @returns 検証結果と処理済み環境変数
  */
@@ -152,12 +153,14 @@ function validateEnvVariables(env: Record<string, string>): EnvValidationResult 
   // 必須変数の検証
   const missingRequired = ENV_VARS.required.filter((key) => !env[key]);
   if (missingRequired.length > 0) {
-    throw new Error(`必須環境変数が設定されていません: ${missingRequired.join(', ')}\n.env ファイルを確認してください。`);
+    throw new Error(
+      `必須環境変数が設定されていません: ${missingRequired.join(', ')}\n.env ファイルを確認してください。`,
+    );
   }
 
   // 任意変数の検証
   const missingOptional = ENV_VARS.optional.filter((key) => !env[key]);
-  
+
   // define 用の環境変数オブジェクトを作成
   const allVars = [...ENV_VARS.required, ...ENV_VARS.optional];
   const defineEnv = allVars.reduce<Record<string, string>>((acc, key) => {
@@ -174,13 +177,13 @@ function validateEnvVariables(env: Record<string, string>): EnvValidationResult 
 
 /**
  * 開発環境のHTTPS設定を構成
- * 
+ *
  * @returns HTTPS設定オブジェクト
  */
 function configureHttps(): HttpsConfig {
   const keyPath = path.resolve(__dirname, 'localhost.key');
   const certPath = path.resolve(__dirname, 'localhost.crt');
-  
+
   try {
     if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
       return {
@@ -192,8 +195,10 @@ function configureHttps(): HttpsConfig {
       };
     }
   } catch (error) {
-    console.error('SSL 証明書の読み込み中にエラーが発生しました:', 
-      error instanceof Error ? error.message : String(error));
+    console.error(
+      'SSL 証明書の読み込み中にエラーが発生しました:',
+      error instanceof Error ? error.message : String(error),
+    );
   }
 
   return { config: {}, hasHttps: false };
@@ -201,7 +206,7 @@ function configureHttps(): HttpsConfig {
 
 /**
  * 開発サーバーの設定を構成
- * 
+ *
  * @param isDev - 開発モードかどうか
  * @param isMobile - モバイル開発モードかどうか
  * @returns サーバー設定オブジェクト
@@ -212,13 +217,13 @@ function configureServer(isDev: boolean, isMobile = false): ServerConfig {
   const { config: httpsConfig, hasHttps } = configureHttps();
   const httpsEnabled = hasHttps && Object.keys(httpsConfig).length > 0;
   const port = isMobile ? APP_CONSTANTS.PORT.MOBILE : APP_CONSTANTS.PORT.DEFAULT;
-  
+
   if (httpsEnabled) {
     console.log('✅ HTTPS 設定が有効化されました');
   } else {
     console.log('ℹ️ SSL 証明書が見つからないため HTTP で起動します');
   }
-  
+
   return {
     https: httpsEnabled ? httpsConfig : false,
     headers: {
@@ -249,7 +254,7 @@ function configureServer(isDev: boolean, isMobile = false): ServerConfig {
 
 /**
  * ビルド設定を構成
- * 
+ *
  * @param mode - 環境モード
  * @returns ビルド設定オブジェクト
  */
@@ -261,19 +266,22 @@ function configureBuild(mode: string) {
     outDir: APP_CONSTANTS.OUTPUT_DIR,
     sourcemap: isProd ? 'hidden' : true,
     minify: isProd || isAnalyze ? 'terser' : false,
-    terserOptions: isProd || isAnalyze ? {
-      compress: {
-        drop_console: isProd, // 本番環境でのみconsole.*を削除
-        drop_debugger: true,
-        pure_funcs: isProd ? ['console.log', 'console.info', 'console.debug'] : [],
-      },
-      format: {
-        comments: false,
-      },
-      mangle: {
-        safari10: true,
-      },
-    } : undefined,
+    terserOptions:
+      isProd || isAnalyze
+        ? {
+            compress: {
+              drop_console: isProd, // 本番環境でのみconsole.*を削除
+              drop_debugger: true,
+              pure_funcs: isProd ? ['console.log', 'console.info', 'console.debug'] : [],
+            },
+            format: {
+              comments: false,
+            },
+            mangle: {
+              safari10: true,
+            },
+          }
+        : undefined,
     cssCodeSplit: true,
     cssTarget: ['chrome80', 'safari13', 'firefox78', 'edge80'],
     assetsInlineLimit: 4096,
@@ -287,15 +295,15 @@ function configureBuild(mode: string) {
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name || '';
           const extType = info.split('.').at(-1)?.toLowerCase() || '';
-          
+
           if (/\.(woff2?|ttf|otf)$/i.test(info)) {
             return 'assets/fonts/[name].[hash][extname]';
           }
-          
+
           if (/\.(png|jpe?g|gif|svg|webp|avif)$/i.test(info)) {
             return 'assets/images/[name].[hash][extname]';
           }
-          
+
           return 'assets/[name].[hash][extname]';
         },
       },
@@ -327,10 +335,7 @@ function configureOptimizeDeps() {
       '@react-google-maps/api',
       '@googlemaps/markerclusterer',
     ],
-    exclude: [
-      'workbox-window', 
-      'virtual:pwa-register',
-    ],
+    exclude: ['workbox-window', 'virtual:pwa-register'],
     esbuildOptions: {
       target: 'es2020',
       sourcemap: true,
@@ -350,7 +355,7 @@ function configureOptimizeDeps() {
 
 /**
  * PWA設定を構成
- * 
+ *
  * @param isProd - 本番モードかどうか
  * @returns PWA設定オブジェクト
  */
@@ -361,7 +366,8 @@ function configurePwa(isProd: boolean): VitePWAOptions {
     manifest: {
       name: '佐渡で食えっちゃ',
       short_name: '佐渡で食えっちゃ',
-      description: '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。オフラインでも使える観光支援アプリ。',
+      description:
+        '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。オフラインでも使える観光支援アプリ。',
       lang: 'ja',
       theme_color: '#4a6da7',
       background_color: '#ffffff',
@@ -372,14 +378,14 @@ function configurePwa(isProd: boolean): VitePWAOptions {
           src: '/icons/icon-192x192.png',
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any maskable'
+          purpose: 'any maskable',
         },
         {
           src: '/icons/icon-512x512.png',
           sizes: '512x512',
           type: 'image/png',
-          purpose: 'any maskable'
-        }
+          purpose: 'any maskable',
+        },
       ],
       categories: ['food', 'travel', 'navigation'],
       screenshots: [
@@ -388,9 +394,9 @@ function configurePwa(isProd: boolean): VitePWAOptions {
           sizes: '750x1334',
           type: 'image/webp',
           platform: 'narrow',
-          label: 'モバイル表示のマップ画面'
-        }
-      ]
+          label: 'モバイル表示のマップ画面',
+        },
+      ],
     },
     workbox: {
       // キャッシュ戦略の設定
@@ -491,7 +497,7 @@ export default defineConfig(({ mode, command }): UserConfig => {
     // 任意の環境変数がない場合に詳細情報を表示
     if (missingOptional.length > 0) {
       console.warn('📝 以下の任意環境変数を設定することで追加機能が有効になります:');
-      missingOptional.forEach(variable => {
+      missingOptional.forEach((variable) => {
         console.warn(`  - ${variable}`);
       });
     }
@@ -514,18 +520,20 @@ export default defineConfig(({ mode, command }): UserConfig => {
         // PWAプラグイン (開発環境でも有効に変更)
         VitePWA(configurePwa(isProd)),
         // 圧縮プラグイン (本番環境のみ)
-        isProd && compression({
-          algorithm: 'gzip',
-          ext: '.gz',
-          filter: /\.(js|css|html|svg)$/,
-          threshold: 10240, // 10KB以上のファイルのみ圧縮
-        }),
-        isProd && compression({
-          algorithm: 'brotliCompress',
-          ext: '.br',
-          filter: /\.(js|css|html|svg)$/,
-          threshold: 10240, // 10KB以上のファイルのみ圧縮
-        }),
+        isProd &&
+          compression({
+            algorithm: 'gzip',
+            ext: '.gz',
+            filter: /\.(js|css|html|svg)$/,
+            threshold: 10240, // 10KB以上のファイルのみ圧縮
+          }),
+        isProd &&
+          compression({
+            algorithm: 'brotliCompress',
+            ext: '.br',
+            filter: /\.(js|css|html|svg)$/,
+            threshold: 10240, // 10KB以上のファイルのみ圧縮
+          }),
       ].filter(Boolean),
       build: configureBuild(mode),
       optimizeDeps: configureOptimizeDeps(),
@@ -553,18 +561,14 @@ export default defineConfig(({ mode, command }): UserConfig => {
       },
       experimental: {
         renderBuiltUrl(filename: string) {
-          return isProd 
-            ? `${APP_CONSTANTS.BASE_PATH.PROD}${filename}` 
-            : `/${filename}`;
-        }
+          return isProd ? `${APP_CONSTANTS.BASE_PATH.PROD}${filename}` : `/${filename}`;
+        },
       },
       css: {
         devSourcemap: true,
         modules: {
           localsConvention: 'camelCaseOnly',
-          generateScopedName: isProd
-            ? '[hash:base64:8]'
-            : '[local]_[hash:base64:5]',
+          generateScopedName: isProd ? '[hash:base64:8]' : '[local]_[hash:base64:5]',
         },
       },
       // モバイルデバイス対応の向上

@@ -45,7 +45,9 @@ export function getEnvValue<T>(
 
       if (opts.logErrors) {
         const logFn = isProd ? console.error : console.warn;
-        logFn(`[${isProd ? '本番環境' : '開発環境'}] ${errorMsg}. デフォルト値を使用: ${defaultValue}`);
+        logFn(
+          `[${isProd ? '本番環境' : '開発環境'}] ${errorMsg}. デフォルト値を使用: ${defaultValue}`,
+        );
       }
     }
     return defaultValue;
@@ -122,6 +124,10 @@ export function getEnvValueAsBoolean(
 /**
  * 環境変数からJSON値を取得
  */
-export function getEnvValueAsJson<T>(key: string, defaultValue: T, options?: Parameters<typeof getEnvValue>[3]): T {
+export function getEnvValueAsJson<T>(
+  key: string,
+  defaultValue: T,
+  options?: Parameters<typeof getEnvValue>[3],
+): T {
   return getEnvValue(key, defaultValue, (val) => JSON.parse(val) as T, options);
 }

@@ -157,7 +157,10 @@ export function formatEnglishDate(date: Date | string | number): string {
  * @param format カスタムフォーマット（オプション）
  * @returns 現在の言語に合わせてフォーマットされた日付文字列
  */
-export function formatDate(date: Date | string | number, format?: 'short' | 'long' | 'full'): string {
+export function formatDate(
+  date: Date | string | number,
+  format?: 'short' | 'long' | 'full',
+): string {
   if (!isValidDate(date)) {
     return getCurrentLanguage() === 'ja' ? '無効な日付' : 'Invalid date';
   }
@@ -216,7 +219,10 @@ export function formatDate(date: Date | string | number, format?: 'short' | 'lon
  * @param lang 言語設定（デフォルト: 現在の言語）
  * @returns 相対的な日付表現
  */
-export function toRelativeTime(date: Date | string | number, lang: SupportedLanguage = getCurrentLanguage()): string {
+export function toRelativeTime(
+  date: Date | string | number,
+  lang: SupportedLanguage = getCurrentLanguage(),
+): string {
   if (!isValidDate(date)) {
     return lang === 'ja' ? '無効な日付' : 'Invalid date';
   }

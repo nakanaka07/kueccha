@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
 import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
+
 import type { InfoWindowProps, LatLngLiteral, BusinessHourKey } from '../../utils/types';
 
 const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
@@ -62,14 +64,18 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
         </button>
       </div>
       <div>
-        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && <div>{businessHoursContent}</div>}
+        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
+          <div>{businessHoursContent}</div>
+        )}
         <div>
-          {poi.location && (
+          {poi.location ? (
             <div>
               <span>位置</span>
-              <span>{typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}</span>
+              <span>
+                {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
+              </span>
             </div>
-          )}
+          ) : null}
           {[
             {
               key: 'description',
@@ -153,7 +159,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
           ].map((item) =>
             item.condition ? (
               <div key={item.key}>
-                {item.title && <h3>{item.title}</h3>}
+                {item.title ? <h3>{item.title}</h3> : null}
                 {item.content}
               </div>
             ) : null,

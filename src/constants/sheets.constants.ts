@@ -4,9 +4,10 @@
  * データソースとなるGoogle Sheetsの設定パラメータを定義します。
  * 環境変数から取得したAPI KeyとスプレッドシートIDが含まれます。
  */
-import { AreaType } from '../types/areas.types';
-import { SheetRow, SheetColumnIdentifier, SheetsConfig } from '../types/sheets.types';
 import { getEnvValue, getEnvValueAsBoolean } from '../utils/env.utils';
+
+import type { AreaType } from '../types/areas.types';
+import type { SheetRow, SheetColumnIdentifier, SheetsConfig } from '../types/sheets.types';
 
 // ============================================================================
 // 環境と基本設定
@@ -169,7 +170,16 @@ export const SHEETS_PROCESSING_OPTIONS = {
   jsonColumns: ['options'],
 
   /** 営業時間関連の列（曜日ごとの処理用） */
-  businessHourColumns: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'holiday'],
+  businessHourColumns: [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+    'holiday',
+  ],
 
   /** エリアマッピングの定義 */
   areaMapping: {
@@ -231,7 +241,11 @@ function getAreaTypeFromName(areaName?: string | null): AreaType {
  * @param defaultValue - デフォルト値
  * @returns 取得した値または変換後の値
  */
-function getColumnValue<T>(row: SheetRow, columnIdentifier: SheetColumnIdentifier, defaultValue: T): T {
+function getColumnValue<T>(
+  row: SheetRow,
+  columnIdentifier: SheetColumnIdentifier,
+  defaultValue: T,
+): T {
   // 通常の列インデックスの場合
   if (typeof columnIdentifier === 'number') {
     const adjustedIndex = getAdjustedColumnIndex(columnIdentifier);
@@ -309,7 +323,10 @@ function parseJsonSafely<T>(jsonString: string | undefined | null, defaultValue:
  * @param type - 変換する型
  * @returns 変換された値
  */
-function convertValueByType(value: unknown, type: 'string' | 'number' | 'boolean' | 'date'): unknown {
+function convertValueByType(
+  value: unknown,
+  type: 'string' | 'number' | 'boolean' | 'date',
+): unknown {
   if (value === null || value === undefined) return null;
 
   switch (type) {

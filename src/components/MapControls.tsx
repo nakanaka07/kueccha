@@ -1,8 +1,10 @@
 import React from 'react';
+
 import resetNorthIcon from '../../utils/images/ano_icon04.png';
 import recommendIcon from '../../utils/images/ano_icon_recommend.png';
 import currentLocationIcon from '../../utils/images/shi_icon04.png';
-import { MapControlsProps } from '../../utils/types';
+
+import type { MapControlsProps } from '../../utils/types';
 
 export const MapControls: React.FC<MapControlsProps> = ({
   onResetNorth,

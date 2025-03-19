@@ -27,7 +27,10 @@ export enum AreaCategory {
  * 地理的エリアの型定義
  * 佐渡島の地理的区分を表します
  */
-export type RegionAreaType = 'RYOTSU_AIKAWA' | 'KANAI_SAWADA_NIIBO_HATANO_MANO' | 'AKADOMARI_HAMOCHI_OGI';
+export type RegionAreaType =
+  | 'RYOTSU_AIKAWA'
+  | 'KANAI_SAWADA_NIIBO_HATANO_MANO'
+  | 'AKADOMARI_HAMOCHI_OGI';
 
 /**
  * 施設タイプの型定義

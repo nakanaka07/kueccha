@@ -2,7 +2,7 @@
 
 /**
  * ビルド後のアセット最適化スクリプト
- * 
+ *
  * 機能:
  * - 画像の最適化
  * - 不要なファイルの削除
@@ -13,9 +13,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import sharp from 'sharp';
-import glob from 'fast-glob';
+
 import chalk from 'chalk';
+import glob from 'fast-glob';
+import sharp from 'sharp';
 
 // 型定義
 interface OptimizationConfig {
@@ -40,8 +41,8 @@ const config: OptimizationConfig = {
     // セキュリティヘッダー
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
-    'X-XSS-Protection': '1; mode=block'
-  }
+    'X-XSS-Protection': '1; mode=block',
+  },
 };
 
 // パスの設定
@@ -56,18 +57,18 @@ async function main(): Promise<void> {
   try {
     // ビルドディレクトリの存在確認
     checkBuildDirectory();
-    
+
     console.log(chalk.blue('🔄 ビルドアセットの最適化を実行中...'));
-    
+
     // 各最適化タスクを並行実行
     await Promise.all([
       copyServiceWorker(),
       checkAndGenerateManifest(),
       optimizeImages(),
       removeUnnecessaryFiles(),
-      generateCacheConfig()
+      generateCacheConfig(),
     ]);
-    
+
     console.log(chalk.green('✅ ビルドアセットの最適化が完了しました'));
   } catch (error) {
     console.error(chalk.red(`❌ 最適化処理中にエラーが発生しました: ${error.message}`));
@@ -90,12 +91,12 @@ function checkBuildDirectory(): void {
 async function copyServiceWorker(): Promise<void> {
   const swSource = path.join(srcDir, 'service-worker.js');
   const swDest = path.join(distDir, 'service-worker.js');
-  
+
   try {
     if (fs.existsSync(swSource)) {
       await fs.promises.copyFile(swSource, swDest);
       console.log(chalk.green('✅ サービスワーカーをコピーしました'));
-      
+
       // サービスワーカー登録スクリプトが存在するか確認
       const indexHtmlPath = path.join(distDir, 'index.html');
       if (fs.existsSync(indexHtmlPath)) {
@@ -106,11 +107,15 @@ async function copyServiceWorker(): Promise<void> {
       }
     } else {
       // Workboxを使用したサービスワーカー生成
-      console.log(chalk.yellow('⚠️ サービスワーカーファイルが見つかりません。基本的なSWを生成します。'));
+      console.log(
+        chalk.yellow('⚠️ サービスワーカーファイルが見つかりません。基本的なSWを生成します。'),
+      );
       await generateBasicServiceWorker();
     }
   } catch (error) {
-    console.warn(chalk.yellow(`⚠️ サービスワーカーの処理中にエラーが発生しました: ${error.message}`));
+    console.warn(
+      chalk.yellow(`⚠️ サービスワーカーの処理中にエラーが発生しました: ${error.message}`),
+    );
   }
 }
 
@@ -153,11 +158,13 @@ self.addEventListener('fetch', (event) => {
  */
 async function checkAndGenerateManifest(): Promise<void> {
   const manifestPath = path.join(distDir, 'manifest.json');
-  
+
   try {
     if (!fs.existsSync(manifestPath)) {
-      console.log(chalk.yellow('⚠️ manifest.jsonが見つかりません。基本的なマニフェストを生成します。'));
-      
+      console.log(
+        chalk.yellow('⚠️ manifest.jsonが見つかりません。基本的なマニフェストを生成します。'),
+      );
+
       // 基本的なマニフェストファイルを生成
       const manifest = {
         name: 'Kueccha App',
@@ -172,31 +179,31 @@ async function checkAndGenerateManifest(): Promise<void> {
             src: '/assets/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any maskable',
           },
           {
             src: '/assets/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
+            purpose: 'any maskable',
+          },
+        ],
       };
-      
+
       await fs.promises.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
       console.log(chalk.green('✅ 基本的なmanifest.jsonを生成しました'));
-      
+
       // マニフェストアイコンのプレースホルダー作成
       await ensureManifestIcons();
     } else {
       console.log(chalk.green('✅ manifest.jsonが存在します'));
-      
+
       // マニフェストが有効かチェック
       const manifest = JSON.parse(await fs.promises.readFile(manifestPath, 'utf-8'));
       if (!manifest.icons || manifest.icons.length === 0) {
         console.log(chalk.yellow('⚠️ マニフェストにアイコンが定義されていません'));
       }
-      
+
       // アイコンファイルの存在確認
       if (manifest.icons) {
         for (const icon of manifest.icons) {
@@ -217,31 +224,31 @@ async function checkAndGenerateManifest(): Promise<void> {
  */
 async function ensureManifestIcons(): Promise<void> {
   const assetsDir = path.join(distDir, 'assets');
-  
+
   // アセットディレクトリが存在しなければ作成
   if (!fs.existsSync(assetsDir)) {
     await fs.promises.mkdir(assetsDir, { recursive: true });
   }
-  
+
   // プレースホルダーの色 (PWAが必須とするアイコン)
   const placeholderColor = { r: 66, g: 133, b: 244, alpha: 1 }; // Google Blue
-  
+
   // 必要なサイズのアイコンを生成
   for (const size of [192, 512]) {
     const iconPath = path.join(assetsDir, `icon-${size}x${size}.png`);
-    
+
     if (!fs.existsSync(iconPath)) {
       await sharp({
         create: {
           width: size,
           height: size,
           channels: 4,
-          background: placeholderColor
-        }
+          background: placeholderColor,
+        },
       })
-      .png()
-      .toFile(iconPath);
-      
+        .png()
+        .toFile(iconPath);
+
       console.log(chalk.green(`✅ プレースホルダーアイコンを生成しました: ${size}x${size}`));
     }
   }
@@ -255,58 +262,60 @@ async function optimizeImages(): Promise<void> {
     // 画像ファイルを検索
     const imageExtensions = config.imageFormats.join('|').replace(/\./g, '');
     const imagePattern = `${distDir}/**/*.@(${imageExtensions})`;
-    
+
     const imageFiles = await glob(imagePattern, { onlyFiles: true });
-    
+
     if (imageFiles.length === 0) {
       console.log(chalk.yellow('⚠️ 最適化対象の画像ファイルが見つかりませんでした'));
       return;
     }
-    
+
     console.log(chalk.blue(`🖼️ ${imageFiles.length}枚の画像を最適化中...`));
-    
+
     // 各画像を最適化
     const optimizationPromises = imageFiles.map(async (imagePath) => {
       const extension = path.extname(imagePath).toLowerCase();
       const filename = path.basename(imagePath, extension);
       const dirname = path.dirname(imagePath);
-      
+
       try {
         // 画像の最適化
         const image = sharp(imagePath);
-        
+
         // フォーマット別の最適化オプション
         if (extension === '.jpg' || extension === '.jpeg') {
           await image
             .jpeg({ quality: 80, progressive: true })
             .toBuffer()
-            .then(data => fs.promises.writeFile(imagePath, data));
+            .then((data) => fs.promises.writeFile(imagePath, data));
         } else if (extension === '.png') {
           await image
             .png({ compressionLevel: 9, palette: true })
             .toBuffer()
-            .then(data => fs.promises.writeFile(imagePath, data));
+            .then((data) => fs.promises.writeFile(imagePath, data));
         } else if (extension === '.webp') {
           await image
             .webp({ quality: 80 })
             .toBuffer()
-            .then(data => fs.promises.writeFile(imagePath, data));
+            .then((data) => fs.promises.writeFile(imagePath, data));
         }
-        
+
         // WebP版の生成 (jpg/pngの場合)
         if (extension === '.jpg' || extension === '.jpeg' || extension === '.png') {
-          await image
-            .webp({ quality: 80 })
-            .toFile(path.join(dirname, `${filename}.webp`));
+          await image.webp({ quality: 80 }).toFile(path.join(dirname, `${filename}.webp`));
         }
-        
+
         return imagePath;
       } catch (error) {
-        console.warn(chalk.yellow(`⚠️ 画像の最適化に失敗しました ${path.basename(imagePath)}: ${error.message}`));
+        console.warn(
+          chalk.yellow(
+            `⚠️ 画像の最適化に失敗しました ${path.basename(imagePath)}: ${error.message}`,
+          ),
+        );
         return null;
       }
     });
-    
+
     const optimizedImages = (await Promise.all(optimizationPromises)).filter(Boolean);
     console.log(chalk.green(`✅ ${optimizedImages.length}枚の画像を最適化しました`));
   } catch (error) {
@@ -319,20 +328,20 @@ async function optimizeImages(): Promise<void> {
  */
 async function removeUnnecessaryFiles(): Promise<void> {
   try {
-    const patterns = config.filesToRemove.map(pattern => `${distDir}/**/${pattern}`);
+    const patterns = config.filesToRemove.map((pattern) => `${distDir}/**/${pattern}`);
     const filesToRemove = await glob(patterns);
-    
+
     if (filesToRemove.length === 0) {
       console.log(chalk.green('✅ 削除すべき不要ファイルはありません'));
       return;
     }
-    
+
     console.log(chalk.blue(`🗑️ ${filesToRemove.length}個の不要ファイルを削除中...`));
-    
+
     for (const file of filesToRemove) {
       await fs.promises.unlink(file);
     }
-    
+
     console.log(chalk.green(`✅ ${filesToRemove.length}個の不要ファイルを削除しました`));
   } catch (error) {
     console.warn(chalk.yellow(`⚠️ 不要ファイルの削除中にエラーが発生しました: ${error.message}`));
@@ -345,33 +354,32 @@ async function removeUnnecessaryFiles(): Promise<void> {
 async function generateCacheConfig(): Promise<void> {
   try {
     const headersPath = path.join(distDir, '_headers');
-    
+
     let headersContent = `# Netlify/Vercel/Cloudflare Pages 用のヘッダー設定\n`;
     headersContent += `/*\n`;
-    
+
     Object.entries(config.headers).forEach(([key, value]) => {
       headersContent += `  ${key}: ${value}\n`;
     });
-    
+
     // キャッシュしない特定のファイルに対する設定
     headersContent += `\n# サービスワーカーはキャッシュさせない\n`;
     headersContent += `/service-worker.js\n`;
     headersContent += `  Cache-Control: no-cache, no-store, must-revalidate\n`;
-    
+
     headersContent += `\n# マニフェストファイルは短期キャッシュ\n`;
     headersContent += `/manifest.json\n`;
     headersContent += `  Cache-Control: public, max-age=86400\n`;
-    
+
     await fs.promises.writeFile(headersPath, headersContent);
     console.log(chalk.green('✅ _headers ファイルを生成しました'));
-    
   } catch (error) {
     console.warn(chalk.yellow(`⚠️ キャッシュ設定生成中にエラーが発生しました: ${error.message}`));
   }
 }
 
 // スクリプト実行
-main().catch(error => {
+main().catch((error) => {
   console.error(chalk.red(`致命的なエラーが発生しました: ${error.message}`));
   process.exit(1);
 });

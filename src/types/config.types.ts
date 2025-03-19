@@ -6,9 +6,9 @@
  */
 
 /// <reference types="@types/google.maps" />
-import { AreaType } from './areas.types';
-import { MapConfig } from './maps.types';
-import { SheetsConfig } from './sheets.types';
+import type { AreaType } from './areas.types';
+import type { MapConfig } from './maps.types';
+import type { SheetsConfig } from './sheets.types';
 
 // ============================================================================
 // 環境設定関連の型定義
