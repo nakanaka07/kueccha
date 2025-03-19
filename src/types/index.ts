@@ -42,11 +42,8 @@ export * from './ui.types';
 // 設定関連の型
 export * from './config.types';
 
-// 国際化関連の型定義
-export type { SupportedLanguage } from '../constants/i18n.constants';
-
 // ============================================================================
-// 頻繁に使用される型のエイリアス（オプション）
+// 頻繁に使用される型のエイリアス
 // ============================================================================
 
 // エクスポートする共通型へのわかりやすいエイリアスを提供
@@ -61,6 +58,9 @@ export {
   // 地理データ型
   type LatLngLiteral,
   type Bounds,
+  createLatLng,
+  createLatitude,
+  createLongitude,
 } from './geo.types';
 
 export {

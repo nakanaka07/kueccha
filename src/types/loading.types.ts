@@ -1,24 +1,25 @@
 /**
- * ローディング関連の型定義ファイル
+ * ローディング状態関連の型定義ファイル
  *
- * アプリケーションのローディング状態を管理するための型を定義します。
- * これらの型はローディングコンポーネントやローディング状態の管理に使用されます。
+ * アプリケーション全体でのローディング状態管理に関する型を定義します。
+ * 非同期処理の進捗状況と状態遷移を型安全に扱うための定義です。
  */
 
 import type { BaseProps } from './base.types';
+import type { AppError } from './errors.types';
 
 // ============================================================================
-// ローディング状態の基本型定義
+// ローディング状態の列挙型と基本型
 // ============================================================================
 
 /**
- * ローディングの状態を表す列挙型
- * より詳細なローディング状態を管理するために使用します
+ * ローディング状態を表す列挙型。
+ * アプリケーション全体で一貫したローディング状態を管理します。
  */
 export enum LoadingStatus {
-  /** 初期状態・アイドル状態 */
+  /** 初期状態 */
   IDLE = 'idle',
-  /** 初回読み込み中 */
+  /** ローディング中 */
   LOADING = 'loading',
   /** データ更新中 */
   REFRESHING = 'refreshing',
@@ -38,23 +39,9 @@ export enum LoadingStatus {
  */
 export type ProgressPercentage = number & { readonly __brand: unique symbol };
 
-/**
- * アプリケーション固有のエラー情報
- * 標準のErrorオブジェクトを拡張し、より詳細なエラー情報を提供します
- */
-export interface AppError {
-  /** エラーメッセージ */
-  message: string;
-
-  /** エラーコード */
-  code?: string;
-
-  /** 元のエラーオブジェクト */
-  originalError?: Error;
-
-  /** エラーに関連する追加コンテキスト情報 */
-  context?: Record<string, unknown>;
-}
+// ============================================================================
+// ローディング状態管理の型
+// ============================================================================
 
 /**
  * ローディング状態を表す拡張型。
@@ -86,25 +73,18 @@ export interface LoadingState {
  * データ読み込み中やAPI呼び出し中の表示を制御します。
  */
 export interface LoadingFallbackProps extends BaseProps {
-  /**
-   * 現在ローディング中かどうか。true の場合はローディング表示、false の場合はフェードアウト
-   */
-  isLoading: boolean;
-
-  /**
-   * ローディング中に表示するメッセージ
-   * @default 'データを読み込んでいます...'
-   */
+  /** ローディング中に表示するメッセージ */
   message?: string;
 
   /**
-   * ローディングスピナーに適用するCSSクラス名
-   * @default 'spinner-border text-primary'
+   * ローディング表示の遅延時間（ミリ秒）
+   * この時間が経過するまでローディング表示を開始しない
+   * @default 300
    */
-  spinnerClassName?: string;
+  delay?: number;
 
   /**
-   * フェードアウトアニメーションの時間（ミリ秒）
+   * ローディング表示のフェードイン時間（ミリ秒）
    * @default 1000
    */
   fadeDuration?: number;
@@ -182,18 +162,5 @@ export function createInitialLoadingState(timeout: number = 30000): LoadingState
     status: LoadingStatus.IDLE,
     progress: validateProgress(0),
     timeout,
-  };
-}
-
-/**
- * 初期ローディング結果を生成する関数
- * @returns 初期化されたローディング結果
- */
-export function createInitialLoadingResult<T>(): LoadingResult<T> {
-  return {
-    data: null,
-    status: LoadingStatus.IDLE,
-    progress: validateProgress(0),
-    error: null,
   };
 }

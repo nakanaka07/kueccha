@@ -51,6 +51,7 @@ interface EnvVariables {
 interface EnvValidationResult {
   readonly defineEnv: Record<string, string>;
   readonly missingOptional: readonly string[];
+  readonly logWarnings: () => void; // 追加: 警告ログを表示する関数
 }
 
 /**
@@ -168,7 +169,17 @@ function validateEnvVariables(env: Record<string, string>): EnvValidationResult 
     return acc;
   }, {});
 
-  return { defineEnv, missingOptional };
+  // 警告ログ出力関数を追加
+  const logWarnings = () => {
+    if (missingOptional.length > 0) {
+      console.warn('📝 以下の任意環境変数を設定することで追加機能が有効になります:');
+      missingOptional.forEach((variable) => {
+        console.warn(`  - ${variable}`);
+      });
+    }
+  };
+
+  return { defineEnv, missingOptional, logWarnings };
 }
 
 // ============================================================================
@@ -361,7 +372,7 @@ function configureOptimizeDeps() {
  */
 function configurePwa(isProd: boolean): VitePWAOptions {
   return {
-    registerType: 'autoUpdate',
+    registerType: 'prompt', // アプリ更新時にユーザーに通知
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
     manifest: {
       name: '佐渡で食えっちゃ',
@@ -399,6 +410,10 @@ function configurePwa(isProd: boolean): VitePWAOptions {
       ],
     },
     workbox: {
+      // アプリケーションが更新された場合の処理
+      skipWaiting: true,
+      clientsClaim: true,
+
       // キャッシュ戦略の設定
       runtimeCaching: [
         {
@@ -427,6 +442,19 @@ function configurePwa(isProd: boolean): VitePWAOptions {
             networkTimeoutSeconds: 10,
           },
         },
+        // APIデータのキャッシュ戦略
+        {
+          urlPattern: /\/api\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 10,
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 24 * 60 * 60, // 24時間
+            },
+          },
+        },
         {
           urlPattern: /\.(js|css)$/,
           handler: 'StaleWhileRevalidate',
@@ -439,13 +467,19 @@ function configurePwa(isProd: boolean): VitePWAOptions {
           },
         },
         {
-          urlPattern: /\.(png|jpg|jpeg|svg|gif|webp|avif|ico)$/,
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/i,
           handler: 'CacheFirst',
           options: {
-            cacheName: 'images',
+            cacheName: 'images-cache',
             expiration: {
-              maxEntries: 150,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30日
+              maxEntries: 100,
+              maxAgeSeconds: 30 * 24 * 60 * 60, // 30日
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+            matchOptions: {
+              ignoreSearch: true,
             },
           },
         },
@@ -473,7 +507,7 @@ function configurePwa(isProd: boolean): VitePWAOptions {
       type: 'module',
       navigateFallback: 'index.html',
     },
-    injectRegister: 'auto',
+    injectRegister: 'script',
     minify: isProd,
     includeManifestIcons: true,
   };
@@ -492,15 +526,10 @@ export default defineConfig(({ mode, command }): UserConfig => {
     const isMobile = env.VITE_MOBILE === 'true'; // モバイル開発モード
 
     // 環境変数の検証
-    const { defineEnv, missingOptional } = validateEnvVariables(env);
+    const { defineEnv, missingOptional, logWarnings } = validateEnvVariables(env);
 
     // 任意の環境変数がない場合に詳細情報を表示
-    if (missingOptional.length > 0) {
-      console.warn('📝 以下の任意環境変数を設定することで追加機能が有効になります:');
-      missingOptional.forEach((variable) => {
-        console.warn(`  - ${variable}`);
-      });
-    }
+    logWarnings();
 
     // バージョン情報の取得
     const appVersion = process.env.npm_package_version || '0.0.0';
@@ -583,8 +612,30 @@ export default defineConfig(({ mode, command }): UserConfig => {
     };
   } catch (error) {
     // エラーハンドリングの強化
-    console.error('⛔ 設定エラー:', error instanceof Error ? error.message : String(error));
-    console.error('詳細:', error instanceof Error ? error.stack : '');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    console.error('⛔ 設定エラー:', errorMessage);
+
+    // スタックトレースが存在する場合のみ表示
+    if (errorStack) {
+      console.error('詳細:', errorStack);
+    }
+
+    // エラーの種類に応じたアドバイスを表示
+    if (errorMessage.includes('環境変数')) {
+      console.error('ヒント: ".env"ファイルが正しく設定されているか確認してください。');
+      console.error('必要な環境変数: ' + ENV_VARS.required.join(', '));
+    } else if (errorMessage.includes('plugin')) {
+      console.error(
+        'ヒント: プラグインの互換性を確認してください。npm installを実行して依存関係を更新してみてください。',
+      );
+    } else if (errorMessage.includes('path') || errorMessage.includes('file')) {
+      console.error(
+        'ヒント: ファイルパスが正しいか確認してください。必要なディレクトリとファイルが存在するか確認してください。',
+      );
+    }
+
     process.exit(1);
   }
 });

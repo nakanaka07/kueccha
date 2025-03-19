@@ -19,6 +19,9 @@ export * from './device.services';
 // フォーマッターサービス
 export * from './formatters.services';
 
+// 直接エクスポート（下位互換性のため）
+export * from './serviceWorker.services';
+
 // ============================================================================
 // 名前空間によるグループ化
 // ============================================================================
@@ -27,6 +30,7 @@ export * from './formatters.services';
 import * as ConfigService from './config.services';
 import * as DeviceService from './device.services';
 import * as FormattersService from './formatters.services';
+import * as ServiceWorkerService from './serviceWorker.services';
 
 /**
  * 設定サービス
@@ -80,6 +84,20 @@ export const Formatters = {
   address: FormattersService.formatAddress,
   /** 電話番号の有効性を検証 */
   isValidPhone: FormattersService.isValidPhoneNumber,
+};
+
+/**
+ * PWA関連サービス
+ *
+ * サービスワーカーとPWA機能を管理します。
+ */
+export const PWA = {
+  /** サービスワーカー登録 */
+  register: ServiceWorkerService.registerSW,
+  /** サービスワーカー更新 */
+  update: ServiceWorkerService.updateSW,
+  /** サービスワーカーの状態確認 */
+  checkStatus: ServiceWorkerService.checkSWStatus,
 };
 
 // ============================================================================

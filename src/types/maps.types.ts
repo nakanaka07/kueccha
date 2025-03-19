@@ -7,8 +7,6 @@
 
 /// <reference types="@types/google.maps" />
 
-import { MapTypeControlStyle, MapStyleOptions } from './geo.types';
-
 import type { BaseProps } from './base.types';
 import type { LatLngLiteral, ControlPosition, ControlPositionString, MapTypeId } from './geo.types';
 import type { Poi } from './poi.types';
@@ -23,10 +21,25 @@ import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
  * アプリケーションで使用可能なマップ表示モード
  */
 export enum MapDisplayMode {
+  /** 標準的な道路地図 */
   STANDARD = 'standard',
+  /** 衛星写真 */
   SATELLITE = 'satellite',
-  ACCESSIBLE = 'accessible', // 高コントラスト、シンプル表示など
-  NIGHT = 'night', // 夜間モード
+  /** アクセシビリティ向上モード */
+  ACCESSIBLE = 'accessible',
+  /** 夜間モード */
+  NIGHT = 'night',
+}
+
+/**
+ * マップ表示モードのマッピング
+ * 各モードの設定を管理します
+ */
+export interface MapDisplayModes {
+  [MapDisplayMode.STANDARD]: MapDisplayModeOptions;
+  [MapDisplayMode.SATELLITE]: MapDisplayModeOptions;
+  [MapDisplayMode.ACCESSIBLE]: MapDisplayModeOptions;
+  [MapDisplayMode.NIGHT]: MapDisplayModeOptions;
 }
 
 /**
@@ -41,13 +54,18 @@ export interface MapDisplayModeOptions {
 }
 
 /**
- * マップ表示モードマッピングの型
+ * マップのスタイル設定
  */
-export type MapDisplayModes = Record<MapDisplayMode, MapDisplayModeOptions>;
+export interface MapStyle {
+  /** コンテナの幅 */
+  width: string;
 
-// ============================================================================
-// マップ設定関連の型定義
-// ============================================================================
+  /** コンテナの高さ */
+  height: string;
+
+  /** 追加のCSSスタイル（オプション） */
+  additionalStyles?: React.CSSProperties;
+}
 
 /**
  * 標準のMapOptions型を拡張してカスタムコントロールをサポート
@@ -60,18 +78,6 @@ export interface ExtendedMapOptions extends MapOptions {
   cameraControlOptions?: {
     position: ControlPosition | ControlPositionString;
   };
-}
-
-/**
- * マップのスタイルを表す型。
- * マップコンテナのサイズや表示方法を定義します。
- */
-export interface MapStyle {
-  /** マップの幅 (CSSの値: '100%', '500px'など) */
-  width: string;
-
-  /** マップの高さ (CSSの値: '100%', '500px'など) */
-  height: string;
 }
 
 /**
@@ -129,13 +135,16 @@ export interface MapConfig {
  */
 export interface MapLoadError {
   /** エラーコード */
-  code: 'API_KEY_INVALID' | 'NETWORK_ERROR' | 'SCRIPT_LOAD_ERROR' | 'UNKNOWN';
+  code: string;
 
   /** エラーメッセージ */
   message: string;
 
-  /** 追加の詳細情報（オプション） */
+  /** 追加のエラー詳細情報（オプション） */
   details?: unknown;
+
+  /** エラーのタイムスタンプ */
+  timestamp: number;
 }
 
 /**
@@ -201,10 +210,6 @@ export interface MapComponentProps {
   /** マップイベントハンドラ */
   eventHandlers?: MapEventHandlers;
 }
-
-// ============================================================================
-// マップUI関連の型定義
-// ============================================================================
 
 /**
  * マップエラーコンポーネントのプロパティ型。

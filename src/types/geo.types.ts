@@ -6,7 +6,6 @@
  */
 
 /// <reference types="@types/google.maps" />
-import { BaseProps } from './base.types';
 
 // ============================================================================
 // 基本地理データ型 - ブランド型による強化
@@ -29,11 +28,11 @@ export type Longitude = number & { readonly __brand: unique symbol };
  * Google Maps APIの同名型（google.maps.LatLngLiteral）と互換性があります。
  */
 export interface LatLngLiteral {
-  /** 緯度（-90〜90の範囲） */
-  lat: Latitude | number;
+  /** 緯度 (-90から90) */
+  lat: number;
 
-  /** 経度（-180〜180の範囲） */
-  lng: Longitude | number;
+  /** 経度 (-180から180) */
+  lng: number;
 }
 
 /**
@@ -41,10 +40,10 @@ export interface LatLngLiteral {
  * 地図の表示範囲などに使用されます。
  */
 export interface Bounds {
-  /** 北東端の座標 */
+  /** 北東の隅の座標 */
   northeast: LatLngLiteral;
 
-  /** 南西端の座標 */
+  /** 南西の隅の座標 */
   southwest: LatLngLiteral;
 }
 
@@ -101,8 +100,11 @@ export interface Distance {
   /** 距離の値 */
   value: number;
 
-  /** 距離の単位 */
-  unit: 'km' | 'm' | 'mi' | 'ft';
+  /** 距離の単位 ('m', 'km', 'mi'など) */
+  unit: string;
+
+  /** 表示用にフォーマットされた距離文字列 */
+  formatted: string;
 }
 
 /**
@@ -110,14 +112,17 @@ export interface Distance {
  * Geolocation APIから取得した位置情報の精度を表します。
  */
 export interface GeolocationAccuracy {
-  /** 精度（メートル） */
-  accuracy: number;
+  /** 精度の値（メートル） */
+  value: number;
 
-  /** 高精度モードが使用されたか */
+  /** 水平方向の精度（メートル） */
+  horizontal?: number;
+
+  /** 垂直方向の精度（メートル、高度情報がある場合） */
+  vertical?: number;
+
+  /** 高精度かどうか（精度が20m以下の場合true） */
   isHighAccuracy: boolean;
-
-  /** タイムスタンプ */
-  timestamp: number;
 }
 
 // ============================================================================
@@ -175,47 +180,15 @@ export function createLongitude(value: number): Longitude {
 }
 
 /**
- * 型安全な緯度経度オブジェクトを作成する
+ * 緯度経度の値から型安全なLatLngLiteralオブジェクトを作成
  * @param lat - 緯度
  * @param lng - 経度
  * @returns 検証済みの緯度経度オブジェクト
  */
 export function createLatLng(lat: number, lng: number): LatLngLiteral {
-  return {
-    lat: createLatitude(lat),
-    lng: createLongitude(lng),
-  };
+  // 値の検証を行うが、戻り値は標準的なLatLngLiteralインターフェースに合わせる
+  createLatitude(lat);
+  createLongitude(lng);
+
+  return { lat, lng };
 }
-
-/**
- * 緯度経度オブジェクトを検証する
- * @param location - 検証する緯度経度オブジェクト
- * @returns 検証済みの緯度経度オブジェクト
- */
-export function validateLatLng(location: LatLngLiteral): LatLngLiteral {
-  return createLatLng(Number(location.lat), Number(location.lng));
-}
-
-/**
- * 2地点間の距離を計算する関数の型定義
- */
-export type DistanceCalculator = (
-  point1: LatLngLiteral,
-  point2: LatLngLiteral,
-  unit?: Distance['unit'],
-) => Distance;
-
-/**
- * 指定した座標が境界ボックス内にあるかを判定する関数の型定義
- */
-export type BoundsChecker = (point: LatLngLiteral, bounds: Bounds) => boolean;
-
-/**
- * 座標を文字列表現に変換する関数の型
- */
-export type LatLngFormatter = (location: LatLngLiteral, format?: 'dms' | 'dec') => string;
-
-/**
- * 複数地点から境界を計算する関数の型
- */
-export type BoundsCalculator = (points: LatLngLiteral[]) => Bounds | null;
