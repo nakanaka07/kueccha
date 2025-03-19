@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // 構文・コンパイルターゲット設定
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2022", "ESNext", "WebWorker"],
+    "jsx": "react-jsx",
+    
+    // 厳格な型チェック設定
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noErrorTruncation": true,
+    
+    // エラー検出と品質向上設定
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "checkJs": true,
+    
+    // モジュール・インポート設定
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    
+    // プロジェクト構成設定
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"],
+      "@constants/*": ["src/constants/*"],
+      "@services/*": ["src/services/*"],
+      "@adapters/*": ["src/adapters/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@images/*": ["src/images/*"],
+      "@styles/*": ["src/styles/*"],
+      "@locales/*": ["src/locales/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./types"],
+    
+    // ビルド・デバッグ設定
+    "outDir": "./dist",
+    "sourceMap": true,
+    "inlineSources": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "declaration": false,
+    
+    // パフォーマンス最適化設定
+    "useDefineForClassFields": true,
+    "importsNotUsedAsValues": "remove",
+    
+    // 互換性・安定性設定
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src/**/*",
+    "server.ts",
+    "scripts/**/*",
+    "vite.config.ts",
+    "eslint.config.js",
+    "env.d.ts",
+    "css.d.ts"
+  ],
+  "exclude": [
+    "dist", 
+    "node_modules", 
+    "**/*.spec.ts", 
+    "**/*.test.ts",
+    "**/__mocks__/*",
+    "**/__tests__/*",
+    "coverage"
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
+}

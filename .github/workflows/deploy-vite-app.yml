@@ -1,0 +1,117 @@
+name: Deploy Vite App to GitHub Pages
+
+# ワークフロー実行トリガー設定
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch: # 手動実行用トリガー
+    inputs:
+      environment:
+        description: 'デプロイ環境'
+        required: true
+        default: 'github-pages'
+        type: choice
+        options:
+          - github-pages
+          - staging
+
+# 必要な権限設定
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時実行制御設定
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # ソースコードの取得
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # 履歴を最小限に保ち、チェックアウト時間を短縮
+
+      # 環境セットアップ
+      - name: pnpm環境のセットアップ
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Node.js環境のセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # 依存関係のインストールとキャッシュ
+      - name: 依存パッケージのインストール
+        run: pnpm install --frozen-lockfile
+        id: install-deps
+
+      # ビルド処理
+      - name: アプリケーションのビルド
+        id: build
+        run: pnpm run build
+        env:
+          # Google Maps関連
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.MAPS_MAP_ID }}
+          
+          # Google Sheets関連
+          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.SHEETS_API_KEY }}
+          VITE_GOOGLE_SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          
+          # EmailJS関連
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          
+          # ビルド環境設定
+          NODE_ENV: production
+
+      # PWA対応
+      - name: PWAアセットの処理
+        run: |
+          # マニフェストファイルのコピー
+          if [ -f "manifest.json" ]; then
+            cp manifest.json ./dist/
+            echo "マニフェストファイルをdistディレクトリにコピーしました"
+          else
+            echo "マニフェストファイルが見つかりません - スキップします"
+          fi
+          
+          # Service Workerの存在確認
+          if [ -f "dist/sw.js" ]; then
+            echo "Service Workerが正しく生成されました"
+          else
+            echo "警告: Service Workerが見つかりません"
+          fi
+
+      # ビルド成果物のアップロード
+      - name: ビルド成果物のアップロード
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+          retention-days: 7
+
+  # デプロイジョブ
+  deploy:
+    needs: build
+    environment:
+      name: ${{ github.event.inputs.environment || 'github-pages' }}
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: GitHub Pagesへのデプロイ
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          timeout: 600000  # デプロイタイムアウトを10分に設定
