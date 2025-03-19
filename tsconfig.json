@@ -90,5 +90,4 @@
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
-  "references": [{ "path": "./tsconfig.node.json" }]
 }
