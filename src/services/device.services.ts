@@ -1,9 +1,6 @@
 /**
- * デバイス検出とプラットフォーム関連のユーティリティ
+ * デバイス検出とレスポンシブ対応のユーティリティ
  */
-
-/** モバイルデバイス判定のためのユーザーエージェント正規表現 */
-const MOBILE_UA_REGEX = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 
 /** レスポンシブ設計のブレークポイント (ピクセル単位) */
 export const BREAKPOINTS = {
@@ -14,40 +11,31 @@ export const BREAKPOINTS = {
 };
 
 /**
- * デバイスの種類を判定
- * @returns モバイルデバイスかどうか
- */
-export function isMobileDevice(): boolean {
-  // ブラウザ環境以外では常にfalseを返す
-  if (typeof navigator === 'undefined' || !navigator.userAgent) {
-    return false;
-  }
-  return MOBILE_UA_REGEX.test(navigator.userAgent);
-}
-
-/**
- * 画面サイズに基づくモバイル判定
- * @returns 現在の画面幅がモバイルサイズかどうか
- */
-export function isMobileViewport(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth <= BREAKPOINTS.MOBILE;
-}
-
-/**
- * デバイスと画面サイズの両方を考慮したスマート判定
+ * デバイスと画面サイズを考慮したモバイル判定
  * @returns モバイル向けUIを表示すべきかどうか
  */
-export function isMobileExperience(): boolean {
-  return isMobileDevice() || isMobileViewport();
+export function isMobile(): boolean {
+  // ブラウザ環境チェック
+  if (typeof window === 'undefined') return false;
+  
+  // デバイス判定（ユーザーエージェント）
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator?.userAgent || ''
+  );
+  
+  // 画面サイズ判定
+  const isMobileViewport = window.innerWidth <= BREAKPOINTS.MOBILE;
+  
+  return isMobileDevice || isMobileViewport;
 }
 
 /**
  * デバイス設定の統合オブジェクト
  */
 export const DeviceConfig = {
-  isMobile: isMobileExperience(),
   breakpoints: BREAKPOINTS,
+  isMobile: typeof window !== 'undefined' ? isMobile() : false,
   isTouch: typeof window !== 'undefined' && 'ontouchstart' in window,
-  isMobileCheck: isMobileExperience,
 };
+
+export default DeviceConfig;

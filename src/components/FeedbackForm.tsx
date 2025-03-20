@@ -1,32 +1,38 @@
 import emailjs from '@emailjs/browser';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { ERROR_MESSAGES } from '../constants';
+import type { FeedbackFormProps, TemplateParams } from '../types/types';
 
-import { ERROR_MESSAGES } from '../../utils/constants';
+export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
+  const [formState, setFormState] = useState({
+    name: '',
+    email: '',
+    message: '',
+    isSubmitted: false,
+    error: '',
+    isLoading: false
+  });
 
-import type { FeedbackFormProps, TemplateParams } from '../../utils/types';
+  const { name, email, message, isSubmitted, error, isLoading } = formState;
 
-const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormState(prev => ({ ...prev, [id]: value, error: '' }));
+  };
 
   const validateForm = () => {
     if (!name.trim()) {
-      setError(ERROR_MESSAGES.FORM.EMPTY_NAME);
+      setFormState(prev => ({ ...prev, error: ERROR_MESSAGES.FORM.EMPTY_NAME }));
       return false;
     }
     if (!message.trim()) {
-      setError(ERROR_MESSAGES.FORM.EMPTY_MESSAGE);
+      setFormState(prev => ({ ...prev, error: ERROR_MESSAGES.FORM.EMPTY_MESSAGE }));
       return false;
     }
     if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setError(ERROR_MESSAGES.FORM.INVALID_EMAIL);
+      setFormState(prev => ({ ...prev, error: ERROR_MESSAGES.FORM.INVALID_EMAIL }));
       return false;
     }
-    setError('');
     return true;
   };
 
@@ -34,8 +40,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    setFormState(prev => ({ ...prev, isLoading: true }));
+    
     try {
+      const { VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, VITE_EMAILJS_PUBLIC_KEY } = import.meta.env;
+      
       const templateParams: TemplateParams = {
         name: name || '匿名',
         email: email || '未入力',
@@ -43,40 +52,39 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
       };
 
       await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        VITE_EMAILJS_SERVICE_ID,
+        VITE_EMAILJS_TEMPLATE_ID,
         templateParams as Record<string, unknown>,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+        VITE_EMAILJS_PUBLIC_KEY
       );
 
-      setIsSubmitted(true);
-      setError('');
+      setFormState({
+        name: '',
+        email: '',
+        message: '',
+        isSubmitted: true,
+        error: '',
+        isLoading: false
+      });
     } catch {
-      setError(ERROR_MESSAGES.FORM.SUBMISSION_FAILED);
-    } finally {
-      setIsLoading(false);
+      setFormState(prev => ({ 
+        ...prev, 
+        error: ERROR_MESSAGES.FORM.SUBMISSION_FAILED,
+        isLoading: false 
+      }));
     }
   };
 
-  useEffect(() => {
-    if (isSubmitted) {
-      setName('');
-      setEmail('');
-      setMessage('');
-    }
-  }, [isSubmitted]);
-
   return (
     <div role="dialog" aria-labelledby="feedback-title">
-      <button onClick={onClose} aria-label="閉じる">
-        ×
-      </button>
+      <button onClick={onClose} aria-label="閉じる">×</button>
+      
       {isSubmitted ? (
         <div role="alert">フィードバックを送信しました。ありがとうございます。</div>
       ) : (
         <form onSubmit={sendFeedback} noValidate>
           <h2 id="feedback-title">フィードバック</h2>
-          {error ? <div role="alert">{error}</div> : null}
+          {error && <div role="alert">{error}</div>}
 
           <label htmlFor="name">
             名前:
@@ -84,10 +92,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError('');
-              }}
+              onChange={handleInputChange}
               aria-label="名前"
             />
           </label>
@@ -98,10 +103,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError('');
-              }}
+              onChange={handleInputChange}
               aria-label="メール"
             />
           </label>
@@ -111,10 +113,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
             <textarea
               id="message"
               value={message}
-              onChange={(e) => {
-                setMessage(e.target.value);
-                setError('');
-              }}
+              onChange={handleInputChange}
               aria-label="メッセージ"
             />
           </label>

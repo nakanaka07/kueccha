@@ -1,64 +1,56 @@
 /**
  * サービスワーカー管理サービス
- *
- * PWA機能のためのサービスワーカーの登録、更新、状態管理を担当します。
+ * PWA機能のためのサービスワーカーの登録、更新、状態管理
  */
 
+// サービスワーカー対応確認
+const isSWSupported = 'serviceWorker' in navigator;
+
 /**
- * サービスワーカーを登録する関数
- *
- * @returns 登録が成功した場合はPromise<void>
+ * サービスワーカーを登録
  */
 export async function registerSW(): Promise<void> {
-  if ('serviceWorker' in navigator) {
-    try {
-      // サービスワーカーを登録
-      await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/',
-      });
-      console.info('🔧 サービスワーカーが登録されました');
-    } catch (error) {
-      console.error('サービスワーカーの登録に失敗しました:', error);
-      throw error;
-    }
-  } else {
+  if (!isSWSupported) {
     throw new Error('このブラウザはサービスワーカーに対応していません');
   }
+
+  try {
+    await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+    console.info('🔧 サービスワーカーが登録されました');
+  } catch (error) {
+    console.error('サービスワーカーの登録に失敗しました:', error);
+    throw error;
+  }
 }
 
 /**
- * サービスワーカーを更新する関数
- *
- * @returns 更新が成功した場合はPromise<void>
+ * サービスワーカーを更新
  */
 export async function updateSW(): Promise<void> {
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.update();
-      console.info('🔄 サービスワーカーが更新されました');
-    } catch (error) {
-      console.error('サービスワーカーの更新に失敗しました:', error);
-      throw error;
-    }
+  if (!isSWSupported) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update();
+    console.info('🔄 サービスワーカーが更新されました');
+  } catch (error) {
+    console.error('サービスワーカーの更新に失敗しました:', error);
+    throw error;
   }
 }
 
 /**
- * サービスワーカーの状態を確認する関数
- *
- * @returns サービスワーカーの登録情報、未登録の場合はnull
+ * サービスワーカーの状態を確認
  */
 export async function checkSWStatus(): Promise<ServiceWorkerRegistration | null> {
-  if ('serviceWorker' in navigator) {
-    try {
-      return await navigator.serviceWorker.ready;
-    } catch (error) {
-      console.warn('サービスワーカーの状態確認に失敗しました:', error);
-      return null;
-    }
+  if (!isSWSupported) return null;
+  
+  try {
+    return await navigator.serviceWorker.ready;
+  } catch (error) {
+    console.warn('サービスワーカーの状態確認に失敗しました:', error);
+    return null;
   }
-  return null;
 }
 
 // グローバル型定義の拡張
@@ -67,7 +59,6 @@ declare global {
     deferredPrompt?: BeforeInstallPromptEvent;
   }
 
-  // BeforeInstallPromptEventの型定義
   interface BeforeInstallPromptEvent extends Event {
     readonly platforms: Array<string>;
     readonly userChoice: Promise<{
@@ -77,3 +68,5 @@ declare global {
     prompt(): Promise<void>;
   }
 }
+
+export default { registerSW, updateSW, checkSWStatus };

@@ -1,29 +1,12 @@
 /**
- * エラーメッセージ関連定数ファイル
- *
- * アプリケーション全体で使用される多言語対応エラーメッセージを定義します。
- * メッセージは日本語(ja)と英語(en)で提供されます。
+ * 多言語対応エラーメッセージ定数
+ * 日本語(ja)と英語(en)をサポート
  */
-
-import {
-  SupportedLanguage,
-  DEFAULT_LANGUAGE,
-  getCurrentLanguage,
-  getLocalizedMessage,
-} from './i18n.constants';
-
 import type { LocalizedMessage } from './i18n.constants';
-import type { ErrorCategory, ErrorCode, ErrorMessagesSchema } from '../types/errors.types';
+import type { ErrorMessagesSchema } from '../types/errors.types';
 
-// ============================================================================
-// 再利用可能な共通エラーメッセージ
-// ============================================================================
-
-/**
- * 共通エラーメッセージ定義
- * 冗長性を排除し、再利用可能なメッセージを定義します。
- */
-const COMMON_MESSAGES: Record<string, LocalizedMessage> = {
+// 共通エラーメッセージ定義
+const COMMON_MESSAGES = {
   INVALID_CONFIGURATION: {
     ja: '設定が正しくありません。設定を確認してください。',
     en: 'Invalid configuration. Please check your settings.',
@@ -48,18 +31,9 @@ const COMMON_MESSAGES: Record<string, LocalizedMessage> = {
     ja: '予期せぬエラーが発生しました。サポートに連絡してください。',
     en: 'An unexpected error occurred. Please contact support.',
   },
-};
+} as const;
 
-// ============================================================================
 // カテゴリー別エラーメッセージ
-// ============================================================================
-
-/**
- * エラーメッセージ定義
- *
- * アプリケーション内で使用される各種エラーメッセージを定義します。
- * カテゴリ別に整理され、多言語対応した一貫したエラーメッセージを提供します。
- */
 export const ERROR_MESSAGES: ErrorMessagesSchema = {
   CONFIG: {
     INVALID: COMMON_MESSAGES.INVALID_CONFIGURATION,

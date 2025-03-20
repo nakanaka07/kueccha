@@ -83,120 +83,6 @@ export function sample<T>(array: T[], count: number = 1): T[] {
 }
 
 /**
- * 配列から特定の要素を削除する
- *
- * @param array 元の配列
- * @param valueOrPredicate 削除する値または条件関数
- * @returns 要素が削除された新しい配列
- */
-export function remove<T>(array: T[], valueOrPredicate: T | ((item: T) => boolean)): T[] {
-  if (!array.length) return [];
-
-  const predicate =
-    typeof valueOrPredicate === 'function'
-      ? (valueOrPredicate as (item: T) => boolean)
-      : (item: T) => item === valueOrPredicate;
-
-  return array.filter((item) => !predicate(item));
-}
-
-// ============================================================================
-// POIデータ向け特殊操作
-// ============================================================================
-
-/**
- * POIをID順にソートする
- *
- * @param pois ソートするPOI配列
- * @param direction ソート方向（'asc'または'desc'）
- * @returns ソートされたPOI配列
- */
-export function sortById<T extends { id: string }>(
-  pois: T[],
-  direction: 'asc' | 'desc' = 'asc',
-): T[] {
-  if (!pois.length) return [];
-
-  return [...pois].sort((a, b) => {
-    const comparison = a.id.localeCompare(b.id);
-    return direction === 'asc' ? comparison : -comparison;
-  });
-}
-
-/**
- * POIを名前順にソートする
- *
- * @param pois ソートするPOI配列
- * @param direction ソート方向（'asc'または'desc'）
- * @returns ソートされたPOI配列
- */
-export function sortByName<T extends { name: string }>(
-  pois: T[],
-  direction: 'asc' | 'desc' = 'asc',
-): T[] {
-  if (!pois.length) return [];
-
-  return [...pois].sort((a, b) => {
-    const comparison = a.name.localeCompare(b.name);
-    return direction === 'asc' ? comparison : -comparison;
-  });
-}
-
-/**
- * POIを特定の座標からの距離順にソートする
- *
- * @param pois ソートするPOI配列
- * @param center 距離を計算する中心座標
- * @param direction ソート方向（'asc'または'desc'）
- * @returns ソートされたPOI配列
- */
-export function sortByDistance(
-  pois: Poi[],
-  center: LatLngLiteral,
-  direction: 'asc' | 'desc' = 'asc',
-): Poi[] {
-  if (!pois.length || !center) return [];
-
-  return [...pois].sort((a, b) => {
-    if (!a.location || !b.location) return 0;
-
-    const distanceA = calculateDistance(center, a.location);
-    const distanceB = calculateDistance(center, b.location);
-
-    const comparison = distanceA - distanceB;
-    return direction === 'asc' ? comparison : -comparison;
-  });
-}
-
-/**
- * POIをジャンル優先度でソートする
- *
- * @param pois ソートするPOI配列
- * @param genrePriorities ジャンル別優先度のマップオブジェクト
- * @param direction ソート方向（'asc'または'desc'）
- * @returns ソートされたPOI配列
- */
-export function sortByGenrePriority(
-  pois: Poi[],
-  genrePriorities: Record<string, number>,
-  direction: 'asc' | 'desc' = 'desc',
-): Poi[] {
-  if (!pois.length) return [];
-
-  return [...pois].sort((a, b) => {
-    const priorityA = genrePriorities[a.genre] || 0;
-    const priorityB = genrePriorities[b.genre] || 0;
-
-    const comparison = priorityA - priorityB;
-    return direction === 'asc' ? comparison : -comparison;
-  });
-}
-
-// ============================================================================
-// グループ化と分類
-// ============================================================================
-
-/**
  * 配列をキーによってグループ化する
  *
  * @param array グループ化する配列
@@ -225,92 +111,81 @@ export function groupBy<T, K extends string | number | symbol>(
 }
 
 /**
- * POIをエリアによってグループ化する
- *
- * @param pois グループ化するPOI配列
- * @returns エリアごとにグループ化されたオブジェクト
+ * 数値の配列から統計値を計算する
+ * 
+ * @param array 対象の数値配列
+ * @returns 統計情報（合計、平均、最大、最小）
  */
-export function groupByArea(pois: Poi[]): Record<string, Poi[]> {
-  return groupBy(pois, (poi) => poi.area);
+export function stats(array: number[]): { sum: number; avg: number; max?: number; min?: number } {
+  if (!array.length) return { sum: 0, avg: 0 };
+  
+  const sum = array.reduce((total, current) => total + current, 0);
+  return {
+    sum,
+    avg: sum / array.length,
+    max: Math.max(...array),
+    min: Math.min(...array)
+  };
 }
 
-/**
- * POIをジャンルによってグループ化する
- *
- * @param pois グループ化するPOI配列
- * @returns ジャンルごとにグループ化されたオブジェクト
- */
-export function groupByGenre(pois: Poi[]): Record<string, Poi[]> {
-  return groupBy(pois, (poi) => poi.genre);
-}
+// ============================================================================
+// POI特化ユーティリティ
+// ============================================================================
 
 /**
- * 配列をキーによって分類し、結果を変換する
- *
- * @param array 分類する配列
- * @param getKey 分類キーを取得する関数
- * @param transform 各グループを変換する関数
- * @returns 変換後のオブジェクト
+ * 汎用的なソート関数
+ * 
+ * @param array ソートする配列
+ * @param getKey ソートキーを取得する関数
+ * @param direction ソート方向
+ * @returns ソートされた配列
  */
-export function classify<T, K extends string | number | symbol, R>(
+export function sortBy<T, V>(
   array: T[],
-  getKey: (item: T) => K,
-  transform: (items: T[]) => R,
-): Record<K, R> {
-  if (!array.length) return {} as Record<K, R>;
-
-  const grouped = groupBy(array, getKey);
-  const result = {} as Record<K, R>;
-
-  for (const key in grouped) {
-    if (Object.prototype.hasOwnProperty.call(grouped, key)) {
-      result[key as K] = transform(grouped[key as K]);
-    }
-  }
-
-  return result;
-}
-
-// ============================================================================
-// 検索とフィルタリング
-// ============================================================================
-
-/**
- * 配列から条件に一致する最初の要素を検索する
- *
- * @param array 検索対象の配列
- * @param predicate 検索条件
- * @returns 見つかった要素、または undefined
- */
-export function findFirst<T>(array: T[], predicate: (item: T) => boolean): T | undefined {
-  if (!array.length) return undefined;
-  return array.find(predicate);
-}
-
-/**
- * IDで要素を検索する
- *
- * @param array 検索対象の配列
- * @param id 検索するID
- * @returns 見つかった要素、または undefined
- */
-export function findById<T extends { id: string }>(array: T[], id: string): T | undefined {
-  if (!array.length || !id) return undefined;
-  return findFirst(array, (item) => item.id === id);
-}
-
-/**
- * 配列から複数条件でフィルタリングする
- *
- * @param array フィルタリングする配列
- * @param filters 適用するフィルタ関数の配列
- * @returns フィルタリングされた配列
- */
-export function multiFilter<T>(array: T[], filters: Array<(item: T) => boolean>): T[] {
+  getKey: (item: T) => V,
+  direction: 'asc' | 'desc' = 'asc'
+): T[] {
   if (!array.length) return [];
-  if (!filters.length) return array;
+  
+  return [...array].sort((a, b) => {
+    const keyA = getKey(a);
+    const keyB = getKey(b);
+    
+    let comparison: number;
+    if (typeof keyA === 'string' && typeof keyB === 'string') {
+      comparison = keyA.localeCompare(keyB);
+    } else if (keyA < keyB) {
+      comparison = -1;
+    } else if (keyA > keyB) {
+      comparison = 1;
+    } else {
+      comparison = 0;
+    }
+    
+    return direction === 'asc' ? comparison : -comparison;
+  });
+}
 
-  return array.filter((item) => filters.every((filter) => filter(item)));
+/**
+ * POIを特定の座標からの距離順にソートする
+ *
+ * @param pois ソートするPOI配列
+ * @param center 距離を計算する中心座標
+ * @param direction ソート方向（'asc'または'desc'）
+ * @returns ソートされたPOI配列
+ */
+export function sortByDistance(
+  pois: Poi[],
+  center: LatLngLiteral,
+  direction: 'asc' | 'desc' = 'asc',
+): Poi[] {
+  if (!pois.length || !center) return [];
+
+  return sortBy(
+    pois,
+    (poi) => poi.location ? calculateDistance(center, poi.location) : Infinity,
+    direction
+  );
 }
 
 /**
@@ -386,88 +261,4 @@ export function searchWithScore(
 
   // スコアの高い順にソートして返す
   return results.sort((a, b) => b.score - a.score);
-}
-
-// ============================================================================
-// 変換と集計
-// ============================================================================
-
-/**
- * 配列の要素を変換する
- *
- * @param array 変換する配列
- * @param transform 変換関数
- * @returns 変換後の配列
- */
-export function map<T, R>(array: T[], transform: (item: T, index: number) => R): R[] {
-  if (!array.length) return [];
-  return array.map(transform);
-}
-
-/**
- * 配列から特定のプロパティだけを抽出する
- *
- * @param array 対象の配列
- * @param property 抽出するプロパティ名
- * @returns プロパティ値の配列
- */
-export function pluck<T, K extends keyof T>(array: T[], property: K): T[K][] {
-  if (!array.length) return [];
-  return array.map((item) => item[property]);
-}
-
-/**
- * POIデータを表示用にマッピングする
- *
- * @param pois マッピングするPOI配列
- * @param transformer POIをマッピングする関数
- * @returns マッピングされた表示用データ
- */
-export function mapToDisplayData<R>(pois: Poi[], transformer: (poi: Poi) => R): R[] {
-  if (!pois.length) return [];
-  return pois.map(transformer);
-}
-
-/**
- * 数値の配列から合計値を計算する
- *
- * @param array 対象の数値配列
- * @returns 合計値
- */
-export function sum(array: number[]): number {
-  if (!array.length) return 0;
-  return array.reduce((total, current) => total + current, 0);
-}
-
-/**
- * 数値の配列から平均値を計算する
- *
- * @param array 対象の数値配列
- * @returns 平均値、または配列が空の場合は0
- */
-export function average(array: number[]): number {
-  if (!array.length) return 0;
-  return sum(array) / array.length;
-}
-
-/**
- * 数値の配列から最大値を返す
- *
- * @param array 対象の数値配列
- * @returns 最大値、または配列が空の場合はundefined
- */
-export function max(array: number[]): number | undefined {
-  if (!array.length) return undefined;
-  return Math.max(...array);
-}
-
-/**
- * 数値の配列から最小値を返す
- *
- * @param array 対象の数値配列
- * @returns 最小値、または配列が空の場合はundefined
- */
-export function min(array: number[]): number | undefined {
-  if (!array.length) return undefined;
-  return Math.min(...array);
 }

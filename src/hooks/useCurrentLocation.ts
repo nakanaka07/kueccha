@@ -1,50 +1,51 @@
-import { useState } from 'react';
-
+import { useState, useCallback } from 'react';
 import { ERROR_MESSAGES } from '../constants/constants';
+import type { LatLngLiteral } from '../types/types';
 
+/**
+ * 現在位置の取得と管理を行うカスタムフック
+ */
 const useCurrentLocation = (setShowWarning: (show: boolean) => void) => {
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LatLngLiteral | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  const handleCurrentLocationChange = (isChecked: boolean) => {
-    if (isChecked) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCurrentLocation({ lat: latitude, lng: longitude });
-          setShowWarning(true);
-          setLocationError(null);
-        },
-        (error) => {
-          let errorMessage: string = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.PERMISSION_DENIED;
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.POSITION_UNAVAILABLE;
-              break;
-            case error.TIMEOUT:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.TIMEOUT;
-              break;
-            default:
-              errorMessage = ERROR_MESSAGES.GEOLOCATION.UNKNOWN;
-              break;
-          }
-          setLocationError(errorMessage);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        },
-      );
-    } else {
+  // 現在地の表示/非表示を切り替える
+  const handleCurrentLocationChange = useCallback((isChecked: boolean) => {
+    if (!isChecked) {
       setCurrentLocation(null);
       setShowWarning(false);
       setLocationError(null);
+      return;
     }
-  };
+
+    // 位置情報を取得
+    navigator.geolocation.getCurrentPosition(
+      // 成功時
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setShowWarning(true);
+        setLocationError(null);
+      },
+      // エラー時
+      (error) => {
+        const errorCode = error.code;
+        const errorMessages = ERROR_MESSAGES.GEOLOCATION;
+        
+        const errorMap: Record<number, string> = {
+          [GeolocationPositionError.PERMISSION_DENIED]: errorMessages.PERMISSION_DENIED,
+          [GeolocationPositionError.POSITION_UNAVAILABLE]: errorMessages.POSITION_UNAVAILABLE,
+          [GeolocationPositionError.TIMEOUT]: errorMessages.TIMEOUT
+        };
+        
+        setLocationError(errorMap[errorCode] || errorMessages.UNKNOWN);
+      },
+      // オプション
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, [setShowWarning]);
 
   return { currentLocation, locationError, handleCurrentLocationChange };
 };

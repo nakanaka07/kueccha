@@ -18,14 +18,10 @@ import type {
 } from '../types';
 import type { SheetsAdapter } from './index';
 
-/**
- * Google Sheets APIのベースURL
- */
+// Google Sheets APIのベースURL
 const SHEETS_API_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-/**
- * データ変換処理の定義
- */
+// データ変換処理の定義
 const DATA_PROCESSORS: Record<DataProcessingType, (value: string) => any> = {
   string: (value: string) => value,
   number: (value: string) => {
@@ -55,24 +51,13 @@ const DATA_PROCESSORS: Record<DataProcessingType, (value: string) => any> = {
  * シートのデータをオブジェクトに変換するためのマッパー
  */
 interface SheetColumnMapper<T> {
-  /**
-   * 列識別子（インデックスまたはヘッダー名）
-   */
+  /** 列識別子（インデックスまたはヘッダー名） */
   column: number | string;
-
-  /**
-   * オブジェクトのプロパティ名
-   */
+  /** オブジェクトのプロパティ名 */
   property: keyof T;
-
-  /**
-   * 値の処理方法
-   */
+  /** 値の処理方法 */
   type?: DataProcessingType;
-
-  /**
-   * カスタム変換関数
-   */
+  /** カスタム変換関数 */
   transform?: (value: SheetCellValue) => any;
 }
 
@@ -87,23 +72,14 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * コンストラクタ
-   * @param config シート設定
    */
   constructor(config: SheetsConfig) {
-    this.apiKey =
-      config.apiKey ||
-      getEnvValue('VITE_GOOGLE_SHEETS_API_KEY', '', {
-        required: true,
-        logErrors: true,
-      });
-
-    this.spreadsheetId =
-      config.spreadsheetId ||
-      getEnvValue('VITE_GOOGLE_SPREADSHEET_ID', '', {
-        required: true,
-        logErrors: true,
-      });
-
+    this.apiKey = config.apiKey || 
+      getEnvValue('VITE_GOOGLE_SHEETS_API_KEY', '', { required: true, logErrors: true });
+    
+    this.spreadsheetId = config.spreadsheetId || 
+      getEnvValue('VITE_GOOGLE_SPREADSHEET_ID', '', { required: true, logErrors: true });
+    
     this.config = {
       ...config,
       apiKey: this.apiKey,
@@ -113,21 +89,15 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * APIリクエストURLを構築する
-   * @param sheetName シート名
-   * @param range 範囲（オプション）
    */
   private buildRequestUrl(sheetName: string, range?: string): string {
-    const baseUrl = `${SHEETS_API_BASE_URL}/${this.spreadsheetId}/values/`;
     const rangePart = range ? `${sheetName}!${range}` : sheetName;
     const encodedRange = encodeURIComponent(rangePart);
-    return `${baseUrl}${encodedRange}?key=${this.apiKey}`;
+    return `${SHEETS_API_BASE_URL}/${this.spreadsheetId}/values/${encodedRange}?key=${this.apiKey}`;
   }
 
   /**
    * APIからデータを取得する
-   * @param url 取得先URL
-   * @param options リクエストオプション
-   * @returns レスポンスデータ
    */
   private async fetchFromApi<T>(url: string, options: SheetsRequestOptions = {}): Promise<T> {
     const cacheKey = url + JSON.stringify(options);
@@ -135,7 +105,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
     // キャッシュチェック
     if (this.config.cacheTime && options.useCache !== false) {
       const cached = this.cache.get(cacheKey);
-
       if (cached && Date.now() - cached.timestamp < this.config.cacheTime) {
         return cached.data as T;
       }
@@ -164,10 +133,7 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
       // キャッシュに保存
       if (this.config.cacheTime && options.useCache !== false) {
-        this.cache.set(cacheKey, {
-          data,
-          timestamp: Date.now(),
-        });
+        this.cache.set(cacheKey, { data, timestamp: Date.now() });
       }
 
       return data as T;
@@ -187,9 +153,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * シートから生データを取得する
-   * @param sheetName シート名
-   * @param range 範囲
-   * @param options リクエストオプション
    */
   private async fetchRawSheetData(
     sheetName: string,
@@ -202,9 +165,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * スプレッドシートからデータを取得する
-   * @param sheetName シート名
-   * @param range 範囲（オプション）
-   * @param options リクエストオプション
    */
   async fetchData<T>(
     sheetName: string,
@@ -225,16 +185,9 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
       // データを変換
       return rows.map((row) => {
         const obj = {} as any;
-
-        // 各列の値をプロパティにマッピング
         headers.forEach((header, index) => {
-          if (index < row.length) {
-            obj[String(header)] = row[index];
-          } else {
-            obj[String(header)] = null; // 値がない場合はnull
-          }
+          obj[String(header)] = index < row.length ? row[index] : null;
         });
-
         return obj as T;
       });
     } catch (error) {
@@ -245,10 +198,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * カスタムマッピングを使用してデータを取得
-   * @param sheetName シート名
-   * @param mappers 列マッパー
-   * @param range 範囲（オプション）
-   * @param options リクエストオプション
    */
   async fetchMappedData<T>(
     sheetName: string,
@@ -266,7 +215,7 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
       const headers = response.values[0];
       const rows = response.values.slice(1);
 
-      // ヘッダー名から列インデックスへのマッピングを作成
+      // ヘッダー名から列インデックスへのマッピング
       const headerMap = new Map<string, number>();
       headers.forEach((header, index) => {
         headerMap.set(String(header), index);
@@ -275,19 +224,14 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
       return rows.map((row) => {
         const obj = {} as any;
 
-        // マッパーを使用してデータを変換
         mappers.forEach((mapper) => {
-          let columnIndex: number;
-
-          if (typeof mapper.column === 'string') {
-            columnIndex = headerMap.get(mapper.column) ?? -1;
-          } else {
-            columnIndex = mapper.column;
-          }
+          const columnIndex = typeof mapper.column === 'string' 
+            ? headerMap.get(mapper.column) ?? -1 
+            : mapper.column;
 
           if (columnIndex >= 0 && columnIndex < row.length) {
             const value = row[columnIndex];
-
+            
             if (mapper.transform) {
               obj[mapper.property as string] = mapper.transform(value);
             } else if (mapper.type && DATA_PROCESSORS[mapper.type]) {
@@ -310,15 +254,9 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * スプレッドシートにデータを書き込む
-   * @param sheetName シート名
-   * @param range 範囲
-   * @param values 値の配列
+   * （現状では実装されていない）
    */
   async writeData(sheetName: string, range: string, values: any[][]): Promise<boolean> {
-    // 書き込み機能の実装（必要な場合）
-    // Google Sheets APIの書き込み機能は認証が必要で複雑なため
-    // 当面は読み取り専用としています
-
     throw createError(
       'DATA',
       'WRITE_NOT_SUPPORTED',
@@ -328,7 +266,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
   /**
    * キャッシュをクリアする
-   * @param pattern 特定のパターンに一致するキーのみクリア
    */
   clearCache(pattern?: RegExp): void {
     if (!pattern) {
@@ -346,7 +283,6 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
 
 /**
  * Google Sheets Adapterを作成するファクトリ関数
- * @param config オプションの設定
  */
 export function createGoogleSheetsAdapter(config: Partial<SheetsConfig> = {}): SheetsAdapter {
   const defaultConfig: SheetsConfig = {

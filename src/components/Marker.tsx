@@ -1,42 +1,32 @@
 import React, { useEffect, useRef } from 'react';
-
 import { MARKER_ICONS } from '../constants/constants';
-
 import type { MarkerProps } from '../types/types';
 
-const Marker = React.memo(
-  ({
-    poi,
-    onClick,
-    map,
-    isSelected,
-    zIndex,
-  }: MarkerProps & { isSelected: boolean; zIndex?: number }) => {
+export const Marker: React.FC<MarkerProps & { isSelected?: boolean; zIndex?: number }> = React.memo(
+  ({ poi, onClick, map, zIndex }) => {
     const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
     useEffect(() => {
-      if (!map || !window.google.maps) return;
+      if (!map || !window.google?.maps) return;
 
       const iconUrl = MARKER_ICONS[poi.area] || MARKER_ICONS.DEFAULT;
       const iconElement = document.createElement('div');
-      iconElement.style.backgroundImage = `url(${iconUrl})`;
-      iconElement.style.backgroundSize = 'contain';
-      iconElement.style.width = '36px';
-      iconElement.style.height = '36px';
+      iconElement.style.cssText = `
+        background-image: url(${iconUrl});
+        background-size: contain;
+        width: 36px;
+        height: 36px;
+      `;
 
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position: poi.location,
         map,
         title: poi.name,
         content: iconElement,
-        zIndex,
+        zIndex
       });
 
-      const handleClick = () => {
-        onClick(poi);
-      };
-
-      marker.addListener('click', handleClick);
+      marker.addListener('click', () => onClick(poi));
       markerRef.current = marker;
 
       return () => {
@@ -49,9 +39,7 @@ const Marker = React.memo(
     }, [map, poi, onClick, zIndex]);
 
     return null;
-  },
+  }
 );
 
 Marker.displayName = 'Marker';
-export { Marker };
-export default Marker;

@@ -1,59 +1,134 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../constants';
+import { formatInformation, isValidPhoneNumber } from '../utils/formatters';
+import type { InfoWindowProps, BusinessHourKey } from '../types/types';
 
-import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../../utils/constants';
-import { formatInformation, isValidPhoneNumber } from '../../utils/formatters';
-
-import type { InfoWindowProps, LatLngLiteral, BusinessHourKey } from '../../utils/types';
-
-const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
+export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const infoWindowRef = useRef<HTMLDivElement>(null);
 
-  const handleResize = () => {
-    if (infoWindowRef.current) {
-      const windowHeight = window.innerHeight;
-      const maxHeight = windowHeight - 150;
-      infoWindowRef.current.style.maxHeight = `${maxHeight}px`;
-    }
-  };
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
-      onCloseClick();
-    }
-  };
-
+  // リサイズ処理
   useEffect(() => {
+    const handleResize = () => {
+      if (infoWindowRef.current) {
+        infoWindowRef.current.style.maxHeight = `${window.innerHeight - 150}px`;
+      }
+    };
+    
     window.addEventListener('resize', handleResize);
     handleResize();
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 外部クリック処理
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (infoWindowRef.current && !infoWindowRef.current.contains(event.target as Node)) {
+        onCloseClick();
+      }
     };
-  }, [handleClickOutside]);
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onCloseClick]);
 
-  const formatLocation = (location: LatLngLiteral) => {
-    return `緯度: ${location.lat}, 経度: ${location.lng}`;
+  // POI項目のレンダリング
+  const renderItems = () => {
+    const items = [
+      {
+        key: 'holidayInfo',
+        title: '定休日について',
+        value: poi.holidayInfo,
+      },
+      {
+        key: 'parking',
+        title: '駐車場',
+        value: poi.parking,
+      },
+      {
+        key: 'payment',
+        title: 'キャッシュレス',
+        value: poi.payment,
+      },
+      {
+        key: 'category',
+        title: 'カテゴリー',
+        value: poi.category,
+      },
+      {
+        key: 'genre',
+        title: 'ジャンル',
+        value: poi.genre,
+      },
+      {
+        key: 'area',
+        title: 'エリア',
+        value: poi.area ? AREAS[poi.area] : undefined,
+      },
+      {
+        key: 'phone',
+        title: '問い合わせ',
+        value: poi.phone,
+        render: poi.phone && isValidPhoneNumber(poi.phone) ? (
+          <a href={`tel:${poi.phone}`}>{poi.phone}</a>
+        ) : (
+          <span>{poi.phone}</span>
+        ),
+      },
+      {
+        key: 'address',
+        title: '所在地',
+        value: poi.address,
+      },
+      {
+        key: 'information',
+        title: '関連情報',
+        value: poi.information,
+        render: poi.information ? formatInformation(poi.information) : null,
+      },
+      {
+        key: 'view',
+        title: '',
+        value: poi.view,
+        render: (
+          <a href={poi.view} target="_blank" rel="noopener noreferrer">
+            Google マップで写真を見る
+          </a>
+        ),
+      },
+    ];
+
+    return items.map((item) => {
+      if (!item.value) return null;
+      
+      return (
+        <div key={item.key}>
+          {item.title && <h3>{item.title}</h3>}
+          {item.render || <p>{item.value}</p>}
+        </div>
+      );
+    });
   };
 
-  const businessHoursContent = useMemo(
-    () =>
-      INFO_WINDOW_BUSINESS_HOURS.map(
-        (hour) =>
-          poi[hour.key as BusinessHourKey] && (
-            <div key={hour.key}>
-              <span>{hour.day}</span>
-              <span>{poi[hour.key as BusinessHourKey]}</span>
-            </div>
-          ),
-      ),
-    [poi],
-  );
+  // 営業時間のレンダリング
+  const renderBusinessHours = () => {
+    const hasHours = INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key as BusinessHourKey]);
+    
+    if (!hasHours) return null;
+    
+    return (
+      <div>
+        {INFO_WINDOW_BUSINESS_HOURS.map(
+          (hour) =>
+            poi[hour.key as BusinessHourKey] && (
+              <div key={hour.key}>
+                <span>{hour.day}</span>
+                <span>{poi[hour.key as BusinessHourKey]}</span>
+              </div>
+            )
+        )}
+      </div>
+    );
+  };
 
   return (
     <div ref={infoWindowRef} onClick={(e) => e.stopPropagation()}>
@@ -64,106 +139,19 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
         </button>
       </div>
       <div>
-        {INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key]) && (
-          <div>{businessHoursContent}</div>
-        )}
+        {renderBusinessHours()}
         <div>
-          {poi.location ? (
+          {poi.location && (
             <div>
               <span>位置</span>
               <span>
-                {typeof poi.location === 'string' ? poi.location : formatLocation(poi.location)}
+                {typeof poi.location === 'string' 
+                  ? poi.location 
+                  : `緯度: ${poi.location.lat}, 経度: ${poi.location.lng}`}
               </span>
             </div>
-          ) : null}
-          {[
-            {
-              key: 'description',
-              condition: poi.holidayInfo,
-              title: '定休日について',
-              content: <p>{poi.holidayInfo}</p>,
-              description: 'この場所の定休日に関する情報です。',
-            },
-            {
-              key: 'reservation',
-              condition: poi.parking,
-              title: '駐車場',
-              content: <p>{poi.parking}</p>,
-              description: '駐車場の有無や詳細についての情報です。',
-            },
-            {
-              key: 'payment',
-              condition: poi.payment,
-              title: 'キャッシュレス',
-              content: <p>{poi.payment}</p>,
-              description: '利用可能な支払い方法についての情報です。',
-            },
-            {
-              key: 'category',
-              condition: poi.category,
-              title: 'カテゴリー',
-              content: <p>{poi.category}</p>,
-              description: 'この場所のカテゴリーに関する情報です。',
-            },
-            {
-              key: 'genre',
-              condition: poi.genre,
-              title: 'ジャンル',
-              content: <p>{poi.genre}</p>,
-              description: 'この場所のジャンルに関する情報です。',
-            },
-            {
-              key: 'area',
-              condition: poi.area,
-              title: 'エリア',
-              content: <p>{AREAS[poi.area]}</p>,
-              description: 'この場所が属するエリアに関する情報です。',
-            },
-            {
-              key: 'phone',
-              condition: poi.phone,
-              title: '問い合わせ',
-              content:
-                poi.phone && isValidPhoneNumber(poi.phone) ? (
-                  <a href={`tel:${poi.phone}`}>{poi.phone}</a>
-                ) : (
-                  <span>{poi.phone}</span>
-                ),
-              description: 'この場所への問い合わせ先の電話番号です。',
-            },
-            {
-              key: 'address',
-              condition: poi.address,
-              title: '所在地',
-              content: <p>{poi.address}</p>,
-              description: 'この場所の住所に関する情報です。',
-            },
-            {
-              key: 'information',
-              condition: poi.information,
-              title: '関連情報',
-              content: <div>{poi.information ? formatInformation(poi.information) : null}</div>,
-              description: 'この場所に関連する追加情報です。',
-            },
-            {
-              key: 'view',
-              condition: poi.view,
-              title: '',
-              content: (
-                <a href={poi.view} target="_blank" rel="noopener noreferrer">
-                  Google マップで写真を見る
-                </a>
-              ),
-              description: 'Google マップでこの場所の写真を見ることができます。',
-            },
-          ].map((item) =>
-            item.condition ? (
-              <div key={item.key}>
-                {item.title ? <h3>{item.title}</h3> : null}
-                {item.content}
-              </div>
-            ) : null,
           )}
+          {renderItems()}
         </div>
       </div>
     </div>
@@ -171,5 +159,3 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
 };
 
 InfoWindow.displayName = 'InfoWindow';
-export { InfoWindow };
-export default InfoWindow;
