@@ -1,18 +1,21 @@
 {
-  // IntelliSense を使用して利用可能な属性を学べます。
-  // 既存の属性の説明をホバーして表示します。
-  // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0", // launch.jsonのバージョンを指定
-
-  // デバッグ構成のリスト
+  "version": "0.2.0",
   "configurations": [
     {
-      "type": "msedge", // デバッグするブラウザの種類（Microsoft Edge）
-      "request": "launch", // デバッグのリクエストタイプ（新しいブラウザウィンドウを起動）
-      "name": "Launch Edge", // デバッグ構成の名前
-      "url": "https://localhost:5173", // デバッグするURL（ローカルホストの特定ポート）
-      "webRoot": "${workspaceFolder}", // ワークスペースのルートディレクトリ
-      "sourceMaps": true // ソースマップを有効にする（デバッグ時に元のソースコードを表示）
+      "type": "msedge",
+      "request": "launch",
+      "name": "Edge",
+      "url": "https://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Chrome",
+      "url": "https://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true
     }
   ]
 }

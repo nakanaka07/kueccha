@@ -1,105 +1,36 @@
-#--------------------
 # 依存関係
-#--------------------
-# Node modules
 node_modules/
-# npm
 .npm
-npm-debug.log*
-# Yarn
-.yarn-integrity
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-yarn-debug.log*
-yarn-error.log*
+*.log
+.pnpm-store/
 
-#--------------------
-# ビルド & コンパイル
-#--------------------
-# TypeScript
-*.tsbuildinfo
 # ビルド出力
 dist/
 build/
-# Vite
 .vite/
-# テスト出力
 coverage/
+*.tsbuildinfo
 
-#--------------------
-# 開発環境
-#--------------------
 # 環境変数
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-# IDEs と エディタ
+.env*
+!.env.example
+
+# エディタ
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-!.vscode/launch.json
 .idea/
-*.sublime-*
-# リント
-.eslintcache
-.stylelintcache
 
-#--------------------
-# OS固有
-#--------------------
-# macOS
+# OS
 .DS_Store
-# Windows
 Thumbs.db
-ehthumbs.db
-Desktop.ini
 
-#--------------------
-# セキュリティ関連
-#--------------------
-# 証明書
+# キャッシュ
+.cache/
+.eslintcache
+
+# セキュリティ
 *.pem
 *.key
 *.crt
-localhost.crt
-localhost.key
-openssl.cnf
-# API キー設定（バックアップファイル等）
-*.config.backup
 *secrets*
-
-#--------------------
-# キャッシュ & ログ
-#--------------------
-# ログ
-logs/
-*.log
-# キャッシュ
-.cache/
-.temp/
-.parcel-cache/
-
-#--------------------
-# その他
-#--------------------
-# PIDs
-pids/
-*.pid
-*.seed
-*.pid.lock
-# REPL
-.node_repl_history
-# Packages
-*.tgz
-# Temporary files
-*~
-# Trash
-.Trash-*
-# Vim
-*.swp
-*.swo

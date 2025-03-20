@@ -6,11 +6,8 @@
  */
 import { getEnvValue } from '../utils/env.utils';
 
-import type {
-  LoadingState,
-  validateProgress,
-  createInitialLoadingState,
-} from '../types/loading.types';
+// 必要な型のみをインポート
+import type { ProgressPercentage } from '../types/loading.types';
 
 // ============================================================================
 // 型定義
@@ -28,6 +25,8 @@ type TimingConstantsType = {
   DEFAULT_FADE_DURATION: number;
   /** ローディングのタイムアウト時間（ミリ秒） */
   DEFAULT_LOADING_TIMEOUT: number;
+  /** 再試行ボタン表示までのタイムアウト時間（ミリ秒） */
+  RETRY_TIMEOUT: number;
 };
 
 /**
@@ -50,7 +49,7 @@ type AnimationConstantsType = {
   SPINNER_ANIMATION_DURATION: string;
   /** フェードイン/アウトのイージング関数 */
   FADE_TIMING_FUNCTION: string;
-  /** モバイル用のスピナーアニメーション時間 */
+  /** モバイル用のスピナーアニメーション時間（より速い） */
   MOBILE_ANIMATION_DURATION: string;
 };
 
@@ -70,6 +69,11 @@ export const TimingConstants: TimingConstantsType = {
 
   // ローディング完了後、背景要素を非表示にするまでの遅延時間（ミリ秒）
   BACKGROUND_HIDE_DELAY: getEnvValue<number>('VITE_BACKGROUND_HIDE_DELAY', 1000, Number, {
+    logErrors: false,
+  }),
+
+  // 新しく追加する定数
+  RETRY_TIMEOUT: getEnvValue<number>('VITE_RETRY_TIMEOUT', 30000, Number, {
     logErrors: false,
   }),
 
@@ -122,41 +126,12 @@ export const AnimationConstants: AnimationConstantsType = {
 };
 
 // ============================================================================
-// エクスポート用の定数
+// 主要エクスポート - 統合されたローディング設定
 // ============================================================================
-
-/**
- * よく使用される定数をアプリケーション全体からアクセスしやすくするためのエクスポート
- */
-export const DEFAULT_LOADING_MESSAGE = UIConstants.DEFAULT_LOADING_MESSAGE;
-export const DEFAULT_SPINNER_CLASS = UIConstants.DEFAULT_SPINNER_CLASS;
-export const DEFAULT_FADE_DURATION = TimingConstants.DEFAULT_FADE_DURATION;
-export const DEFAULT_LOADING_TIMEOUT = TimingConstants.DEFAULT_LOADING_TIMEOUT;
-
-// ============================================================================
-// ヘルパー関数
-// ============================================================================
-
-/**
- * デバイスに応じたローディング設定を提供する関数
- *
- * @param isMobile モバイルデバイスかどうか
- * @returns デバイスに最適化されたローディング設定
- */
-export function getDeviceSpecificLoadingSettings(isMobile: boolean = false) {
-  return {
-    spinnerClass: isMobile ? UIConstants.MOBILE_SPINNER_CLASS : UIConstants.DEFAULT_SPINNER_CLASS,
-    animationDuration: isMobile
-      ? AnimationConstants.MOBILE_ANIMATION_DURATION
-      : AnimationConstants.SPINNER_ANIMATION_DURATION,
-    loadingDelay: isMobile ? 0 : TimingConstants.LOADING_DELAY, // モバイルではより早く表示
-    fadeTimingFunction: AnimationConstants.FADE_TIMING_FUNCTION,
-  };
-}
 
 /**
  * 統合されたローディング設定
- * 使用頻度が高い設定を一箇所にまとめたオブジェクト
+ * アプリケーション全体でのローディング表示設定をまとめて提供します
  */
 export const LoadingConfig = {
   timing: TimingConstants,
@@ -173,3 +148,38 @@ export const LoadingConfig = {
     timeout: TimingConstants.DEFAULT_LOADING_TIMEOUT,
   },
 };
+
+// ============================================================================
+// 個別エクスポート - 利便性のため
+// ============================================================================
+
+/**
+ * よく使用される定数をアプリケーション全体からアクセスしやすくするためのエクスポート
+ */
+export const DEFAULT_LOADING_MESSAGE = UIConstants.DEFAULT_LOADING_MESSAGE;
+export const DEFAULT_SPINNER_CLASS = UIConstants.DEFAULT_SPINNER_CLASS;
+export const DEFAULT_FADE_DURATION = TimingConstants.DEFAULT_FADE_DURATION;
+export const DEFAULT_LOADING_TIMEOUT = TimingConstants.DEFAULT_LOADING_TIMEOUT;
+export const RETRY_TIMEOUT = TimingConstants.RETRY_TIMEOUT;
+
+// ============================================================================
+// ヘルパー関数
+// ============================================================================
+
+/**
+ * デバイスに応じたローディング設定を提供する関数
+ * LoadingConfig.getDeviceSettings として主に使用されます
+ *
+ * @param isMobile モバイルデバイスかどうか
+ * @returns デバイスに最適化されたローディング設定
+ */
+function getDeviceSpecificLoadingSettings(isMobile: boolean = false) {
+  return {
+    spinnerClass: isMobile ? UIConstants.MOBILE_SPINNER_CLASS : UIConstants.DEFAULT_SPINNER_CLASS,
+    animationDuration: isMobile
+      ? AnimationConstants.MOBILE_ANIMATION_DURATION
+      : AnimationConstants.SPINNER_ANIMATION_DURATION,
+    loadingDelay: isMobile ? 0 : TimingConstants.LOADING_DELAY, // モバイルではより早く表示
+    fadeTimingFunction: AnimationConstants.FADE_TIMING_FUNCTION,
+  };
+}

@@ -4,12 +4,10 @@
  * Google Maps APIの設定パラメータや初期設定値を定義します。
  */
 
-import {
-  MapTypeControlStyle,
-  ControlPosition,
-  MapDisplayMode, // 不足していた型をインポート
-} from '../types/maps.types';
+import { ERROR_MESSAGES } from './errors.constants';
+import { MapTypeControlStyle, ControlPosition, MapDisplayMode } from '../types/maps.types';
 import { getEnvValue } from '../utils/env.utils';
+import { createError, logError } from '../utils/errors.utils';
 
 import type {
   MapConfig,
@@ -80,6 +78,44 @@ export const DEFAULT_CENTER = {
 export const DEFAULT_ZOOM = getEnvValue('VITE_MAP_DEFAULT_ZOOM', 11, Number, { logErrors: true });
 
 // ============================================================================
+// ヘルパー関数（先に定義してコード内で利用）
+// ============================================================================
+
+/**
+ * Google Maps APIが読み込まれているかを確認する
+ *
+ * @returns Google Maps APIが利用可能な場合はtrue、そうでない場合はfalse
+ */
+export function checkGoogleMapsLoaded(): boolean {
+  return typeof google !== 'undefined' && typeof google.maps.MapTypeId !== 'undefined';
+}
+
+/**
+ * Google Maps のMapTypeId値を安全に取得する
+ *
+ * @param typeId マップタイプID文字列
+ * @returns Google Maps MapTypeId値またはフォールバック文字列
+ */
+export function getMapTypeId(typeId: string): google.maps.MapTypeId | string {
+  if (!checkGoogleMapsLoaded()) {
+    return typeId; // APIが読み込まれていない場合は文字列をそのまま返す
+  }
+
+  switch (typeId.toLowerCase()) {
+    case 'roadmap':
+      return google.maps.MapTypeId.ROADMAP;
+    case 'satellite':
+      return google.maps.MapTypeId.SATELLITE;
+    case 'hybrid':
+      return google.maps.MapTypeId.HYBRID;
+    case 'terrain':
+      return google.maps.MapTypeId.TERRAIN;
+    default:
+      return google.maps.MapTypeId.ROADMAP;
+  }
+}
+
+// ============================================================================
 // マップ表示モード設定
 // ============================================================================
 
@@ -90,24 +126,20 @@ export const DEFAULT_ZOOM = getEnvValue('VITE_MAP_DEFAULT_ZOOM', 11, Number, { l
 export const MAP_DISPLAY_MODES: MapDisplayModes = {
   // グローバルオブジェクト参照を安全に行うための関数で囲む
   get [MapDisplayMode.STANDARD]() {
-    return checkGoogleMapsLoaded()
-      ? {
-          mapTypeId: google.maps.MapTypeId.ROADMAP,
-          styles: [],
-        }
-      : { mapTypeId: 'roadmap', styles: [] };
+    return {
+      mapTypeId: getMapTypeId('roadmap'),
+      styles: [],
+    };
   },
   get [MapDisplayMode.SATELLITE]() {
-    return checkGoogleMapsLoaded()
-      ? {
-          mapTypeId: google.maps.MapTypeId.SATELLITE,
-          styles: [],
-        }
-      : { mapTypeId: 'satellite', styles: [] };
+    return {
+      mapTypeId: getMapTypeId('satellite'),
+      styles: [],
+    };
   },
   get [MapDisplayMode.ACCESSIBLE]() {
     return {
-      mapTypeId: checkGoogleMapsLoaded() ? google.maps.MapTypeId.ROADMAP : 'roadmap',
+      mapTypeId: getMapTypeId('roadmap'),
       styles: [
         {
           featureType: 'all',
@@ -119,7 +151,7 @@ export const MAP_DISPLAY_MODES: MapDisplayModes = {
   },
   get [MapDisplayMode.NIGHT]() {
     return {
-      mapTypeId: checkGoogleMapsLoaded() ? google.maps.MapTypeId.ROADMAP : 'roadmap',
+      mapTypeId: getMapTypeId('roadmap'),
       styles: [
         {
           featureType: 'all',
@@ -159,6 +191,22 @@ const MOBILE_MAP_OPTIONS: Partial<ExtendedMapOptions> = {
 };
 
 /**
+ * マップの基本オプション設定のデフォルト値
+ * Google Maps APIが未ロード時のフォールバック
+ */
+const DEFAULT_MAP_OPTIONS: ExtendedMapOptions = {
+  zoomControl: true,
+  mapTypeControl: true,
+  streetViewControl: true,
+  fullscreenControl: true,
+  gestureHandling: 'greedy',
+  clickableIcons: false,
+  disableDefaultUI: false,
+  backgroundColor: '#f2f2f2',
+  mapId: GOOGLE_MAPS_MAP_ID,
+} as ExtendedMapOptions;
+
+/**
  * マップの基本オプション設定
  *
  * Google Maps APIがロードされた後にアクセスするため、
@@ -168,17 +216,7 @@ function createMapOptions(): ExtendedMapOptions {
   // Google Maps APIが読み込まれていることを確認
   if (!checkGoogleMapsLoaded()) {
     // フォールバック値を返す
-    return {
-      zoomControl: true,
-      mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-      gestureHandling: 'greedy',
-      clickableIcons: false,
-      disableDefaultUI: false,
-      backgroundColor: '#f2f2f2',
-      mapId: GOOGLE_MAPS_MAP_ID,
-    } as ExtendedMapOptions;
+    return DEFAULT_MAP_OPTIONS;
   }
 
   return {
@@ -222,6 +260,32 @@ function createMapOptions(): ExtendedMapOptions {
 }
 
 /**
+ * エリア別の境界データ
+ * ToDo: このデータは将来的に外部ファイルや設定から取得するように改善
+ */
+const AREA_BOUNDS: Record<string, google.maps.LatLngBoundsLiteral> = {
+  ryotsu: {
+    north: 38.5,
+    south: 38.0,
+    east: 139.0,
+    west: 138.5,
+  },
+  aikawa: {
+    north: 38.3,
+    south: 37.9,
+    east: 138.4,
+    west: 138.0,
+  },
+  // デフォルト境界はマップ全体を表示
+  default: {
+    north: DEFAULT_CENTER.lat + 0.5,
+    south: DEFAULT_CENTER.lat - 0.5,
+    east: DEFAULT_CENTER.lng + 0.5,
+    west: DEFAULT_CENTER.lng - 0.5,
+  },
+};
+
+/**
  * マップの全体設定
  */
 export const MAPS_CONFIG: MapConfig = {
@@ -242,18 +306,38 @@ export const MAPS_CONFIG: MapConfig = {
   defaultInfoWindowMaxWidth: 300,
 };
 
-// ============================================================================
-// ヘルパー関数
-// ============================================================================
+// 既存のコードに追加
+/**
+ * マップコンテナの基本スタイル
+ * コンポーネント内で直接使用できるCSSスタイルオブジェクト
+ */
+export const MAP_CONTAINER_STYLE: MapStyle = {
+  width: '100%',
+  height: '100vh',
+  maxHeight: '100%',
+  additionalStyles: {
+    // 必要に応じて追加のCSSプロパティ
+    position: 'relative',
+    overflow: 'hidden',
+  },
+};
 
 /**
- * Google Maps APIが読み込まれているかを確認する
- *
- * @returns Google Maps APIが利用可能な場合はtrue、そうでない場合はfalse
+ * モバイル用マップコンテナスタイル
+ * デバイスタイプに応じた最適化
  */
-function checkGoogleMapsLoaded(): boolean {
-  return typeof google !== 'undefined' && typeof google.maps.MapTypeId !== 'undefined';
-}
+export const MOBILE_MAP_CONTAINER_STYLE: MapStyle = {
+  ...MAP_CONTAINER_STYLE,
+  height: 'calc(100vh - 56px)', // モバイルのナビゲーションバーを考慮
+  additionalStyles: {
+    ...MAP_CONTAINER_STYLE.additionalStyles,
+    // モバイル固有のスタイル調整
+  },
+};
+
+// ============================================================================
+// エクスポートされるヘルパー関数
+// ============================================================================
 
 /**
  * 指定されたエリアタイプの境界データを取得
@@ -262,38 +346,26 @@ function checkGoogleMapsLoaded(): boolean {
  * @returns エリアの境界座標
  */
 export function getAreaBounds(areaType: string): google.maps.LatLngBounds {
-  if (!checkGoogleMapsLoaded()) {
-    throw new Error('Google Maps APIが読み込まれていません');
+  try {
+    if (!checkGoogleMapsLoaded()) {
+      throw createError('MAP', 'API_ERROR', ERROR_MESSAGES.MAP.API_NOT_LOADED);
+    }
+
+    const bounds = AREA_BOUNDS[areaType] || AREA_BOUNDS.default;
+
+    return new google.maps.LatLngBounds(
+      { lat: bounds.south, lng: bounds.west },
+      { lat: bounds.north, lng: bounds.east },
+    );
+  } catch (error) {
+    logError('MAP', 'BOUNDS_ERROR', `エリア境界の取得に失敗しました: ${areaType}`);
+    // エラー発生時はデフォルト境界を返す
+    const defaultBounds = AREA_BOUNDS.default;
+    return new google.maps.LatLngBounds(
+      { lat: defaultBounds.south, lng: defaultBounds.west },
+      { lat: defaultBounds.north, lng: defaultBounds.east },
+    );
   }
-
-  // 実際の実装では特定のエリアの境界データを返す
-  // ここではデモの例としてのみ提供
-  const boundsByArea: Record<string, google.maps.LatLngBoundsLiteral> = {
-    ryotsu: {
-      north: 38.5,
-      south: 38.0,
-      east: 139.0,
-      west: 138.5,
-    },
-    aikawa: {
-      north: 38.3,
-      south: 37.9,
-      east: 138.4,
-      west: 138.0,
-    },
-  };
-
-  const bounds = boundsByArea[areaType] || {
-    north: DEFAULT_CENTER.lat + 0.5,
-    south: DEFAULT_CENTER.lat - 0.5,
-    east: DEFAULT_CENTER.lng + 0.5,
-    west: DEFAULT_CENTER.lng - 0.5,
-  };
-
-  return new google.maps.LatLngBounds(
-    { lat: bounds.south, lng: bounds.west },
-    { lat: bounds.north, lng: bounds.east },
-  );
 }
 
 /**
