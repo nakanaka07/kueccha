@@ -17,7 +17,45 @@ import type {
   Bounds,
   Distance,
   DistanceUnit,
+  Latitude,
+  Longitude,
 } from '../types/geo.types';
+
+/**
+ * 緯度値を検証して型安全な値を返す
+ */
+export function createLatitude(value: number): Latitude {
+  if (value < -90 || value > 90) {
+    throw new Error(`緯度の値が範囲外です: ${value}。-90から90の間である必要があります。`);
+  }
+  return value as Latitude;
+}
+
+/**
+ * 経度値を検証して型安全な値を返す
+ */
+export function createLongitude(value: number): Longitude {
+  if (value < -180 || value > 180) {
+    throw new Error(`経度の値が範囲外です: ${value}。-180から180の間である必要があります。`);
+  }
+  return value as Longitude;
+}
+
+/**
+ * 緯度経度の値から型安全なLatLngLiteralオブジェクトを作成
+ */
+export function createLatLng(lat: number, lng: number): LatLngLiteral {
+  createLatitude(lat);
+  createLongitude(lng);
+  return { lat, lng };
+}
+
+/**
+ * 境界ボックスを作成する
+ */
+export function createBounds(northeast: LatLngLiteral, southwest: LatLngLiteral): Bounds {
+  return { northeast, southwest };
+}
 
 /**
  * 緯度経度を検証する関数

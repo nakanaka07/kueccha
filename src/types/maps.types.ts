@@ -1,16 +1,30 @@
 /**
  * マップ関連の型定義ファイル
+ * 
+ * Google Maps操作に関連する型定義を提供します。表示モード、設定、
+ * イベントハンドラー、コンポーネントプロパティなどを含みます。
+ * 
+ * @see geo.types.ts - 位置情報の基本型定義
  */
 
 /// <reference types="@types/google.maps" />
 
-import type { BaseProps } from './base.types';
+import type { 
+  BaseProps, 
+  StyledComponentProps,
+  MapError 
+} from './base.types';
 import type { LatLngLiteral, ControlPosition, ControlPositionString, MapTypeId } from './geo.types';
 import type { Poi } from './poi.types';
 import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
 
+// ============================================================================
+// マップ表示モード関連
+// ============================================================================
+
 /**
  * マップ表示モードの種類
+ * ユーザーが選択できる地図の視覚表現スタイル
  */
 export enum MapDisplayMode {
   STANDARD = 'standard',  // 標準的な道路地図
@@ -21,6 +35,7 @@ export enum MapDisplayMode {
 
 /**
  * マップ表示モードのマッピング
+ * 各モードに対応する設定オプションを保持
  */
 export interface MapDisplayModes {
   [MapDisplayMode.STANDARD]: MapDisplayModeOptions;
@@ -31,23 +46,26 @@ export interface MapDisplayModes {
 
 /**
  * マップ表示モード設定の型
+ * 地図の視覚的スタイルを定義するオプション
  */
 export interface MapDisplayModeOptions {
   mapTypeId: MapTypeId; // マップタイプID
   styles: google.maps.MapTypeStyle[]; // マップスタイル配列
 }
 
+// ============================================================================
+// マップ設定関連
+// ============================================================================
+
 /**
  * マップのスタイル設定
+ * base.types.tsのStyledComponentPropsを活用
  */
-export interface MapStyle {
-  width: string; // コンテナの幅
-  height: string; // コンテナの高さ
-  additionalStyles?: React.CSSProperties; // 追加のCSSスタイル
-}
+export interface MapStyle extends StyledComponentProps {}
 
 /**
  * 標準のMapOptions型を拡張してカスタムコントロールをサポート
+ * Google Mapsの標準オプションに加えて、アプリ固有の拡張機能を定義
  */
 export interface ExtendedMapOptions extends MapOptions {
   cameraControl?: boolean; // カメラコントロールの表示/非表示
@@ -58,6 +76,7 @@ export interface ExtendedMapOptions extends MapOptions {
 
 /**
  * マップの設定情報を表す型
+ * アプリケーション全体のマップ設定を中央管理
  */
 export interface MapConfig {
   apiKey: string; // Google Maps API キー
@@ -75,25 +94,31 @@ export interface MapConfig {
   defaultInfoWindowMaxWidth?: number; // 情報ウィンドウのデフォルト最大幅
 }
 
+// ============================================================================
+// マップ読み込みとエラー処理
+// ============================================================================
+
 /**
  * マップ読み込みエラー情報を表す型
+ * base.types.tsのMapErrorを活用
  */
-export interface MapLoadError {
-  code: string; // エラーコード
-  message: string; // エラーメッセージ
-  details?: unknown; // 追加のエラー詳細情報
-  timestamp: number; // エラーのタイムスタンプ
-}
+export type MapLoadError = MapError;
 
 /**
  * マップ読み込み結果を表す型
+ * 読み込み成功時はマップインスタンス、失敗時はエラー情報を持つ判別可能なユニオン型
  */
 export type MapLoadResult =
   | { success: true; map: google.maps.Map }
   | { success: false; error: MapLoadError };
 
+// ============================================================================
+// マップイベントとインタラクション
+// ============================================================================
+
 /**
  * マップイベントハンドラを表す型
+ * マップとのユーザーインタラクションを処理するコールバック関数群
  */
 export interface MapEventHandlers {
   onClick?: (event: google.maps.MapMouseEvent) => void; // マップクリック時の処理
@@ -103,8 +128,13 @@ export interface MapEventHandlers {
   onIdle?: () => void; // アイドル状態（操作完了後）になった時の処理
 }
 
+// ============================================================================
+// マップUIコンポーネント関連
+// ============================================================================
+
 /**
  * マップコンポーネントのプロパティ型
+ * 最上位マップコンテナのプロパティを定義
  */
 export interface MapProps extends BaseProps {
   pois: Poi[]; // マップ上に表示するPOI(Point of Interest)の配列
@@ -113,6 +143,7 @@ export interface MapProps extends BaseProps {
 
 /**
  * メインマップコンポーネントのプロパティ型
+ * 内部マップコンポーネントのプロパティを定義
  */
 export interface MapComponentProps {
   onMapLoad: (result: MapLoadResult) => void; // マップがロードされたときに呼び出されるコールバック関数
@@ -121,6 +152,7 @@ export interface MapComponentProps {
 
 /**
  * マップエラーコンポーネントのプロパティ型
+ * マップ読み込みエラー表示用コンポーネントのプロパティを定義
  */
 export interface MapErrorProps {
   error: MapLoadError; // エラー情報
@@ -129,6 +161,7 @@ export interface MapErrorProps {
 
 /**
  * マップコントロールコンポーネントのプロパティ型
+ * マップ上に表示される操作コントロール用コンポーネントのプロパティを定義
  */
 export interface MapControlsProps {
   map: google.maps.Map; // マップインスタンス

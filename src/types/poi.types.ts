@@ -1,22 +1,24 @@
 /**
  * POI（ポイントオブインタレスト）関連の型定義ファイル
+ * 
+ * このファイルはPOIの基本構造、分類、表示オプション、営業時間などの
+ * POI固有の型定義を提供します。検索機能との共有型は poi-search-common.types.ts に定義されています。
+ * 
+ * @see poi-search-common.types.ts - POIと検索機能で共有される型定義
+ * @see base.types.ts - 基本エンティティの型定義
  */
 
+// 標準的な順序で必要な型をインポート
 import type { AreaType } from './areas.types';
 import type { BaseEntity } from './base.types';
 import type { LatLngLiteral } from './geo.types';
+import type { MarkerAnimation } from './markers.types';
+// 循環参照を解決するため共通ファイルからインポート
+import type { PoiGenre } from './poi-common.types';
 
-/**
- * POIのジャンルを表す型
- */
-export type PoiGenre =
-  | 'restaurant'
-  | 'cafe'
-  | 'shop'
-  | 'attraction'
-  | 'facility'
-  | 'current_location'
-  | 'other';
+// ============================================================================
+// 営業時間関連
+// ============================================================================
 
 /**
  * 営業時間のキーを表す型
@@ -32,77 +34,71 @@ export type BusinessHourKey =
   | 'holiday';
 
 /**
- * マーカーアニメーションの種類
+ * 営業時間項目の型
  */
-export type MarkerAnimation = 'BOUNCE' | 'DROP' | 'NONE';
+export interface BusinessHourItem {
+  day: string;
+  key: BusinessHourKey;
+}
+
+/**
+ * 曜日マッピング情報
+ */
+export type BusinessHourDayMapping = BusinessHourItem;
+
+// ============================================================================
+// マーカー表示関連
+// ============================================================================
 
 /**
  * マーカー表示オプションを表す型
  */
 export interface MarkerDisplayOptions {
-  icon?: string; // アイコンのURL または 識別子
-  color?: string; // マーカーの色 (CSS色形式)
-  opacity?: number; // 不透明度 (0.0-1.0)
-  animation?: MarkerAnimation; // アニメーション種類
-  zIndex?: number; // マーカーの優先表示順位 (高いほど前面に表示)
+  icon?: string;
+  color?: string;
+  opacity?: number;
+  animation?: MarkerAnimation;
+  zIndex?: number;
 }
+
+// ============================================================================
+// POIデータ構造
+// ============================================================================
 
 /**
  * POI（ポイントオブインタレスト）を表す型
  */
 export interface Poi extends BaseEntity {
-  name: string; // POIの名称
-  location: LatLngLiteral; // POIの位置（緯度・経度）
-  area: AreaType; // POIが属するエリア
-  genre: PoiGenre; // POIのジャンル
-  category: string; // POIのカテゴリ（より詳細な分類）
-  businessHours?: Partial<Record<BusinessHourKey, string>>; // 営業時間情報
-  holidayInfo?: string; // 定休日や特別営業日の情報
-  parking?: string; // 駐車場の有無や情報
-  payment?: string; // 利用可能な決済方法
-  information?: string; // その他の追加情報
-  view?: string; // 外観表示用URL
-  phone?: string; // 連絡先電話番号
-  address?: string; // 物理的な住所
-  markerOptions?: MarkerDisplayOptions; // マーカー表示設定
-  keywords?: string[]; // 検索用のキーワード
-  detailUrl?: string; // 詳細情報URL
+  name: string;
+  location: LatLngLiteral;
+  area: AreaType;
+  genre: PoiGenre;
+  category: string;
+  businessHours?: Partial<Record<BusinessHourKey, string>>;
+  holidayInfo?: string;
+  parking?: string;
+  payment?: string;
+  information?: string;
+  view?: string;
+  phone?: string;
+  address?: string;
+  markerOptions?: MarkerDisplayOptions;
+  keywords?: string[];
+  detailUrl?: string;
+  rating?: number;
+  reviewCount?: number;
+  updatedAt?: string;
 }
 
-/**
- * 営業時間項目の型
- */
-export interface BusinessHourItem {
-  day: string; // 表示用の曜日名（例：「月曜日」）
-  key: BusinessHourKey; // データアクセス用のキー
-}
-
-/**
- * POI検索結果を表す型
- */
-export interface PoiSearchResult {
-  poi: Poi; // 検索結果のPOI
-  relevance: number; // 検索クエリとの関連性スコア (0-100)
-  matchedFields: string[]; // クエリとマッチした部分 (ハイライト用)
-}
-
-/**
- * POI検索パラメータを表す型
- */
-export interface PoiSearchParams {
-  query?: string; // 検索クエリ文字列
-  area?: AreaType | AreaType[]; // 特定のエリアに限定
-  genre?: PoiGenre | PoiGenre[]; // 特定のジャンルに限定
-  category?: string | string[]; // 特定のカテゴリに限定
-  limit?: number; // 検索結果の最大数
-  minRelevance?: number; // 検索の最小関連性スコア
-}
+// ============================================================================
+// データアクセス関連
+// ============================================================================
 
 /**
  * POIデータソースに対する操作を定義するインターフェース
  */
 export interface PoiDataSource {
-  getAllPois(): Promise<Poi[]>; // すべてのPOIを取得
-  getPoiById(id: string): Promise<Poi | null>; // IDでPOIを取得
-  searchPois(params: PoiSearchParams): Promise<PoiSearchResult[]>; // 検索条件に一致するPOIを検索
+  getAllPois(): Promise<Poi[]>;
+  getPoiById(id: string): Promise<Poi | null>;
+  searchPois(params: PoiSearchParams): Promise<PoiSearchResult<Poi>>;
 }

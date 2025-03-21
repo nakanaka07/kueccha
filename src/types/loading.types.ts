@@ -1,9 +1,17 @@
 /**
- * ローディング状態関連の型定義ファイル
+ * ローディング状態管理に関する型定義ファイル
+ * 
+ * このファイルでは、アプリケーション全体でのローディング状態の表現と管理に
+ * 関連する型定義を提供します。AsyncThunk、非同期フック、データフェッチングに
+ * 一貫したローディングUIを提供するために使用されます。
  */
 
 import type { BaseProps } from './base.types';
-import type { AppError } from './errors.types';
+import type { AppError } from '../utils/errors';
+
+// ============================================================================
+// ローディング状態の基本型
+// ============================================================================
 
 /**
  * ローディング状態を表す列挙型
@@ -19,12 +27,18 @@ export enum LoadingStatus {
 }
 
 /**
- * 進捗率の型（0-100の範囲）
+ * ProgressPercentage のブランド型定義
+ * 0-100の範囲に制限された進捗率を表現する型安全な数値型
+ * 
+ * @example
+ * // 正しい使用法:
+ * import { validateProgress } from '../utils/loading.utils';
+ * const progress: ProgressPercentage = validateProgress(75);
  */
 export type ProgressPercentage = number & { readonly __brand: unique symbol };
 
 /**
- * ローディング状態を表す拡張型
+ * ローディング状態を表す基本型
  */
 export interface LoadingState {
   status: LoadingStatus;          // 現在のローディング状態
@@ -34,19 +48,27 @@ export interface LoadingState {
   id?: string;                    // ローディング操作の識別子
 }
 
+// ============================================================================
+// ローディングUI関連
+// ============================================================================
+
 /**
  * ローディングコンポーネントのプロパティ型
  */
 export interface LoadingFallbackProps extends BaseProps {
   message?: string;               // 表示メッセージ
-  delay?: number;                 // 表示遅延時間
-  fadeDuration?: number;          // フェードイン時間
+  delay?: number;                 // 表示遅延時間（ミリ秒）
+  fadeDuration?: number;          // フェードイン時間（ミリ秒）
   showProgress?: boolean;         // 進捗率表示フラグ
   progress?: ProgressPercentage;  // 進捗率
-  timeout?: number;               // タイムアウト時間
+  timeout?: number;               // タイムアウト時間（ミリ秒）
   timeoutMessage?: string;        // タイムアウト時メッセージ
   onRetry?: () => void;           // 再試行ハンドラ
 }
+
+// ============================================================================
+// ローディング結果と操作
+// ============================================================================
 
 /**
  * ローディング処理の結果を表す型
@@ -56,23 +78,5 @@ export interface LoadingResult<T> {
   status: LoadingStatus;          // ローディング状態
   progress?: ProgressPercentage;  // 進捗率
   error: AppError | null;         // エラー情報
-  updatedAt?: number;             // 最終更新時間
-}
-
-/**
- * 進捗率を検証し、有効な値を返す関数
- */
-export function validateProgress(value: number): ProgressPercentage {
-  return Math.max(0, Math.min(100, value)) as ProgressPercentage;
-}
-
-/**
- * 初期ローディング状態を生成する関数
- */
-export function createInitialLoadingState(timeout: number = 30000): LoadingState {
-  return {
-    status: LoadingStatus.IDLE,
-    progress: validateProgress(0),
-    timeout,
-  };
+  updatedAt?: number;             // 最終更新時間（タイムスタンプ）
 }

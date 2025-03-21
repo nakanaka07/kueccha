@@ -1,80 +1,157 @@
 /**
- * アプリケーション設定関連の型定義ファイル
+ * アプリケーション設定関連の型定義
+ * 
+ * 設定管理システムで使用される型を体系的に定義します。
+ * 環境設定、マップ設定、シート設定など、カテゴリごとに整理されています。
  */
 
-/// <reference types="@types/google.maps" />
-import type { AreaType } from './areas.types';
-import type { MapConfig } from './maps.types';
-import type { SheetsConfig } from './sheets.types';
-
-/**
- * アプリケーション実行環境を表す型
- */
 export type EnvironmentName = 'development' | 'production' | 'test';
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+export type MapTypeId = 
+  | google.maps.MapTypeId 
+  | 'roadmap' 
+  | 'satellite' 
+  | 'hybrid' 
+  | 'terrain' 
+  | string;
 
 /**
- * 環境固有の設定を表す型
+ * 環境固有の設定
  */
 export interface EnvironmentConfig {
-  name: EnvironmentName;     // 環境名
-  debug: boolean;            // デバッグモード有効化
-  logLevel: 'error' | 'warn' | 'info' | 'debug'; // ログレベル
-  cacheEnabled: boolean;     // API呼び出しのキャッシュ有効化
+  name: EnvironmentName;
+  debug: boolean;
+  logLevel: LogLevel;
+  cacheEnabled: boolean;
+  cacheDuration?: number;
 }
 
 /**
- * マーカーカスタム設定のオプション
+ * マップ設定
  */
-export interface MarkerCustomOptions {
-  defaultOpacity: number;    // デフォルトの不透明度（0.0-1.0）
-  selectedAnimation: google.maps.Animation | null; // 選択時アニメーション
-  defaultSize?: {
+export interface MapsConfig {
+  apiKey: string;
+  mapId: string;
+  libraries?: string[];
+  version?: string;
+  language?: string;
+  region?: string;
+  options: {
+    center: { lat: number; lng: number };
+    zoom: number;
+    mapTypeId: MapTypeId;
+    fullscreenControl?: boolean;
+    streetViewControl?: boolean;
+    zoomControl?: boolean;
+    mapTypeControl?: boolean;
+    [key: string]: any;
+  };
+  mobileOptions?: Partial<MapsConfig['options']>;
+  boundsPadding?: number;
+  clusteringThreshold?: number;
+}
+
+/**
+ * シート設定
+ */
+export interface SheetsConfig {
+  apiKey: string;
+  spreadsheetId: string;
+  cacheDuration?: number;
+  maxRetries?: number;
+  retryDelay?: number;
+  sheets?: Array<{
+    name: string;
+    range: string;
+    primaryKey?: string;
+    isKeyValue?: boolean;
+  }>;
+  sheetNames?: {
+    pois: string;
+    areas: string;
+    [key: string]: string;
+  };
+}
+
+/**
+ * マーカー設定
+ */
+export interface MarkerConfig {
+  defaultIcon: string;
+  selectedIcon?: string;
+  clusterIcon?: string;
+  animation?: 'BOUNCE' | 'DROP' | null;
+  opacity?: number;
+  size?: {
     width: number;
     height: number;
   };
-  highlight?: {
-    zIndex: number;
-    opacity: number;
-    scale?: number;
-  };
+  iconMapping?: Record<string, string>;
 }
 
 /**
- * 表示関連の設定を表す型
+ * 表示設定
  */
 export interface DisplayConfig {
-  defaultVisibleAreas: AreaType[]; // デフォルト表示エリア
-  markerOptions: MarkerCustomOptions; // マーカー設定
-  mobile: {
+  defaultVisibleAreas: Array<string>;
+  markerOptions: {
+    defaultOpacity: number;
+    selectedAnimation: any;
+    defaultSize?: {
+      width: number;
+      height: number;
+    };
+    highlight?: {
+      zIndex: number;
+      opacity: number;
+      scale: number;
+    };
+  };
+  mobile?: {
     menuButtonPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
     infoWindowScale: number;
   };
 }
 
 /**
- * エラー処理関連の設定を表す型
+ * エラー処理設定
  */
 export interface ErrorHandlingConfig {
-  retryCount: number;        // API呼び出し再試行回数
-  retryInterval: number;     // 再試行間隔（ミリ秒）
-  reportErrors: boolean;     // エラーレポート送信
-  showErrors: boolean;       // エラーログ表示
+  retryCount: number;
+  retryInterval: number;
+  reportErrors: boolean;
+  showErrors: boolean;
 }
 
 /**
- * アプリケーションの全体設定を表す型
+ * アプリケーション情報
+ */
+export interface AppInfoConfig {
+  name: string;
+  version: string;
+  description: string;
+  buildDate: string;
+  commitHash?: string;
+}
+
+/**
+ * 完全なアプリケーション設定
  */
 export interface AppConfig {
-  environment: EnvironmentConfig;   // 環境設定
-  maps: MapConfig;                  // Google Maps設定
-  sheets: SheetsConfig;             // Google Sheets設定
-  display: DisplayConfig;           // 表示設定
-  errorHandling: ErrorHandlingConfig; // エラー処理設定
+  app: AppInfoConfig;
+  environment: EnvironmentConfig;
+  maps: MapsConfig;
+  sheets: SheetsConfig;
+  markers: MarkerConfig;
+  display: DisplayConfig;
+  errorHandling: ErrorHandlingConfig;
 }
 
 /**
- * 設定関連のユーティリティ型
+ * 環境変数オプション
  */
-export type ConfigValidator<T> = (value: unknown) => T;
-export type ConfigMerger<T> = (base: T, override: Partial<T>) => T;
-export type ConfigLoader = () => Promise<Partial<AppConfig>> | Partial<AppConfig>;
+export interface EnvValueOptions {
+  required?: boolean;
+  logErrors?: boolean;
+  throwInProduction?: boolean;
+}
