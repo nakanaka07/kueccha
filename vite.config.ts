@@ -1,15 +1,27 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import compression from 'vite-plugin-compression';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+// PWA設定をインポート
+import { getPwaConfig } from './src/config/pwa.config';
+
 // ============================================================================
 // 型と定数
 // ============================================================================
-const APP_CONFIG = {
+interface AppConfig {
+  BASE_PATH: { PROD: string; DEV: string };
+  OUTPUT_DIR: string;
+  PORT: { DEFAULT: number; MOBILE: number };
+  REQUIRED_ENV: string[];
+  OPTIONAL_ENV: string[];
+  ENV_DEFAULTS: Record<string, string>;
+}
+
+const APP_CONFIG: AppConfig = {
   BASE_PATH: { PROD: '/kueccha/', DEV: '/' },
   OUTPUT_DIR: 'dist',
   PORT: { DEFAULT: 5173, MOBILE: 5174 },
@@ -26,6 +38,12 @@ const APP_CONFIG = {
     'VITE_DEFAULT_CENTER_LNG',
     'VITE_APP_TITLE',
   ],
+  ENV_DEFAULTS: {
+    VITE_DEFAULT_ZOOM: '12',
+    VITE_DEFAULT_CENTER_LAT: '38.0503',
+    VITE_DEFAULT_CENTER_LNG: '138.3716',
+    VITE_APP_TITLE: '佐渡で食えっちゃ',
+  }
 };
 
 // ============================================================================
@@ -33,127 +51,38 @@ const APP_CONFIG = {
 // ============================================================================
 
 /**
- * 環境変数の検証
+ * 環境変数の検証と処理
  */
-function validateEnv(env) {
+function validateEnv(env: Record<string, string | undefined>): Record<string, string> {
+  // 必須環境変数のチェック
   const missingRequired = APP_CONFIG.REQUIRED_ENV.filter(key => !env[key]);
   if (missingRequired.length > 0) {
-    throw new Error(`必須環境変数が設定されていません: ${missingRequired.join(', ')}`);
+    throw new Error(
+      `必須環境変数が設定されていません: ${missingRequired.join(', ')}\n` +
+      `開発環境では.envファイルに、本番環境ではGitHub Secretsに設定してください。`
+    );
   }
 
+  // デフォルト値の適用
+  Object.entries(APP_CONFIG.ENV_DEFAULTS).forEach(([key, defaultValue]) => {
+    if (!env[key]) {
+      env[key] = defaultValue;
+    }
+  });
+
+  // Viteのdefine用に環境変数を整形
   const defineEnv = [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].reduce((acc, key) => {
     if (env[key]) acc[`process.env.${key}`] = JSON.stringify(env[key]);
     return acc;
-  }, {});
+  }, {} as Record<string, string>);
 
   return defineEnv;
 }
 
 /**
- * PWA設定を生成
- */
-function getPwaConfig(isProd) {
-  return {
-    registerType: 'prompt',
-    includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
-    manifest: {
-      name: '佐渡で食えっちゃ',
-      short_name: '佐渡で食えっちゃ',
-      description: '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。オフラインでも使える観光支援アプリ。',
-      lang: 'ja',
-      theme_color: '#4a6da7',
-      background_color: '#ffffff',
-      display: 'standalone',
-      orientation: 'any',
-      icons: [
-        {
-          src: '/icons/icon-192x192.png',
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'any maskable',
-        },
-        {
-          src: '/icons/icon-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable',
-        }
-      ],
-      categories: ['food', 'travel', 'navigation'],
-    },
-    workbox: {
-      skipWaiting: true,
-      clientsClaim: true,
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/maps\.googleapis\.com\/.*/i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'google-maps',
-            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            cacheableResponse: { statuses: [0, 200] },
-          },
-        },
-        {
-          urlPattern: /^https:\/\/sheets\.googleapis\.com\/.*/i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'google-sheets',
-            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
-            networkTimeoutSeconds: 10,
-          },
-        },
-        {
-          urlPattern: /\/api\/.*/i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            networkTimeoutSeconds: 10,
-            expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 },
-          },
-        },
-        {
-          urlPattern: /\.(js|css)$/,
-          handler: 'StaleWhileRevalidate',
-          options: {
-            cacheName: 'static-resources',
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
-          },
-        },
-        {
-          urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'images-cache',
-            expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
-            cacheableResponse: { statuses: [0, 200] },
-            matchOptions: { ignoreSearch: true },
-          },
-        },
-        {
-          urlPattern: /\.(woff2?|ttf|otf)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'fonts',
-            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-          },
-        },
-      ],
-      navigateFallback: 'index.html',
-      navigateFallbackDenylist: [/^\/api/, /\.(json|xml|csv|webmanifest|txt)$/],
-    },
-    devOptions: {
-      enabled: !isProd,
-      type: 'module',
-      navigateFallback: 'index.html',
-    },
-  };
-}
-
-/**
  * サーバー設定を生成
  */
-function getServerConfig(isDev, isMobile) {
+function getServerConfig(isDev: boolean, isMobile: boolean) {
   if (!isDev) return {};
 
   const port = isMobile ? APP_CONFIG.PORT.MOBILE : APP_CONFIG.PORT.DEFAULT;
@@ -195,8 +124,11 @@ function getHttpsConfig() {
         }
       };
     }
+    console.info('開発用SSL証明書が見つからないため、HTTP接続を使用します。');
+    console.info('HTTPS接続を有効にするには、localhost.keyとlocalhots.crtファイルをプロジェクトルートに配置してください。');
   } catch (error) {
     console.error('SSL証明書の読み込みエラー:', error instanceof Error ? error.message : String(error));
+    console.info('SSL設定なしで続行します。本番環境では適切なSSL証明書を使用してください。');
   }
 
   return { enabled: false, config: {} };
@@ -205,7 +137,7 @@ function getHttpsConfig() {
 /**
  * ビルド設定を生成
  */
-function getBuildConfig(isProd) {
+function getBuildConfig(isProd: boolean) {
   return {
     outDir: APP_CONFIG.OUTPUT_DIR,
     sourcemap: isProd ? 'hidden' : true,
@@ -249,10 +181,22 @@ function getAliases() {
   };
 }
 
+/**
+ * 圧縮プラグインの生成
+ */
+function getCompressionPlugins(isProd: boolean) {
+  if (!isProd) return [];
+  
+  return [
+    compression({ algorithm: 'gzip', ext: '.gz' }),
+    compression({ algorithm: 'brotliCompress', ext: '.br' })
+  ];
+}
+
 // ============================================================================
 // メイン設定
 // ============================================================================
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode, command }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
   const isDev = command === 'serve';
@@ -274,9 +218,8 @@ export default defineConfig(({ mode, command }) => {
         }),
         tsconfigPaths(),
         VitePWA(getPwaConfig(isProd)),
-        isProd && compression({ algorithm: 'gzip', ext: '.gz' }),
-        isProd && compression({ algorithm: 'brotliCompress', ext: '.br' }),
-      ].filter(Boolean),
+        ...getCompressionPlugins(isProd),
+      ],
       build: getBuildConfig(isProd),
       optimizeDeps: {
         include: ['react', 'react-dom', '@googlemaps/js-api-loader', '@react-google-maps/api'],
