@@ -1,5 +1,6 @@
 /**
  * アプリケーションのエントリーポイント
+ * GitHub Pages静的サイト向けに最適化
  */
 import React, { Suspense, StrictMode, lazy, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -26,8 +27,8 @@ const App = lazy(() =>
   }),
 );
 
-// 環境設定
-const isDevelopment = process.env.NODE_ENV === 'development';
+// 環境設定 - 環境変数の使用を簡略化
+const isDevelopment = import.meta.env.DEV;
 
 /**
  * エラーバウンダリーコンポーネント
@@ -73,12 +74,15 @@ class ErrorBoundary extends React.Component<
 const RenderWithErrorHandling: React.FC = () => {
   const [isSWRegistered, setSWRegistered] = useState<boolean>(false);
 
+  // サービスワーカー登録 - 静的サイト向けに最適化
   useEffect(() => {
+    // GitHub Pages環境では常にPWAを有効化
     if ('serviceWorker' in navigator && !isDevelopment) {
       PWA.register()
         .then(() => setSWRegistered(true))
         .catch((error) => logError('サービスワーカー登録エラー', { error }));
     } else {
+      // 開発環境ではサービスワーカーをスキップ
       setSWRegistered(true);
     }
   }, []);
@@ -119,7 +123,7 @@ function handleFatalError(error: unknown): void {
       <ErrorDisplay error={appError} onRetry={() => window.location.reload()} isFatal={true} />,
     );
   } catch (fallbackError) {
-    logError('エラー表示の生成に失敗しました', { error: fallbackError });
+    // 最後の手段としての純HTMLフォールバック
     errorContainer.innerHTML = `
       <div class="error-container" role="alert">
         <h2>エラーが発生しました</h2>
@@ -135,10 +139,6 @@ function handleFatalError(error: unknown): void {
  */
 function renderApp(): void {
   try {
-    if (isDevelopment) {
-      performance.mark('app-render-start');
-    }
-
     const container = document.getElementById('app');
     if (!container) {
       throw createError('SYSTEM', 'DOM_ERROR', ERROR_MESSAGES.SYSTEM.CONTAINER_NOT_FOUND);
@@ -154,13 +154,6 @@ function renderApp(): void {
         <RenderWithErrorHandling />
       ),
     );
-
-    if (isDevelopment) {
-      performance.mark('app-render-end');
-      performance.measure('app-render-duration', 'app-render-start', 'app-render-end');
-      const measurements = performance.getEntriesByName('app-render-duration');
-      console.info(`🚀 App render time: ${measurements[0]?.duration.toFixed(2)}ms`);
-    }
   } catch (error) {
     handleFatalError(error);
   }

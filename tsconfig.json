@@ -8,20 +8,22 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022", "WebWorker"],
     "jsx": "react-jsx",
 
-    // 型チェック
+    // 型チェック (厳格モードの明示的設定)
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
 
     // モジュール設定
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     
-    // パス設定
+    // パス設定 (プロジェクト構造に合わせて調整)
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -32,8 +34,8 @@
       "@services/*": ["src/services/*"],
       "@adapters/*": ["src/adapters/*"],
       "@types/*": ["src/types/*"],
-      "@contexts/*": ["src/contexts/*"],
       "@images/*": ["src/images/*"],
+      "@contexts/*": ["src/contexts/*"],
       "@styles/*": ["src/styles/*"],
       "@locales/*": ["src/locales/*"]
     },
@@ -49,10 +51,10 @@
   },
   "include": [
     "src/**/*",
-    "server.ts",
     "vite.config.ts",
     "env.d.ts",
-    "css.d.ts"
+    "css.d.ts",
+    "scripts/**/*.ts"
   ],
   "exclude": [
     "dist",
@@ -63,6 +65,9 @@
   ],
   "ts-node": {
     "transpileOnly": true,
-    "esm": true
+    "esm": true,
+    "compilerOptions": {
+      "module": "ESNext"
+    }
   }
 }

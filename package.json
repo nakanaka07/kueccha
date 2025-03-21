@@ -16,7 +16,6 @@
     "build": "pnpm run check:env && vite build",
     "build:prod": "pnpm run build && pnpm run optimize",
     "optimize": "ts-node scripts/optimize-assets.ts",
-    "start": "node server.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,27 +26,20 @@
     "typecheck": "tsc --noEmit",
     "check:env": "ts-node scripts/check-env.ts",
     "prepare": "husky",
-    "reset": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune"
+    "reset": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune",
+    "analyze": "vite build --mode analyze"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@googlemaps/markerclusterer": "^2.5.3",
     "@react-google-maps/api": "^2.20.6",
-    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.0",
-    "helmet": "^8.1.0",
     "lru-cache": "^11.0.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "winston": "^3.17.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.1",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.11",
     "@types/react-dom": "^19.0.4",
@@ -67,6 +59,7 @@
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
+    "rollup-plugin-visualizer": "^5.12.0",
     "sharp": "^0.33.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",

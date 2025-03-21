@@ -1,9 +1,8 @@
 /**
  * アプリケーションのメインコンポーネント
- * 
- * 地図表示とPOI管理の中央ハブとして機能します。
+ * GitHub Pages静的サイト向けに最適化
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
@@ -17,39 +16,50 @@ import { logError } from './utils/logger';
 import type { MapLoadResult } from './types/maps.types';
 import type { Poi } from './types/poi.types';
 
+/**
+ * アプリケーションのメインコンポーネント
+ */
 const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
-  const { pois, isLoading: isDataLoading, error: dataError, refetch } = usePoisData();
+  const { 
+    pois, 
+    isLoading: isDataLoading, 
+    error: dataError, 
+    refetch 
+  } = usePoisData();
   
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
   const [mapError, setMapError] = useState<Error | null>(null);
 
+  // マップ読み込み完了ハンドラ
   const handleMapLoad = useCallback((result: MapLoadResult) => {
     setIsMapLoading(false);
     
     if (!result.success) {
       const errorMessage = result.error.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
       logError('MAP', 'LOAD_ERROR', errorMessage, result.error.details);
-      setMapError(new Error(errorMessage));
+      setMapError(createError('MAP', 'LOAD_ERROR', errorMessage));
     }
   }, []);
 
+  // POI選択ハンドラ
   const handlePoiSelect = useCallback((poi: Poi | null) => {
     setSelectedPoi(poi);
   }, []);
 
-  const renderErrorFallback = useCallback((error: Error) => {
-    const appError = createError('MAP', 'RENDER_ERROR', error.message);
-    return (
+  // エラー表示コンポーネント - メモ化
+  const ErrorFallback = useMemo(() => {
+    return ({ message, onRetry }: { message: string, onRetry: () => void }) => (
       <div className="error-container" role="alert">
-        <h2>マップの読み込みに失敗しました</h2>
-        <p>{appError.message}</p>
-        <button onClick={() => window.location.reload()}>再読み込み</button>
+        <h2>読み込みに失敗しました</h2>
+        <p>{message}</p>
+        <button onClick={onRetry}>再試行</button>
       </div>
     );
   }, []);
 
+  // 再試行ハンドラ
   const handleRetry = useCallback(() => {
     if (dataError) refetch();
     if (mapError) {
@@ -58,25 +68,42 @@ const App: React.FC = () => {
     }
   }, [dataError, mapError, refetch]);
 
-  // ステータス判定
-  const isLoading = isDataLoading || isMapLoading;
-  const hasError = dataError || mapError;
-  const errorMessage = dataError?.message || mapError?.message || 'アプリケーションエラーが発生しました';
+  // アプリケーション状態の計算
+  const appState = useMemo(() => {
+    const isLoading = isDataLoading || isMapLoading;
+    const hasError = Boolean(dataError || mapError);
+    const errorMessage = dataError?.message || mapError?.message || ERROR_MESSAGES.GENERAL.UNKNOWN;
+    const loadingMessage = isDataLoading 
+      ? 'データを読み込んでいます...' 
+      : '地図を読み込んでいます...';
+      
+    return { isLoading, hasError, errorMessage, loadingMessage };
+  }, [isDataLoading, isMapLoading, dataError, mapError]);
+
+  // エラーバウンダリ用フォールバック（マップレンダリングエラー専用）
+  const renderErrorFallback = useCallback((error: Error) => {
+    const appError = createError('MAP', 'RENDER_ERROR', error.message);
+    return (
+      <ErrorFallback 
+        message={appError.message} 
+        onRetry={() => window.location.reload()} 
+      />
+    );
+  }, [ErrorFallback]);
 
   return (
     <div className="app-container">
       <ErrorBoundary fallback={renderErrorFallback}>
-        {hasError ? (
-          <div className="error-container" role="alert">
-            <h2>読み込みに失敗しました</h2>
-            <p>{errorMessage}</p>
-            <button onClick={handleRetry}>再試行</button>
-          </div>
+        {appState.hasError ? (
+          <ErrorFallback 
+            message={appState.errorMessage} 
+            onRetry={handleRetry} 
+          />
         ) : (
           <>
-            {isLoading && (
+            {appState.isLoading && (
               <LoadingFallback
-                message={isDataLoading ? 'データを読み込んでいます...' : '地図を読み込んでいます...'}
+                message={appState.loadingMessage}
                 showProgress={true}
                 className="map-loading"
                 aria-live="polite"
@@ -84,7 +111,7 @@ const App: React.FC = () => {
             )}
             <Map
               onMapLoad={handleMapLoad}
-              pois={pois}
+              pois={pois || []}
               eventHandlers={{ onPoiSelect: handlePoiSelect }}
               selectedPoi={selectedPoi}
               isMobile={isMobile}

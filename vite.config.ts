@@ -1,4 +1,5 @@
 import path from 'node:path';
+// fsモジュールは証明書読み込みとエイリアス設定のみに使用
 import fs from 'node:fs';
 import { defineConfig, loadEnv, UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -8,19 +9,39 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // PWA設定をインポート
 import { getPwaConfig } from './src/config/pwa.config';
+import { logError, logInfo } from './src/utils/logger';
 
 // ============================================================================
 // 型と定数
 // ============================================================================
+
+/**
+ * アプリケーション設定の型定義
+ */
 interface AppConfig {
+  /** ベースパス設定（本番/開発） */
   BASE_PATH: { PROD: string; DEV: string };
+  /** ビルド出力ディレクトリ */
   OUTPUT_DIR: string;
+  /** サーバーポート設定 */
   PORT: { DEFAULT: number; MOBILE: number };
+  /** 必須環境変数リスト */
   REQUIRED_ENV: string[];
+  /** 任意環境変数リスト */
   OPTIONAL_ENV: string[];
+  /** 環境変数のデフォルト値 */
   ENV_DEFAULTS: Record<string, string>;
 }
 
+// 不要なHTTPSインターフェース削除
+// interface HttpsConfigResult {
+//   enabled: boolean;
+//   config: Record<string, any>;
+// }
+
+/**
+ * アプリケーション設定
+ */
 const APP_CONFIG: AppConfig = {
   BASE_PATH: { PROD: '/kueccha/', DEV: '/' },
   OUTPUT_DIR: 'dist',
@@ -46,12 +67,18 @@ const APP_CONFIG: AppConfig = {
   }
 };
 
+// セキュリティヘッダー設定削除（GitHub Pagesの場合は不要）
+// const SECURITY_HEADERS = { ... };
+
 // ============================================================================
-// 設定関数
+// 環境変数管理
 // ============================================================================
 
 /**
  * 環境変数の検証と処理
+ * @param env 環境変数オブジェクト
+ * @returns 処理済み環境変数
+ * @throws 必須環境変数が不足している場合にエラーをスロー
  */
 function validateEnv(env: Record<string, string | undefined>): Record<string, string> {
   // 必須環境変数のチェック
@@ -59,47 +86,42 @@ function validateEnv(env: Record<string, string | undefined>): Record<string, st
   if (missingRequired.length > 0) {
     throw new Error(
       `必須環境変数が設定されていません: ${missingRequired.join(', ')}\n` +
-      `開発環境では.envファイルに、本番環境ではGitHub Secretsに設定してください。`
+      `.env.exampleを確認し、開発環境では.envファイルに、本番環境ではGitHub Secretsに設定してください。`
     );
   }
 
   // デフォルト値の適用
   Object.entries(APP_CONFIG.ENV_DEFAULTS).forEach(([key, defaultValue]) => {
     if (!env[key]) {
+      logInfo('CONFIG', 'ENV_DEFAULT', `環境変数 ${key} にデフォルト値「${defaultValue}」を適用しました`);
       env[key] = defaultValue;
     }
   });
 
   // Viteのdefine用に環境変数を整形
-  const defineEnv = [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].reduce((acc, key) => {
+  return [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].reduce((acc, key) => {
     if (env[key]) acc[`process.env.${key}`] = JSON.stringify(env[key]);
     return acc;
   }, {} as Record<string, string>);
-
-  return defineEnv;
 }
 
+// ============================================================================
+// サーバー設定（簡略化）
+// ============================================================================
+
 /**
- * サーバー設定を生成
+ * サーバー設定を生成（ローカル開発用）
+ * @param isDev 開発モードかどうか
+ * @param isMobile モバイル開発モードかどうか
+ * @returns サーバー設定オブジェクト
  */
 function getServerConfig(isDev: boolean, isMobile: boolean) {
   if (!isDev) return {};
 
   const port = isMobile ? APP_CONFIG.PORT.MOBILE : APP_CONFIG.PORT.DEFAULT;
-  const httpsConfig = getHttpsConfig();
 
   return {
-    https: httpsConfig.enabled ? httpsConfig.config : false,
-    headers: {
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-    },
-    hmr: {
-      protocol: httpsConfig.enabled ? 'wss' : 'ws',
-      host: 'localhost',
-      port,
-    },
+    // HTTPS関連の設定を削除
     cors: true,
     open: !isMobile,
     port,
@@ -107,35 +129,17 @@ function getServerConfig(isDev: boolean, isMobile: boolean) {
   };
 }
 
-/**
- * HTTPS設定を生成
- */
-function getHttpsConfig() {
-  const keyPath = path.resolve(__dirname, 'localhost.key');
-  const certPath = path.resolve(__dirname, 'localhost.crt');
+// HTTPS設定関数を削除
+// function getHttpsConfig(): HttpsConfigResult { ... }
 
-  try {
-    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-      return {
-        enabled: true,
-        config: {
-          key: fs.readFileSync(keyPath),
-          cert: fs.readFileSync(certPath),
-        }
-      };
-    }
-    console.info('開発用SSL証明書が見つからないため、HTTP接続を使用します。');
-    console.info('HTTPS接続を有効にするには、localhost.keyとlocalhots.crtファイルをプロジェクトルートに配置してください。');
-  } catch (error) {
-    console.error('SSL証明書の読み込みエラー:', error instanceof Error ? error.message : String(error));
-    console.info('SSL設定なしで続行します。本番環境では適切なSSL証明書を使用してください。');
-  }
-
-  return { enabled: false, config: {} };
-}
+// ============================================================================
+// ビルド設定
+// ============================================================================
 
 /**
  * ビルド設定を生成
+ * @param isProd 本番モードかどうか
+ * @returns ビルド設定オブジェクト
  */
 function getBuildConfig(isProd: boolean) {
   return {
@@ -146,7 +150,7 @@ function getBuildConfig(isProd: boolean) {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        pure_funcs: ['console.log', 'console.debug'],
       },
       format: { comments: false },
     } : undefined,
@@ -155,34 +159,66 @@ function getBuildConfig(isProd: boolean) {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
           'maps-vendor': ['@googlemaps/js-api-loader', '@react-google-maps/api', '@googlemaps/markerclusterer'],
+          'ui-vendor': ['@emotion/react', '@emotion/styled'],
         },
       },
     },
+    // ビルドパフォーマンスの最適化
+    reportCompressedSize: isProd,
+    chunkSizeWarningLimit: 1000,
   };
 }
 
 /**
  * エイリアス設定を生成
+ * @returns パスエイリアス設定オブジェクト
  */
 function getAliases() {
-  return {
-    '@': path.resolve(__dirname, './src'),
-    '@components': path.resolve(__dirname, './src/components'),
-    '@hooks': path.resolve(__dirname, './src/hooks'),
-    '@utils': path.resolve(__dirname, './src/utils'),
-    '@services': path.resolve(__dirname, './src/services'),
-    '@constants': path.resolve(__dirname, './src/constants'),
-    '@adapters': path.resolve(__dirname, './src/adapters'),
-    '@types': path.resolve(__dirname, './src/types'),
-    '@contexts': path.resolve(__dirname, './src/contexts'),
-    '@images': path.resolve(__dirname, './src/images'),
-    '@styles': path.resolve(__dirname, './src/styles'),
-    '@locales': path.resolve(__dirname, './src/locales'),
-  };
+  // src直下のディレクトリを自動検出
+  const srcBasePath = path.resolve(__dirname, './src');
+  const baseDirectories = ['components', 'hooks', 'utils', 'services', 
+                           'constants', 'adapters', 'types', 'contexts', 
+                           'images', 'styles', 'locales'];
+  
+  try {
+    // srcディレクトリの存在を確認
+    if (fs.existsSync(srcBasePath)) {
+      // 静的リストに加えて、自動的にディレクトリを検出
+      const autoDetectedDirs = fs.readdirSync(srcBasePath, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name)
+        .filter(name => !name.startsWith('.') && !baseDirectories.includes(name));
+      
+      // 重複を除去して結合
+      const allDirectories = [...new Set([...baseDirectories, ...autoDetectedDirs])];
+      
+      // 基本エイリアス設定
+      const aliases: Record<string, string> = {
+        '@': srcBasePath,
+      };
+      
+      // ディレクトリベースのエイリアスを追加
+      allDirectories.forEach(dir => {
+        const dirPath = path.resolve(srcBasePath, dir);
+        if (fs.existsSync(dirPath)) {
+          aliases[`@${dir}`] = dirPath;
+        }
+      });
+      
+      return aliases;
+    }
+  } catch (error) {
+    logError('CONFIG', 'ALIAS_ERROR', 'エイリアス設定の生成中にエラーが発生しました', error);
+  }
+  
+  // エラー時やsrcディレクトリが存在しない場合は基本設定のみ返す
+  return { '@': srcBasePath };
 }
 
 /**
  * 圧縮プラグインの生成
+ * @param isProd 本番モードかどうか
+ * @returns 圧縮プラグインの配列
  */
 function getCompressionPlugins(isProd: boolean) {
   if (!isProd) return [];
@@ -196,17 +232,26 @@ function getCompressionPlugins(isProd: boolean) {
 // ============================================================================
 // メイン設定
 // ============================================================================
+
 export default defineConfig(({ mode, command }): UserConfig => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const isProd = mode === 'production';
-  const isDev = command === 'serve';
-  const isMobile = env.VITE_MOBILE === 'true';
-  
   try {
+    const env = loadEnv(mode, process.cwd(), '');
+    const isProd = mode === 'production';
+    const isDev = command === 'serve';
+    const isMobile = env.VITE_MOBILE === 'true';
+    
+    // 環境変数の検証
     const defineEnv = validateEnv(env);
     const appVersion = process.env.npm_package_version || '0.0.0';
+    const buildTime = new Date().toISOString();
     
-    console.log(`🚀 アプリケーションバージョン: ${appVersion} (${mode}モード)`);
+    logInfo('CONFIG', 'APP_VERSION', `アプリケーションバージョン: ${appVersion} (${mode}モード)`);
+    logInfo('CONFIG', 'BUILD_TIME', `ビルド時刻: ${buildTime}`);
+
+    // モバイルモードのログ
+    if (isMobile) {
+      logInfo('CONFIG', 'MOBILE_MODE', 'モバイル開発モードが有効です');
+    }
 
     return {
       base: isProd ? APP_CONFIG.BASE_PATH.PROD : APP_CONFIG.BASE_PATH.DEV,
@@ -228,7 +273,8 @@ export default defineConfig(({ mode, command }): UserConfig => {
       define: {
         ...defineEnv,
         __APP_VERSION__: JSON.stringify(appVersion),
-        __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+        __BUILD_TIME__: JSON.stringify(buildTime),
+        __DEV__: !isProd,
       },
       server: getServerConfig(isDev, isMobile),
       resolve: { alias: getAliases() },
@@ -239,9 +285,14 @@ export default defineConfig(({ mode, command }): UserConfig => {
           generateScopedName: isProd ? '[hash:base64:8]' : '[local]_[hash:base64:5]',
         },
       },
+      // エラーハンドリングと警告設定
+      logLevel: isProd ? 'error' : 'info',
+      clearScreen: false,
     };
   } catch (error) {
-    console.error('⛔ 設定エラー:', error instanceof Error ? error.message : String(error));
+    // より構造化されたエラーログ
+    logError('CONFIG', 'FATAL_ERROR', '設定処理中に致命的なエラーが発生しました', error);
+    console.error(`スタックトレース: ${error.stack}`);
     process.exit(1);
   }
 });

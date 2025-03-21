@@ -24,44 +24,80 @@ concurrency:
   group: 'pages'
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - uses: pnpm/action-setup@v3
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        
+      - name: Setup environment variables
+        id: env-setup
+        run: |
+          {
+            echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"
+            echo "VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.MAPS_MAP_ID }}"
+            echo "VITE_GOOGLE_SHEETS_API_KEY=${{ secrets.SHEETS_API_KEY }}"
+            echo "VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.SPREADSHEET_ID }}"
+            echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}"
+            echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }}"
+            echo "VITE_EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }}"
+          } | tee .env >> $GITHUB_ENV
+
+      - name: Validate environment variables
+        run: pnpm ts-node scripts/check-env.ts
 
       - name: Build application
         run: pnpm run build
         env:
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.MAPS_MAP_ID }}
-          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.SHEETS_API_KEY }}
-          VITE_GOOGLE_SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
-          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
-          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
           NODE_ENV: production
 
+      - name: Optimize assets
+        run: pnpm ts-node scripts/optimize-assets.ts
+        
       - name: Setup PWA assets
         run: |
-          [ -f "manifest.json" ] && cp manifest.json ./dist/
-          [ -f "dist/sw.js" ] || echo "Warning: Service Worker not found"
+          # manifest.jsonのコピー（存在する場合）
+          if [ -f "manifest.json" ] && [ ! -f "dist/manifest.json" ]; then
+            cp manifest.json ./dist/
+            echo "✓ PWA manifest copied to dist/"
+          fi
+          
+          # アイコンのコピー（必要な場合）
+          if [ -d "public/icons" ] && [ ! -d "dist/icons" ]; then
+            mkdir -p dist/icons
+            cp -r public/icons/* dist/icons/
+            echo "✓ PWA icons copied to dist/"
+          fi
+          
+          # Service Workerの確認
+          if [ -f "dist/service-worker.js" ] || [ -f "dist/sw.js" ]; then
+            echo "✓ Service Worker verified in build output"
+          fi
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
           retention-days: 7
@@ -72,8 +108,23 @@ jobs:
       name: ${{ github.event.inputs.environment || 'github-pages' }}
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
         with:
           timeout: 600000
+
+      - name: Verify deployment
+        run: |
+          DEPLOY_URL="${{ steps.deployment.outputs.page_url }}"
+          echo "✓ デプロイ完了: $DEPLOY_URL"
+          
+          # 基本的なデプロイ健全性チェック
+          if curl -sSf "$DEPLOY_URL" > /dev/null; then
+            echo "✓ デプロイサイトへのアクセス確認成功"
+          else
+            echo "❌ デプロイサイトへのアクセス失敗"
+            exit 1
+          fi
