@@ -27,6 +27,7 @@ concurrency:
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8'
+  BASE_PATH: '/kueccha/'
 
 jobs:
   build:
@@ -48,53 +49,56 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+          cache-dependency-path: '**/pnpm-lock.yaml'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        
+
       - name: Setup environment variables
-        id: env-setup
         run: |
-          {
-            echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"
-            echo "VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.MAPS_MAP_ID }}"
-            echo "VITE_GOOGLE_SHEETS_API_KEY=${{ secrets.SHEETS_API_KEY }}"
-            echo "VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.SPREADSHEET_ID }}"
-            echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}"
-            echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }}"
-            echo "VITE_EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }}"
-          } | tee .env >> $GITHUB_ENV
+          cat << EOF > .env
+          VITE_GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
+          VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.VITE_GOOGLE_SPREADSHEET_ID }}
+          VITE_EMAILJS_SERVICE_ID=${{ secrets.VITE_EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID=${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY=${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
+          EOF
+
+          echo "環境変数ファイルを作成しました"
 
       - name: Validate environment variables
-        run: pnpm ts-node scripts/check-env.ts
+        run: pnpm run check:env
 
-      - name: Build application
-        run: pnpm run build
+      - name: Generate PWA assets
+        run: pnpm run generate:pwa-assets
+
+      - name: Build application with GitHub Pages configuration
+        run: pnpm run build:pages
         env:
           NODE_ENV: production
+          BASE_PATH: ${{ env.BASE_PATH }}
 
       - name: Optimize assets
-        run: pnpm ts-node scripts/optimize-assets.ts
-        
-      - name: Setup PWA assets
+        run: pnpm run optimize
+
+      - name: Verify PWA configuration
         run: |
-          # manifest.jsonのコピー（存在する場合）
-          if [ -f "manifest.json" ] && [ ! -f "dist/manifest.json" ]; then
-            cp manifest.json ./dist/
-            echo "✓ PWA manifest copied to dist/"
+          if [ -f "dist/manifest.json" ]; then
+            echo "✓ PWA manifest verified in dist/"
+          else
+            echo "PWA manifest missing, copying from project root"
+            cp manifest.json ./dist/ || true
           fi
-          
-          # アイコンのコピー（必要な場合）
-          if [ -d "public/icons" ] && [ ! -d "dist/icons" ]; then
-            mkdir -p dist/icons
-            cp -r public/icons/* dist/icons/
-            echo "✓ PWA icons copied to dist/"
-          fi
-          
-          # Service Workerの確認
+
           if [ -f "dist/service-worker.js" ] || [ -f "dist/sw.js" ]; then
             echo "✓ Service Worker verified in build output"
+          else
+            echo "⚠️ Warning: Service Worker not found in build output"
           fi
+
+          echo "Checking for critical assets:"
+          ls -la dist
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
@@ -120,7 +124,7 @@ jobs:
         run: |
           DEPLOY_URL="${{ steps.deployment.outputs.page_url }}"
           echo "✓ デプロイ完了: $DEPLOY_URL"
-          
+
           # 基本的なデプロイ健全性チェック
           if curl -sSf "$DEPLOY_URL" > /dev/null; then
             echo "✓ デプロイサイトへのアクセス確認成功"
@@ -128,3 +132,5 @@ jobs:
             echo "❌ デプロイサイトへのアクセス失敗"
             exit 1
           fi
+
+          echo "✓ GitHub Pagesへのデプロイが正常に完了しました"

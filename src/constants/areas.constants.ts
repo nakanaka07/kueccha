@@ -52,7 +52,7 @@ export const INITIAL_VISIBILITY = Object.fromEntries(
   (Object.keys(AREAS) as Array<AreaType>).map((area) => [
     area,
     !INITIALLY_HIDDEN_AREAS.includes(area),
-  ])
+  ]),
 ) as Record<AreaType, boolean>;
 
 export const AreasUtil = {
@@ -91,7 +91,7 @@ export const AreasUtil = {
       return Object.keys(GEOGRAPHIC_AREAS) as RegionAreaType[];
     } else if (categoryFilter === 'facility') {
       return Object.keys(FACILITY_CATEGORIES).filter(
-        (area) => !AreasUtil.isSpecialArea(area as AreaType)
+        (area) => !AreasUtil.isSpecialArea(area as AreaType),
       ) as FacilityAreaType[];
     } else if (categoryFilter === 'special') {
       return Object.keys(SPECIAL_AREAS) as SpecialAreaType[];
@@ -100,7 +100,7 @@ export const AreasUtil = {
   },
 
   getVisibilityWithOverrides(
-    overrides: Partial<Record<AreaType, boolean>>
+    overrides: Partial<Record<AreaType, boolean>>,
   ): Record<AreaType, boolean> {
     return { ...INITIAL_VISIBILITY, ...overrides };
   },

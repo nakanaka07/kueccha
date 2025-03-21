@@ -15,11 +15,16 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
   try {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const lines = text.split('\n');
-    const textLines = lines.filter(line => !line.match(urlRegex));
+    const textLines = lines.filter((line) => !line.match(urlRegex));
     const urlLines = lines
-      .filter(line => line.match(urlRegex))
-      .filter(line => {
-        try { new URL(line); return true; } catch { return false; }
+      .filter((line) => line.match(urlRegex))
+      .filter((line) => {
+        try {
+          new URL(line);
+          return true;
+        } catch {
+          return false;
+        }
       });
 
     const textElements = textLines.map((line, i) => (
@@ -27,10 +32,10 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
         <span>{line.trim()}</span>
       </div>
     ));
-    
+
     const urlElements = urlLines.map((url, i) => (
       <div key={`url-${i}`}>
-        <a 
+        <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
@@ -52,31 +57,28 @@ export const formatInformation = (text: string | null): React.ReactElement | nul
 /**
  * 電話番号の有効性を検証
  */
-export const isValidPhoneNumber = (phone: string): boolean => 
-  /^[0-9-+() ]+$/.test(phone);
+export const isValidPhoneNumber = (phone: string): boolean => /^[0-9-+() ]+$/.test(phone);
 
 /**
  * POIの営業時間情報を整形
  */
-export const formatBusinessHours = (poi: Poi): { day: string; hours: string }[] => 
-  INFO_WINDOW_BUSINESS_HOURS
-    .filter(({ key }) => poi.businessHours?.[key]?.trim())
-    .map(({ day, key }) => ({
+export const formatBusinessHours = (poi: Poi): { day: string; hours: string }[] =>
+  INFO_WINDOW_BUSINESS_HOURS.filter(({ key }) => poi.businessHours?.[key]?.trim()).map(
+    ({ day, key }) => ({
       day,
       hours: poi.businessHours?.[key] || '',
-    }));
+    }),
+  );
 
 /**
  * POIの休日情報を整形
  */
-export const formatHolidayInfo = (poi: Poi): string => 
-  poi.holidayInfo?.trim() || '情報なし';
+export const formatHolidayInfo = (poi: Poi): string => poi.holidayInfo?.trim() || '情報なし';
 
 /**
  * POIの住所情報を整形
  */
-export const formatAddress = (poi: Poi): string => 
-  poi.address?.trim() || '住所情報なし';
+export const formatAddress = (poi: Poi): string => poi.address?.trim() || '住所情報なし';
 
 /**
  * POIの詳細情報を整形
@@ -84,7 +86,7 @@ export const formatAddress = (poi: Poi): string =>
 export const formatPoiDetails = (poi: Poi): [string, string | React.ReactElement | null][] => {
   const details: [string, string | React.ReactElement | null][] = [
     ['名称', poi.name],
-    ['カテゴリ', poi.category]
+    ['カテゴリ', poi.category],
   ];
 
   if (poi.address) details.push(['住所', formatAddress(poi)]);

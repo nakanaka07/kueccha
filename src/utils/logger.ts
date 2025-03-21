@@ -65,19 +65,39 @@ function log(
 }
 
 // 各ログレベルのエクスポート関数
-export function logError(category: LogCategory, code: LogCode, message: string, details?: LogDetails): void {
+export function logError(
+  category: LogCategory,
+  code: LogCode,
+  message: string,
+  details?: LogDetails,
+): void {
   log('error', category, code, message, details);
 }
 
-export function logWarn(category: LogCategory, code: LogCode, message: string, details?: LogDetails): void {
+export function logWarn(
+  category: LogCategory,
+  code: LogCode,
+  message: string,
+  details?: LogDetails,
+): void {
   log('warn', category, code, message, details);
 }
 
-export function logInfo(category: LogCategory, code: LogCode, message: string, details?: LogDetails): void {
+export function logInfo(
+  category: LogCategory,
+  code: LogCode,
+  message: string,
+  details?: LogDetails,
+): void {
   log('info', category, code, message, details);
 }
 
-export function logDebug(category: LogCategory, code: LogCode, message: string, details?: LogDetails): void {
+export function logDebug(
+  category: LogCategory,
+  code: LogCode,
+  message: string,
+  details?: LogDetails,
+): void {
   log('debug', category, code, message, details);
 }
 

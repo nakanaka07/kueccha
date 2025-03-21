@@ -54,26 +54,37 @@ export function getMapTypeId(typeId: string): google.maps.MapTypeId | string {
   if (!checkGoogleMapsLoaded()) return typeId;
 
   switch (typeId.toLowerCase()) {
-    case 'roadmap': return google.maps.MapTypeId.ROADMAP;
-    case 'satellite': return google.maps.MapTypeId.SATELLITE;
-    case 'hybrid': return google.maps.MapTypeId.HYBRID;
-    case 'terrain': return google.maps.MapTypeId.TERRAIN;
-    default: return google.maps.MapTypeId.ROADMAP;
+    case 'roadmap':
+      return google.maps.MapTypeId.ROADMAP;
+    case 'satellite':
+      return google.maps.MapTypeId.SATELLITE;
+    case 'hybrid':
+      return google.maps.MapTypeId.HYBRID;
+    case 'terrain':
+      return google.maps.MapTypeId.TERRAIN;
+    default:
+      return google.maps.MapTypeId.ROADMAP;
   }
 }
 
 // マップ表示モード
 export const MAP_DISPLAY_MODES: MapDisplayModes = {
   [MapDisplayMode.STANDARD]: {
-    get mapTypeId() { return getMapTypeId('roadmap'); },
+    get mapTypeId() {
+      return getMapTypeId('roadmap');
+    },
     styles: [],
   },
   [MapDisplayMode.SATELLITE]: {
-    get mapTypeId() { return getMapTypeId('satellite'); },
+    get mapTypeId() {
+      return getMapTypeId('satellite');
+    },
     styles: [],
   },
   [MapDisplayMode.ACCESSIBLE]: {
-    get mapTypeId() { return getMapTypeId('roadmap'); },
+    get mapTypeId() {
+      return getMapTypeId('roadmap');
+    },
     styles: [
       {
         featureType: 'all',
@@ -83,7 +94,9 @@ export const MAP_DISPLAY_MODES: MapDisplayModes = {
     ],
   },
   [MapDisplayMode.NIGHT]: {
-    get mapTypeId() { return getMapTypeId('roadmap'); },
+    get mapTypeId() {
+      return getMapTypeId('roadmap');
+    },
     styles: [
       {
         featureType: 'all',
@@ -164,10 +177,16 @@ function createMapOptions(): ExtendedMapOptions {
 // エリア境界データ
 const AREA_BOUNDS: Record<string, google.maps.LatLngBoundsLiteral> = {
   ryotsu: {
-    north: 38.5, south: 38.0, east: 139.0, west: 138.5,
+    north: 38.5,
+    south: 38.0,
+    east: 139.0,
+    west: 138.5,
   },
   aikawa: {
-    north: 38.3, south: 37.9, east: 138.4, west: 138.0,
+    north: 38.3,
+    south: 37.9,
+    east: 138.4,
+    west: 138.0,
   },
   default: {
     north: DEFAULT_CENTER.lat + 0.5,
@@ -187,7 +206,9 @@ export const MAPS_CONFIG: MapConfig = {
   language: 'ja',
   version: 'quarterly',
   style: MAP_STYLE,
-  get options() { return createMapOptions(); },
+  get options() {
+    return createMapOptions();
+  },
   mobileOptions: MOBILE_MAP_OPTIONS,
   boundsPadding: 50,
   clusteringThreshold: 100,

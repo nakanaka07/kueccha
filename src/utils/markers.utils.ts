@@ -1,6 +1,6 @@
 /**
  * マーカー関連のユーティリティ関数
- * 
+ *
  * マーカースタイルの設定や操作に関する関数を提供します。
  */
 
@@ -8,7 +8,7 @@ import type { MarkerConfigAttributes, MarkerStyleOptions } from '../types/marker
 
 /**
  * 設定用マーカー属性からスタイルオプションへの変換関数
- * 
+ *
  * @param config マーカー設定属性
  * @param isSelected マーカーが選択状態かどうか
  * @returns マーカースタイルオプション

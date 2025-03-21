@@ -18,10 +18,11 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const handleError = (error: unknown, retryCount: number): FetchError => {
   console.error(error);
-  const message = retryCount < API_CONFIG.MAX_RETRIES
-    ? ERROR_MESSAGES.DATA.FETCH_FAILED
-    : 'データの取得に失敗しました。インターネット接続を確認し、再試行してください。';
-  
+  const message =
+    retryCount < API_CONFIG.MAX_RETRIES
+      ? ERROR_MESSAGES.DATA.FETCH_FAILED
+      : 'データの取得に失敗しました。インターネット接続を確認し、再試行してください。';
+
   return { message, code: 'FETCH_ERROR' };
 };
 
@@ -120,11 +121,11 @@ export function useSheetData() {
 
     try {
       validateConfig(CONFIG);
-      
+
       const normalAreas = Object.keys(AREAS).filter(
         (area) => area !== 'RECOMMEND' && area !== 'CURRENT_LOCATION',
       ) as AreaType[];
-      
+
       const normalPoisArrays = await Promise.all(normalAreas.map((area) => fetchAreaData(area)));
       const recommendPois = await fetchAreaData('RECOMMEND');
 

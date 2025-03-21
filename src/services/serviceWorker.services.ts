@@ -28,7 +28,7 @@ export async function registerSW(): Promise<void> {
  */
 export async function updateSW(): Promise<void> {
   if (!isSWSupported) return;
-  
+
   try {
     const registration = await navigator.serviceWorker.ready;
     await registration.update();
@@ -44,7 +44,7 @@ export async function updateSW(): Promise<void> {
  */
 export async function checkSWStatus(): Promise<ServiceWorkerRegistration | null> {
   if (!isSWSupported) return null;
-  
+
   try {
     return await navigator.serviceWorker.ready;
   } catch (error) {

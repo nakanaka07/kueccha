@@ -1,19 +1,15 @@
 /**
  * マップ関連の型定義ファイル
- * 
+ *
  * Google Maps操作に関連する型定義を提供します。表示モード、設定、
  * イベントハンドラー、コンポーネントプロパティなどを含みます。
- * 
+ *
  * @see geo.types.ts - 位置情報の基本型定義
  */
 
 /// <reference types="@types/google.maps" />
 
-import type { 
-  BaseProps, 
-  StyledComponentProps,
-  MapError 
-} from './base.types';
+import type { BaseProps, StyledComponentProps, MapError } from './base.types';
 import type { LatLngLiteral, ControlPosition, ControlPositionString, MapTypeId } from './geo.types';
 import type { Poi } from './poi.types';
 import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
@@ -27,7 +23,7 @@ import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
  * ユーザーが選択できる地図の視覚表現スタイル
  */
 export enum MapDisplayMode {
-  STANDARD = 'standard',  // 標準的な道路地図
+  STANDARD = 'standard', // 標準的な道路地図
   SATELLITE = 'satellite', // 衛星写真
   ACCESSIBLE = 'accessible', // アクセシビリティ向上モード
   NIGHT = 'night', // 夜間モード

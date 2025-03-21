@@ -88,10 +88,8 @@ export function formatDate(
     const year = d.getFullYear();
     const month = d.getMonth() + 1;
     const day = d.getDate();
-    
-    return lang === 'ja' 
-      ? `${year}年${month}月${day}日` 
-      : `${month}/${day}/${year}`;
+
+    return lang === 'ja' ? `${year}年${month}月${day}日` : `${month}/${day}/${year}`;
   }
 }
 
@@ -150,10 +148,10 @@ export function toRelativeTime(
 export function addToDate(
   date: Date,
   amount: number,
-  unit: 'days' | 'hours' | 'months' | 'years' = 'days'
+  unit: 'days' | 'hours' | 'months' | 'years' = 'days',
 ): Date {
   const result = new Date(date);
-  
+
   switch (unit) {
     case 'days':
       result.setDate(result.getDate() + amount);
@@ -168,7 +166,7 @@ export function addToDate(
       result.setFullYear(result.getFullYear() + amount);
       break;
   }
-  
+
   return result;
 }
 

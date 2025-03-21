@@ -31,7 +31,7 @@ export function getLocalizedErrorMessage<T extends ErrorCategory>(
 ): string {
   try {
     const message = ERROR_MESSAGES[category][code as keyof (typeof ERROR_MESSAGES)[T]];
-    
+
     let baseMessage: string;
     if (typeof message === 'object') {
       // 優先順位: 指定された言語 > デフォルト言語 > 最初に見つかった言語

@@ -110,8 +110,10 @@ export const MARKERS_BY_AREA: Record<AreaType | 'DEFAULT', MarkerConfigAttribute
 };
 
 // エリア識別子の検証
-function getSafeAreaKey(area: AreaType | keyof typeof MARKERS_BY_AREA): keyof typeof MARKERS_BY_AREA {
-  return area in MARKERS_BY_AREA ? area as keyof typeof MARKERS_BY_AREA : 'DEFAULT';
+function getSafeAreaKey(
+  area: AreaType | keyof typeof MARKERS_BY_AREA,
+): keyof typeof MARKERS_BY_AREA {
+  return area in MARKERS_BY_AREA ? (area as keyof typeof MARKERS_BY_AREA) : 'DEFAULT';
 }
 
 // マーカー属性取得の汎用関数

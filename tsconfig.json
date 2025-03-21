@@ -22,7 +22,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
-    
+
     // パス設定 (プロジェクト構造に合わせて調整)
     "baseUrl": ".",
     "paths": {
@@ -39,30 +39,18 @@
       "@styles/*": ["src/styles/*"],
       "@locales/*": ["src/locales/*"]
     },
-    
+
     // ビルド設定
     "outDir": "./dist",
     "sourceMap": true,
     "incremental": true,
-    
+
     // 互換性設定
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/**/*",
-    "vite.config.ts",
-    "env.d.ts",
-    "css.d.ts",
-    "scripts/**/*.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "**/__tests__/*"
-  ],
+  "include": ["src/**/*", "vite.config.ts", "env.d.ts", "css.d.ts", "scripts/**/*.ts"],
+  "exclude": ["dist", "node_modules", "**/*.spec.ts", "**/*.test.ts", "**/__tests__/*"],
   "ts-node": {
     "transpileOnly": true,
     "esm": true,

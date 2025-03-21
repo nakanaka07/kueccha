@@ -34,7 +34,7 @@ export const Map: React.FC<MapComponentProps> = ({ onLoad, setIsMapLoaded, event
   const handleMapLoad = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
-      
+
       const result: MapLoadResult = { success: true, map };
       onLoad?.(result);
       setIsMapLoaded?.(true);

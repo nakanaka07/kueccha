@@ -74,12 +74,14 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
    * コンストラクタ
    */
   constructor(config: SheetsConfig) {
-    this.apiKey = config.apiKey || 
+    this.apiKey =
+      config.apiKey ||
       getEnvValue('VITE_GOOGLE_SHEETS_API_KEY', '', { required: true, logErrors: true });
-    
-    this.spreadsheetId = config.spreadsheetId || 
+
+    this.spreadsheetId =
+      config.spreadsheetId ||
       getEnvValue('VITE_GOOGLE_SPREADSHEET_ID', '', { required: true, logErrors: true });
-    
+
     this.config = {
       ...config,
       apiKey: this.apiKey,
@@ -225,13 +227,14 @@ export class GoogleSheetsAdapter implements SheetsAdapter {
         const obj = {} as any;
 
         mappers.forEach((mapper) => {
-          const columnIndex = typeof mapper.column === 'string' 
-            ? headerMap.get(mapper.column) ?? -1 
-            : mapper.column;
+          const columnIndex =
+            typeof mapper.column === 'string'
+              ? (headerMap.get(mapper.column) ?? -1)
+              : mapper.column;
 
           if (columnIndex >= 0 && columnIndex < row.length) {
             const value = row[columnIndex];
-            
+
             if (mapper.transform) {
               obj[mapper.property as string] = mapper.transform(value);
             } else if (mapper.type && DATA_PROCESSORS[mapper.type]) {

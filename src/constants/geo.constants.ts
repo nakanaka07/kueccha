@@ -19,25 +19,25 @@ export function isGoogleMapsAvailable(): boolean {
 
 export function getMapTypeId(type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain'): MapTypeId {
   if (!isGoogleMapsAvailable()) return type;
-  
+
   switch (type) {
-    case 'satellite': return google.maps.MapTypeId.SATELLITE;
-    case 'hybrid': return google.maps.MapTypeId.HYBRID;
-    case 'terrain': return google.maps.MapTypeId.TERRAIN;
-    default: return google.maps.MapTypeId.ROADMAP;
+    case 'satellite':
+      return google.maps.MapTypeId.SATELLITE;
+    case 'hybrid':
+      return google.maps.MapTypeId.HYBRID;
+    case 'terrain':
+      return google.maps.MapTypeId.TERRAIN;
+    default:
+      return google.maps.MapTypeId.ROADMAP;
   }
 }
 
 function getControlPosition(position: 'TOP_RIGHT'): ControlPosition {
-  return isGoogleMapsAvailable() 
-    ? google.maps.ControlPosition.TOP_RIGHT 
-    : 3; // TOP_RIGHT = 3
+  return isGoogleMapsAvailable() ? google.maps.ControlPosition.TOP_RIGHT : 3; // TOP_RIGHT = 3
 }
 
 function getMapTypeControlStyle(style: 'DROPDOWN_MENU'): MapTypeControlStyle {
-  return isGoogleMapsAvailable() 
-    ? google.maps.MapTypeControlStyle.DROPDOWN_MENU 
-    : 2; // DROPDOWN_MENU = 2
+  return isGoogleMapsAvailable() ? google.maps.MapTypeControlStyle.DROPDOWN_MENU : 2; // DROPDOWN_MENU = 2
 }
 
 // 地理的デフォルト位置

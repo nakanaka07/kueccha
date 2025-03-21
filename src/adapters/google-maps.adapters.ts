@@ -65,7 +65,9 @@ export class GoogleMapsAdapter implements MapAdapter {
       }
 
       if (!isGoogleMapsAvailable()) {
-        throw createError('MAP', 'API_NOT_LOADED', 'Google Maps APIが読み込まれていません', { config });
+        throw createError('MAP', 'API_NOT_LOADED', 'Google Maps APIが読み込まれていません', {
+          config,
+        });
       }
 
       const container = document.getElementById(config.containerId);
@@ -74,7 +76,7 @@ export class GoogleMapsAdapter implements MapAdapter {
           'MAP',
           'CONTAINER_NOT_FOUND',
           `マップコンテナ要素が見つかりません: ${config.containerId}`,
-          { config }
+          { config },
         );
       }
 
@@ -111,7 +113,7 @@ export class GoogleMapsAdapter implements MapAdapter {
       throw createError(
         'MAP',
         'NOT_INITIALIZED',
-        'Google Mapsが初期化されていません。initialize()を先に呼び出してください。'
+        'Google Mapsが初期化されていません。initialize()を先に呼び出してください。',
       );
     }
   }
@@ -121,7 +123,7 @@ export class GoogleMapsAdapter implements MapAdapter {
    */
   createMarker(options: MarkerOptions): Marker {
     this.ensureInitialized();
-    
+
     const markerOptions: google.maps.MarkerOptions = {
       position: options.position,
       map: this.map,
@@ -201,7 +203,7 @@ export class GoogleMapsAdapter implements MapAdapter {
     const listeners = this.eventListeners.get(eventName)!;
 
     if (!handler) {
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         google.maps.event.removeListener(listener);
       });
       this.eventListeners.delete(eventName);
@@ -214,8 +216,8 @@ export class GoogleMapsAdapter implements MapAdapter {
    * すべてのイベントリスナーを削除する
    */
   clearAllListeners(): void {
-    this.eventListeners.forEach(listeners => {
-      listeners.forEach(listener => {
+    this.eventListeners.forEach((listeners) => {
+      listeners.forEach((listener) => {
         google.maps.event.removeListener(listener);
       });
     });
@@ -234,7 +236,7 @@ export class GoogleMapsAdapter implements MapAdapter {
    */
   dispose(): void {
     this.clearAllListeners();
-    this.markers.forEach(marker => marker.remove());
+    this.markers.forEach((marker) => marker.remove());
     this.markers.clear();
     this.map = null;
     this.isInitialized = false;

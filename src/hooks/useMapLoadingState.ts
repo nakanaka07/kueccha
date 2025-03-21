@@ -10,7 +10,7 @@ export function useMapLoadingState(
   isLoaded: boolean,
   loadError: Error | null | undefined,
   timeoutDuration = DEFAULT_LOADING_TIMEOUT,
-  errorCategory = 'MAP'
+  errorCategory = 'MAP',
 ) {
   const [isTimeout, setIsTimeout] = useState(false);
 
@@ -22,7 +22,7 @@ export function useMapLoadingState(
         logError(
           errorCategory,
           'LOAD_TIMEOUT',
-          UI.Loading.default.message || 'コンテンツの読み込みがタイムアウトしました'
+          UI.Loading.default.message || 'コンテンツの読み込みがタイムアウトしました',
         );
       }, timeoutDuration);
 
@@ -32,6 +32,6 @@ export function useMapLoadingState(
 
   return {
     isTimeout,
-    resetState: () => setIsTimeout(false)
+    resetState: () => setIsTimeout(false),
   };
 }

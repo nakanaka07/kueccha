@@ -1,10 +1,10 @@
 /**
  * 基本的な共通型定義ファイル
- * 
+ *
  * このファイルはアプリケーション全体で再利用される基本的な型を定義します。
  * 状態管理、UIコンポーネント、エンティティモデル、API応答、ページネーション、検索などの
  * 共通型が含まれています。
- * 
+ *
  * 注意: このファイルは他のファイルへの依存を持たないように設計されています。
  * 他の型定義ファイルからはインポートされますが、自身は他の型定義をインポートしません。
  */
@@ -54,15 +54,17 @@ export interface StyledComponentProps extends Dimensions {
  * 位置情報を持つUI要素の基本型
  */
 export interface PositionedElementProps {
-  position: {
-    x: number;
-    y: number;
-  } | {
-    top?: number | string;
-    left?: number | string;
-    bottom?: number | string;
-    right?: number | string;
-  };
+  position:
+    | {
+        x: number;
+        y: number;
+      }
+    | {
+        top?: number | string;
+        left?: number | string;
+        bottom?: number | string;
+        right?: number | string;
+      };
   zIndex?: number;
 }
 
@@ -72,22 +74,22 @@ export interface PositionedElementProps {
 export interface AnimationOptions {
   /** アニメーション時間（ミリ秒） */
   duration?: number;
-  
+
   /** 開始遅延（ミリ秒） */
   delay?: number;
-  
+
   /** イージング関数 */
   easing?: string;
-  
+
   /** フェードイン効果を適用 */
   fadeIn?: boolean;
-  
+
   /** フェードアウト効果を適用 */
   fadeOut?: boolean;
-  
+
   /** スライドイン方向 */
   slideIn?: 'top' | 'bottom' | 'left' | 'right';
-  
+
   /** スライドアウト方向 */
   slideOut?: 'top' | 'bottom' | 'left' | 'right';
 }
@@ -190,11 +192,11 @@ export interface FilterParams {
  * 検索パラメータの共通インターフェース
  */
 export interface SearchParams {
-  query?: string;              // 検索クエリ文字列
-  limit?: number;              // 結果の最大数
-  offset?: number;             // 結果の開始オフセット
-  minRelevance?: number;       // 最小関連性スコア (0-100)
-  sortBy?: string;             // 並び替えフィールド
+  query?: string; // 検索クエリ文字列
+  limit?: number; // 結果の最大数
+  offset?: number; // 結果の開始オフセット
+  minRelevance?: number; // 最小関連性スコア (0-100)
+  sortBy?: string; // 並び替えフィールド
   sortDirection?: 'asc' | 'desc'; // 並び順
 }
 
@@ -202,18 +204,18 @@ export interface SearchParams {
  * 検索結果アイテムの基本構造
  */
 export interface SearchResult<T> {
-  item: T;                     // 検索結果のアイテム
-  relevance: number;           // 関連性スコア (0-100)
-  matchedFields: string[];     // マッチしたフィールド名
+  item: T; // 検索結果のアイテム
+  relevance: number; // 関連性スコア (0-100)
+  matchedFields: string[]; // マッチしたフィールド名
 }
 
 /**
  * 基本的なフィルタパラメータの拡張（エリア用）
- * 
+ *
  * 注: AreaTypeは文字列型として扱い、実際の型はimportするファイルで指定
  */
 export interface AreaFilterParams extends FilterParams {
-  areas?: string[];          // エリアでフィルタリング
+  areas?: string[]; // エリアでフィルタリング
 }
 
 // ============================================================================
@@ -247,19 +249,19 @@ export const ResultUtils = {
   success<T>(data: T, metadata?: Record<string, unknown>): Result<T> {
     return { success: true, data, metadata };
   },
-  
+
   fail<T, E = BaseResponseError>(error: E): Result<T, E> {
     return { success: false, error };
   },
-  
+
   isSuccess<T, E>(result: Result<T, E>): result is { success: true; data: T } {
     return result.success === true;
   },
-  
+
   unwrap<T, E>(result: Result<T, E>): T {
     if (!result.success) {
       throw new Error('Result is not successful');
     }
     return result.data;
-  }
+  },
 };

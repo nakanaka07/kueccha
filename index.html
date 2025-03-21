@@ -11,6 +11,17 @@
     <meta name="keywords" content="佐渡,飲食店,駐車場,公共トイレ,旅行,観光,佐渡で食えっちゃ,INTX" />
     <meta name="theme-color" content="#4a6da7" />
     <title>佐渡で食えっちゃ by INTX</title>
+    <meta name="version" content="__APP_VERSION__" />
+    <meta name="build-time" content="__BUILD_TIME__" />
+
+    <!-- PWA対応の強化 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#4a6da7" />
+    <meta name="apple-mobile-web-app-title" content="佐渡で食えっちゃ" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- ベースパス設定 - 環境に応じて自動的に置換される -->
+    <base href="__BASE_PATH__" />
 
     <!-- OGP設定 -->
     <meta property="og:title" content="佐渡で食えっちゃ by INTX" />
@@ -20,7 +31,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="佐渡で食えっちゃ" />
-    <meta property="og:image" content="/kueccha/images/logos/ogp.png" />
+    <meta property="og:image" content="__BASE_PATH__images/logos/ogp.png" />
     <meta property="og:locale" content="ja_JP" />
     <meta property="og:url" content="https://nakanaka07.github.io/kueccha/" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -29,12 +40,21 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://nakanaka07.github.io/kueccha/" />
 
-    <!-- セキュリティ設定 -->
+    <!-- セキュリティ設定 - GitHub Pages対応 -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com https://api.emailjs.com; object-src 'none';"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com https://api.emailjs.com; worker-src 'self'; manifest-src 'self'; object-src 'none';"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+    <!-- アイコン設定 - PWA Assets Generator対応 -->
+    <link rel="icon" href="__BASE_PATH__favicon.ico" sizes="any" />
+    <link rel="icon" href="__BASE_PATH__favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="__BASE_PATH__apple-touch-icon.png" />
+    <link rel="mask-icon" href="__BASE_PATH__mask-icon.svg" color="#4a6da7" />
+
+    <!-- マニフェスト - PWA対応 -->
+    <link rel="manifest" href="__BASE_PATH__manifest.json" />
 
     <!-- 構造化データ -->
     <script type="application/ld+json">
@@ -51,26 +71,18 @@
       }
     </script>
 
-    <!-- PWA対応 -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="#4a6da7" />
-    <meta name="apple-mobile-web-app-title" content="佐渡で食えっちゃ" />
-    <link rel="icon" href="/kueccha/images/favicon.ico" sizes="any" />
-    <link rel="icon" href="/kueccha/images/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/kueccha/images/apple-touch-icon.png" />
-    <link rel="manifest" href="/kueccha/manifest.json" />
-
     <!-- リソース最適化：重要なリソースを先読み -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://maps.googleapis.com" />
 
     <!-- クリティカルリソースのプリロード -->
-    <link rel="preload" href="/kueccha/images/logos/row2.png" as="image" type="image/png" />
-    <link rel="preload" href="/kueccha/index.css" as="style" />
+    <link rel="preload" href="__BASE_PATH__images/logos/row2.png" as="image" type="image/png" />
+    <link rel="preload" href="__BASE_PATH__index.css" as="style" />
+    <link rel="preload" href="__BASE_PATH__assets/react-vendor-*.js" as="script" crossorigin />
 
     <!-- スタイルシート -->
-    <link rel="stylesheet" href="/kueccha/index.css" />
+    <link rel="stylesheet" href="__BASE_PATH__index.css" />
 
     <!-- フォント読み込みの最適化 -->
     <link
@@ -94,6 +106,17 @@
   <body>
     <div id="app"></div>
     <noscript>このアプリケーションを利用するにはJavaScriptを有効にしてください。</noscript>
+
+    <!-- インライン初期化スクリプト - PWA初期化の最適化 -->
+    <script>
+      // 環境変数設定（ビルド時に置換される）
+      window.ENV = {
+        BASE_PATH: '__BASE_PATH__',
+        APP_VERSION: '__APP_VERSION__',
+        BUILD_TIME: '__BUILD_TIME__',
+      };
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,18 +1,18 @@
 /**
  * アプリケーション設定関連の型定義
- * 
+ *
  * 設定管理システムで使用される型を体系的に定義します。
  * 環境設定、マップ設定、シート設定など、カテゴリごとに整理されています。
  */
 
 export type EnvironmentName = 'development' | 'production' | 'test';
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
-export type MapTypeId = 
-  | google.maps.MapTypeId 
-  | 'roadmap' 
-  | 'satellite' 
-  | 'hybrid' 
-  | 'terrain' 
+export type MapTypeId =
+  | google.maps.MapTypeId
+  | 'roadmap'
+  | 'satellite'
+  | 'hybrid'
+  | 'terrain'
   | string;
 
 /**

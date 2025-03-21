@@ -7,18 +7,18 @@
  * エリアのカテゴリ
  */
 export enum AreaCategory {
-  REGION = 'region',     // 地理的な地域（佐渡島内の区分）
+  REGION = 'region', // 地理的な地域（佐渡島内の区分）
   FACILITY = 'facility', // 施設タイプ（スナック、トイレなど）
-  SPECIAL = 'special',   // 特殊表示（おすすめ、現在地など）
+  SPECIAL = 'special', // 特殊表示（おすすめ、現在地など）
 }
 
 /**
  * 地理的エリア（佐渡島の地理的区分）
  */
 export type RegionAreaType =
-  | 'RYOTSU_AIKAWA'                  // 両津・相川エリア
+  | 'RYOTSU_AIKAWA' // 両津・相川エリア
   | 'KANAI_SAWADA_NIIBO_HATANO_MANO' // 金井・佐和田・新穂・畑野・真野エリア
-  | 'AKADOMARI_HAMOCHI_OGI';         // 赤泊・羽茂・小木エリア
+  | 'AKADOMARI_HAMOCHI_OGI'; // 赤泊・羽茂・小木エリア
 
 /**
  * 施設タイプ
@@ -44,13 +44,13 @@ export type AreaCategoryFilter = keyof typeof AreaCategory | undefined;
  * エリアの詳細情報
  */
 export interface AreaInfo {
-  id: AreaType;             // エリアの識別子
-  displayName: string;      // エリアの表示名
-  category: AreaCategory;   // エリアのカテゴリ
-  description?: string;     // エリアの説明
-  iconUrl?: string;         // エリアアイコンのURL
+  id: AreaType; // エリアの識別子
+  displayName: string; // エリアの表示名
+  category: AreaCategory; // エリアのカテゴリ
+  description?: string; // エリアの説明
+  iconUrl?: string; // エリアアイコンのURL
   center?: { lat: number; lng: number }; // 地図上の中心座標
-  color?: string;           // エリアの色（マーカーやUIでの表示色）
+  color?: string; // エリアの色（マーカーやUIでの表示色）
 }
 
 /**

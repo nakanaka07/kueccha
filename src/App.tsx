@@ -21,13 +21,8 @@ import type { Poi } from './types/poi.types';
  */
 const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
-  const { 
-    pois, 
-    isLoading: isDataLoading, 
-    error: dataError, 
-    refetch 
-  } = usePoisData();
-  
+  const { pois, isLoading: isDataLoading, error: dataError, refetch } = usePoisData();
+
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
   const [mapError, setMapError] = useState<Error | null>(null);
@@ -35,7 +30,7 @@ const App: React.FC = () => {
   // マップ読み込み完了ハンドラ
   const handleMapLoad = useCallback((result: MapLoadResult) => {
     setIsMapLoading(false);
-    
+
     if (!result.success) {
       const errorMessage = result.error.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
       logError('MAP', 'LOAD_ERROR', errorMessage, result.error.details);
@@ -50,7 +45,7 @@ const App: React.FC = () => {
 
   // エラー表示コンポーネント - メモ化
   const ErrorFallback = useMemo(() => {
-    return ({ message, onRetry }: { message: string, onRetry: () => void }) => (
+    return ({ message, onRetry }: { message: string; onRetry: () => void }) => (
       <div className="error-container" role="alert">
         <h2>読み込みに失敗しました</h2>
         <p>{message}</p>
@@ -73,32 +68,27 @@ const App: React.FC = () => {
     const isLoading = isDataLoading || isMapLoading;
     const hasError = Boolean(dataError || mapError);
     const errorMessage = dataError?.message || mapError?.message || ERROR_MESSAGES.GENERAL.UNKNOWN;
-    const loadingMessage = isDataLoading 
-      ? 'データを読み込んでいます...' 
+    const loadingMessage = isDataLoading
+      ? 'データを読み込んでいます...'
       : '地図を読み込んでいます...';
-      
+
     return { isLoading, hasError, errorMessage, loadingMessage };
   }, [isDataLoading, isMapLoading, dataError, mapError]);
 
   // エラーバウンダリ用フォールバック（マップレンダリングエラー専用）
-  const renderErrorFallback = useCallback((error: Error) => {
-    const appError = createError('MAP', 'RENDER_ERROR', error.message);
-    return (
-      <ErrorFallback 
-        message={appError.message} 
-        onRetry={() => window.location.reload()} 
-      />
-    );
-  }, [ErrorFallback]);
+  const renderErrorFallback = useCallback(
+    (error: Error) => {
+      const appError = createError('MAP', 'RENDER_ERROR', error.message);
+      return <ErrorFallback message={appError.message} onRetry={() => window.location.reload()} />;
+    },
+    [ErrorFallback],
+  );
 
   return (
     <div className="app-container">
       <ErrorBoundary fallback={renderErrorFallback}>
         {appState.hasError ? (
-          <ErrorFallback 
-            message={appState.errorMessage} 
-            onRetry={handleRetry} 
-          />
+          <ErrorFallback message={appState.errorMessage} onRetry={handleRetry} />
         ) : (
           <>
             {appState.isLoading && (

@@ -29,7 +29,7 @@ export type PoiSearchResult<T> = SearchResultItem<T>[];
 
 /**
  * 従来の検索結果型定義
- * 
+ *
  * @deprecated v2.0.0で削除予定。代わりに PoiSearchResult<Poi> を使用してください。
  * @example
  * // 代替使用法:

@@ -1,9 +1,9 @@
 /**
  * 位置情報関連の型定義ファイル
- * 
+ *
  * 地理座標、境界、距離などの位置情報に関する基本型を定義します。
  * 関連するユーティリティ関数は utils/geo.utils.ts に実装されています。
- * 
+ *
  * @see ../utils/geo.utils.ts - 位置情報操作用ユーティリティ関数
  */
 
@@ -47,8 +47,8 @@ export interface Bounds {
  * 距離を表す型
  */
 export interface Distance {
-  value: number;     // 距離の値
-  unit: string;      // 距離の単位
+  value: number; // 距離の値
+  unit: string; // 距離の単位
   formatted: string; // フォーマット済み文字列
 }
 
@@ -56,9 +56,9 @@ export interface Distance {
  * 位置情報の精度を表す型
  */
 export interface GeolocationAccuracy {
-  value: number;       // 精度値（メートル）
+  value: number; // 精度値（メートル）
   horizontal?: number; // 水平精度
-  vertical?: number;   // 垂直精度
+  vertical?: number; // 垂直精度
   isHighAccuracy: boolean; // 高精度かどうか
 }
 
@@ -111,7 +111,7 @@ export type MapTypeId = google.maps.MapTypeId | 'roadmap' | 'satellite' | 'hybri
  * 地図の表示スタイル設定
  */
 export interface MapStyleOptions {
-  name: string;                      // スタイル名
-  description?: string;              // 説明
+  name: string; // スタイル名
+  description?: string; // 説明
   styles: google.maps.MapTypeStyle[]; // スタイル配列
 }

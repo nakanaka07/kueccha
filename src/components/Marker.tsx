@@ -23,7 +23,7 @@ export const Marker: React.FC<MarkerProps & { isSelected?: boolean; zIndex?: num
         map,
         title: poi.name,
         content: iconElement,
-        zIndex
+        zIndex,
       });
 
       marker.addListener('click', () => onClick(poi));
@@ -39,7 +39,7 @@ export const Marker: React.FC<MarkerProps & { isSelected?: boolean; zIndex?: num
     }, [map, poi, onClick, zIndex]);
 
     return null;
-  }
+  },
 );
 
 Marker.displayName = 'Marker';

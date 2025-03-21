@@ -13,7 +13,7 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
         infoWindowRef.current.style.maxHeight = `${window.innerHeight - 150}px`;
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
@@ -26,7 +26,7 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
         onCloseClick();
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onCloseClick]);
@@ -68,11 +68,12 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
         key: 'phone',
         title: '問い合わせ',
         value: poi.phone,
-        render: poi.phone && isValidPhoneNumber(poi.phone) ? (
-          <a href={`tel:${poi.phone}`}>{poi.phone}</a>
-        ) : (
-          <span>{poi.phone}</span>
-        ),
+        render:
+          poi.phone && isValidPhoneNumber(poi.phone) ? (
+            <a href={`tel:${poi.phone}`}>{poi.phone}</a>
+          ) : (
+            <span>{poi.phone}</span>
+          ),
       },
       {
         key: 'address',
@@ -99,7 +100,7 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
 
     return items.map((item) => {
       if (!item.value) return null;
-      
+
       return (
         <div key={item.key}>
           {item.title && <h3>{item.title}</h3>}
@@ -112,9 +113,9 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
   // 営業時間のレンダリング
   const renderBusinessHours = () => {
     const hasHours = INFO_WINDOW_BUSINESS_HOURS.some((hour) => poi[hour.key as BusinessHourKey]);
-    
+
     if (!hasHours) return null;
-    
+
     return (
       <div>
         {INFO_WINDOW_BUSINESS_HOURS.map(
@@ -124,7 +125,7 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
                 <span>{hour.day}</span>
                 <span>{poi[hour.key as BusinessHourKey]}</span>
               </div>
-            )
+            ),
         )}
       </div>
     );
@@ -145,8 +146,8 @@ export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => 
             <div>
               <span>位置</span>
               <span>
-                {typeof poi.location === 'string' 
-                  ? poi.location 
+                {typeof poi.location === 'string'
+                  ? poi.location
                   : `緯度: ${poi.location.lat}, 経度: ${poi.location.lng}`}
               </span>
             </div>

@@ -9,9 +9,13 @@ export const LOADING = {
   // タイミング関連の定数
   timing: {
     LOADING_DELAY: getEnvValue<number>('VITE_LOADING_DELAY', 0, Number, { logErrors: false }),
-    BACKGROUND_HIDE_DELAY: getEnvValue<number>('VITE_BACKGROUND_HIDE_DELAY', 1000, Number, { logErrors: false }),
+    BACKGROUND_HIDE_DELAY: getEnvValue<number>('VITE_BACKGROUND_HIDE_DELAY', 1000, Number, {
+      logErrors: false,
+    }),
     RETRY_TIMEOUT: getEnvValue<number>('VITE_RETRY_TIMEOUT', 30000, Number, { logErrors: false }),
-    DEFAULT_LOADING_TIMEOUT: getEnvValue<number>('VITE_LOADING_TIMEOUT', 30000, Number, { logErrors: false }),
+    DEFAULT_LOADING_TIMEOUT: getEnvValue<number>('VITE_LOADING_TIMEOUT', 30000, Number, {
+      logErrors: false,
+    }),
     get DEFAULT_FADE_DURATION() {
       return this.BACKGROUND_HIDE_DELAY;
     },
@@ -19,7 +23,12 @@ export const LOADING = {
 
   // UI表示関連の定数
   ui: {
-    DEFAULT_LOADING_MESSAGE: getEnvValue<string>('VITE_LOADING_MESSAGE', 'データを読み込んでいます...', String, { logErrors: false }),
+    DEFAULT_LOADING_MESSAGE: getEnvValue<string>(
+      'VITE_LOADING_MESSAGE',
+      'データを読み込んでいます...',
+      String,
+      { logErrors: false },
+    ),
     DEFAULT_SPINNER_CLASS: 'spinner-border text-primary',
     MOBILE_SPINNER_CLASS: 'spinner-border spinner-border-sm text-primary',
   },
@@ -35,7 +44,9 @@ export const LOADING = {
   getDeviceSettings(isMobile: boolean = false) {
     return {
       spinnerClass: isMobile ? this.ui.MOBILE_SPINNER_CLASS : this.ui.DEFAULT_SPINNER_CLASS,
-      animationDuration: isMobile ? this.animation.MOBILE_ANIMATION_DURATION : this.animation.SPINNER_ANIMATION_DURATION,
+      animationDuration: isMobile
+        ? this.animation.MOBILE_ANIMATION_DURATION
+        : this.animation.SPINNER_ANIMATION_DURATION,
       loadingDelay: isMobile ? 0 : this.timing.LOADING_DELAY,
       fadeTimingFunction: this.animation.FADE_TIMING_FUNCTION,
     };

@@ -1,6 +1,6 @@
 /**
  * 環境変数管理ユーティリティ
- * 
+ *
  * プロジェクト全体で一貫した環境変数アクセスを提供します。
  * 環境変数の型安全性と存在確認を行います。
  */
@@ -24,11 +24,11 @@ export const getEnvVariable = (key: string, defaultValue: string = ''): string =
 export const getRequiredEnvVariable = (key: string): string => {
   const fullKey = `VITE_${key}`;
   const value = import.meta.env[fullKey] || process.env[fullKey];
-  
+
   if (!value && getEnvironment() !== 'test') {
     console.warn(`Warning: Required environment variable ${fullKey} is not set.`);
   }
-  
+
   return value || '';
 };
 

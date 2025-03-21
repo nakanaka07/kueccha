@@ -1,6 +1,6 @@
 /**
  * アプリケーション設定管理
- * 
+ *
  * このサービスは設定の読み込み、検証、アクセスを一元管理し、
  * 環境変数へのアクセスを標準化します。アプリケーション全体で
  * 一貫した設定管理を提供するためのシングルトンパターンを採用しています。
@@ -17,8 +17,8 @@ import {
   AREAS,
 } from '../constants';
 
-import type { 
-  AppConfig, 
+import type {
+  AppConfig,
   AreaType,
   EnvironmentName,
   EnvironmentConfig,
@@ -29,7 +29,7 @@ import type {
   MapTypeId,
   AppInfoConfig,
   ErrorHandlingConfig,
-  EnvValueOptions
+  EnvValueOptions,
 } from '../types';
 
 /**
@@ -100,12 +100,15 @@ export class ConfigManager {
     try {
       this.validateConfig();
       this._initialized = true;
-      
+
       if (this.isDevelopment()) {
         logger.info('✅ アプリケーション設定の検証が完了しました');
       }
     } catch (error) {
-      logger.error('設定の検証に失敗しました:', error instanceof Error ? error.message : String(error));
+      logger.error(
+        '設定の検証に失敗しました:',
+        error instanceof Error ? error.message : String(error),
+      );
       throw error;
     }
   }
@@ -151,14 +154,19 @@ export class ConfigManager {
    * @returns カンマ区切りの環境変数を配列に変換した結果またはデフォルト値
    */
   public getEnvArray<T extends string>(
-    key: string, 
+    key: string,
     defaultValue: T[] = [] as unknown as T[],
-    options?: EnvValueOptions
+    options?: EnvValueOptions,
   ): T[] {
-    return getEnvValue(key, '', (val) => {
-      if (!val) return defaultValue;
-      return val.split(',').map(item => item.trim() as T);
-    }, options);
+    return getEnvValue(
+      key,
+      '',
+      (val) => {
+        if (!val) return defaultValue;
+        return val.split(',').map((item) => item.trim() as T);
+      },
+      options,
+    );
   }
 
   /**
@@ -176,7 +184,7 @@ export class ConfigManager {
 
     const value = this.getNestedValue(this._config, path);
     const result = (value === undefined ? defaultValue : value) as T;
-    
+
     // キャッシュに保存
     this._cachedValues.set(cacheKey, result);
     return result;
@@ -238,10 +246,12 @@ export class ConfigManager {
    * モバイルデバイスかどうかを判定
    */
   public isMobileDevice(): boolean {
-    return typeof window !== 'undefined' && 
+    return (
+      typeof window !== 'undefined' &&
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        window.navigator.userAgent
-      );
+        window.navigator.userAgent,
+      )
+    );
   }
 
   /**
@@ -249,12 +259,16 @@ export class ConfigManager {
    */
   public getMapTypeId(defaultType: string = 'roadmap'): google.maps.MapTypeId | string {
     if (!this.isGoogleMapsAvailable()) return defaultType;
-    
+
     switch (defaultType) {
-      case 'satellite': return google.maps.MapTypeId.SATELLITE;
-      case 'hybrid': return google.maps.MapTypeId.HYBRID;
-      case 'terrain': return google.maps.MapTypeId.TERRAIN;
-      default: return google.maps.MapTypeId.ROADMAP;
+      case 'satellite':
+        return google.maps.MapTypeId.SATELLITE;
+      case 'hybrid':
+        return google.maps.MapTypeId.HYBRID;
+      case 'terrain':
+        return google.maps.MapTypeId.TERRAIN;
+      default:
+        return google.maps.MapTypeId.ROADMAP;
     }
   }
 
@@ -263,8 +277,11 @@ export class ConfigManager {
    */
   public getMarkerAnimation(type: 'BOUNCE' | 'DROP' | null): google.maps.Animation | null {
     if (!type || !this.isGoogleMapsAvailable()) return null;
-    return type === 'BOUNCE' ? google.maps.Animation.BOUNCE : 
-           type === 'DROP' ? google.maps.Animation.DROP : null;
+    return type === 'BOUNCE'
+      ? google.maps.Animation.BOUNCE
+      : type === 'DROP'
+        ? google.maps.Animation.DROP
+        : null;
   }
 
   /**
@@ -273,25 +290,25 @@ export class ConfigManager {
   private buildInitialConfig(): AppConfig {
     // 現在の環境取得
     const currentEnv = this.getCurrentEnvironment();
-    
+
     // 環境設定の構築
     const envConfig = this.buildEnvironmentConfig(currentEnv);
-    
+
     // アプリケーション情報の構築
     const appInfo = this.buildAppInfo();
-    
+
     // マップ設定の構築
     const mapsConfig = this.buildMapsConfig();
-    
+
     // シート設定の構築
     const sheetsConfig = this.buildSheetsConfig();
-    
+
     // 表示設定の構築
     const displayConfig = this.buildDisplayConfig();
-    
+
     // エラー処理設定の構築
     const errorHandlingConfig = this.buildErrorHandlingConfig(currentEnv);
-    
+
     return {
       app: appInfo,
       environment: envConfig,
@@ -307,13 +324,10 @@ export class ConfigManager {
    * 現在の環境名を取得
    */
   private getCurrentEnvironment(): EnvironmentName {
-    return getEnvValue<EnvironmentName>(
-      'VITE_ENVIRONMENT',
-      'development',
-      (value) => 
-        ['development', 'production', 'test'].includes(value as string)
-          ? (value as EnvironmentName)
-          : 'development'
+    return getEnvValue<EnvironmentName>('VITE_ENVIRONMENT', 'development', (value) =>
+      ['development', 'production', 'test'].includes(value as string)
+        ? (value as EnvironmentName)
+        : 'development',
     );
   }
 
@@ -322,17 +336,14 @@ export class ConfigManager {
    */
   private buildEnvironmentConfig(currentEnv: EnvironmentName): EnvironmentConfig {
     const baseConfig = ENV_CONFIGS[currentEnv];
-    
+
     return {
       ...baseConfig,
       debug: this.getEnvBoolean('VITE_DEBUG', baseConfig.debug),
-      logLevel: getEnvValue<LogLevel>(
-        'VITE_LOG_LEVEL', 
-        baseConfig.logLevel,
-        (value) =>
-          ['error', 'warn', 'info', 'debug'].includes(value as string)
-            ? (value as LogLevel)
-            : 'error'
+      logLevel: getEnvValue<LogLevel>('VITE_LOG_LEVEL', baseConfig.logLevel, (value) =>
+        ['error', 'warn', 'info', 'debug'].includes(value as string)
+          ? (value as LogLevel)
+          : 'error',
       ),
       cacheEnabled: this.getEnvBoolean('VITE_CACHE_ENABLED', baseConfig.cacheEnabled),
       cacheDuration: this.getEnvNumber('VITE_CACHE_DURATION', 60 * 60 * 1000),
@@ -365,7 +376,7 @@ export class ConfigManager {
       options: {
         ...MAPS_CONFIG.options,
         mapTypeId: this.getMapTypeId(this.getEnvString('VITE_DEFAULT_MAP_TYPE', 'roadmap')),
-      }
+      },
     };
   }
 
@@ -383,7 +394,7 @@ export class ConfigManager {
       sheetNames: {
         pois: this.getEnvString('VITE_POI_SHEET_NAME', 'POIs'),
         areas: this.getEnvString('VITE_AREAS_SHEET_NAME', 'Areas'),
-      }
+      },
     };
   }
 
@@ -395,11 +406,11 @@ export class ConfigManager {
     const defaultVisibleAreas = Object.entries(INITIAL_VISIBILITY)
       .filter(([, isVisible]) => isVisible)
       .map(([area]) => area as AreaType);
-    
+
     return {
       defaultVisibleAreas: this.getEnvArray<AreaType>(
-        'VITE_DEFAULT_VISIBLE_AREAS', 
-        defaultVisibleAreas
+        'VITE_DEFAULT_VISIBLE_AREAS',
+        defaultVisibleAreas,
       ),
       markerOptions: {
         defaultOpacity: this.getEnvNumber('VITE_MARKER_OPACITY', 0.8),
@@ -415,13 +426,10 @@ export class ConfigManager {
         },
       },
       mobile: {
-        menuButtonPosition: getEnvValue(
-          'VITE_MOBILE_MENU_POSITION', 
-          'top-left', 
-          (value) =>
-            ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(value as string)
-              ? (value as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right')
-              : 'top-left'
+        menuButtonPosition: getEnvValue('VITE_MOBILE_MENU_POSITION', 'top-left', (value) =>
+          ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(value as string)
+            ? (value as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right')
+            : 'top-left',
         ),
         infoWindowScale: this.getEnvNumber('VITE_MOBILE_INFO_SCALE', 0.85),
       },
@@ -457,7 +465,7 @@ export class ConfigManager {
     const missingVars = this.checkRequiredEnvVars();
     if (missingVars.length > 0) {
       throw new Error(
-        `${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`
+        `${ERROR_MESSAGES.MAP.CONFIG_MISSING} 不足している環境変数: ${missingVars.join(', ')}`,
       );
     }
   }
@@ -491,16 +499,16 @@ export class ConfigManager {
     if (typeof zoom === 'number' && (zoom < 1 || zoom > 22)) {
       this.logConfigWarning(
         `ズームレベル(${zoom})が推奨範囲外です(1-22)。問題が生じる可能性があります。`,
-        'maps.options.zoom'
+        'maps.options.zoom',
       );
     }
-    
+
     // APIタイムアウト値の検証
     const timeout = this.getEnvNumber('VITE_API_TIMEOUT', 10000);
     if (timeout < 1000) {
       this.logConfigWarning(
         `APIタイムアウト(${timeout}ms)が短すぎます。通信エラーが発生する可能性があります。`,
-        'VITE_API_TIMEOUT'
+        'VITE_API_TIMEOUT',
       );
     }
   }
@@ -510,11 +518,13 @@ export class ConfigManager {
    */
   private validateSettingRelationships(): void {
     // 無効なエリア識別子の警告
-    const invalidAreas = this._config.display.defaultVisibleAreas.filter((area) => !(area in AREAS));
+    const invalidAreas = this._config.display.defaultVisibleAreas.filter(
+      (area) => !(area in AREAS),
+    );
     if (invalidAreas.length > 0) {
       this.logConfigWarning(
         `無効なエリア識別子が指定されています: ${invalidAreas.join(', ')}`,
-        'display.defaultVisibleAreas'
+        'display.defaultVisibleAreas',
       );
     }
   }

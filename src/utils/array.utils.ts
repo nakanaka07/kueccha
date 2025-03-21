@@ -23,7 +23,7 @@ import type { Poi, LatLngLiteral } from '../types';
  * @example
  * // 単純な値の配列から重複を除去
  * unique([1, 2, 2, 3, 3, 3]); // [1, 2, 3]
- * 
+ *
  * // オブジェクト配列から特定のプロパティに基づいて重複を除去
  * unique(users, user => user.id);
  */
@@ -54,7 +54,7 @@ export function unique<T>(array: T[], getKey?: (item: T) => any): T[] {
  */
 export function chunk<T>(array: T[], size: number): T[][] {
   if (!array.length || size <= 0) return [];
-  
+
   const chunks: T[][] = [];
   for (let i = 0; i < array.length; i += size) {
     chunks.push(array.slice(i, i + size));
@@ -97,19 +97,22 @@ export function groupBy<T, K extends string | number | symbol>(
 ): Record<K, T[]> {
   if (!array.length) return {} as Record<K, T[]>;
 
-  return array.reduce((groups, item) => {
-    const key = getKey(item);
-    if (!groups[key]) {
-      groups[key] = [];
-    }
-    groups[key].push(item);
-    return groups;
-  }, {} as Record<K, T[]>);
+  return array.reduce(
+    (groups, item) => {
+      const key = getKey(item);
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(item);
+      return groups;
+    },
+    {} as Record<K, T[]>,
+  );
 }
 
 /**
  * 数値の配列から統計値を計算する
- * 
+ *
  * @param array 対象の数値配列
  * @returns 統計情報（合計、平均、最大、最小）
  * @example
@@ -135,7 +138,7 @@ export function stats(array: number[]): { sum: number; avg: number; max?: number
 
 /**
  * 汎用的なソート関数
- * 
+ *
  * @param array ソートする配列
  * @param getKey ソートキーを取得する関数
  * @param direction ソート方向
@@ -143,21 +146,21 @@ export function stats(array: number[]): { sum: number; avg: number; max?: number
  * @example
  * // 名前でソート
  * sortBy(users, user => user.name);
- * 
+ *
  * // 年齢で降順ソート
  * sortBy(users, user => user.age, 'desc');
  */
 export function sortBy<T, V>(
   array: T[],
   getKey: (item: T) => V,
-  direction: 'asc' | 'desc' = 'asc'
+  direction: 'asc' | 'desc' = 'asc',
 ): T[] {
   if (!array.length) return [];
-  
+
   return [...array].sort((a, b) => {
     const keyA = getKey(a);
     const keyB = getKey(b);
-    
+
     let comparison: number;
     if (typeof keyA === 'string' && typeof keyB === 'string') {
       comparison = keyA.localeCompare(keyB);
@@ -168,14 +171,14 @@ export function sortBy<T, V>(
     } else {
       comparison = 0;
     }
-    
+
     return direction === 'asc' ? comparison : -comparison;
   });
 }
 
 /**
  * 配列のフィルタリングと安全な例外処理を行う
- * 
+ *
  * @param array フィルタリングする配列
  * @param predicate フィルタリング条件関数
  * @returns フィルタリングされた配列
@@ -185,7 +188,7 @@ export function sortBy<T, V>(
  */
 export function safeFilter<T>(
   array: T[],
-  predicate: (item: T, index: number, array: T[]) => boolean
+  predicate: (item: T, index: number, array: T[]) => boolean,
 ): T[] {
   if (!array?.length) return [];
 
@@ -222,8 +225,8 @@ export function sortByDistance(
   try {
     return sortBy(
       pois,
-      (poi) => poi.location ? calculateDistance(center, poi.location) : Infinity,
-      direction
+      (poi) => (poi.location ? calculateDistance(center, poi.location) : Infinity),
+      direction,
     );
   } catch (error) {
     logError('SYSTEM', 'SORT_ERROR', `距離によるソート中にエラーが発生しました: ${error}`);

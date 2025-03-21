@@ -35,10 +35,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <h1>{ERROR_MESSAGES.SYSTEM.UNKNOWN}</h1>
         <p>{error?.message || ERROR_MESSAGES.SYSTEM.UNKNOWN}</p>
         <p>問題が解決しない場合は、サポートにお問い合わせください。</p>
-        <button
-          onClick={this.handleReset}
-          aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
-        >
+        <button onClick={this.handleReset} aria-label={ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}>
           {ERROR_MESSAGES.ERROR_BOUNDARY.RETRY_BUTTON}
         </button>
       </div>

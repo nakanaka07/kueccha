@@ -43,13 +43,55 @@ export const MARKER_ANIMATIONS = {
 
 // ジャンルごとのマーカー設定
 export const DEFAULT_MARKER_OPTIONS: Record<PoiGenre, MarkerDisplayOptions> = {
-  restaurant: { icon: '/assets/icons/restaurant.png', color: '#FF5722', opacity: 0.9, animation: 'NONE', zIndex: 10 },
-  cafe: { icon: '/assets/icons/cafe.png', color: '#795548', opacity: 0.9, animation: 'NONE', zIndex: 10 },
-  shop: { icon: '/assets/icons/shop.png', color: '#3F51B5', opacity: 0.9, animation: 'NONE', zIndex: 10 },
-  attraction: { icon: '/assets/icons/attraction.png', color: '#4CAF50', opacity: 0.9, animation: 'NONE', zIndex: 20 },
-  facility: { icon: '/assets/icons/facility.png', color: '#9E9E9E', opacity: 0.9, animation: 'NONE', zIndex: 5 },
-  current_location: { icon: '/assets/icons/current_location.png', color: '#2196F3', opacity: 1.0, animation: 'NONE', zIndex: 100 },
-  other: { icon: '/assets/icons/other.png', color: '#607D8B', opacity: 0.8, animation: 'NONE', zIndex: 1 },
+  restaurant: {
+    icon: '/assets/icons/restaurant.png',
+    color: '#FF5722',
+    opacity: 0.9,
+    animation: 'NONE',
+    zIndex: 10,
+  },
+  cafe: {
+    icon: '/assets/icons/cafe.png',
+    color: '#795548',
+    opacity: 0.9,
+    animation: 'NONE',
+    zIndex: 10,
+  },
+  shop: {
+    icon: '/assets/icons/shop.png',
+    color: '#3F51B5',
+    opacity: 0.9,
+    animation: 'NONE',
+    zIndex: 10,
+  },
+  attraction: {
+    icon: '/assets/icons/attraction.png',
+    color: '#4CAF50',
+    opacity: 0.9,
+    animation: 'NONE',
+    zIndex: 20,
+  },
+  facility: {
+    icon: '/assets/icons/facility.png',
+    color: '#9E9E9E',
+    opacity: 0.9,
+    animation: 'NONE',
+    zIndex: 5,
+  },
+  current_location: {
+    icon: '/assets/icons/current_location.png',
+    color: '#2196F3',
+    opacity: 1.0,
+    animation: 'NONE',
+    zIndex: 100,
+  },
+  other: {
+    icon: '/assets/icons/other.png',
+    color: '#607D8B',
+    opacity: 0.8,
+    animation: 'NONE',
+    zIndex: 1,
+  },
 };
 
 // 選択状態のマーカー設定
@@ -69,19 +111,38 @@ export function getMarkerOptionsForGenre(
 
 // 営業時間表示順序
 export const BUSINESS_HOUR_DISPLAY_ORDER: BusinessHourKey[] = [
-  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'holiday'
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+  'holiday',
 ];
 
 // 営業時間ラベル
 export const BUSINESS_HOUR_LABELS: Record<string, Record<BusinessHourKey, string>> = {
   ja: {
-    monday: '月曜日', tuesday: '火曜日', wednesday: '水曜日', thursday: '木曜日',
-    friday: '金曜日', saturday: '土曜日', sunday: '日曜日', holiday: '祝日'
+    monday: '月曜日',
+    tuesday: '火曜日',
+    wednesday: '水曜日',
+    thursday: '木曜日',
+    friday: '金曜日',
+    saturday: '土曜日',
+    sunday: '日曜日',
+    holiday: '祝日',
   },
   en: {
-    monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday',
-    friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday', holiday: 'Holidays'
-  }
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday',
+    holiday: 'Holidays',
+  },
 };
 
 // 曜日ラベルを取得
@@ -92,27 +153,53 @@ export function getBusinessHourLabel(key: BusinessHourKey): string {
 
 // 営業時間項目を生成
 export function createBusinessHourItems(): { day: string; key: BusinessHourKey }[] {
-  return BUSINESS_HOUR_DISPLAY_ORDER.map(key => ({ day: getBusinessHourLabel(key), key }));
+  return BUSINESS_HOUR_DISPLAY_ORDER.map((key) => ({ day: getBusinessHourLabel(key), key }));
 }
 
 // POI詳細表示順序
 export const POI_DETAIL_DISPLAY_ORDER: (keyof Poi)[] = [
-  'name', 'category', 'businessHours', 'holidayInfo', 'phone',
-  'address', 'parking', 'payment', 'information', 'detailUrl'
+  'name',
+  'category',
+  'businessHours',
+  'holidayInfo',
+  'phone',
+  'address',
+  'parking',
+  'payment',
+  'information',
+  'detailUrl',
 ];
 
 // POIフィールドラベル
 export const POI_FIELD_LABELS: Record<string, Partial<Record<keyof Poi, string>>> = {
   ja: {
-    name: '名称', category: 'カテゴリ', businessHours: '営業時間', holidayInfo: '定休日',
-    phone: '電話番号', address: '住所', parking: '駐車場', payment: '支払い方法',
-    information: '追加情報', detailUrl: '詳細情報', genre: 'ジャンル', area: 'エリア'
+    name: '名称',
+    category: 'カテゴリ',
+    businessHours: '営業時間',
+    holidayInfo: '定休日',
+    phone: '電話番号',
+    address: '住所',
+    parking: '駐車場',
+    payment: '支払い方法',
+    information: '追加情報',
+    detailUrl: '詳細情報',
+    genre: 'ジャンル',
+    area: 'エリア',
   },
   en: {
-    name: 'Name', category: 'Category', businessHours: 'Business Hours', holidayInfo: 'Closed On',
-    phone: 'Phone', address: 'Address', parking: 'Parking', payment: 'Payment Methods',
-    information: 'Additional Info', detailUrl: 'More Details', genre: 'Genre', area: 'Area'
-  }
+    name: 'Name',
+    category: 'Category',
+    businessHours: 'Business Hours',
+    holidayInfo: 'Closed On',
+    phone: 'Phone',
+    address: 'Address',
+    parking: 'Parking',
+    payment: 'Payment Methods',
+    information: 'Additional Info',
+    detailUrl: 'More Details',
+    genre: 'Genre',
+    area: 'Area',
+  },
 };
 
 // フィールドラベルを取得
@@ -125,7 +212,13 @@ export function getPoiFieldLabel(field: keyof Poi): string {
 export const MIN_SEARCH_RELEVANCE_SCORE = getEnvValueAsNumber('VITE_MIN_SEARCH_RELEVANCE', 30);
 export const MAX_SEARCH_RESULTS = getEnvValueAsNumber('VITE_MAX_SEARCH_RESULTS', 50);
 export const SEARCH_FIELD_WEIGHTS: Partial<Record<keyof Poi, number>> = {
-  name: 100, category: 80, keywords: 90, address: 40, information: 30, genre: 60, area: 50
+  name: 100,
+  category: 80,
+  keywords: 90,
+  address: 40,
+  information: 30,
+  genre: 60,
+  area: 50,
 };
 
 // 現在地POIテンプレート

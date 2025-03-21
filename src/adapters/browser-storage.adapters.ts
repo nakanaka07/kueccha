@@ -63,11 +63,13 @@ export class BrowserStorageAdapter implements StorageAdapter {
         expiry: options?.expiry ? Date.now() + options.expiry : undefined,
       },
     };
-    
+
     try {
       return JSON.stringify(item);
     } catch (error) {
-      throw createError('DATA', 'SERIALIZATION_FAILED', 'データをシリアライズできませんでした', { value });
+      throw createError('DATA', 'SERIALIZATION_FAILED', 'データをシリアライズできませんでした', {
+        value,
+      });
     }
   }
 
@@ -75,7 +77,12 @@ export class BrowserStorageAdapter implements StorageAdapter {
     try {
       return JSON.parse(data) as StorageItem<T>;
     } catch (error) {
-      throw createError('DATA', 'DESERIALIZATION_FAILED', 'データをデシリアライズできませんでした', { data });
+      throw createError(
+        'DATA',
+        'DESERIALIZATION_FAILED',
+        'データをデシリアライズできませんでした',
+        { data },
+      );
     }
   }
 
@@ -99,13 +106,13 @@ export class BrowserStorageAdapter implements StorageAdapter {
     try {
       const data = this.storage.getItem(key);
       if (!data) return defaultValue;
-      
+
       const item = this.deserialize<T>(data);
       if (this.isExpired(item)) {
         this.removeItem(key);
         return defaultValue;
       }
-      
+
       return item.value;
     } catch (error) {
       console.error('Failed to retrieve data:', error);
@@ -137,17 +144,17 @@ export class BrowserStorageAdapter implements StorageAdapter {
 
   cleanExpired(): void {
     if (!this.storage) return;
-    
+
     try {
       const keysToRemove: string[] = [];
 
       for (let i = 0; i < this.storage.length; i++) {
         const key = this.storage.key(i);
         if (!key) continue;
-        
+
         const data = this.storage.getItem(key);
         if (!data) continue;
-        
+
         try {
           const item = this.deserialize<unknown>(data);
           if (this.isExpired(item)) {
@@ -159,7 +166,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
         }
       }
 
-      keysToRemove.forEach(key => this.removeItem(key));
+      keysToRemove.forEach((key) => this.removeItem(key));
     } catch (error) {
       console.error('Failed to clean expired items:', error);
     }
@@ -170,13 +177,13 @@ export class BrowserStorageAdapter implements StorageAdapter {
     try {
       const data = this.storage.getItem(key);
       if (!data) return false;
-      
+
       const item = this.deserialize<unknown>(data);
       if (this.isExpired(item)) {
         this.removeItem(key);
         return false;
       }
-      
+
       return true;
     } catch {
       return false;
@@ -202,9 +209,9 @@ class MemoryStorageAdapter implements StorageAdapter {
     try {
       const item: StorageItem<T> = {
         value,
-        meta: { 
+        meta: {
           timestamp: Date.now(),
-          expiry: options?.expiry ? Date.now() + options.expiry : undefined
+          expiry: options?.expiry ? Date.now() + options.expiry : undefined,
         },
       };
       this.storage.set(key, JSON.stringify(item));
@@ -218,13 +225,13 @@ class MemoryStorageAdapter implements StorageAdapter {
     try {
       const data = this.storage.get(key);
       if (!data) return defaultValue;
-      
+
       const item = JSON.parse(data) as StorageItem<T>;
       if (item.meta.expiry && Date.now() > item.meta.expiry) {
         this.removeItem(key);
         return defaultValue;
       }
-      
+
       return item.value;
     } catch {
       return defaultValue;
@@ -240,24 +247,24 @@ class MemoryStorageAdapter implements StorageAdapter {
     this.storage.clear();
     return true;
   }
-  
+
   hasItem(key: string): boolean {
     try {
       const data = this.storage.get(key);
       if (!data) return false;
-      
+
       const item = JSON.parse(data) as StorageItem<unknown>;
       if (item.meta.expiry && Date.now() > item.meta.expiry) {
         this.removeItem(key);
         return false;
       }
-      
+
       return true;
     } catch {
       return false;
     }
   }
-  
+
   cleanExpired(): void {
     try {
       this.storage.forEach((value, key) => {
@@ -274,7 +281,7 @@ class MemoryStorageAdapter implements StorageAdapter {
       // エラーが発生しても処理を続行
     }
   }
-  
+
   getStorageType(): StorageType {
     return StorageType.LOCAL; // メモリストレージはデフォルトでローカルとみなす
   }
@@ -308,6 +315,6 @@ export function createStorageAdapter(type: StorageType, fallback: boolean = true
     console.warn(`${type} storage is not available, falling back to memory storage`);
     return new MemoryStorageAdapter();
   }
-  
+
   return adapter;
 }

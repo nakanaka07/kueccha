@@ -17,15 +17,15 @@ export const BREAKPOINTS = {
 export function isMobile(): boolean {
   // ブラウザ環境チェック
   if (typeof window === 'undefined') return false;
-  
+
   // デバイス判定（ユーザーエージェント）
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator?.userAgent || ''
+    navigator?.userAgent || '',
   );
-  
+
   // 画面サイズ判定
   const isMobileViewport = window.innerWidth <= BREAKPOINTS.MOBILE;
-  
+
   return isMobileDevice || isMobileViewport;
 }
 

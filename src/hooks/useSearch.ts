@@ -34,15 +34,13 @@ const useSearch = (pois: Poi[]) => {
           return;
         }
 
-        const results = pois.filter((poi) => 
-          poi.name.toLowerCase().includes(query.toLowerCase())
-        );
+        const results = pois.filter((poi) => poi.name.toLowerCase().includes(query.toLowerCase()));
 
         cache.current[query] = results;
         setSearchResults(results);
       }, 300);
     },
-    [pois]
+    [pois],
   );
 
   useEffect(() => {
