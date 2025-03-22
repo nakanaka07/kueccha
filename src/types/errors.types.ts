@@ -6,9 +6,10 @@
  * ErrorBoundaryコンポーネントの型定義を含みます。
  */
 
+import type { ReactNode, ErrorInfo } from 'react';
+
 import type { BaseProps } from './base.types';
 import type { SupportedLanguage } from '../constants/i18n.constants';
-import type { ReactNode, ErrorInfo } from 'react';
 
 // ============================================================================
 // エラーカテゴリとコード

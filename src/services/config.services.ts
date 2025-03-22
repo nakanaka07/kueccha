@@ -6,8 +6,6 @@
  * 一貫した設定管理を提供するためのシングルトンパターンを採用しています。
  */
 
-import { getEnvValue, getEnvValueAsBoolean, getEnvValueAsNumber } from '../utils/env.utils';
-import { logger } from '../utils/logger.utils';
 import {
   MAPS_CONFIG,
   SHEETS_CONFIG,
@@ -16,7 +14,6 @@ import {
   INITIAL_VISIBILITY,
   AREAS,
 } from '../constants';
-
 import type {
   AppConfig,
   AreaType,
@@ -31,6 +28,9 @@ import type {
   ErrorHandlingConfig,
   EnvValueOptions,
 } from '../types';
+import { getEnvValue, getEnvValueAsBoolean, getEnvValueAsNumber } from '../utils/env.utils';
+import { logger } from '../utils/logger.utils';
+
 
 /**
  * 必須環境変数リスト
@@ -239,7 +239,7 @@ export class ConfigManager {
    * Google Mapsが利用可能かどうかを判定
    */
   public isGoogleMapsAvailable(): boolean {
-    return typeof google !== 'undefined' && typeof google.maps?.Animation !== 'undefined';
+    return typeof google !== 'undefined' && typeof google.maps.Animation !== 'undefined';
   }
 
   /**

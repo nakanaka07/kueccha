@@ -3,8 +3,8 @@
  */
 
 import type { AreaFilterParams, SearchParams } from './base.types';
-import type { Poi } from './poi.types';
 import type { PoiGenre, PoiSearchBaseParams, SearchResultBase } from './poi-common.types';
+import type { Poi } from './poi.types';
 
 /**
  * POI検索用パラメータの型

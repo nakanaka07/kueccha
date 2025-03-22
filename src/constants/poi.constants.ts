@@ -2,9 +2,9 @@
  * POI（ポイントオブインタレスト）関連の定数ファイル
  */
 import { getCurrentLanguage } from './i18n.constants';
+import type { PoiGenre, BusinessHourKey, MarkerDisplayOptions, Poi } from '../types/poi.types';
 import { getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
 
-import type { PoiGenre, BusinessHourKey, MarkerDisplayOptions, Poi } from '../types/poi.types';
 
 // POIジャンル表示名
 export const POI_GENRE_DISPLAY_NAMES: Record<PoiGenre, Record<string, string>> = {

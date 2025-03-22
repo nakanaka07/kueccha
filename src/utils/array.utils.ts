@@ -4,10 +4,9 @@
  * POIデータや検索結果など、配列データの処理に便利な関数を提供します。
  */
 
-import { calculateDistance } from './geo.utils';
 import { createError } from './errors.utils';
+import { calculateDistance } from './geo.utils';
 import { logError } from './logger';
-
 import type { Poi, LatLngLiteral } from '../types';
 
 // ============================================================================
@@ -190,7 +189,7 @@ export function safeFilter<T>(
   array: T[],
   predicate: (item: T, index: number, array: T[]) => boolean,
 ): T[] {
-  if (!array?.length) return [];
+  if (!array.length) return [];
 
   try {
     return array.filter(predicate);

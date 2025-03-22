@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { APP_CONFIG } from '../src/config/app.config';
-import { logError, logInfo, logWarning } from '../src/utils/logger';
+import { logError, logInfo, logWarn } from '../src/utils/logger';
 
 /**
  * 環境変数の検証と処理
@@ -17,7 +18,7 @@ export function validateEnv(env: Record<string, string | undefined>): Record<str
     const isCI = env.CI === 'true' || env.GITHUB_ACTIONS === 'true';
 
     // 必須環境変数のチェック
-    const missingRequired = APP_CONFIG.REQUIRED_ENV.filter((key) => !env[key]);
+    const missingRequired = APP_CONFIG.REQUIRED_ENV.filter((key: string) => !env[key]);
     if (missingRequired.length > 0) {
       const errorMsg = isCI
         ? `CI環境で必須環境変数が不足しています: ${missingRequired.join(', ')}\nGitHub Secretsに設定してください。`
@@ -32,11 +33,11 @@ export function validateEnv(env: Record<string, string | undefined>): Record<str
       if (fs.existsSync(envExamplePath)) {
         const envExampleContent = fs.readFileSync(envExamplePath, 'utf8');
         const missingFromExample = [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].filter(
-          (key) => !envExampleContent.includes(key),
+          (key: string) => !envExampleContent.includes(key),
         );
 
         if (missingFromExample.length > 0) {
-          logWarning(
+          logWarn(
             'CONFIG',
             'ENV_WARNING',
             `以下の環境変数が.env.exampleに記載されていません: ${missingFromExample.join(', ')}`,
@@ -59,7 +60,7 @@ export function validateEnv(env: Record<string, string | undefined>): Record<str
 
     // PWA関連の追加チェック
     if (env.NODE_ENV === 'production' && !env.BASE_PATH) {
-      logWarning(
+      logWarn(
         'CONFIG',
         'PWA_WARNING',
         'BASE_PATHが設定されていません。PWA機能が正常に動作しない可能性があります。',
@@ -69,15 +70,16 @@ export function validateEnv(env: Record<string, string | undefined>): Record<str
 
     // Viteのdefine用に環境変数を整形
     return [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].reduce(
-      (acc, key) => {
+      (acc, key: string) => {
         if (env[key]) acc[`process.env.${key}`] = JSON.stringify(env[key]);
         return acc;
       },
       {} as Record<string, string>,
     );
-  } catch (error) {
+  } catch (error: unknown) {
     // エラーをログに記録し、再スロー
-    logError('CONFIG', 'ENV_ERROR', error.message, error);
+    const err = error as Error;
+    logError('CONFIG', 'ENV_ERROR', err.message, err);
     throw error;
   }
 }
@@ -90,8 +92,9 @@ if (require.main === module) {
     validateEnv(env);
     logInfo('CONFIG', 'ENV_CHECK', '✅ 環境変数の検証に成功しました');
     process.exit(0);
-  } catch (error) {
-    logError('CONFIG', 'ENV_CHECK', '❌ 環境変数の検証に失敗しました', error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    logError('CONFIG', 'ENV_CHECK', '❌ 環境変数の検証に失敗しました', err);
     process.exit(1);
   }
 }

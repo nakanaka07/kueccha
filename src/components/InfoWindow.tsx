@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+
 import { AREAS, INFO_WINDOW_BUSINESS_HOURS } from '../constants';
-import { formatInformation, isValidPhoneNumber } from '../utils/formatters';
 import type { InfoWindowProps, BusinessHourKey } from '../types/types';
+import { formatInformation, isValidPhoneNumber } from '../utils/formatters';
 
 export const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onCloseClick }) => {
   const infoWindowRef = useRef<HTMLDivElement>(null);

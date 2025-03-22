@@ -1,8 +1,8 @@
 /**
  * ローディング関連定数ファイル
  */
-import { getEnvValue } from '../utils/env.utils';
 import type { ProgressPercentage } from '../types/loading.types';
+import { getEnvValue } from '../utils/env.utils';
 
 // 定数定義
 export const LOADING = {

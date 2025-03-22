@@ -2,7 +2,6 @@
  * 位置情報関連の定数ファイル
  */
 /// <reference types="@types/google.maps" />
-import { getEnvValueAsNumber } from '../utils/env.utils';
 import type {
   LatLngLiteral,
   Bounds,
@@ -11,6 +10,7 @@ import type {
   ControlPosition,
   MapTypeControlStyle,
 } from '../types/geo.types';
+import { getEnvValueAsNumber } from '../utils/env.utils';
 
 // Google Maps 依存関係ユーティリティ
 export function isGoogleMapsAvailable(): boolean {

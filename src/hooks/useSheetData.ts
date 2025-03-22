@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import { AREAS, ERROR_MESSAGES } from '../constants/constants';
 import { CONFIG, validateConfig } from '../services/config.services';
 import type { Poi, AreaType } from '../types/types';

@@ -9,8 +9,7 @@
  * @see config.types.ts - アプリケーション設定に関連する型定義
  */
 
-import type { BaseResponseError, Result } from './base.types';
-import type { PaginationMeta } from './base.types';
+import type { BaseResponseError, Result , PaginationMeta } from './base.types';
 
 // ============================================================================
 // 基本データ型

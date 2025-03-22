@@ -1,14 +1,15 @@
+
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    // 基本設定
+    // 基本設定 - GitHub Pages最適化
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2022", "WebWorker"],
     "jsx": "react-jsx",
 
-    // 型チェック (厳格モードの明示的設定)
+    // 型チェック (厳格モード) - 品質向上のために最適化
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
@@ -17,13 +18,13 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
 
-    // モジュール設定
+    // モジュール設定 - バンドル最適化
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
 
-    // パス設定 (プロジェクト構造に合わせて調整)
+    // パス設定 - プロジェクト構造に合わせて最適化
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -35,22 +36,32 @@
       "@adapters/*": ["src/adapters/*"],
       "@types/*": ["src/types/*"],
       "@images/*": ["src/images/*"],
-      "@contexts/*": ["src/contexts/*"],
-      "@styles/*": ["src/styles/*"],
-      "@locales/*": ["src/locales/*"]
+      "@config/*": ["src/config/*"]
     },
 
-    // ビルド設定
+    // ビルド設定 - 静的サイト最適化
     "outDir": "./dist",
     "sourceMap": true,
     "incremental": true,
 
-    // 互換性設定
+    // 互換性設定 - ブラウザ対応
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "vite.config.ts", "env.d.ts", "css.d.ts", "scripts/**/*.ts"],
-  "exclude": ["dist", "node_modules", "**/*.spec.ts", "**/*.test.ts", "**/__tests__/*"],
+  "include": [
+    "src/**/*", 
+    "vite.config.ts", 
+    "env.d.ts", 
+    "css.d.ts", 
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "dist", 
+    "node_modules", 
+    "**/*.spec.ts", 
+    "**/*.test.ts", 
+    "**/__tests__/*"
+  ],
   "ts-node": {
     "transpileOnly": true,
     "esm": true,

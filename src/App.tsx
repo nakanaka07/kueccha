@@ -2,19 +2,20 @@
  * アプリケーションのメインコンポーネント
  * GitHub Pages静的サイト向けに最適化
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
 import Map from './components/map/Map';
+import { APP_CONFIG } from './config/app.config';
 import { ERROR_MESSAGES } from './constants';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { usePoisData } from './hooks/usePoisData';
-import { createError } from './utils/errors.utils';
-import { logError } from './utils/logger';
-
 import type { MapLoadResult } from './types/maps.types';
 import type { Poi } from './types/poi.types';
+import { createError } from './utils/errors.utils';
+import { logError, logInfo } from './utils/logger';
+
 
 /**
  * アプリケーションのメインコンポーネント
@@ -26,6 +27,28 @@ const App: React.FC = () => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
   const [mapError, setMapError] = useState<Error | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+
+  // オンライン/オフラインステータスの監視
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      logInfo('APP', 'ONLINE', 'オンライン接続が回復しました');
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      logInfo('APP', 'OFFLINE', 'オフライン状態になりました');
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // マップ読み込み完了ハンドラ
   const handleMapLoad = useCallback((result: MapLoadResult) => {
@@ -35,6 +58,11 @@ const App: React.FC = () => {
       const errorMessage = result.error.message || ERROR_MESSAGES.MAP.LOAD_FAILED;
       logError('MAP', 'LOAD_ERROR', errorMessage, result.error.details);
       setMapError(createError('MAP', 'LOAD_ERROR', errorMessage));
+    } else {
+      logInfo('MAP', 'LOAD_SUCCESS', 'マップが正常に読み込まれました', {
+        basePath: APP_CONFIG.BASE_PATH.CURRENT,
+        timestamp: new Date().toISOString()
+      });
     }
   }, []);
 
@@ -72,8 +100,8 @@ const App: React.FC = () => {
       ? 'データを読み込んでいます...'
       : '地図を読み込んでいます...';
 
-    return { isLoading, hasError, errorMessage, loadingMessage };
-  }, [isDataLoading, isMapLoading, dataError, mapError]);
+    return { isLoading, hasError, errorMessage, loadingMessage, isOnline };
+  }, [isDataLoading, isMapLoading, dataError, mapError, isOnline]);
 
   // エラーバウンダリ用フォールバック（マップレンダリングエラー専用）
   const renderErrorFallback = useCallback(
@@ -84,8 +112,19 @@ const App: React.FC = () => {
     [ErrorFallback],
   );
 
+  // オフライン状態の表示
+  const OfflineNotice = useMemo(() => {
+    return (
+      <div className="offline-notice" role="status" aria-live="polite">
+        <p>📶 現在オフライン状態です。一部の機能が制限されています。</p>
+      </div>
+    );
+  }, []);
+
   return (
-    <div className="app-container">
+    <div className="app-container" data-version={APP_CONFIG.VERSION} data-env={APP_CONFIG.ENV}>
+      {!appState.isOnline && OfflineNotice}
+      
       <ErrorBoundary fallback={renderErrorFallback}>
         {appState.hasError ? (
           <ErrorFallback message={appState.errorMessage} onRetry={handleRetry} />
@@ -105,6 +144,8 @@ const App: React.FC = () => {
               eventHandlers={{ onPoiSelect: handlePoiSelect }}
               selectedPoi={selectedPoi}
               isMobile={isMobile}
+              basePath={APP_CONFIG.BASE_PATH.CURRENT}
+              isOffline={!appState.isOnline}
             />
           </>
         )}

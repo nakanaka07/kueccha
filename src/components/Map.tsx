@@ -7,11 +7,11 @@ import { ERROR_MESSAGES, Map as MapConstants } from '../constants';
 import { DEFAULT_LOADING_TIMEOUT } from '../constants/loading.constants';
 import { useDeviceDetection } from '../hooks/useDeviceDetection';
 import { useMapControl } from '../hooks/useMapControl';
+import type { MapLoadResult } from '../types/maps.types';
+import type { MapComponentProps } from '../types/ui.types';
 import { createError } from '../utils/errors.utils';
 import { logError } from '../utils/logger';
 
-import type { MapLoadResult } from '../types/maps.types';
-import type { MapComponentProps } from '../types/ui.types';
 
 if (!(MapConstants.Config.apiKey && MapConstants.Config.mapId)) {
   throw createError('MAP', 'CONFIG_ERROR', ERROR_MESSAGES.MAP.CONFIG_MISSING);

@@ -2,23 +2,26 @@
  * アプリケーションのエントリーポイント
  * GitHub Pages静的サイト向けに最適化
  */
+import { PWA } from '@services/index';
 import React, { Suspense, StrictMode, lazy, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { PWA } from '@services/index';
-
 import { ErrorDisplay } from './components/ErrorDisplay';
 import { LoadingScreen } from './components/LoadingScreen';
+import { APP_CONFIG } from './config/app.config';
 import { ERROR_MESSAGES, LogLevel } from './constants/constants';
 import { createError } from './utils/errors';
-import { logError } from './utils/logger';
-
 import type { AppError } from './utils/errors';
+import { logError, logInfo } from './utils/logger';
+
+// 環境設定 - 環境変数の集中管理
+const isDevelopment = APP_CONFIG.ENV === 'development';
+const basePath = isDevelopment ? APP_CONFIG.BASE_PATH.DEV : APP_CONFIG.BASE_PATH.PROD;
 
 // アプリケーションコンポーネントを遅延ロード
 const App = lazy(() =>
   import('./App').catch((error) => {
-    logError('Appコンポーネントの読み込みに失敗しました', {
+    logError('APP_LOAD', 'Appコンポーネントの読み込みに失敗しました', {
       error,
       level: LogLevel.ERROR,
       context: 'app_loading',
@@ -26,9 +29,6 @@ const App = lazy(() =>
     throw error;
   }),
 );
-
-// 環境設定 - 環境変数の使用を簡略化
-const isDevelopment = import.meta.env.DEV;
 
 /**
  * エラーバウンダリーコンポーネント
@@ -52,12 +52,21 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logError('UIレンダリングエラーが発生しました', {
+    logError('UI', 'レンダリングエラー', {
       error,
       errorInfo,
       level: LogLevel.ERROR,
       context: 'component_rendering',
     });
+
+    // GitHub Pages環境ではテレメトリ送信（必要に応じて）
+    if (!isDevelopment && APP_CONFIG.TELEMETRY_ENABLED) {
+      try {
+        // エラーテレメトリ送信（実装があれば）
+      } catch (sendError) {
+        // テレメトリ送信エラーは無視（アプリ機能には影響させない）
+      }
+    }
   }
 
   render() {
@@ -76,15 +85,28 @@ const RenderWithErrorHandling: React.FC = () => {
 
   // サービスワーカー登録 - 静的サイト向けに最適化
   useEffect(() => {
-    // GitHub Pages環境では常にPWAを有効化
-    if ('serviceWorker' in navigator && !isDevelopment) {
-      PWA.register()
-        .then(() => setSWRegistered(true))
-        .catch((error) => logError('サービスワーカー登録エラー', { error }));
-    } else {
-      // 開発環境ではサービスワーカーをスキップ
-      setSWRegistered(true);
-    }
+    const setupServiceWorker = async () => {
+      try {
+        // GitHub Pages環境ではPWAを有効化、開発環境では無効
+        if ('serviceWorker' in navigator && !isDevelopment) {
+          await PWA.register();
+          logInfo('PWA', 'サービスワーカーの登録に成功しました');
+        }
+        // PWA登録の成否にかかわらずアプリは起動させる
+        setSWRegistered(true);
+      } catch (error) {
+        logError('PWA', 'サービスワーカー登録エラー', { error });
+        // エラーが発生してもアプリは起動させる
+        setSWRegistered(true);
+      }
+    };
+    
+    setupServiceWorker();
+    
+    // クリーンアップ（必要に応じて）
+    return () => {
+      // PWA関連リソースのクリーンアップ
+    };
   }, []);
 
   if (!isSWRegistered) {
@@ -104,10 +126,12 @@ const RenderWithErrorHandling: React.FC = () => {
  * 致命的なエラーを処理する関数
  */
 function handleFatalError(error: unknown): void {
-  logError('アプリケーションの初期化に失敗しました', {
+  logError('SYSTEM', 'アプリケーション初期化失敗', {
     error,
     level: LogLevel.FATAL,
     context: 'application_startup',
+    basePath,
+    userAgent: navigator.userAgent,
   });
 
   const errorContainer = document.getElementById('app') || document.body;
@@ -128,6 +152,7 @@ function handleFatalError(error: unknown): void {
       <div class="error-container" role="alert">
         <h2>エラーが発生しました</h2>
         <p>${appError.message}</p>
+        <p>エラー詳細: ${appError.code}</p>
         <button onclick="window.location.reload()">再読み込み</button>
       </div>
     `;
@@ -170,4 +195,13 @@ if (document.readyState === 'loading') {
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window.deferredPrompt = e;
+  
+  // GitHub Pagesのアナリティクスにインストールプロンプト表示を記録（必要に応じて）
+  if (!isDevelopment && APP_CONFIG.ANALYTICS_ENABLED) {
+    try {
+      // インストールプロンプト表示イベント記録（実装があれば）
+    } catch (error) {
+      // エラーは無視
+    }
+  }
 });

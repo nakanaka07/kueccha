@@ -7,7 +7,6 @@
 import { formatMessage } from './string.utils';
 import { ERROR_MESSAGES } from '../constants/errors.constants';
 import { DEFAULT_LANGUAGE, getCurrentLanguage } from '../constants/i18n.constants';
-
 import type { SupportedLanguage } from '../constants/i18n.constants';
 import type { AppError, ErrorCategory, ErrorCode } from '../types/errors.types';
 

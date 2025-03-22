@@ -2,7 +2,6 @@
  * マーカー関連定数ファイル - マップ上のマーカーの設定を定義
  */
 import { getMarkerAnimation } from './config.constants';
-import { configToStyleOptions } from '../types/markers.types';
 
 // マーカーアイコン画像
 import publicToiletIcon from '../images/ano_icon01.png';
@@ -14,8 +13,8 @@ import defaultIcon from '../images/row2.png';
 import parkingIcon from '../images/shi_icon01.png';
 import snackIcon from '../images/shi_icon02.png';
 import currentLocationIcon from '../images/shi_icon04.png';
-
 import type { AreaType } from '../types/areas.types';
+import { configToStyleOptions } from '../types/markers.types';
 import type {
   MarkerSize,
   MarkerConfigAttributes,

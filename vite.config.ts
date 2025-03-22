@@ -1,17 +1,19 @@
-import path from 'node:path';
 import fs from 'node:fs';
-import { defineConfig, loadEnv, UserConfig } from 'vite';
+import path from 'node:path';
+
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import type { UserConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import compression from 'vite-plugin-compression';
+import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-// PWA設定をインポート
+// PWA設定とロガーをインポート
 import { getPwaConfig } from './src/config/pwa.config';
-import { logError, logInfo } from './src/utils/logger';
+import { logError, logInfo, logWarning } from './src/utils/logger';
 
 // ============================================================================
-// 型と定数
+// 型と定数 - GitHub Pages対応に最適化
 // ============================================================================
 
 /**
@@ -33,13 +35,13 @@ interface AppConfig {
 }
 
 /**
- * アプリケーション設定
+ * アプリケーション設定 - GitHub Pages用に最適化
  */
 const APP_CONFIG: AppConfig = {
   BASE_PATH: { PROD: '/kueccha/', DEV: '/' },
   OUTPUT_DIR: 'dist',
   PORT: { DEFAULT: 5173, MOBILE: 5174 },
-  REQUIRED_ENV: ['VITE_GOOGLE_API_KEY'], // 単一のAPIキーを必須として維持
+  REQUIRED_ENV: ['VITE_GOOGLE_API_KEY'], 
   OPTIONAL_ENV: [
     'VITE_GOOGLE_MAPS_MAP_ID',
     'VITE_GOOGLE_SPREADSHEET_ID',
@@ -60,7 +62,7 @@ const APP_CONFIG: AppConfig = {
 };
 
 // ============================================================================
-// 環境変数管理
+// 環境変数管理 - GitHub Pages CI/CD対応
 // ============================================================================
 
 /**
@@ -70,7 +72,7 @@ const APP_CONFIG: AppConfig = {
  * @throws 必須環境変数が不足している場合にエラーをスロー
  */
 function validateEnv(env: Record<string, string | undefined>): Record<string, string> {
-  // BASE_PATHが環境変数から指定されている場合は優先
+  // GitHub ActionsからのBASE_PATH環境変数を優先
   if (env.BASE_PATH) {
     APP_CONFIG.BASE_PATH.PROD = env.BASE_PATH;
     logInfo('CONFIG', 'BASE_PATH', `ベースパスを環境変数から設定: ${env.BASE_PATH}`);
@@ -108,7 +110,7 @@ function validateEnv(env: Record<string, string | undefined>): Record<string, st
 }
 
 // ============================================================================
-// サーバー設定
+// サーバー設定 - 開発効率化
 // ============================================================================
 
 /**
@@ -127,11 +129,18 @@ function getServerConfig(isDev: boolean, isMobile: boolean) {
     open: !isMobile,
     port,
     host: isMobile ? true : 'localhost',
+    // HTTPS設定（ローカル開発用SSL証明書が存在する場合）
+    https: fs.existsSync('./localhost.key') && fs.existsSync('./localhost.crt')
+      ? {
+          key: fs.readFileSync('./localhost.key'),
+          cert: fs.readFileSync('./localhost.crt'),
+        }
+      : undefined,
   };
 }
 
 // ============================================================================
-// ビルド設定
+// ビルド設定 - GitHub Pages最適化
 // ============================================================================
 
 /**
@@ -164,6 +173,7 @@ function getBuildConfig(isProd: boolean) {
             '@googlemaps/markerclusterer',
           ],
           'ui-vendor': ['@emotion/react', '@emotion/styled'],
+          'data-vendor': ['lodash', 'date-fns'],
         },
         // GitHub Pages向けにアセットのファイル名パターンを最適化
         assetFileNames: (assetInfo) => {
@@ -176,6 +186,9 @@ function getBuildConfig(isProd: boolean) {
           }
           return 'assets/[name]-[hash][extname]';
         },
+        // GitHub Pages向けにチャンクの命名パターンを最適化
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
     // GitHub Pagesでのキャッシュ最適化
@@ -204,7 +217,7 @@ function getAliases() {
     'contexts',
     'images',
     'styles',
-    'locales',
+    'config',
   ];
 
   try {
@@ -244,7 +257,7 @@ function getAliases() {
 }
 
 /**
- * 圧縮プラグインの生成
+ * 圧縮プラグインの生成 - GitHub Pages向け最適化
  * @param isProd 本番モードかどうか
  * @returns 圧縮プラグインの配列
  */
@@ -259,7 +272,7 @@ function getCompressionPlugins(isProd: boolean) {
 }
 
 // ============================================================================
-// メイン設定
+// メイン設定 - GitHub Pages対応
 // ============================================================================
 
 export default defineConfig(({ mode, command }): UserConfig => {
@@ -294,7 +307,7 @@ export default defineConfig(({ mode, command }): UserConfig => {
           jsxImportSource: '@emotion/react',
         }),
         tsconfigPaths(),
-        VitePWA(getPwaConfig(isProd)),
+        VitePWA(getPwaConfig(isProd, basePath)), // basePath引数を追加
         ...getCompressionPlugins(isProd),
       ],
       build: getBuildConfig(isProd),
@@ -321,11 +334,19 @@ export default defineConfig(({ mode, command }): UserConfig => {
       // エラーハンドリングと警告設定
       logLevel: isProd ? 'error' : 'info',
       clearScreen: false,
+      // ビルド後処理のガイダンス
+      esbuild: {
+        legalComments: isProd ? 'none' : 'eof',
+        drop: isProd ? ['console', 'debugger'] : [],
+      },
     };
   } catch (error) {
     // より構造化されたエラーログ
     logError('CONFIG', 'FATAL_ERROR', '設定処理中に致命的なエラーが発生しました', error);
-    console.error(`スタックトレース: ${error.stack}`);
+    console.error(`スタックトレース: ${(error as Error).stack}`);
     process.exit(1);
   }
 });
+
+// app.config.ts用にエクスポート (scripts/optimize-assets.tsなどで使用)
+export { APP_CONFIG };

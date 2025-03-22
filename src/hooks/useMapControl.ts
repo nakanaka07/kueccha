@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+
 import type { LatLngLiteral } from '../types/types';
 
 /**

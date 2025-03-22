@@ -11,9 +11,6 @@
  * - フィルタリング型: データのフィルタリングと選択に関連するコンポーネント
  */
 
-import type { BaseProps, Dimensions, AnimationOptions, StateUpdater } from './base.types';
-import type { LatLngLiteral } from './geo.types';
-import type { Poi } from './poi.types';
 import type {
   AreaType,
   AreaVisibility,
@@ -21,6 +18,9 @@ import type {
   AreasByCategory,
   AreaCategory,
 } from './areas.types';
+import type { BaseProps, Dimensions, AnimationOptions, StateUpdater } from './base.types';
+import type { LatLngLiteral } from './geo.types';
+import type { Poi } from './poi.types';
 
 // ============================================================================
 // 基本UI型

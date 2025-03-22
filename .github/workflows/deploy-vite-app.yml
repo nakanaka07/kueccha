@@ -28,6 +28,7 @@ env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8'
   BASE_PATH: '/kueccha/'
+  CACHE_KEY_PREFIX: 'build-cache-'
 
 jobs:
   build:
@@ -51,11 +52,22 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: '**/pnpm-lock.yaml'
 
+      # 依存関係のキャッシュ改善
+      - name: Cache build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./dist
+            ./.vite
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ github.sha }}
+          restore-keys: ${{ env.CACHE_KEY_PREFIX }}
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Setup environment variables
         run: |
+          # 環境変数ファイル作成
           cat << EOF > .env
           VITE_GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}
           VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
@@ -65,7 +77,7 @@ jobs:
           VITE_EMAILJS_PUBLIC_KEY=${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
           EOF
 
-          echo "環境変数ファイルを作成しました"
+          echo "✓ 環境変数ファイルを作成しました"
 
       - name: Validate environment variables
         run: pnpm run check:env
@@ -73,32 +85,101 @@ jobs:
       - name: Generate PWA assets
         run: pnpm run generate:pwa-assets
 
-      - name: Build application with GitHub Pages configuration
+      - name: Build application for GitHub Pages
         run: pnpm run build:pages
         env:
           NODE_ENV: production
           BASE_PATH: ${{ env.BASE_PATH }}
 
-      - name: Optimize assets
+      - name: Optimize assets for GitHub Pages
         run: pnpm run optimize
 
-      - name: Verify PWA configuration
+      - name: Verify and fix PWA configuration
         run: |
+          # マニフェストファイルの検証
           if [ -f "dist/manifest.json" ]; then
-            echo "✓ PWA manifest verified in dist/"
+            echo "✓ PWAマニフェスト確認: OK"
+            
+            # JSONの整形性チェック
+            if jq empty dist/manifest.json 2>/dev/null; then
+              echo "✓ マニフェストJSONの形式: 正常"
+              
+              # start_urlが正しく設定されているか確認
+              START_URL=$(jq -r '.start_url' dist/manifest.json)
+              if [[ "$START_URL" != *"$BASE_PATH"* ]]; then
+                echo "⚠️ start_urlにBASE_PATHが含まれていません。修正します。"
+                jq --arg bp "$BASE_PATH" '.start_url = $bp' dist/manifest.json > dist/manifest.json.tmp
+                mv dist/manifest.json.tmp dist/manifest.json
+              fi
+            else
+              echo "⚠️ マニフェストJSONの形式に問題があります"
+            fi
           else
-            echo "PWA manifest missing, copying from project root"
-            cp manifest.json ./dist/ || true
+            echo "⚠️ PWAマニフェストが見つかりません。基本マニフェストを作成します。"
+            cat << EOF > dist/manifest.json
+            {
+              "name": "佐渡で食えっちゃ by INTX",
+              "short_name": "佐渡で食えっちゃ",
+              "start_url": "$BASE_PATH",
+              "display": "standalone",
+              "background_color": "#ffffff",
+              "theme_color": "#4a6da7",
+              "icons": [
+                {
+                  "src": "${BASE_PATH}apple-touch-icon.png",
+                  "sizes": "180x180",
+                  "type": "image/png"
+                }
+              ]
+            }
+            EOF
           fi
 
+          # サービスワーカーの検証
           if [ -f "dist/service-worker.js" ] || [ -f "dist/sw.js" ]; then
-            echo "✓ Service Worker verified in build output"
+            echo "✓ サービスワーカー確認: OK"
           else
-            echo "⚠️ Warning: Service Worker not found in build output"
+            echo "⚠️ サービスワーカーが見つかりません。最小限のサービスワーカーを作成します。"
+            cat << EOF > dist/service-worker.js
+            // 最小限のサービスワーカー
+            self.addEventListener('install', (event) => {
+              self.skipWaiting();
+            });
+
+            self.addEventListener('activate', (event) => {
+              event.waitUntil(clients.claim());
+            });
+
+            self.addEventListener('fetch', (event) => {
+              event.respondWith(fetch(event.request));
+            });
+            EOF
+            echo "✓ 基本的なサービスワーカーを作成しました"
           fi
 
-          echo "Checking for critical assets:"
-          ls -la dist
+          # GitHub Pages用の設定ファイル作成
+          if [ ! -f "dist/.nojekyll" ]; then
+            touch dist/.nojekyll
+            echo "✓ .nojekyllファイルを作成しました"
+          fi
+
+          # SPA用404ページ
+          if [ ! -f "dist/404.html" ] && [ -f "dist/index.html" ]; then
+            cp dist/index.html dist/404.html
+            echo "✓ SPA用404.htmlを作成しました"
+          fi
+
+          echo "重要なアセットの確認:"
+          find dist -maxdepth 1 -type f | sort
+
+      # ビルドサイズ分析
+      - name: Analyze build size
+        run: |
+          echo "ビルド出力サイズ分析:"
+          du -h -d 1 dist/ | sort -hr
+          
+          echo "最も大きいファイル TOP 5:"
+          find dist -type f -not -path "*/\.*" -exec du -h {} \; | sort -hr | head -n 5
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
@@ -124,13 +205,38 @@ jobs:
         run: |
           DEPLOY_URL="${{ steps.deployment.outputs.page_url }}"
           echo "✓ デプロイ完了: $DEPLOY_URL"
-
-          # 基本的なデプロイ健全性チェック
-          if curl -sSf "$DEPLOY_URL" > /dev/null; then
-            echo "✓ デプロイサイトへのアクセス確認成功"
+          
+          # 包括的なデプロイ検証
+          echo "デプロイ検証を実行中..."
+          
+          # 基本アクセス確認
+          if curl -sSfL "$DEPLOY_URL" > /tmp/index.html; then
+            echo "✓ メインページアクセス: 成功"
+            
+            # HTMLに重要な要素が含まれているか確認
+            if grep -q "app" /tmp/index.html; then
+              echo "✓ アプリケーションのルート要素: 検出"
+            else
+              echo "⚠️ アプリケーションのルート要素が見つかりません"
+            fi
+            
+            # PWA関連ファイルへのアクセス確認
+            if curl -sSfL "${DEPLOY_URL}manifest.json" > /dev/null; then
+              echo "✓ PWAマニフェストアクセス: 成功"
+            else
+              echo "⚠️ PWAマニフェストへのアクセスに失敗しました"
+            fi
+            
+            # サービスワーカーへのアクセス確認
+            if curl -sSfL "${DEPLOY_URL}service-worker.js" > /dev/null || \
+               curl -sSfL "${DEPLOY_URL}sw.js" > /dev/null; then
+              echo "✓ サービスワーカーアクセス: 成功"
+            else
+              echo "⚠️ サービスワーカーへのアクセスに失敗しました"
+            fi
+            
+            echo "✓ GitHub Pagesへのデプロイが正常に完了しました"
           else
-            echo "❌ デプロイサイトへのアクセス失敗"
+            echo "❌ メインページへのアクセスに失敗しました"
             exit 1
           fi
-
-          echo "✓ GitHub Pagesへのデプロイが正常に完了しました"

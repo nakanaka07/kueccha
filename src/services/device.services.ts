@@ -20,7 +20,7 @@ export function isMobile(): boolean {
 
   // デバイス判定（ユーザーエージェント）
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator?.userAgent || '',
+    navigator.userAgent || '',
   );
 
   // 画面サイズ判定

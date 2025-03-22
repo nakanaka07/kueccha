@@ -9,10 +9,11 @@
 
 /// <reference types="@types/google.maps" />
 
+import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
+
 import type { BaseProps, StyledComponentProps, MapError } from './base.types';
 import type { LatLngLiteral, ControlPosition, ControlPositionString, MapTypeId } from './geo.types';
 import type { Poi } from './poi.types';
-import type { LoadScriptProps, MapOptions } from '@react-google-maps/api';
 
 // ============================================================================
 // マップ表示モード関連

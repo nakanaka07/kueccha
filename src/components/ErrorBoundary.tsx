@@ -1,4 +1,6 @@
-import React, { Component, ErrorInfo } from 'react';
+import type { ErrorInfo } from 'react';
+import React, { Component } from 'react';
+
 import { ERROR_MESSAGES } from '../constants';
 import type { ErrorBoundaryProps, ErrorBoundaryState } from '../types/types';
 

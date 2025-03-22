@@ -5,12 +5,11 @@
  */
 
 import { RegionSettings } from '../constants/app.constants';
+import { JAPANESE_HOLIDAYS } from '../constants/holiday.constants';
 import { getCurrentLanguage } from '../constants/i18n.constants';
-
 import type { SupportedLanguage } from '../types';
 
 // 日本の祝日データを別ファイルに移動
-import { JAPANESE_HOLIDAYS } from '../constants/holiday.constants';
 
 /**
  * 日付が有効かどうかを検証する

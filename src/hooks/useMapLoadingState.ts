@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { UI } from '../constants';
 import { DEFAULT_LOADING_TIMEOUT } from '../constants/loading.constants';
 import { logError } from '../utils/logger';

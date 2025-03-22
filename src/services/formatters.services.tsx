@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+
 import { INFO_WINDOW_BUSINESS_HOURS } from '../constants';
 import type { Poi } from '../types';
 

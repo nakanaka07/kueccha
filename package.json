@@ -30,7 +30,12 @@
     "prepare": "husky",
     "reset": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune",
     "analyze": "vite build --mode analyze",
-    "generate:pwa-assets": "pwa-assets-generator"
+    "generate:pwa-assets": "pwa-assets-generator",
+    "predeploy": "pnpm run build:pages", 
+    "deploy": "gh-pages -d dist",
+    "validate:pwa": "pnpm run build:pages && ts-node scripts/validate-pwa.ts",
+    "clean:cache": "rimraf .vite node_modules/.vite",
+    "check:bundle-size": "pnpm run build:prod && bundlesize"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
@@ -48,10 +53,11 @@
     "@types/react-dom": "^19.0.4",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
-    "@vite-pwa/assets-generator": "^0.2.4",
+    "@vite-pwa/assets-generator": "^0.2.6",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.0.9",
     "@vitest/ui": "^3.0.9",
+    "bundlesize": "^0.18.1",
     "chalk": "^5.4.1",
     "cross-env": "^7.0.3",
     "eslint": "^9.22.0",
@@ -60,11 +66,12 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "gh-pages": "^6.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
-    "rollup-plugin-visualizer": "^5.12.0",
+    "rollup-plugin-visualizer": "^5.14.0",
     "sharp": "^0.33.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
@@ -96,5 +103,23 @@
       "esbuild",
       "sharp"
     ]
-  }
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/assets/js/main-*.js",
+      "maxSize": "200 kB"
+    },
+    {
+      "path": "./dist/assets/js/react-vendor-*.js",
+      "maxSize": "120 kB"
+    },
+    {
+      "path": "./dist/assets/js/maps-vendor-*.js", 
+      "maxSize": "150 kB"
+    },
+    {
+      "path": "./dist/index.css",
+      "maxSize": "20 kB"
+    }
+  ]
 }

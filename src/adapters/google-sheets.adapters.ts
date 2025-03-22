@@ -6,9 +6,6 @@
  */
 
 import { SheetRange, SheetsError } from '../types';
-import { getEnvValue } from '../utils/env.utils';
-import { createError } from '../utils/error.utils';
-
 import type {
   SheetCellValue,
   SheetRow,
@@ -16,6 +13,9 @@ import type {
   SheetsConfig,
   SheetsRequestOptions,
 } from '../types';
+import { getEnvValue } from '../utils/env.utils';
+import { createError } from '../utils/error.utils';
+
 import type { SheetsAdapter } from './index';
 
 // Google Sheets APIのベースURL

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+
 import type { Poi } from '../types/types';
 
 /**

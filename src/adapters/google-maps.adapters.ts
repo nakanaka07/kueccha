@@ -1,6 +1,3 @@
-import { isBrowser } from '../utils/env.utils';
-import { createError } from '../utils/error.utils';
-
 import type {
   MapConfig,
   MarkerOptions,
@@ -9,6 +6,9 @@ import type {
   Bounds,
   MarkerAnimation,
 } from '../types';
+import { isBrowser } from '../utils/env.utils';
+import { createError } from '../utils/error.utils';
+
 import type { MapAdapter } from './index';
 
 /**

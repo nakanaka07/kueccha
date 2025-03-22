@@ -11,7 +11,6 @@ import {
   SADO_BOUNDS,
 } from '../constants/geo.constants';
 import { getCurrentLanguage } from '../constants/i18n.constants';
-
 import type {
   LatLngLiteral,
   Bounds,
