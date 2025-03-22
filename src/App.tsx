@@ -16,7 +16,6 @@ import type { Poi } from './types/poi.types';
 import { createError } from './utils/errors.utils';
 import { logError, logInfo } from './utils/logger';
 
-
 /**
  * アプリケーションのメインコンポーネント
  */
@@ -35,15 +34,15 @@ const App: React.FC = () => {
       setIsOnline(true);
       logInfo('APP', 'ONLINE', 'オンライン接続が回復しました');
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
       logInfo('APP', 'OFFLINE', 'オフライン状態になりました');
     };
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -61,7 +60,7 @@ const App: React.FC = () => {
     } else {
       logInfo('MAP', 'LOAD_SUCCESS', 'マップが正常に読み込まれました', {
         basePath: APP_CONFIG.BASE_PATH.CURRENT,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }, []);
@@ -124,7 +123,7 @@ const App: React.FC = () => {
   return (
     <div className="app-container" data-version={APP_CONFIG.VERSION} data-env={APP_CONFIG.ENV}>
       {!appState.isOnline && OfflineNotice}
-      
+
       <ErrorBoundary fallback={renderErrorFallback}>
         {appState.hasError ? (
           <ErrorFallback message={appState.errorMessage} onRetry={handleRetry} />

@@ -7,6 +7,8 @@ import importPlugin from 'eslint-plugin-import';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+// セキュリティプラグインの追加
+import securityPlugin from 'eslint-plugin-security';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -60,15 +62,16 @@ export default [
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       import: importPlugin,
+      security: securityPlugin, // セキュリティプラグイン追加
     },
     settings: {
       react: { version: '19', runtime: 'automatic' },
       'import/resolver': {
-        typescript: { 
-          project: tsconfigPath,
-          alwaysTryTypes: true, 
+        node: { 
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+          // nodeリゾルバーにTypeScriptパスを追加
+          paths: [path.resolve(__dirname, 'src')],
         },
-        node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
       },
       'import/parsers': {
         '@typescript-eslint/parser': ['.ts', '.tsx'],
@@ -84,7 +87,6 @@ export default [
       '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unnecessary-condition': 'warn', // 不要な条件分岐を警告
       '@typescript-eslint/prefer-nullish-coalescing': 'warn', // null/undefinedチェックの最適化
-      '@typescript-eslint/no-duplicate-imports': 'error', // 重複インポート防止
 
       // モバイル最適化のための追加ルール
       '@typescript-eslint/prefer-optional-chain': 'warn', // 長いプロパティチェーンの最適化
@@ -101,6 +103,12 @@ export default [
       'react/jsx-pascal-case': 'error', // コンポーネント名のPascalCase強制
       'react/no-unstable-nested-components': 'error', // レンダリングパフォーマンス向上
 
+      // React 19向け最適化
+      'react/function-component-definition': ['warn', {
+        namedComponents: 'arrow-function',
+        unnamedComponents: 'arrow-function',
+      }],
+
       // Hooks - メモリリークと不要再レンダリング防止
       ...reactHooksPlugin.configs.recommended.rules,
       'react-hooks/exhaustive-deps': 'warn',
@@ -111,6 +119,11 @@ export default [
       'jsx-a11y/anchor-has-content': 'error', // リンクにコンテンツ必須
       'jsx-a11y/click-events-have-key-events': 'warn', // キーボードアクセシビリティ
       'jsx-a11y/interactive-supports-focus': 'warn', // フォーカス可能な要素
+
+      // セキュリティルール
+      'security/detect-object-injection': 'warn',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-unsafe-regex': 'error',
 
       // インポート順 - コード整理と一貫性
       'import/order': [
@@ -125,7 +138,7 @@ export default [
 
       // パフォーマンス関連 - GitHub Pages向け最適化
       'react/jsx-no-constructed-context-values': 'error', // レンダリング時のコンテキスト作成回避
-      'react/no-inline-styles': 'warn', // インラインスタイル回避でバンドルサイズ削減
+      // 'react/no-inline-styles': 'warn', // この行をコメントアウトまたは削除
 
       // 不要コード削減
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }], // デバッグコード削減

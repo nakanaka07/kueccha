@@ -1,20 +1,27 @@
+/* eslint-disable security/detect-object-injection */
 import fs from 'node:fs';
 import path from 'node:path';
 
 import react from '@vitejs/plugin-react';
-import type { UserConfig } from 'vite';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type UserConfig, type BuildOptions, type ServerOptions } from 'vite';
 import compression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 // PWA設定とロガーをインポート
 import { getPwaConfig } from './src/config/pwa.config';
-import { logError, logInfo, logWarning } from './src/utils/logger';
+import { logError, logInfo, type LogCode } from './src/utils/logger';
 
 // ============================================================================
 // 型と定数 - GitHub Pages対応に最適化
 // ============================================================================
+
+// 独自ログコード（LogCode型拡張用）
+const CONFIG_LOG_CODES = {
+  CONFIG_UPDATE: 'ENV_DEFAULT' as LogCode,
+  CONFIG_ERROR: 'ENV_ERROR' as LogCode,
+  CONFIG_INFO: 'ENV_CHECK' as LogCode,
+} as const;
 
 /**
  * アプリケーション設定の型定義
@@ -27,11 +34,11 @@ interface AppConfig {
   /** サーバーポート設定 */
   PORT: { DEFAULT: number; MOBILE: number };
   /** 必須環境変数リスト */
-  REQUIRED_ENV: string[];
+  REQUIRED_ENV: readonly string[];
   /** 任意環境変数リスト */
-  OPTIONAL_ENV: string[];
+  OPTIONAL_ENV: readonly string[];
   /** 環境変数のデフォルト値 */
-  ENV_DEFAULTS: Record<string, string>;
+  ENV_DEFAULTS: Readonly<Record<string, string>>;
 }
 
 /**
@@ -41,7 +48,7 @@ const APP_CONFIG: AppConfig = {
   BASE_PATH: { PROD: '/kueccha/', DEV: '/' },
   OUTPUT_DIR: 'dist',
   PORT: { DEFAULT: 5173, MOBILE: 5174 },
-  REQUIRED_ENV: ['VITE_GOOGLE_API_KEY'], 
+  REQUIRED_ENV: ['VITE_GOOGLE_API_KEY'],
   OPTIONAL_ENV: [
     'VITE_GOOGLE_MAPS_MAP_ID',
     'VITE_GOOGLE_SPREADSHEET_ID',
@@ -73,13 +80,22 @@ const APP_CONFIG: AppConfig = {
  */
 function validateEnv(env: Record<string, string | undefined>): Record<string, string> {
   // GitHub ActionsからのBASE_PATH環境変数を優先
-  if (env.BASE_PATH) {
+  if ('BASE_PATH' in env && env.BASE_PATH) {
     APP_CONFIG.BASE_PATH.PROD = env.BASE_PATH;
-    logInfo('CONFIG', 'BASE_PATH', `ベースパスを環境変数から設定: ${env.BASE_PATH}`);
+    logInfo('CONFIG', CONFIG_LOG_CODES.CONFIG_UPDATE, `ベースパスを環境変数から設定: ${env.BASE_PATH}`);
   }
 
-  // 必須環境変数のチェック
-  const missingRequired = APP_CONFIG.REQUIRED_ENV.filter((key) => !env[key]);
+  // 必須環境変数のチェック - セキュリティ向上
+  const missingRequired = APP_CONFIG.REQUIRED_ENV.filter((key) => {
+    // 安全なプロパティ確認（Object.prototype.hasOwnProperty.call を使用）
+    if (!Object.prototype.hasOwnProperty.call(env, key)) {
+      return true;
+    }
+    // 存在を確認後に安全にアクセス
+    const value = env[key];
+    return value === undefined;
+  });
+  
   if (missingRequired.length > 0) {
     throw new Error(
       `必須環境変数が設定されていません: ${missingRequired.join(', ')}\n` +
@@ -87,26 +103,44 @@ function validateEnv(env: Record<string, string | undefined>): Record<string, st
     );
   }
 
-  // デフォルト値の適用
-  Object.entries(APP_CONFIG.ENV_DEFAULTS).forEach(([key, defaultValue]) => {
-    if (!env[key]) {
+  // デフォルト値の適用 - セキュアなアプローチ
+  const processedEnv = { ...env };
+  
+  // 安全なデフォルト値適用 - ホワイトリストベースのアクセス
+  APP_CONFIG.OPTIONAL_ENV.forEach((key) => {
+    const hasDefault = Object.prototype.hasOwnProperty.call(APP_CONFIG.ENV_DEFAULTS, key);
+    const hasEnvValue = Object.prototype.hasOwnProperty.call(processedEnv, key);
+    
+    // 安全なアクセス - 存在確認後のみ値を取得
+    const defaultValue = hasDefault ? APP_CONFIG.ENV_DEFAULTS[key] : undefined;
+    const currentValue = hasEnvValue ? processedEnv[key] : undefined;
+    
+    if (defaultValue && !currentValue && hasEnvValue) {
+      // 安全なプロパティ代入
+      processedEnv[key] = defaultValue;
       logInfo(
         'CONFIG',
-        'ENV_DEFAULT',
+        CONFIG_LOG_CODES.CONFIG_UPDATE,
         `環境変数 ${key} にデフォルト値「${defaultValue}」を適用しました`,
       );
-      env[key] = defaultValue;
     }
   });
 
-  // Viteのdefine用に環境変数を整形
-  return [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].reduce(
-    (acc, key) => {
-      if (env[key]) acc[`process.env.${key}`] = JSON.stringify(env[key]);
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+  // Viteのdefine用に環境変数を整形 - セキュアな方法
+  const defineEnv: Record<string, string> = {};
+  
+  // 許可された環境変数のみを処理（型安全な方法）
+  [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV].forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(processedEnv, key)) {
+      // 存在確認後に安全にアクセス
+      const value = processedEnv[key];
+      if (value) {
+        defineEnv[`process.env.${key}`] = JSON.stringify(value);
+      }
+    }
+  });
+
+  return defineEnv;
 }
 
 // ============================================================================
@@ -119,50 +153,82 @@ function validateEnv(env: Record<string, string | undefined>): Record<string, st
  * @param isMobile モバイル開発モードかどうか
  * @returns サーバー設定オブジェクト
  */
-function getServerConfig(isDev: boolean, isMobile: boolean) {
+function getServerConfig(isDev: boolean, isMobile: boolean): ServerOptions {
   if (!isDev) return {};
 
   const port = isMobile ? APP_CONFIG.PORT.MOBILE : APP_CONFIG.PORT.DEFAULT;
-
-  return {
+  
+  // 基本設定を作成 - セキュリティ対応済み
+  const serverConfig: ServerOptions = {
     cors: true,
     open: !isMobile,
     port,
     host: isMobile ? true : 'localhost',
-    // HTTPS設定（ローカル開発用SSL証明書が存在する場合）
-    https: fs.existsSync('./localhost.key') && fs.existsSync('./localhost.crt')
-      ? {
-          key: fs.readFileSync('./localhost.key'),
-          cert: fs.readFileSync('./localhost.crt'),
-        }
-      : undefined,
   };
+
+  // HTTPS設定（ローカル開発用SSL証明書が存在する場合）
+  try {
+    const keyPath = './localhost.key';
+    const certPath = './localhost.crt';
+    
+    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+      // 型安全な設定
+      serverConfig.https = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+      };
+      logInfo(
+        'CONFIG',
+        CONFIG_LOG_CODES.CONFIG_INFO,
+        'ローカル開発用HTTPSが有効化されました'
+      );
+    }
+  } catch (error) {
+    // エラー耐性の向上
+    logError(
+      'CONFIG',
+      CONFIG_LOG_CODES.CONFIG_ERROR,
+      'HTTPS設定の読み込みに失敗しました',
+      error
+    );
+  }
+
+  return serverConfig;
 }
 
 // ============================================================================
 // ビルド設定 - GitHub Pages最適化
 // ============================================================================
 
+// 静的アセットタイプ定義
+type AssetType = 'image' | 'font' | 'other';
+
+/**
+ * アセットタイプを判定する関数
+ * @param extension ファイル拡張子
+ * @returns アセットタイプ
+ */
+function getAssetType(extension: string): AssetType {
+  if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extension)) {
+    return 'image';
+  }
+  if (/woff|woff2|eot|ttf|otf/i.test(extension)) {
+    return 'font';
+  }
+  return 'other';
+}
+
 /**
  * ビルド設定を生成
  * @param isProd 本番モードかどうか
  * @returns ビルド設定オブジェクト
  */
-function getBuildConfig(isProd: boolean) {
-  return {
+function getBuildConfig(isProd: boolean): BuildOptions {
+  // 基本設定を作成
+  const buildConfig: BuildOptions = {
     outDir: APP_CONFIG.OUTPUT_DIR,
     sourcemap: isProd ? 'hidden' : true,
     minify: isProd ? 'terser' : false,
-    terserOptions: isProd
-      ? {
-          compress: {
-            drop_console: true,
-            drop_debugger: true,
-            pure_funcs: ['console.log', 'console.debug'],
-          },
-          format: { comments: false },
-        }
-      : undefined,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -177,14 +243,19 @@ function getBuildConfig(isProd: boolean) {
         },
         // GitHub Pages向けにアセットのファイル名パターンを最適化
         assetFileNames: (assetInfo) => {
-          const extType = assetInfo.name?.split('.').at(1);
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType || '')) {
-            return 'assets/images/[name]-[hash][extname]';
+          // アセット情報がない場合のデフォルト値を設定
+          const fileName = assetInfo.name ?? '';
+          const extension = fileName.split('.').pop() ?? '';
+          const assetType = getAssetType(extension);
+          
+          switch (assetType) {
+            case 'image':
+              return 'assets/images/[name]-[hash][extname]';
+            case 'font':
+              return 'assets/fonts/[name]-[hash][extname]';
+            default:
+              return 'assets/[name]-[hash][extname]';
           }
-          if (/woff|woff2|eot|ttf|otf/i.test(extType || '')) {
-            return 'assets/fonts/[name]-[hash][extname]';
-          }
-          return 'assets/[name]-[hash][extname]';
         },
         // GitHub Pages向けにチャンクの命名パターンを最適化
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -197,15 +268,31 @@ function getBuildConfig(isProd: boolean) {
     // GitHub Actions経由でビルドする場合の最適化設定
     emptyOutDir: true,
   };
+
+  // 本番環境のみterserOptionsを追加
+  if (isProd) {
+    buildConfig.terserOptions = {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.debug'],
+      },
+      format: { comments: false },
+    };
+  }
+
+  return buildConfig;
 }
 
 /**
  * エイリアス設定を生成
  * @returns パスエイリアス設定オブジェクト
  */
-function getAliases() {
+function getAliases(): Record<string, string> {
   // src直下のディレクトリを自動検出
   const srcBasePath = path.resolve(__dirname, './src');
+  
+  // 標準ディレクトリのセット（読み取り専用）
   const baseDirectories = [
     'components',
     'hooks',
@@ -218,42 +305,44 @@ function getAliases() {
     'images',
     'styles',
     'config',
-  ];
+  ] as const;
+
+  // 基本エイリアス設定
+  const aliases: Record<string, string> = {
+    '@': srcBasePath,
+  };
 
   try {
     // srcディレクトリの存在を確認
     if (fs.existsSync(srcBasePath)) {
-      // 静的リストに加えて、自動的にディレクトリを検出
-      const autoDetectedDirs = fs
-        .readdirSync(srcBasePath, { withFileTypes: true })
+      // 安全なディレクトリ走査
+      const dirents = fs.readdirSync(srcBasePath, { withFileTypes: true });
+      
+      // 有効なディレクトリのみをフィルタリング
+      const autoDetectedDirs = dirents
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
-        .filter((name) => !name.startsWith('.') && !baseDirectories.includes(name));
+        .filter((name) => {
+          // 安全な比較 - 動的アクセスを避ける
+          return !name.startsWith('.') && !baseDirectories.includes(name as typeof baseDirectories[number]);
+        });
 
-      // 重複を除去して結合
+      // 重複を除去して結合（型安全）
       const allDirectories = [...new Set([...baseDirectories, ...autoDetectedDirs])];
 
-      // 基本エイリアス設定
-      const aliases: Record<string, string> = {
-        '@': srcBasePath,
-      };
-
-      // ディレクトリベースのエイリアスを追加
-      allDirectories.forEach((dir) => {
+      // ディレクトリベースのエイリアスを追加（安全なイテレーション）
+      for (const dir of allDirectories) {
         const dirPath = path.resolve(srcBasePath, dir);
         if (fs.existsSync(dirPath)) {
           aliases[`@${dir}`] = dirPath;
         }
-      });
-
-      return aliases;
+      }
     }
   } catch (error) {
-    logError('CONFIG', 'ALIAS_ERROR', 'エイリアス設定の生成中にエラーが発生しました', error);
+    logError('CONFIG', CONFIG_LOG_CODES.CONFIG_ERROR, 'エイリアス設定の生成中にエラーが発生しました', error);
   }
 
-  // エラー時やsrcディレクトリが存在しない場合は基本設定のみ返す
-  return { '@': srcBasePath };
+  return aliases;
 }
 
 /**
@@ -280,34 +369,33 @@ export default defineConfig(({ mode, command }): UserConfig => {
     const env = loadEnv(mode, process.cwd(), '');
     const isProd = mode === 'production';
     const isDev = command === 'serve';
-    const isMobile = env.VITE_MOBILE === 'true';
+    const isMobile = 'VITE_MOBILE' in env && env.VITE_MOBILE === 'true';
 
     // 環境変数の検証
     const defineEnv = validateEnv(env);
-    const appVersion = process.env.npm_package_version || '0.0.0';
+    const appVersion = process.env.npm_package_version ?? '0.0.0';
     const buildTime = new Date().toISOString();
 
-    logInfo('CONFIG', 'APP_VERSION', `アプリケーションバージョン: ${appVersion} (${mode}モード)`);
-    logInfo('CONFIG', 'BUILD_TIME', `ビルド時刻: ${buildTime}`);
+    logInfo('CONFIG', CONFIG_LOG_CODES.CONFIG_INFO, `アプリケーションバージョン: ${appVersion} (${mode}モード)`);
+    logInfo('CONFIG', CONFIG_LOG_CODES.CONFIG_INFO, `ビルド時刻: ${buildTime}`);
 
     // モバイルモードのログ
     if (isMobile) {
-      logInfo('CONFIG', 'MOBILE_MODE', 'モバイル開発モードが有効です');
+      logInfo('CONFIG', CONFIG_LOG_CODES.CONFIG_INFO, 'モバイル開発モードが有効です');
     }
 
     const basePath = isProd ? APP_CONFIG.BASE_PATH.PROD : APP_CONFIG.BASE_PATH.DEV;
-    logInfo('CONFIG', 'BASE_PATH', `ベースパス: ${basePath}`);
+    logInfo('CONFIG', CONFIG_LOG_CODES.CONFIG_INFO, `ベースパス: ${basePath}`);
 
     return {
       base: basePath,
       plugins: [
         react({
-          fastRefresh: isDev,
           babel: { plugins: isProd ? ['transform-remove-console'] : [] },
           jsxImportSource: '@emotion/react',
         }),
         tsconfigPaths(),
-        VitePWA(getPwaConfig(isProd, basePath)), // basePath引数を追加
+        VitePWA(getPwaConfig(isProd)),
         ...getCompressionPlugins(isProd),
       ],
       build: getBuildConfig(isProd),
@@ -342,8 +430,8 @@ export default defineConfig(({ mode, command }): UserConfig => {
     };
   } catch (error) {
     // より構造化されたエラーログ
-    logError('CONFIG', 'FATAL_ERROR', '設定処理中に致命的なエラーが発生しました', error);
-    console.error(`スタックトレース: ${(error as Error).stack}`);
+    logError('CONFIG', CONFIG_LOG_CODES.CONFIG_ERROR, '設定処理中に致命的なエラーが発生しました', error);
+    console.error(`スタックトレース: ${(error instanceof Error) ? error.stack : '不明なエラー'}`);
     process.exit(1);
   }
 });

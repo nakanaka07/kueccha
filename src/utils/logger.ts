@@ -7,8 +7,13 @@
 
 // ログレベルの定義
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
-type LogCategory = string;
-type LogCode = string;
+export type LogCategory = 'CONFIG' | 'API' | 'APP' | 'AUTH' | 'DB';
+export type LogCode =
+  | 'ENV_ERROR'
+  | 'ENV_WARNING'
+  | 'ENV_DEFAULT'
+  | 'ENV_CHECK'
+  | 'PWA_WARNING';
 type LogDetails = unknown;
 
 // 環境設定

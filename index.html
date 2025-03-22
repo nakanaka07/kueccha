@@ -3,13 +3,43 @@
   <head>
     <!-- 基本メタ情報 -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
       content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。"
     />
     <meta name="keywords" content="佐渡,飲食店,駐車場,公共トイレ,旅行,観光,佐渡で食えっちゃ,INTX" />
-    <meta name="theme-color" content="#4a6da7" />
+    
+    <!-- テーマカラー設定 - クロスブラウザ対応 -->
+    <!-- Chrome、Edge、Safari iOS 15+用 -->
+    <meta name="theme-color" content="#4a6da7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#2a4d87" media="(prefers-color-scheme: dark)" />
+
+    <!-- クロスブラウザ対応のためのフォールバック設定 -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="msapplication-TileColor" content="#4a6da7" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no,address=no,email=no" />
+
+    <!-- CSSによるテーマカラーフォールバック（すべてのブラウザ対応） -->
+    <style>
+      :root {
+        --theme-color-light: #4a6da7;
+        --theme-color-dark: #2a4d87;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: var(--theme-color-dark);
+        }
+      }
+      @media (prefers-color-scheme: light) {
+        body {
+          background-color: var(--theme-color-light);
+        }
+      }
+    </style>
+    
     <title>佐渡で食えっちゃ by INTX</title>
     <meta name="version" content="__APP_VERSION__" />
     <meta name="build-time" content="__BUILD_TIME__" />
@@ -47,6 +77,8 @@
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com data:; connect-src 'self' https://*.googleapis.com https://api.emailjs.com; worker-src 'self'; manifest-src 'self'; object-src 'none';"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(self), camera=(), microphone=()" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
 
     <!-- アイコン設定 - PWA Assets Generator完全対応 -->
     <link rel="icon" href="__BASE_PATH__favicon.ico" sizes="any" />
@@ -86,9 +118,14 @@
     <link rel="preconnect" href="https://maps.googleapis.com" crossorigin />
 
     <!-- クリティカルリソースのプリロード - 初期表示最適化 -->
-    <link rel="preload" href="__BASE_PATH__images/logos/row2.png" as="image" type="image/png" fetchpriority="high" />
+    <link
+      rel="preload"
+      href="__BASE_PATH__images/logos/row2.png"
+      as="image"
+      type="image/png"
+    />
     <link rel="preload" href="__BASE_PATH__index.css" as="style" />
-    <link rel="preload" href="__BASE_PATH__assets/js/react-vendor-*.js" as="script" crossorigin />
+    <link rel="modulepreload" href="__BASE_PATH__assets/js/react-vendor.js" crossorigin />
 
     <!-- スタイルシート -->
     <link rel="stylesheet" href="__BASE_PATH__index.css" />
@@ -115,7 +152,7 @@
   <body>
     <div id="app"></div>
     <noscript>
-      <div style="padding: 20px; text-align: center;">
+      <div style="padding: 20px; text-align: center">
         このアプリケーションを利用するにはJavaScriptを有効にしてください。
       </div>
     </noscript>
@@ -128,13 +165,26 @@
         APP_VERSION: '__APP_VERSION__',
         BUILD_TIME: '__BUILD_TIME__',
       };
-      
-      // サービスワーカー登録
+
+      // サービスワーカー登録 - エラーハンドリング強化
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('__BASE_PATH__service-worker.js').catch(error => {
-            console.error('サービスワーカー登録エラー:', error);
-          });
+          navigator.serviceWorker.register('__BASE_PATH__service-worker.js')
+            .then(registration => {
+              console.log('サービスワーカーが登録されました:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('サービスワーカー登録エラー:', error);
+            });
+        });
+      }
+
+      // パフォーマンス計測 - ユーザー体験の監視
+      if (window.performance && window.performance.mark) {
+        window.performance.mark('app-init-start');
+        document.addEventListener('DOMContentLoaded', () => {
+          window.performance.mark('dom-ready');
+          window.performance.measure('dom-loading', 'app-init-start', 'dom-ready');
         });
       }
     </script>

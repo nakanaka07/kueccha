@@ -1,4 +1,3 @@
-
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
@@ -8,6 +7,11 @@
     "moduleResolution": "bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2022", "WebWorker"],
     "jsx": "react-jsx",
+
+    // 追加の最適化設定
+    "importHelpers": true, // バンドルサイズ削減
+    "moduleDetection": "force", // 全ファイルをモジュールとして扱い型安全性向上
+    "verbatimModuleSyntax": true, // 型のみのインポート最適化
 
     // 型チェック (厳格モード) - 品質向上のために最適化
     "strict": true,
@@ -49,17 +53,17 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*", 
-    "vite.config.ts", 
-    "env.d.ts", 
-    "css.d.ts", 
+    "src/**/*",
+    "vite.config.ts",
+    "env.d.ts",
+    "css.d.ts",
     "scripts/**/*.ts"
   ],
   "exclude": [
-    "dist", 
-    "node_modules", 
-    "**/*.spec.ts", 
-    "**/*.test.ts", 
+    "dist",
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts",
     "**/__tests__/*"
   ],
   "ts-node": {

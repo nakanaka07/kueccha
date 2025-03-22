@@ -5,7 +5,6 @@ import { getCurrentLanguage } from './i18n.constants';
 import type { PoiGenre, BusinessHourKey, MarkerDisplayOptions, Poi } from '../types/poi.types';
 import { getEnvValueAsNumber, getEnvValueAsBoolean } from '../utils/env.utils';
 
-
 // POIジャンル表示名
 export const POI_GENRE_DISPLAY_NAMES: Record<PoiGenre, Record<string, string>> = {
   restaurant: { ja: '飲食店', en: 'Restaurant' },

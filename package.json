@@ -31,7 +31,7 @@
     "reset": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune",
     "analyze": "vite build --mode analyze",
     "generate:pwa-assets": "pwa-assets-generator",
-    "predeploy": "pnpm run build:pages", 
+    "predeploy": "pnpm run build:pages",
     "deploy": "gh-pages -d dist",
     "validate:pwa": "pnpm run build:pages && ts-node scripts/validate-pwa.ts",
     "clean:cache": "rimraf .vite node_modules/.vite",
@@ -57,16 +57,18 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.0.9",
     "@vitest/ui": "^3.0.9",
-    "bundlesize": "^0.18.1",
+    "bundlesize": "^0.18.2",
     "chalk": "^5.4.1",
     "cross-env": "^7.0.3",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
+    "eslint-import-resolver-typescript": "4.2.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "gh-pages": "^6.1.1",
+    "eslint-plugin-security": "3.0.1",
+    "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
@@ -101,6 +103,7 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
+      "iltorb",
       "sharp"
     ]
   },
@@ -114,7 +117,7 @@
       "maxSize": "120 kB"
     },
     {
-      "path": "./dist/assets/js/maps-vendor-*.js", 
+      "path": "./dist/assets/js/maps-vendor-*.js",
       "maxSize": "150 kB"
     },
     {

@@ -100,9 +100,9 @@ const RenderWithErrorHandling: React.FC = () => {
         setSWRegistered(true);
       }
     };
-    
+
     setupServiceWorker();
-    
+
     // クリーンアップ（必要に応じて）
     return () => {
       // PWA関連リソースのクリーンアップ
@@ -195,7 +195,7 @@ if (document.readyState === 'loading') {
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window.deferredPrompt = e;
-  
+
   // GitHub Pagesのアナリティクスにインストールプロンプト表示を記録（必要に応じて）
   if (!isDevelopment && APP_CONFIG.ANALYTICS_ENABLED) {
     try {

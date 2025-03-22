@@ -1,6 +1,6 @@
 /**
  * Prettier設定 - GitHub Pages最適化版
- * 
+ *
  * コード最適化ガイドラインに沿った設定:
  * - 一貫したコーディングスタイルを強制
  * - 可読性とメンテナンス性の向上
@@ -15,16 +15,20 @@ module.exports = {
   singleQuote: true,
   trailingComma: 'all',
   bracketSpacing: true,
-  
+
   // JSX関連設定 - React 19との互換性確保
   jsxSingleQuote: false,
   jsxBracketSameLine: false,
-  
+
   // 特殊設定
   arrowParens: 'always',
   endOfLine: 'lf', // Git LF標準化
   embeddedLanguageFormatting: 'auto',
-  
+
+  // 大規模ファイル処理の最適化
+  rangeStart: 0,
+  rangeEnd: Infinity,
+
   // ファイルタイプごとの上書き設定
   overrides: [
     {
@@ -47,6 +51,21 @@ module.exports = {
       files: ['*.css', '*.scss'],
       options: {
         singleQuote: false,
+      },
+    },
+    {
+      // HTMLファイル - SEO最適化用
+      files: ['*.html'],
+      options: {
+        printWidth: 120,
+        htmlWhitespaceSensitivity: 'css',
+      },
+    },
+    {
+      // Tailwind対応
+      files: ['*.{js,jsx,ts,tsx}'],
+      options: {
+        plugins: ['prettier-plugin-tailwindcss'], // Tailwindプラグインを使用する場合
       },
     },
   ],

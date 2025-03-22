@@ -12,7 +12,6 @@ import type { MapComponentProps } from '../types/ui.types';
 import { createError } from '../utils/errors.utils';
 import { logError } from '../utils/logger';
 
-
 if (!(MapConstants.Config.apiKey && MapConstants.Config.mapId)) {
   throw createError('MAP', 'CONFIG_ERROR', ERROR_MESSAGES.MAP.CONFIG_MISSING);
 }

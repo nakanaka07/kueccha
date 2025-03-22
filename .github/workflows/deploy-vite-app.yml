@@ -177,7 +177,7 @@ jobs:
         run: |
           echo "ビルド出力サイズ分析:"
           du -h -d 1 dist/ | sort -hr
-          
+
           echo "最も大きいファイル TOP 5:"
           find dist -type f -not -path "*/\.*" -exec du -h {} \; | sort -hr | head -n 5
 
@@ -205,10 +205,10 @@ jobs:
         run: |
           DEPLOY_URL="${{ steps.deployment.outputs.page_url }}"
           echo "✓ デプロイ完了: $DEPLOY_URL"
-          
+
           # 包括的なデプロイ検証
           echo "デプロイ検証を実行中..."
-          
+
           # 基本アクセス確認
           if curl -sSfL "$DEPLOY_URL" > /tmp/index.html; then
             echo "✓ メインページアクセス: 成功"
