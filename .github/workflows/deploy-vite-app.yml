@@ -35,7 +35,10 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # 最初に --no-frozen-lockfile でロックファイルを更新し、それから通常のインストールを実行
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm install
 
       # リポジトリ名から動的にBASE_PATHを設定
       - name: Extract repository name
