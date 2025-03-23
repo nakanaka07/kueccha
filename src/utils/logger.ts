@@ -4,35 +4,42 @@
  * サーバー側のロガーとの一貫性を保ちつつ、ブラウザ環境でも動作するよう設計。
  * 環境変数を通じてログレベルを制御し、開発/本番環境で適切な出力形式を提供します。
  */
+import type { LogCategory, LogCode } from '../types/logging';
 
 // ログレベルの定義
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
-export type LogCategory = 'CONFIG' | 'API' | 'APP' | 'AUTH' | 'DB';
-export type LogCode =
-  | 'ENV_ERROR'
-  | 'ENV_WARNING'
-  | 'ENV_DEFAULT'
-  | 'ENV_CHECK'
-  | 'PWA_WARNING';
 type LogDetails = unknown;
 
 // 環境設定
 const IS_DEV = import.meta.env.MODE === 'development';
-const LOG_LEVEL = (import.meta.env.VITE_LOG_LEVEL || 'info').toLowerCase() as LogLevel;
+const LOG_LEVEL = (import.meta.env.VITE_LOG_LEVEL ?? 'info').toLowerCase();
 
-// ログレベルの優先順位
-const LOG_LEVELS: Record<LogLevel, number> = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  debug: 3,
-};
+// ログレベルの優先順位マップ
+const LOG_LEVEL_ERROR = 0;
+const LOG_LEVEL_WARN = 1;
+const LOG_LEVEL_INFO = 2;
+const LOG_LEVEL_DEBUG = 3;
+
+/**
+ * ログレベル文字列を数値に変換する関数
+ */
+function getLogLevelValue(level: string): number {
+  switch (level) {
+    case 'error': return LOG_LEVEL_ERROR;
+    case 'warn': return LOG_LEVEL_WARN;
+    case 'info': return LOG_LEVEL_INFO;
+    case 'debug': return LOG_LEVEL_DEBUG;
+    default: return LOG_LEVEL_INFO; // デフォルトは info
+  }
+}
 
 /**
  * 指定されたレベルのログを出力すべきかを判断
  */
 function shouldLog(level: LogLevel): boolean {
-  return LOG_LEVELS[level] <= LOG_LEVELS[LOG_LEVEL];
+  const currentLevelValue = getLogLevelValue(LOG_LEVEL);
+  const requestedLevelValue = getLogLevelValue(level);
+  return requestedLevelValue <= currentLevelValue;
 }
 
 /**
@@ -57,15 +64,41 @@ function log(
     environment: import.meta.env.MODE,
   };
 
+  const logMessage = `[${logData.timestamp}] ${level.toUpperCase()} [${category}:${code}]: ${message}`;
+  const detailsObj = details !== undefined ? { details } : {};
+  
   if (IS_DEV) {
     // 開発環境: 読みやすいフォーマット
-    console[level](
-      `[${logData.timestamp}] ${level.toUpperCase()} [${category}:${code}]: ${message}`,
-      details !== undefined ? { details } : '',
-    );
+    switch (level) {
+      case 'error':
+        console.error(logMessage, detailsObj);
+        break;
+      case 'warn':
+        console.warn(logMessage, detailsObj);
+        break;
+      case 'info':
+        console.info(logMessage, detailsObj);
+        break;
+      case 'debug':
+        // デバッグ情報は info レベルで出力
+        console.info(`[DEBUG] ${logMessage}`, detailsObj);
+        break;
+    }
   } else {
     // 本番環境: JSON形式（収集/分析しやすい）
-    console[level](JSON.stringify(logData));
+    switch (level) {
+      case 'error':
+        console.error(JSON.stringify(logData));
+        break;
+      case 'warn':
+        console.warn(JSON.stringify(logData));
+        break;
+      case 'info':
+      case 'debug':
+        // debug も info として扱う
+        console.info(JSON.stringify(logData));
+        break;
+    }
   }
 }
 

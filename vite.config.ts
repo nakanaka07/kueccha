@@ -10,7 +10,8 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // PWA設定とロガーをインポート
 import { getPwaConfig } from './src/config/pwa.config';
-import { logError, logInfo, type LogCode } from './src/utils/logger';
+import type { LogCode } from './src/types/logging';
+import { logError, logInfo } from './src/utils/logger';
 
 // ============================================================================
 // 型と定数 - GitHub Pages対応に最適化
@@ -39,6 +40,12 @@ interface AppConfig {
   OPTIONAL_ENV: readonly string[];
   /** 環境変数のデフォルト値 */
   ENV_DEFAULTS: Readonly<Record<string, string>>;
+  /** 現在の環境 */
+  ENV: 'development' | 'production';
+  /** テレメトリ収集の有効化フラグ */
+  TELEMETRY_ENABLED: boolean;
+  /** アナリティクス収集の有効化フラグ */
+  ANALYTICS_ENABLED: boolean;
 }
 
 /**
@@ -66,6 +73,10 @@ const APP_CONFIG: AppConfig = {
     VITE_DEFAULT_CENTER_LNG: '138.3716',
     VITE_APP_TITLE: '佐渡で食えっちゃ',
   },
+  // 追加するプロパティ（デフォルト値）
+  ENV: 'development',
+  TELEMETRY_ENABLED: false,
+  ANALYTICS_ENABLED: false,
 };
 
 // ============================================================================
@@ -371,6 +382,11 @@ export default defineConfig(({ mode, command }): UserConfig => {
     const isDev = command === 'serve';
     const isMobile = 'VITE_MOBILE' in env && env.VITE_MOBILE === 'true';
 
+    // 環境に応じて動的に設定
+    APP_CONFIG.ENV = isProd ? 'production' : 'development';
+    APP_CONFIG.TELEMETRY_ENABLED = isProd;
+    APP_CONFIG.ANALYTICS_ENABLED = isProd;
+    
     // 環境変数の検証
     const defineEnv = validateEnv(env);
     const appVersion = process.env.npm_package_version ?? '0.0.0';

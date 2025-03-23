@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { LogCategory, LogCode } from '../src/types/logging';
+
 // 設定を直接定義して依存関係を削減
 const APP_CONFIG = {
   REQUIRED_ENV: ['VITE_GOOGLE_API_KEY'] as const,
@@ -31,9 +33,10 @@ type ValidEnvKeys = RequiredEnvKeys | OptionalEnvKeys;
 // 有効な環境変数キーのリストを定義
 const VALID_ENV_KEYS = [...APP_CONFIG.REQUIRED_ENV, ...APP_CONFIG.OPTIONAL_ENV];
 
-// 型定義
-type LogCategory = 'CONFIG' | 'ENV' | 'PWA';
-type LogCode = 'ENV_ERROR' | 'ENV_WARNING' | 'ENV_DEFAULT' | 'ENV_CHECK' | 'PWA_WARNING';
+// キーが有効な環境変数キーかどうかを判定する型ガード関数
+function isValidEnvKey(key: string): key is ValidEnvKeys {
+  return VALID_ENV_KEYS.includes(key as ValidEnvKeys);
+}
 
 // セーフなenv値取得関数
 function safeGetEnvValue(env: Record<string, string | undefined>, key: string): string | undefined {
@@ -50,11 +53,6 @@ function safeSetEnvValue(env: Record<string, string | undefined>, key: string, v
     // eslint-disable-next-line security/detect-object-injection
     env[key] = value;
   }
-}
-
-// キーが有効な環境変数キーかどうかを判定する型ガード関数
-function isValidEnvKey(key: string): key is ValidEnvKeys {
-  return VALID_ENV_KEYS.includes(key as ValidEnvKeys);
 }
 
 // シンプルなロガー実装
