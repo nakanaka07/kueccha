@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useGoogleMaps } from '@hooks/useGoogleMaps';
-import { MapContainer } from '@components/map-container';
+import { MapContainer } from '@/components/MapContainer';
 import { validateEnv } from '@utils/env';
 
 /**
