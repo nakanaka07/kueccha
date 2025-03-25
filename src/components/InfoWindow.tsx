@@ -99,10 +99,10 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onClose, onViewDetails }) 
         {/* カテゴリとジャンル */}
         <div className='info-section'>
           {poi.categories?.map((category, index) => (
-              <span key={index} className={getCategoryClass(category)}>
-                {category}
-              </span>
-            ))}
+            <span key={index} className={getCategoryClass(category)}>
+              {category}
+            </span>
+          ))}
           {poi.genre && <p className='genre'>{poi.genre}</p>}
         </div>
 

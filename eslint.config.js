@@ -7,13 +7,7 @@ import a11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
 
 // 共通の除外パターン
-const commonIgnores = [
-  'node_modules/**',
-  'dist/**',
-  'dev-dist/**',
-  'coverage/**',
-  '.git/**',
-];
+const commonIgnores = ['node_modules/**', 'dist/**', 'dev-dist/**', 'coverage/**', '.git/**'];
 
 // 設定ファイルパターン（型チェックから除外する）
 const configFiles = [
@@ -38,25 +32,25 @@ export default tseslint.config(
       reportUnusedDisableDirectives: true,
     },
     rules: {
-      ...eslint.configs.recommended.rules
-    }
+      ...eslint.configs.recommended.rules,
+    },
   },
-  
+
   // TypeScript基本設定（型チェックなし）
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
+    ignores: commonIgnores,
     extends: [tseslint.configs.recommended],
   },
-  
+
   // TypeScript型チェック設定
   {
     files: ['**/*.{ts,tsx}'],
     ignores: [
+      ...commonIgnores,
       ...configFiles,
       'env.d.ts',
       '**/*.d.ts', // すべての型定義ファイルを除外
-      'dev-dist/**',
-      'dist/**',
     ],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
@@ -71,10 +65,11 @@ export default tseslint.config(
       '@typescript-eslint': tseslint.plugin,
     },
   },
-  
+
   // React、JSX、その他のルール設定
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: commonIgnores,
     plugins: {
       '@typescript-eslint': tseslint.plugin,
       react: react,
@@ -99,8 +94,8 @@ export default tseslint.config(
       // importリゾルバーの設定を修正 - typescriptリゾルバーを無効化
       'import/resolver': {
         node: {
-          extensions: ['.js', '.jsx', '.ts', '.tsx']
-        }
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
       },
     },
     rules: {
@@ -166,10 +161,11 @@ export default tseslint.config(
       '@typescript-eslint/prefer-optional-chain': 'warn',
     },
   },
-  
+
   // テストファイル用の特別な設定
   {
     files: ['**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
+    ignores: commonIgnores,
     plugins: {
       '@typescript-eslint': tseslint.plugin,
     },
@@ -181,14 +177,12 @@ export default tseslint.config(
       complexity: 'off',
     },
   },
-  
+
   // 設定ファイルとビルド生成物用の設定
   {
-    files: [
-      ...configFiles,
-      'dev-dist/**',
-      'dist/**',
-    ],
+    files: [...configFiles, 'dist/**'],
+    // dev-distは共通の除外パターンに含まれているので、ここには含めない
+    ignores: commonIgnores,
     plugins: {
       '@typescript-eslint': tseslint.plugin,
     },
@@ -208,6 +202,7 @@ export default tseslint.config(
   // 型定義ファイル専用の設定（型チェックルールを無効化）
   {
     files: ['**/*.d.ts'],
+    ignores: commonIgnores,
     rules: {
       // 型情報を必要とするルールをすべて無効化
       '@typescript-eslint/no-floating-promises': 'off',
@@ -220,7 +215,7 @@ export default tseslint.config(
       '@typescript-eslint/return-await': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
       '@typescript-eslint/unbound-method': 'off',
-      '@typescript-eslint/no-unused-vars': 'off'
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   }
 );

@@ -20,7 +20,7 @@
     "test:coverage": "vitest run --coverage",
     "test:a11y": "echo 'Running accessibility tests' && exit 0",
     "prepare": "husky install",
-    "reset": "rimraf node_modules pnpm-lock.yaml dist && pnpm store prune"
+    "reset": "rimraf node_modules pnpm-lock.yaml dist dev-dist stats.html && pnpm store prune"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
