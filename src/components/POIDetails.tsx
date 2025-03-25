@@ -3,24 +3,12 @@ import { PointOfInterest } from '@/types/poi';
 import { formatWeekdaySchedule } from '@utils/markerUtils';
 import '@/global.css';
 
-// インデックスシグネチャを追加した型
-type WeekdayFields = {
-  [key: `${string}定休日`]: boolean;
-};
-
-type CategoryFields = {
-  和食カテゴリー?: boolean;
-  洋食カテゴリー?: boolean;
-  その他カテゴリー?: boolean;
-  販売カテゴリー?: boolean;
-};
-
 interface POIDetailsProps {
   /**
    * 表示対象のPOI情報
    */
-  poi: PointOfInterest & WeekdayFields & CategoryFields;
-  
+  poi: PointOfInterest;
+
   /**
    * 詳細画面を閉じるときのコールバック
    */
@@ -36,51 +24,48 @@ const POIDetails: React.FC<POIDetailsProps> = ({ poi, onClose }) => {
 
   // 営業曜日の配列
   const weekdays = ['月曜', '火曜', '水曜', '木曜', '金曜', '土曜', '日曜', '祝祭'];
-  
+
   // 営業時間の整形
   const formattedSchedule = formatWeekdaySchedule(poi);
-  
-  // 緯度経度の形式チェック（有効な数値かどうか）
-  const hasValidCoordinates = typeof poi.lat === 'number' && 
-                              typeof poi.lng === 'number' && 
-                              !isNaN(poi.lat) && 
-                              !isNaN(poi.lng);
 
-  // カテゴリー情報の処理
-  const categories = [];
-  if (poi.和食カテゴリー) categories.push('和食');
-  if (poi.洋食カテゴリー) categories.push('洋食');
-  if (poi.その他カテゴリー) categories.push('その他');
-  if (poi.販売カテゴリー) categories.push('販売');
+  // 緯度経度の形式チェック（有効な数値かどうか）
+  const hasValidCoordinates =
+    typeof poi.lat === 'number' &&
+    typeof poi.lng === 'number' &&
+    !isNaN(poi.lat) &&
+    !isNaN(poi.lng);
+
+  // カテゴリー情報の処理を修正 - poi.categories を使用
+  const categories = poi.categories || [];
 
   return (
-    <div className="poi-details-container">
+    <div className='poi-details-container'>
       {/* ヘッダー部分 */}
-      <div className="poi-details-header">
-        <h2 className="poi-name">
-          {poi.isClosed && <span className="closed-label">閉店</span>}
+      <div className='poi-details-header'>
+        <h2 className='poi-name'>
+          {poi.isClosed && <span className='closed-label'>閉店</span>}
           {poi.name}
         </h2>
-        <button className="close-button" onClick={onClose} aria-label="閉じる">
+        <button className='close-button' onClick={onClose} aria-label='閉じる'>
           ×
         </button>
       </div>
 
       {/* タブナビゲーション */}
-      <div className="poi-tabs">
-        <button 
+      <div className='poi-tabs'>
+        <button
           className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
           onClick={() => setActiveTab('info')}
         >
           基本情報
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'hours' ? 'active' : ''}`}
           onClick={() => setActiveTab('hours')}
         >
           営業時間
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
@@ -90,56 +75,58 @@ const POIDetails: React.FC<POIDetailsProps> = ({ poi, onClose }) => {
 
       {/* 基本情報タブ */}
       {activeTab === 'info' && (
-        <div className="poi-tab-content">
+        <div className='poi-tab-content'>
           {poi.genre && (
-            <div className="info-row">
-              <span className="info-label">ジャンル:</span>
-              <span className="info-value">{poi.genre}</span>
+            <div className='info-row'>
+              <span className='info-label'>ジャンル:</span>
+              <span className='info-value'>{poi.genre}</span>
             </div>
           )}
-          
+
           {categories.length > 0 && (
-            <div className="info-row">
-              <span className="info-label">カテゴリ:</span>
-              <span className="info-value">{categories.join(', ')}</span>
+            <div className='info-row'>
+              <span className='info-label'>カテゴリ:</span>
+              <span className='info-value'>{categories.join(', ')}</span>
             </div>
           )}
-          
+
           {poi.address && (
-            <div className="info-row">
-              <span className="info-label">住所:</span>
-              <span className="info-value">{poi.address}</span>
+            <div className='info-row'>
+              <span className='info-label'>住所:</span>
+              <span className='info-value'>{poi.address}</span>
             </div>
           )}
-          
+
           {poi.問い合わせ && poi.問い合わせ !== '情報なし' && (
-            <div className="info-row">
-              <span className="info-label">連絡先:</span>
-              <span className="info-value">
+            <div className='info-row'>
+              <span className='info-label'>連絡先:</span>
+              <span className='info-value'>
                 <a href={`tel:${poi.問い合わせ}`}>{poi.問い合わせ}</a>
               </span>
             </div>
           )}
-          
+
           {poi.関連情報 && poi.関連情報 !== '情報なし' && (
-            <div className="info-row">
-              <span className="info-label">関連情報:</span>
-              <div className="info-value links-container">
+            <div className='info-row'>
+              <span className='info-label'>関連情報:</span>
+              <div className='info-value links-container'>
                 {poi.関連情報.split('\n').map((link, index) => {
                   if (link.startsWith('http')) {
-                    const label = 
-                      link.includes('instagram') ? 'Instagram' :
-                      link.includes('facebook') ? 'Facebook' :
-                      link.includes('visitsado') ? '佐渡観光サイト' :
-                      '公式サイト';
-                    
+                    const label = link.includes('instagram')
+                      ? 'Instagram'
+                      : link.includes('facebook')
+                        ? 'Facebook'
+                        : link.includes('visitsado')
+                          ? '佐渡観光サイト'
+                          : '公式サイト';
+
                     return (
-                      <a 
-                        key={index} 
-                        href={link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="external-link"
+                      <a
+                        key={index}
+                        href={link}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='external-link'
                       >
                         {label}
                       </a>
@@ -150,14 +137,14 @@ const POIDetails: React.FC<POIDetailsProps> = ({ poi, onClose }) => {
               </div>
             </div>
           )}
-          
+
           {poi['Google マップで見る'] && poi['Google マップで見る'] !== '情報なし' && (
-            <div className="info-row">
-              <a 
-                href={poi['Google マップで見る']} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="google-maps-link"
+            <div className='info-row'>
+              <a
+                href={poi['Google マップで見る']}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='google-maps-link'
               >
                 Google マップで見る
               </a>
@@ -168,102 +155,89 @@ const POIDetails: React.FC<POIDetailsProps> = ({ poi, onClose }) => {
 
       {/* 営業時間タブ */}
       {activeTab === 'hours' && (
-        <div className="poi-tab-content">
+        <div className='poi-tab-content'>
           {poi.営業時間 && poi.営業時間 !== '情報なし' ? (
-            <div className="hours-container">
-              <div className="info-row">
-                <span className="info-label">営業時間:</span>
-                <span className="info-value">{poi.営業時間}</span>
+            <div className='hours-container'>
+              <div className='info-row'>
+                <span className='info-label'>営業時間:</span>
+                <span className='info-value'>{poi.営業時間}</span>
               </div>
-              
-              <div className="weekday-schedule">
+
+              <div className='weekday-schedule'>
                 {weekdays.map(day => {
-                  const closedKey = `${day}定休日` as const;
-                  const isClosed = poi[closedKey];
-                  
+                  // 型安全なキャストに修正
+                  const closedKey = `${day}定休日` as keyof PointOfInterest;
+                  const isClosed = poi[closedKey] as boolean | undefined;
+
                   return (
-                    <div 
-                      key={day} 
-                      className={`weekday-row ${isClosed ? 'closed-day' : ''}`}
-                    >
-                      <span className="weekday-name">{day}:</span>
-                      <span className="weekday-hours">
-                        {isClosed
-                          ? '定休日'
-                          : formattedSchedule[day] || '情報なし'}
+                    <div key={day} className={`weekday-row ${isClosed ? 'closed-day' : ''}`}>
+                      <span className='weekday-name'>{day}:</span>
+                      <span className='weekday-hours'>
+                        {isClosed ? '定休日' : formattedSchedule[day] || '情報なし'}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              
+
               {poi.定休日について && poi.定休日について !== '情報なし' && (
-                <div className="info-row holiday-note">
-                  <span className="info-label">備考:</span>
-                  <span className="info-value">{poi.定休日について}</span>
+                <div className='info-row holiday-note'>
+                  <span className='info-label'>備考:</span>
+                  <span className='info-value'>{poi.定休日について}</span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="no-info-message">
-              営業時間情報は登録されていません
-            </div>
+            <div className='no-info-message'>営業時間情報は登録されていません</div>
           )}
         </div>
       )}
 
       {/* 地図タブ */}
       {activeTab === 'map' && (
-        <div className="poi-tab-content map-container">
+        <div className='poi-tab-content map-container'>
           {hasValidCoordinates ? (
-            <div className="map-frame">
+            <div className='map-frame'>
               <iframe
                 title={`${poi.name}の地図`}
-                width="100%"
-                height="250"
-                frameBorder="0"
+                width='100%'
+                height='250'
+                frameBorder='0'
                 src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${poi.lat},${poi.lng}&zoom=16`}
                 allowFullScreen
               ></iframe>
             </div>
           ) : (
-            <div className="no-map-message">
-              地図情報が利用できません
-            </div>
+            <div className='no-map-message'>地図情報が利用できません</div>
           )}
-          
+
           {poi.address && (
-            <div className="address-container">
-              <span className="address-label">住所:</span>
-              <span className="address-value">{poi.address}</span>
+            <div className='address-container'>
+              <span className='address-label'>住所:</span>
+              <span className='address-value'>{poi.address}</span>
             </div>
           )}
         </div>
       )}
 
       {/* フッター部分 */}
-      <div className="poi-details-footer">
+      <div className='poi-details-footer'>
         {poi.isClosed ? (
-          <div className="closed-notice">
-            この施設は閉店/閉鎖しています
-          </div>
+          <div className='closed-notice'>この施設は閉店/閉鎖しています</div>
         ) : (
-          <div className="actions-container">
+          <div className='actions-container'>
             {hasValidCoordinates && (
-              <a 
+              <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${poi.lat},${poi.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="directions-button"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='directions-button'
               >
                 ここへの道順
               </a>
             )}
             {poi.問い合わせ && poi.問い合わせ !== '情報なし' && (
-              <a 
-                href={`tel:${poi.問い合わせ}`}
-                className="call-button"
-              >
+              <a href={`tel:${poi.問い合わせ}`} className='call-button'>
                 電話をかける
               </a>
             )}

@@ -7,15 +7,15 @@ vi.mock('@react-google-maps/api', () => {
   // 実際のモック実装はテスト内で動的に変更できるようにオブジェクトを用意
   const mock = {
     GoogleMap: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid="google-map">{children}</div>
+      <div data-testid='google-map'>{children}</div>
     ),
-    Marker: () => <div data-testid="map-marker" />,
+    Marker: () => <div data-testid='map-marker' />,
     InfoWindow: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid="info-window">{children}</div>
+      <div data-testid='info-window'>{children}</div>
     ),
     useLoadScript: () => ({ isLoaded: true, loadError: null }),
   };
-  
+
   // 実際のエクスポートを返す
   return mock;
 });
@@ -23,7 +23,7 @@ vi.mock('@react-google-maps/api', () => {
 // モック設定を変更するヘルパー関数
 const updateGoogleMapsMock = (options = {}) => {
   const mockModule = vi.mocked(require('@react-google-maps/api'));
-  
+
   // オプションで指定されたプロパティで上書き
   Object.entries(options).forEach(([key, value]) => {
     mockModule[key] = value;
@@ -34,7 +34,7 @@ describe('App', () => {
   beforeEach(() => {
     // vitest のモックをリセット
     vi.resetAllMocks();
-    
+
     // 環境変数のモック
     vi.stubEnv('VITE_GOOGLE_API_KEY', 'test-api-key');
     vi.stubEnv('VITE_GOOGLE_SPREADSHEET_ID', 'test-sheet-id');
@@ -57,10 +57,10 @@ describe('App', () => {
     updateGoogleMapsMock({
       useLoadScript: () => ({ isLoaded: false, loadError: null }),
     });
-    
+
     // App コンポーネントをレンダリング
     render(<App />);
-    
+
     // 実際のテキストに合わせてテストを修正
     const loadingElement = screen.getByText('地図を読み込んでいます...');
     expect(loadingElement).toBeInTheDocument();
@@ -69,15 +69,15 @@ describe('App', () => {
   it('shows error message when map fails to load', () => {
     // モックを更新して地図の読み込みエラーをシミュレート
     updateGoogleMapsMock({
-      useLoadScript: () => ({ 
-        isLoaded: false, 
-        loadError: new Error('Failed to load Google Maps API') 
+      useLoadScript: () => ({
+        isLoaded: false,
+        loadError: new Error('Failed to load Google Maps API'),
       }),
     });
-    
+
     // App コンポーネントをレンダリング
     render(<App />);
-    
+
     // エラー状態でも同じローディングメッセージが表示されているか確認
     // 実際の実装ではエラーメッセージが特に変わっていないようなので、ローディングメッセージを確認
     const loadingElement = screen.getByText('地図を読み込んでいます...');

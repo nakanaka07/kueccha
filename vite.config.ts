@@ -13,7 +13,7 @@ function validateEnv(env: Record<string, string>): void {
   // 環境変数名を.env.exampleに合わせる
   const requiredVars = ['VITE_GOOGLE_API_KEY', 'VITE_GOOGLE_SPREADSHEET_ID'];
   const missingVars = requiredVars.filter(name => !env[name]);
-  
+
   if (missingVars.length > 0) {
     console.warn(`警告: 次の環境変数が未設定です: ${missingVars.join(', ')}`);
     console.warn('本番環境では、これらの環境変数がGitHub Secretsから自動的に取得されます');
@@ -30,13 +30,13 @@ export default defineConfig(({ mode }): UserConfig => {
   // 環境変数ロード - .envファイルまたはGitHub Actionsから注入された変数を取得
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
-  
+
   // 環境変数のバリデーション
   validateEnv(env);
 
   // GitHub PagesのベースパスはCI/CDで動的に設定
   // GitHub Actions: リポジトリ名から自動生成 (deploy-vite-app.yml参照)
-  const basePath = mode === 'development' ? '/' : (env.BASE_PATH || '/kueccha/');
+  const basePath = mode === 'development' ? '/' : env.BASE_PATH || '/kueccha/';
 
   /**
    * 依存関係の定義 - コード分割とプリロードに使用
@@ -45,11 +45,7 @@ export default defineConfig(({ mode }): UserConfig => {
     // Reactコア
     react: ['react', 'react-dom'],
     // 地図関連ライブラリ
-    maps: [
-      '@googlemaps/js-api-loader',
-      '@googlemaps/markerclusterer',
-      '@react-google-maps/api',
-    ],
+    maps: ['@googlemaps/js-api-loader', '@googlemaps/markerclusterer', '@react-google-maps/api'],
     // UIコンポーネント
     ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
     // 共通ユーティリティ
@@ -86,8 +82,12 @@ export default defineConfig(({ mode }): UserConfig => {
   // 開発サーバー用HTTPS証明書 - 本番デプロイには影響なし
   const httpsOptions = !isProd
     ? {
-        key: fs.existsSync('.local/localhost.key') ? fs.readFileSync('.local/localhost.key') : undefined,
-        cert: fs.existsSync('.local/localhost.crt') ? fs.readFileSync('.local/localhost.crt') : undefined,
+        key: fs.existsSync('.local/localhost.key')
+          ? fs.readFileSync('.local/localhost.key')
+          : undefined,
+        cert: fs.existsSync('.local/localhost.crt')
+          ? fs.readFileSync('.local/localhost.crt')
+          : undefined,
       }
     : undefined;
 
@@ -271,7 +271,7 @@ export default defineConfig(({ mode }): UserConfig => {
         target: 'esnext',
       },
     },
-    
+
     css: {
       // CSSモジュールのサポートを有効化
       modules: {

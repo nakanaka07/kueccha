@@ -10,14 +10,10 @@ interface FilterPanelProps {
 
 /**
  * POIデータのフィルタリングを行うパネルコンポーネント
- * 
+ *
  * カテゴリ、地区、営業状態、テキスト検索によるフィルタリングを提供します
  */
-const FilterPanel: React.FC<FilterPanelProps> = ({ 
-  pois, 
-  onFilterChange, 
-  className = '' 
-}) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, className = '' }) => {
   // フィルター状態
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({});
   const [districtFilters, setDistrictFilters] = useState<Record<string, boolean>>({});
@@ -37,7 +33,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
     return {
       categories: Array.from(categoriesSet).sort(),
-      districts: Array.from(districtsSet).sort()
+      districts: Array.from(districtsSet).sort(),
     };
   }, [pois]);
 
@@ -63,27 +59,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const filtered = pois.filter(poi => {
       // カテゴリフィルタ
       if (poi.category && !categoryFilters[poi.category]) return false;
-      
+
       // 地区フィルタ
       if (poi.district && !districtFilters[poi.district]) return false;
-      
+
       // 営業状態フィルタ
       if (statusFilter === 'open' && poi.isClosed) return false;
       if (statusFilter === 'closed' && !poi.isClosed) return false;
-      
+
       // テキスト検索フィルタ
       if (searchText) {
         const searchLower = searchText.toLowerCase();
         const nameMatch = poi.name?.toLowerCase().includes(searchLower);
         const addressMatch = poi.address?.toLowerCase().includes(searchLower);
         const genreMatch = poi.genre?.toLowerCase().includes(searchLower);
-        
+
         if (!(nameMatch || addressMatch || genreMatch)) return false;
       }
-      
+
       return true;
     });
-    
+
     onFilterChange(filtered);
   }, [pois, categoryFilters, districtFilters, statusFilter, searchText, onFilterChange]);
 
@@ -96,7 +92,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const handleCategoryChange = useCallback((category: string, checked: boolean) => {
     setCategoryFilters(prev => ({
       ...prev,
-      [category]: checked
+      [category]: checked,
     }));
   }, []);
 
@@ -104,27 +100,33 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const handleDistrictChange = useCallback((district: string, checked: boolean) => {
     setDistrictFilters(prev => ({
       ...prev,
-      [district]: checked
+      [district]: checked,
     }));
   }, []);
 
   // すべてのカテゴリを選択/解除するハンドラ
-  const handleToggleAllCategories = useCallback((select: boolean) => {
-    const updated: Record<string, boolean> = {};
-    categories.forEach(category => {
-      updated[category] = select;
-    });
-    setCategoryFilters(updated);
-  }, [categories]);
+  const handleToggleAllCategories = useCallback(
+    (select: boolean) => {
+      const updated: Record<string, boolean> = {};
+      categories.forEach(category => {
+        updated[category] = select;
+      });
+      setCategoryFilters(updated);
+    },
+    [categories]
+  );
 
   // すべての地区を選択/解除するハンドラ
-  const handleToggleAllDistricts = useCallback((select: boolean) => {
-    const updated: Record<string, boolean> = {};
-    districts.forEach(district => {
-      updated[district] = select;
-    });
-    setDistrictFilters(updated);
-  }, [districts]);
+  const handleToggleAllDistricts = useCallback(
+    (select: boolean) => {
+      const updated: Record<string, boolean> = {};
+      districts.forEach(district => {
+        updated[district] = select;
+      });
+      setDistrictFilters(updated);
+    },
+    [districts]
+  );
 
   // フィルタをリセットするハンドラ
   const handleResetFilters = useCallback(() => {
@@ -141,39 +143,39 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   return (
     <div className={`filter-panel ${className} ${isExpanded ? 'expanded' : 'collapsed'}`}>
-      <div className="filter-panel-header">
-        <h2 id="filter-heading">絞り込み検索</h2>
-        <button 
-          type="button"
-          className="filter-toggle-button"
+      <div className='filter-panel-header'>
+        <h2 id='filter-heading'>絞り込み検索</h2>
+        <button
+          type='button'
+          className='filter-toggle-button'
           onClick={togglePanel}
           {...{ 'aria-expanded': isExpanded ? 'true' : 'false' }}
-          aria-controls="filter-content"
+          aria-controls='filter-content'
         >
           {isExpanded ? '絞り込みを閉じる' : '絞り込みを開く'}
         </button>
       </div>
 
       {isExpanded && (
-        <div id="filter-content" className="filter-panel-content">
+        <div id='filter-content' className='filter-panel-content'>
           {/* テキスト検索 */}
-          <div className="filter-section">
-            <h3 id="keyword-search-label">キーワード検索</h3>
-            <div className="search-input-container">
+          <div className='filter-section'>
+            <h3 id='keyword-search-label'>キーワード検索</h3>
+            <div className='search-input-container'>
               <input
-                type="text"
+                type='text'
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="店名・住所・ジャンルで検索"
-                aria-labelledby="keyword-search-label"
-                className="search-input"
+                onChange={e => setSearchText(e.target.value)}
+                placeholder='店名・住所・ジャンルで検索'
+                aria-labelledby='keyword-search-label'
+                className='search-input'
               />
               {searchText && (
-                <button 
-                  type="button"
-                  className="clear-search-button"
+                <button
+                  type='button'
+                  className='clear-search-button'
                   onClick={() => setSearchText('')}
-                  aria-label="検索をクリア"
+                  aria-label='検索をクリア'
                 >
                   ✕
                 </button>
@@ -182,36 +184,36 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
 
           {/* 営業状態フィルタ */}
-          <fieldset className="filter-section">
+          <fieldset className='filter-section'>
             <legend>営業状態</legend>
-            <div className="status-options">
-              <label className="radio-label">
+            <div className='status-options'>
+              <label className='radio-label'>
                 <input
-                  type="radio"
-                  name="status"
+                  type='radio'
+                  name='status'
                   checked={statusFilter === 'all'}
                   onChange={() => setStatusFilter('all')}
-                  aria-label="すべての施設を表示"
+                  aria-label='すべての施設を表示'
                 />
                 すべて
               </label>
-              <label className="radio-label">
+              <label className='radio-label'>
                 <input
-                  type="radio"
-                  name="status"
+                  type='radio'
+                  name='status'
                   checked={statusFilter === 'open'}
                   onChange={() => setStatusFilter('open')}
-                  aria-label="営業中の施設のみ表示"
+                  aria-label='営業中の施設のみ表示'
                 />
                 営業中
               </label>
-              <label className="radio-label">
+              <label className='radio-label'>
                 <input
-                  type="radio"
-                  name="status"
+                  type='radio'
+                  name='status'
                   checked={statusFilter === 'closed'}
                   onChange={() => setStatusFilter('closed')}
-                  aria-label="閉店した施設のみ表示"
+                  aria-label='閉店した施設のみ表示'
                 />
                 閉店
               </label>
@@ -219,35 +221,35 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </fieldset>
 
           {/* カテゴリフィルタ */}
-          <fieldset className="filter-section">
+          <fieldset className='filter-section'>
             <legend>カテゴリー</legend>
-            <div className="section-header">
-              <div className="toggle-buttons">
-                <button 
-                  type="button"
+            <div className='section-header'>
+              <div className='toggle-buttons'>
+                <button
+                  type='button'
                   onClick={() => handleToggleAllCategories(true)}
-                  className="toggle-all-button"
-                  aria-label="すべてのカテゴリーを選択"
+                  className='toggle-all-button'
+                  aria-label='すべてのカテゴリーを選択'
                 >
                   すべて選択
                 </button>
-                <button 
-                  type="button"
+                <button
+                  type='button'
                   onClick={() => handleToggleAllCategories(false)}
-                  className="toggle-all-button"
-                  aria-label="すべてのカテゴリーを解除"
+                  className='toggle-all-button'
+                  aria-label='すべてのカテゴリーを解除'
                 >
                   すべて解除
                 </button>
               </div>
             </div>
-            <div className="checkbox-grid" role="group" aria-label="カテゴリーフィルター">
+            <div className='checkbox-grid' role='group' aria-label='カテゴリーフィルター'>
               {categories.map(category => (
-                <label key={category} className="checkbox-label">
+                <label key={category} className='checkbox-label'>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={categoryFilters[category] || false}
-                    onChange={(e) => handleCategoryChange(category, e.target.checked)}
+                    onChange={e => handleCategoryChange(category, e.target.checked)}
                     aria-label={`${category}カテゴリーでフィルター`}
                   />
                   {category}
@@ -257,35 +259,35 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </fieldset>
 
           {/* 地区フィルタ */}
-          <fieldset className="filter-section">
+          <fieldset className='filter-section'>
             <legend>地区</legend>
-            <div className="section-header">
-              <div className="toggle-buttons">
-                <button 
-                  type="button"
+            <div className='section-header'>
+              <div className='toggle-buttons'>
+                <button
+                  type='button'
                   onClick={() => handleToggleAllDistricts(true)}
-                  className="toggle-all-button"
-                  aria-label="すべての地区を選択"
+                  className='toggle-all-button'
+                  aria-label='すべての地区を選択'
                 >
                   すべて選択
                 </button>
-                <button 
-                  type="button"
+                <button
+                  type='button'
                   onClick={() => handleToggleAllDistricts(false)}
-                  className="toggle-all-button"
-                  aria-label="すべての地区を解除"
+                  className='toggle-all-button'
+                  aria-label='すべての地区を解除'
                 >
                   すべて解除
                 </button>
               </div>
             </div>
-            <div className="checkbox-grid" role="group" aria-label="地区フィルター">
+            <div className='checkbox-grid' role='group' aria-label='地区フィルター'>
               {districts.map(district => (
-                <label key={district} className="checkbox-label">
+                <label key={district} className='checkbox-label'>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={districtFilters[district] || false}
-                    onChange={(e) => handleDistrictChange(district, e.target.checked)}
+                    onChange={e => handleDistrictChange(district, e.target.checked)}
                     aria-label={`${district}でフィルター`}
                   />
                   {district}
@@ -295,12 +297,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </fieldset>
 
           {/* リセットボタン */}
-          <div className="filter-actions">
-            <button 
-              type="button"
+          <div className='filter-actions'>
+            <button
+              type='button'
               onClick={handleResetFilters}
-              className="reset-button"
-              aria-label="すべてのフィルターをリセット"
+              className='reset-button'
+              aria-label='すべてのフィルターをリセット'
             >
               フィルターをリセット
             </button>

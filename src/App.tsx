@@ -1,15 +1,23 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useGoogleMaps } from '@hooks/useGoogleMaps';
+import { usePOIData } from '@hooks/usePOIData';
 import { MapContainer } from '@/components/MapContainer';
+import POIDetails from '@/components/POIDetails';
+import FilterPanel from '@/components/FilterPanel';
+import MapMarkers from '@/components/MapMarkers';
+import { PointOfInterest } from '@/types/poi';
 import { validateEnv } from '@utils/env';
 
 /**
  * メインアプリケーションコンポーネント
- * 地図の表示と読み込み状態の管理を行います
+ * 地図の表示とPOIデータの管理を行います
  */
 function App() {
   const [isMapElementReady, setIsMapElementReady] = useState(false);
   const [envError, setEnvError] = useState<string | null>(null);
+  const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
+  const [filteredPOIs, setFilteredPOIs] = useState<PointOfInterest[]>([]);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   // 環境変数のバリデーション
   useEffect(() => {
@@ -24,7 +32,7 @@ function App() {
     if (process.env.NODE_ENV === 'development') {
       console.log('App: マップ要素の準備完了コールバックが呼ばれました');
     }
-    
+
     // 状態更新を確実に行う
     setTimeout(() => {
       if (process.env.NODE_ENV === 'development') {
@@ -39,8 +47,37 @@ function App() {
     if (process.env.NODE_ENV === 'development') {
       console.log('マップの初期化が完了しました', map);
     }
-    // ここでマーカーの追加などの処理を行う
+    mapRef.current = map;
   }, []);
+
+  // POIデータの取得
+  const {
+    pois,
+    isLoading: isLoadingPOIs,
+    error: poisError,
+  } = usePOIData({
+    enabled: !envError,
+  });
+
+  // フィルタリングされたPOIの更新
+  const handleFilterChange = useCallback((filtered: PointOfInterest[]) => {
+    setFilteredPOIs(filtered);
+  }, []);
+
+  // POI詳細表示
+  const handlePOISelect = useCallback((poi: PointOfInterest) => {
+    setSelectedPOI(poi);
+  }, []);
+
+  // POI詳細を閉じる
+  const handleClosePOIDetails = useCallback(() => {
+    setSelectedPOI(null);
+  }, []);
+
+  // フィルタリング初期化
+  useEffect(() => {
+    setFilteredPOIs(pois);
+  }, [pois]);
 
   // Google Mapsフック
   const { isLoaded, error } = useGoogleMaps({
@@ -48,15 +85,18 @@ function App() {
     zoom: 11,
     onMapLoaded: handleMapLoaded,
     skipInit: !isMapElementReady,
-    initTimeout: 15000
+    initTimeout: 15000,
   });
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('App再レンダリング:', { isMapElementReady });
+    console.log('App再レンダリング:', { isMapElementReady, poisCount: pois.length });
   }
 
   // 表示すべきエラーの決定（環境変数エラーを優先）
-  const displayError = envError || error;
+  const displayError = envError || error || poisError;
+
+  // ローディング状態の判定
+  const isAppLoading = !isLoaded || isLoadingPOIs;
 
   // ローディング UI とマップコンテナを両方表示
   return (
@@ -66,18 +106,43 @@ function App() {
       </header>
 
       <main>
+        {/* フィルターパネル */}
+        {isLoaded && !displayError && (
+          <FilterPanel pois={pois} onFilterChange={handleFilterChange} />
+        )}
+
         {/* マップコンテナは常に表示（環境変数エラーがない場合） */}
         {!envError && <MapContainer onMapElementReady={handleMapElementReady} />}
-        
+
+        {/* マップにマーカーを追加 */}
+        {isLoaded && mapRef.current && !displayError && filteredPOIs.length > 0 && (
+          <MapMarkers
+            pois={filteredPOIs}
+            mapRef={mapRef}
+            onSelectPOI={handlePOISelect}
+            onViewDetails={handlePOISelect}
+          />
+        )}
+
+        {/* POI詳細表示 */}
+        {selectedPOI && <POIDetails poi={selectedPOI} onClose={handleClosePOIDetails} />}
+
         {/* ローディング表示はオーバーレイとして表示 */}
-        {!isLoaded && !displayError && (
+        {isAppLoading && !displayError && (
           <div className='loading-overlay'>
             <div className='loading-spinner'></div>
-            <p>地図を読み込んでいます...</p>
-            {isMapElementReady ? <p>Google Maps APIを初期化中...</p> : <p>マップ要素を準備中...</p>}
+            <p>地図とデータを読み込んでいます...</p>
+            {isLoadingPOIs ? <p>施設データを準備中...</p> : null}
+            {!isLoaded ? (
+              isMapElementReady ? (
+                <p>Google Maps APIを初期化中...</p>
+              ) : (
+                <p>マップ要素を準備中...</p>
+              )
+            ) : null}
           </div>
         )}
-        
+
         {/* エラー表示 */}
         {displayError && (
           <div className='error-container'>

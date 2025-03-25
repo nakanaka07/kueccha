@@ -23,24 +23,24 @@ export type BusinessHours = string;
  * 地図上のマーカーで表示される場所の情報を表現
  */
 export interface POI {
-  id: string;  // 一意の識別子（通常は生成される）
-  name: string;  // 施設名称
-  position: google.maps.LatLngLiteral;  // 位置情報
-  isClosed: boolean;  // 閉店情報
-  type: POIType;  // POIタイプ（飲食店、駐車場など）
+  id: string; // 一意の識別子（通常は生成される）
+  name: string; // 施設名称
+  position: google.maps.LatLngLiteral; // 位置情報
+  isClosed: boolean; // 閉店情報
+  type: POIType; // POIタイプ（飲食店、駐車場など）
   genre: string;
-  category: POICategory;  // カテゴリー（和食、洋食など）
-  address: string;  // 所在地
+  category: POICategory; // カテゴリー（和食、洋食など）
+  address: string; // 所在地
   area: string;
   contact: string;
-  businessHours: BusinessHours;  // 営業時間情報
+  businessHours: BusinessHours; // 営業時間情報
   parkingInfo: string;
   infoUrl: string;
   googleMapsUrl: string;
-  searchText: string;  // 検索用正規化テキスト
-  district?: string | number;  // 地区情報
-  regularHolidays?: RegularHolidays;  // 定休日情報
-  holidayNotes?: string;  // 定休日に関する補足情報
+  searchText: string; // 検索用正規化テキスト
+  district?: string | number; // 地区情報
+  regularHolidays?: RegularHolidays; // 定休日情報
+  holidayNotes?: string; // 定休日に関する補足情報
 }
 
 /**
@@ -50,19 +50,19 @@ export interface POI {
 export interface PointOfInterest {
   id: string;
   name: string;
-  lat: number;  // 緯度（直接アクセス用）
-  lng: number;  // 経度（直接アクセス用）
+  lat: number; // 緯度（直接アクセス用）
+  lng: number; // 経度（直接アクセス用）
   isClosed: boolean;
   type: POIType;
-  category?: string | undefined;  // 主要カテゴリー（表示用）
-  categories?: string[] | undefined;  // カテゴリー一覧
-  genre?: string | undefined;  // ジャンル情報
-  address: string;  // 所在地
-  district?: string | undefined;  // 地区名
-  問い合わせ?: string | undefined;  // 問い合わせ先
-  関連情報?: string | undefined;  // 関連情報
-  'Google マップで見る'?: string | undefined;  // Google Maps URL
-  営業時間?: string | undefined;  // 営業時間テキスト
+  category?: string | undefined; // 主要カテゴリー（表示用）
+  categories?: string[] | undefined; // カテゴリー一覧
+  genre?: string | undefined; // ジャンル情報
+  address: string; // 所在地
+  district?: string | undefined; // 地区名
+  問い合わせ?: string | undefined; // 問い合わせ先
+  関連情報?: string | undefined; // 関連情報
+  'Google マップで見る'?: string | undefined; // Google Maps URL
+  営業時間?: string | undefined; // 営業時間テキスト
   // 曜日ごとの定休日情報
   月曜定休日?: boolean | undefined;
   火曜定休日?: boolean | undefined;
@@ -72,8 +72,8 @@ export interface PointOfInterest {
   土曜定休日?: boolean | undefined;
   日曜定休日?: boolean | undefined;
   祝祭定休日?: boolean | undefined;
-  定休日について?: string | undefined;  // 定休日の補足情報
-  searchText?: string | undefined;  // 検索用正規化テキスト
+  定休日について?: string | undefined; // 定休日の補足情報
+  searchText?: string | undefined; // 検索用正規化テキスト
   // POI型から変換時に使用されるフィールド
   hasParking?: boolean | undefined;
   hasCashless?: boolean | undefined;
@@ -85,38 +85,38 @@ export interface PointOfInterest {
  * 佐渡島内の地区を表す列挙型
  */
 export enum District {
-  Ryotsu = "ryotsu",  // 両津地区
-  Aikawa = "aikawa",  // 相川地区
-  Sawada = "sawada",  // 佐和田地区
-  Kanai = "kanai",    // 金井地区
-  Niibo = "niibo",    // 新穂地区
-  Hatano = "hatano",  // 畑野地区
-  Mano = "mano",      // 真野地区
-  Akadoma = "akadoma", // 赤泊地区
-  Hamochi = "hamochi", // 羽茂地区
-  Ogi = "ogi",        // 小木地区
+  Ryotsu = 'ryotsu', // 両津地区
+  Aikawa = 'aikawa', // 相川地区
+  Sawada = 'sawada', // 佐和田地区
+  Kanai = 'kanai', // 金井地区
+  Niibo = 'niibo', // 新穂地区
+  Hatano = 'hatano', // 畑野地区
+  Mano = 'mano', // 真野地区
+  Akadoma = 'akadoma', // 赤泊地区
+  Hamochi = 'hamochi', // 羽茂地区
+  Ogi = 'ogi', // 小木地区
 }
 
 /**
  * 曜日を表す列挙型
  */
 export enum DayOfWeek {
-  Monday = "monday",
-  Tuesday = "tuesday",
-  Wednesday = "wednesday",
-  Thursday = "thursday",
-  Friday = "friday",
-  Saturday = "saturday",
-  Sunday = "sunday",
-  Holiday = "holiday",  // 祝日
+  Monday = 'monday',
+  Tuesday = 'tuesday',
+  Wednesday = 'wednesday',
+  Thursday = 'thursday',
+  Friday = 'friday',
+  Saturday = 'saturday',
+  Sunday = 'sunday',
+  Holiday = 'holiday', // 祝日
 }
 
 /**
  * 営業時間帯の情報
  */
 export interface BusinessPeriod {
-  open: string;  // 開店時間（"HH:MM"形式）
-  close: string;  // 閉店時間（"HH:MM"形式）
+  open: string; // 開店時間（"HH:MM"形式）
+  close: string; // 閉店時間（"HH:MM"形式）
 }
 
 /**
@@ -139,7 +139,7 @@ export interface RegularHolidays {
  */
 export interface RawPOIData {
   名称: string;
-  WKT: string;  // 位置情報（Well-Known Text形式）
+  WKT: string; // 位置情報（Well-Known Text形式）
   閉店情報: string;
   ジャンル: string;
   和食カテゴリー: string;
@@ -162,7 +162,7 @@ export interface RawPOIData {
   営業開始時間２: string;
   営業終了時間２: string;
   関連情報: string;
-  "Google マップで見る": string;
+  'Google マップで見る': string;
   問い合わせ: string;
   所在地: string;
   地区: string;
@@ -178,11 +178,11 @@ export interface POIFilterOptions {
   types?: POIType[];
   categories?: POICategory[];
   districts?: District[];
-  isOpenNow?: boolean;  // 現在営業中のみ
-  hasParking?: boolean;  // 駐車場あり
-  hasCashless?: boolean;  // キャッシュレス対応
-  keyword?: string;  // キーワード検索
-  excludeClosed?: boolean;  // 閉店した店舗を除外
+  isOpenNow?: boolean; // 現在営業中のみ
+  hasParking?: boolean; // 駐車場あり
+  hasCashless?: boolean; // キャッシュレス対応
+  keyword?: string; // キーワード検索
+  excludeClosed?: boolean; // 閉店した店舗を除外
 }
 
 /**
@@ -190,8 +190,8 @@ export interface POIFilterOptions {
  */
 export interface MarkerClusterOptions {
   enabled: boolean;
-  maxZoom?: number;  // このズームレベル以上でクラスタリングを解除
-  minClusterSize?: number;  // クラスタを形成する最小マーカー数
+  maxZoom?: number; // このズームレベル以上でクラスタリングを解除
+  minClusterSize?: number; // クラスタを形成する最小マーカー数
 }
 
 /**
@@ -211,8 +211,12 @@ export function convertPOIToPointOfInterest(poi: POI): PointOfInterest {
     lng: poi.position.lng,
     category: categoryStrings.length > 0 ? categoryStrings[0] : undefined,
     categories: categoryStrings,
-    district: typeof poi.district === 'string' ? poi.district : 
-              typeof poi.district === 'number' ? District[(poi.district as unknown) as keyof typeof District] : undefined,
+    district:
+      typeof poi.district === 'string'
+        ? poi.district
+        : typeof poi.district === 'number'
+          ? District[poi.district as unknown as keyof typeof District]
+          : undefined,
     月曜定休日: holidays[DayOfWeek.Monday] || false,
     火曜定休日: holidays[DayOfWeek.Tuesday] || false,
     水曜定休日: holidays[DayOfWeek.Wednesday] || false,
@@ -286,7 +290,7 @@ export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInt
  */
 function determinePoiType(genre: string): POIType {
   const genreLower = genre.toLowerCase();
-  
+
   if (genreLower.includes('食堂') || genreLower.includes('レストラン')) {
     return 'restaurant';
   }
@@ -323,7 +327,7 @@ function determinePoiType(genre: string): POIType {
   if (genreLower.includes('店') || genreLower.includes('販売')) {
     return 'shop';
   }
-  
+
   // デフォルト
   return 'other';
 }

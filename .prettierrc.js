@@ -30,7 +30,7 @@ export default {
     {
       files: '*.md',
       options: {
-        proseWrap: 'always', 
+        proseWrap: 'always',
       },
     },
     {
