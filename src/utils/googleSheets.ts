@@ -1,6 +1,6 @@
 import { ENV } from '@utils/env';
-import { parseCSVtoPOIs } from './csvProcessor';
 import { POIType } from '@/types/poi';
+import { parseCSVtoPOIs } from './csvProcessor';
 
 interface SheetData {
   range: string;

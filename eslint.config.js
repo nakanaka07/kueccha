@@ -27,33 +27,38 @@ const configFiles = [
 ];
 
 // 開発環境か本番環境かを判断する定数
-// NODE_ENVに依存せず、必要に応じて手動で変更
 const isProduction = false; // 本番環境の場合はtrueに設定
 
-// ESLint v9で使用するフラットな設定配列
-export default [
+// typescript-eslintの設定方法を修正
+export default tseslint.config(
   // 基本設定（すべてのファイルに適用）
   {
     ignores: commonIgnores,
-    ...eslint.configs.recommended,
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
+    },
+    rules: {
+      ...eslint.configs.recommended.rules
+    }
   },
   
   // TypeScript基本設定（型チェックなし）
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
-    ...tseslint.configs.recommended,
+    extends: [tseslint.configs.recommended],
   },
   
-  // TypeScript型チェック設定（特定のファイルのみ）
+  // TypeScript型チェック設定
   {
     files: ['**/*.{ts,tsx}'],
     ignores: [
       ...configFiles,
       'env.d.ts',
+      '**/*.d.ts', // すべての型定義ファイルを除外
       'dev-dist/**',
       'dist/**',
     ],
-    ...tseslint.configs.recommendedTypeChecked,
+    extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -67,7 +72,7 @@ export default [
     },
   },
   
-  // React、JSX、一般的なJavaScript/TypeScriptルール
+  // React、JSX、その他のルール設定
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
@@ -91,12 +96,11 @@ export default [
       react: {
         version: 'detect',
       },
-      // eslint-import-resolver-typescriptパッケージが必要
+      // importリゾルバーの設定を修正 - typescriptリゾルバーを無効化
       'import/resolver': {
-        typescript: {
-          // 必要に応じてtsconfig.jsonのパスを指定
-          project: './tsconfig.json',
-        },
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx']
+        }
       },
     },
     rules: {
@@ -108,7 +112,6 @@ export default [
       'react/react-in-jsx-scope': 'off',
 
       // コード品質関連のルール
-      // process.env.NODE_ENV の代わりに明示的な変数を使用
       'no-console': isProduction ? 'error' : 'warn',
       'no-debugger': isProduction ? 'error' : 'warn',
       'no-unused-vars': 'off',
@@ -200,5 +203,24 @@ export default [
       'import/order': 'off',
       'max-lines-per-function': 'off',
     },
+  },
+
+  // 型定義ファイル専用の設定（型チェックルールを無効化）
+  {
+    files: ['**/*.d.ts'],
+    rules: {
+      // 型情報を必要とするルールをすべて無効化
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/return-await': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'
+    },
   }
-];
+);

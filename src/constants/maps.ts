@@ -1,6 +1,6 @@
+import { Libraries } from '@googlemaps/js-api-loader';
 import { ENV } from '../utils/env';
 // Libraries型をインポート
-import { Libraries } from '@googlemaps/js-api-loader';
 
 /**
  * Google Maps API関連の定数

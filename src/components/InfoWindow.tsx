@@ -1,6 +1,6 @@
+import { formatWeekdaySchedule } from '@utils/markerUtils';
 import React, { useMemo } from 'react';
 import { PointOfInterest } from '@/types/poi';
-import { formatWeekdaySchedule } from '@utils/markerUtils';
 import '@/global.css';
 
 interface InfoWindowProps {
@@ -98,8 +98,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onClose, onViewDetails }) 
       <div className='info-window-content'>
         {/* カテゴリとジャンル */}
         <div className='info-section'>
-          {poi.categories &&
-            poi.categories.map((category, index) => (
+          {poi.categories?.map((category, index) => (
               <span key={index} className={getCategoryClass(category)}>
                 {category}
               </span>

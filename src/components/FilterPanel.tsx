@@ -70,8 +70,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
       // テキスト検索フィルタ
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        const nameMatch = poi.name?.toLowerCase().includes(searchLower);
-        const addressMatch = poi.address?.toLowerCase().includes(searchLower);
+        const nameMatch = poi.name.toLowerCase().includes(searchLower);
+        const addressMatch = poi.address.toLowerCase().includes(searchLower);
         const genreMatch = poi.genre?.toLowerCase().includes(searchLower);
 
         if (!(nameMatch || addressMatch || genreMatch)) return false;

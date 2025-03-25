@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
-import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import InfoWindow from '@components/InfoWindow';
-import { PointOfInterest } from '@/types/poi';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
+import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import { getMarkerIcon, isInViewport } from '@utils/markerUtils';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { PointOfInterest } from '@/types/poi';
 
 interface MapMarkersProps {
   /**
@@ -58,7 +58,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 
   // フィルタリングされたPOIリスト
   const filteredPOIs = useMemo(() => {
-    if (!pois?.length) return [];
+    if (!pois.length) return [];
 
     return pois.filter(poi => {
       // カテゴリフィルタリング
@@ -89,9 +89,9 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         const searchLower = filters.searchText.toLowerCase();
 
         // 名称、ジャンル、住所のいずれかにマッチするか
-        const nameMatch = poi.name?.toLowerCase().includes(searchLower);
+        const nameMatch = poi.name.toLowerCase().includes(searchLower);
         const genreMatch = poi.genre?.toLowerCase().includes(searchLower);
-        const addressMatch = poi.address?.toLowerCase().includes(searchLower);
+        const addressMatch = poi.address.toLowerCase().includes(searchLower);
 
         if (!(nameMatch || genreMatch || addressMatch)) {
           return false;
