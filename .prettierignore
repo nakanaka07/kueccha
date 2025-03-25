@@ -1,0 +1,33 @@
+# ビルドとキャッシュディレクトリ
+node_modules
+dist
+dev-dist
+build
+coverage
+.vite
+.cache
+.temp
+.temp-optimized
+.local
+
+# パッケージマネージャーファイル
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# 設定ファイル
+.git
+.husky
+.github
+
+# 環境変数ファイル
+.env*
+
+# 生成物とログ
+*.log
+stats.html
+*.tsbuildinfo
+
+# PWA関連
+**/sw*.js
+**/workbox-*.js*
