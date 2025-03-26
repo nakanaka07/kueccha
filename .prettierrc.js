@@ -8,7 +8,7 @@
  * - 行の最大長 100文字
  * - 末尾カンマは ES5 互換
  */
-export default {
+module.exports = {
   // 基本スタイル設定
   semi: true,
   singleQuote: true,

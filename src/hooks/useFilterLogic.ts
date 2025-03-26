@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+
 import { PointOfInterest } from '@/types/poi';
 
 export type StatusFilter = 'all' | 'open' | 'closed';

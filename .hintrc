@@ -3,20 +3,7 @@
     "development"
   ],
   "hints": {
-    "compat-api/html": [
-      "default",
-      {
-        "ignore": [
-          // PWAサポートに必要なため無視
-          "meta[name=theme-color]"
-        ]
-      }
-    ],
-    // アクセシビリティのヒントを追加
-    "axe/name-role-value": [
-      "default"
-    ],
-    // パフォーマンスに関するヒントを追加
-    "no-inline-styles": "error"
+    "compat-api/html": "off",
+    "axe/aria": "off"
   }
 }

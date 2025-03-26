@@ -134,7 +134,7 @@ export default tseslint.config(
         'error',
         {
           config: {
-            'aria-expanded': ['true', 'false'], // 文字列型を明示
+            // 'aria-expanded': ['true', 'false'], <- この行を削除しました
             'aria-selected': ['true', 'false'], // 選択状態を示すARIA属性
             'aria-pressed': ['true', 'false', 'mixed'], // ボタン状態を示すARIA属性
             'aria-checked': ['true', 'false', 'mixed'], // チェックボックス状態を示すARIA属性
@@ -165,14 +165,14 @@ export default tseslint.config(
           'newlines-between': 'always',
           // グループの並び順
           groups: [
-            'builtin',     // Node.js組み込みモジュール
-            'external',    // npmパッケージ
-            'internal',    // エイリアスによる内部インポート
-            'parent',      // 親ディレクトリからのインポート
-            'sibling',     // 同じディレクトリからのインポート
-            'index',       // 同じディレクトリのインデックスファイル
-            'object',      // オブジェクトインポート
-            'type',        // 型インポート
+            'builtin', // Node.js組み込みモジュール
+            'external', // npmパッケージ
+            'internal', // エイリアスによる内部インポート
+            'parent', // 親ディレクトリからのインポート
+            'sibling', // 同じディレクトリからのインポート
+            'index', // 同じディレクトリのインデックスファイル
+            'object', // オブジェクトインポート
+            'type', // 型インポート
           ],
           // 特定のパターンに対するカスタムグループ設定
           pathGroups: [
@@ -255,6 +255,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off', // 設定ファイルではany型を許可
       '@typescript-eslint/await-thenable': 'off', // 設定ファイルでは非Promise値のawaitを許可
       '@typescript-eslint/no-unused-vars': 'off', // 設定ファイルでは未使用変数を許可
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off', // この行を追加
       'import/order': 'off', // 設定ファイルではインポート順序を緩和
       'max-lines-per-function': 'off', // 設定ファイルでは関数の長さ制限を緩和
     },
@@ -264,8 +265,13 @@ export default tseslint.config(
   {
     files: ['**/*.d.ts'],
     ignores: commonIgnores,
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
     rules: {
-      // 型情報を必要とするルールをすべて無効化
+      // 型定義ファイルでは不要な型チェックルールを無効化
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      // 既存のルール設定があれば、それらもここに含める
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',

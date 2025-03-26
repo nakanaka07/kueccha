@@ -3,6 +3,7 @@ import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import { getMarkerIcon, isInViewport } from '@utils/markerUtils';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
 import { PointOfInterest } from '@/types/poi';
 
 interface MapMarkersProps {
