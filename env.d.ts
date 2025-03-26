@@ -36,7 +36,7 @@ interface ImportMetaEnv {
   readonly MODE: string;
   /** 現在の環境 (Viteが自動的に提供) */
   readonly NODE_ENV: 'development' | 'production' | 'test';
-  
+
   // ==== その他のオプション環境変数 (必要に応じて追加) ====
   /** デバッグモード有効フラグ (任意) */
   readonly VITE_DEBUG_MODE?: 'true' | 'false';

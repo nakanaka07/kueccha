@@ -16,7 +16,7 @@ const logger = (() => {
     const env = process.env.NODE_ENV || 'development';
     return `[${appName}:${env}]`;
   };
-  
+
   return {
     warn: (message: string): void => {
       if (process.env.NODE_ENV !== 'production') {
@@ -33,7 +33,7 @@ const logger = (() => {
         // eslint-disable-next-line no-console
         console.info(`${getPrefix()} ${message}`);
       }
-    }
+    },
   };
 })();
 
@@ -191,7 +191,7 @@ function createPWAConfig(basePath: string, env: Record<string, string>): VitePWA
     minify: true,
     injectManifest: {}, // 空オブジェクトを設定（必須プロパティのため）
     includeManifestIcons: true,
-    disable: false
+    disable: false,
   };
 }
 
@@ -202,7 +202,7 @@ function createPWAConfig(basePath: string, env: Record<string, string>): VitePWA
 function getHttpsOptions(isProd: boolean): Record<string, any> | undefined {
   const keyPath = '.local/localhost.key';
   const certPath = '.local/localhost.crt';
-  
+
   if (!isProd && fs.existsSync(keyPath) && fs.existsSync(certPath)) {
     try {
       return {
@@ -214,7 +214,7 @@ function getHttpsOptions(isProd: boolean): Record<string, any> | undefined {
       return undefined;
     }
   }
-  
+
   return undefined;
 }
 
@@ -239,20 +239,19 @@ export default defineConfig(({ mode }): UserConfig => {
   const httpsOptions = getHttpsOptions(isProd);
 
   // プラグイン配列を型安全に構築
-  const plugins: PluginOption[] = [
-    react(),
-    VitePWA(createPWAConfig(basePath, env)),
-  ];
+  const plugins: PluginOption[] = [react(), VitePWA(createPWAConfig(basePath, env))];
 
   // 条件付きプラグイン追加
   if (process.env.ANALYZE === 'true') {
-    plugins.push(visualizer({
-      open: true,
-      filename: 'dist/stats.html',
-      gzipSize: true,
-      brotliSize: true,
-      template: 'treemap'
-    }) as unknown as PluginOption);
+    plugins.push(
+      visualizer({
+        open: true,
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      }) as unknown as PluginOption
+    );
   }
 
   // returnキーワードの後に設定オブジェクトを正しく配置（波括弧を同じ行に）

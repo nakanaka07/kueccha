@@ -1,6 +1,6 @@
 /**
  * プロジェクト共通のコードフォーマット設定
- * 
+ *
  * 基本設定:
  * - シングルクォート優先
  * - セミコロン必須
@@ -16,25 +16,25 @@ export default {
   tabWidth: 2,
   useTabs: false,
   printWidth: 100,
-  
+
   // コード構文設定
   trailingComma: 'es5',
   quoteProps: 'as-needed',
   arrowParens: 'avoid',
-  
+
   // スペーシング設定
   bracketSpacing: true,
   bracketSameLine: false,
-  
+
   // 環境設定
   endOfLine: 'auto',
-  
+
   // 言語処理設定
   embeddedLanguageFormatting: 'auto',
   htmlWhitespaceSensitivity: 'css',
   vueIndentScriptAndStyle: false,
   proseWrap: 'preserve',
-  
+
   // ファイル形式ごとの個別設定
   overrides: [
     {

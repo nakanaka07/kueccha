@@ -11,18 +11,15 @@
     "analyze": "cross-env ANALYZE=true vite build",
     "preview": "vite preview",
     "start": "vite preview",
-
     "format": "prettier --write .",
     "lint": "eslint . --fix",
     "lint:unused": "pnpm dlx depcheck",
     "lint:all": "pnpm lint && pnpm format && pnpm typecheck",
     "typecheck": "tsc --noEmit",
-
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:a11y": "vitest run a11y",
-
     "prepare": "husky install",
     "reset": "rimraf node_modules pnpm-lock.yaml dist dev-dist stats.html .husky && pnpm store prune",
     "clean": "rimraf dist dev-dist stats.html"

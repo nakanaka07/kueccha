@@ -24,12 +24,12 @@ export default defineConfig({
   test: {
     // 環境設定
     environment: 'jsdom', // ブラウザ環境をシミュレート
-    globals: true,        // グローバル関数（describe, it, expect）を使用可能に
+    globals: true, // グローバル関数（describe, it, expect）を使用可能に
     setupFiles: ['./src/setupTests.ts'],
 
     // カバレッジ設定
     coverage: {
-      provider: 'v8',   // より正確なカバレッジ情報
+      provider: 'v8', // より正確なカバレッジ情報
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/**',
@@ -48,8 +48,8 @@ export default defineConfig({
     },
 
     // 安定性設定
-    testTimeout: 10000,                 // タイムアウトを10秒に設定
-    retry: process.env.CI ? 2 : 0,      // CI環境では失敗したテストを再試行
+    testTimeout: 10000, // タイムアウトを10秒に設定
+    retry: process.env.CI ? 2 : 0, // CI環境では失敗したテストを再試行
     maxThreads: process.env.CI ? 2 : undefined, // CI環境ではスレッド数を制限
     minThreads: process.env.CI ? 1 : undefined,
   },

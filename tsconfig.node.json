@@ -20,19 +20,19 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true, // オプショナルプロパティの型チェックを厳密化
-    "noImplicitReturns": true,         // すべての関数で戻り値を明示的に定義
+    "noImplicitReturns": true, // すべての関数で戻り値を明示的に定義
     "noFallthroughCasesInSwitch": true, // switch文のフォールスルーを防止
 
     // デバッグ支援の改善
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,           // 型定義ファイルのソースマップ生成
+    "declarationMap": true, // 型定義ファイルのソースマップ生成
 
     // ビルドパフォーマンス向上
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
-    "skipDefaultLibCheck": true,      // デフォルトライブラリのチェックをスキップ
-    
+    "skipDefaultLibCheck": true, // デフォルトライブラリのチェックをスキップ
+
     // パスエイリアスの活用（code_optimization_guidelinesに記載された推奨事項）
     "baseUrl": ".",
     "paths": {
@@ -46,8 +46,5 @@
     "env.d.ts",
     "scripts/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }
