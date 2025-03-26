@@ -1,18 +1,21 @@
-import { useGoogleMaps } from '@hooks/useGoogleMaps';
-import { usePOIData } from '@hooks/usePOIData';
-import { validateEnv } from '@utils/env';
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import FilterPanel from '@/components/FilterPanel';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import { MapContainer } from '@/components/MapContainer';
 import MapMarkers from '@/components/MapMarkers';
 import POIDetails from '@/components/POIDetails';
-import { PointOfInterest } from '@/types/poi';
+import { useGoogleMaps } from '@/hooks/useGoogleMaps';
+import { usePOIData } from '@/hooks/usePOIData';
+import type { PointOfInterest } from '@/types/poi';
+import { validateEnv } from '@/utils/env';
 
 /**
  * メインアプリケーションコンポーネント
  * 地図の表示とPOIデータの管理を行います
  */
 function App() {
+  // アプリケーションの状態管理
   const [isMapElementReady, setIsMapElementReady] = useState(false);
   const [envError, setEnvError] = useState<string | null>(null);
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
@@ -29,24 +32,14 @@ function App() {
 
   // マップ要素がDOMに追加された時のコールバック
   const handleMapElementReady = useCallback(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('App: マップ要素の準備完了コールバックが呼ばれました');
-    }
-
     // 状態更新を確実に行う
     setTimeout(() => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('App: isMapElementReady を true に更新します');
-      }
       setIsMapElementReady(true);
     }, 0);
   }, []);
 
   // マップ読み込み完了時のコールバック
   const handleMapLoaded = useCallback((map: google.maps.Map) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('マップの初期化が完了しました', map);
-    }
     mapRef.current = map;
   }, []);
 
@@ -88,17 +81,27 @@ function App() {
     initTimeout: 15000,
   });
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('App再レンダリング:', { isMapElementReady, poisCount: pois.length });
-  }
-
   // 表示すべきエラーの決定（環境変数エラーを優先）
-  const displayError = envError || error || poisError;
+  const displayError = envError ?? error ?? poisError;
 
   // ローディング状態の判定
   const isAppLoading = !isLoaded || isLoadingPOIs;
 
-  // ローディング UI とマップコンテナを両方表示
+  // 条件判定のメモ化（パフォーマンスと可読性の向上）
+  const shouldShowFilters = useMemo(() => 
+    isLoaded && !displayError
+  , [isLoaded, displayError]);
+  
+  // マップマーカー表示の条件判定
+  const shouldShowMarkers = useMemo(() => 
+    isLoaded && 
+    !displayError && 
+    filteredPOIs.length > 0
+  , [isLoaded, displayError, filteredPOIs.length]);
+
+  // マップが実際に利用可能かどうかを確認
+  const isMapAvailable = shouldShowMarkers && mapRef.current !== null;
+
   return (
     <div className='app-container'>
       <header className='app-header'>
@@ -107,7 +110,7 @@ function App() {
 
       <main>
         {/* フィルターパネル */}
-        {isLoaded && !displayError && (
+        {shouldShowFilters && (
           <FilterPanel pois={pois} onFilterChange={handleFilterChange} />
         )}
 
@@ -115,7 +118,7 @@ function App() {
         {!envError && <MapContainer onMapElementReady={handleMapElementReady} />}
 
         {/* マップにマーカーを追加 */}
-        {isLoaded && mapRef.current && !displayError && filteredPOIs.length > 0 && (
+        {isMapAvailable && (
           <MapMarkers
             pois={filteredPOIs}
             mapRef={mapRef}
@@ -127,30 +130,17 @@ function App() {
         {/* POI詳細表示 */}
         {selectedPOI && <POIDetails poi={selectedPOI} onClose={handleClosePOIDetails} />}
 
-        {/* ローディング表示はオーバーレイとして表示 */}
+        {/* ローディング表示 */}
         {isAppLoading && !displayError && (
-          <div className='loading-overlay'>
-            <div className='loading-spinner'></div>
-            <p>地図とデータを読み込んでいます...</p>
-            {isLoadingPOIs ? <p>施設データを準備中...</p> : null}
-            {!isLoaded ? (
-              isMapElementReady ? (
-                <p>Google Maps APIを初期化中...</p>
-              ) : (
-                <p>マップ要素を準備中...</p>
-              )
-            ) : null}
-          </div>
+          <LoadingOverlay
+            isLoadingPOIs={isLoadingPOIs}
+            isLoaded={isLoaded}
+            isMapElementReady={isMapElementReady}
+          />
         )}
 
         {/* エラー表示 */}
-        {displayError && (
-          <div className='error-container'>
-            <h2>エラーが発生しました</h2>
-            <p>{displayError}</p>
-            <button onClick={() => window.location.reload()}>再読み込み</button>
-          </div>
-        )}
+        {displayError && <ErrorDisplay message={displayError} />}
       </main>
 
       <footer className='app-footer'>
