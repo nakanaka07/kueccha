@@ -203,7 +203,7 @@ export function convertPOIToPointOfInterest(poi: POI): PointOfInterest {
   const categoryStrings = [poi.category];
 
   // 定休日情報の変換
-  const holidays = poi.regularHolidays || {};
+  const holidays = poi.regularHolidays ?? {};
 
   return {
     ...poi,
@@ -217,14 +217,14 @@ export function convertPOIToPointOfInterest(poi: POI): PointOfInterest {
         : typeof poi.district === 'number'
           ? District[poi.district as unknown as keyof typeof District]
           : undefined,
-    月曜定休日: holidays[DayOfWeek.Monday] || false,
-    火曜定休日: holidays[DayOfWeek.Tuesday] || false,
-    水曜定休日: holidays[DayOfWeek.Wednesday] || false,
-    木曜定休日: holidays[DayOfWeek.Thursday] || false,
-    金曜定休日: holidays[DayOfWeek.Friday] || false,
-    土曜定休日: holidays[DayOfWeek.Saturday] || false,
-    日曜定休日: holidays[DayOfWeek.Sunday] || false,
-    祝祭定休日: holidays[DayOfWeek.Holiday] || false,
+    月曜定休日: holidays[DayOfWeek.Monday] ?? false,
+    火曜定休日: holidays[DayOfWeek.Tuesday] ?? false,
+    水曜定休日: holidays[DayOfWeek.Wednesday] ?? false,
+    木曜定休日: holidays[DayOfWeek.Thursday] ?? false,
+    金曜定休日: holidays[DayOfWeek.Friday] ?? false,
+    土曜定休日: holidays[DayOfWeek.Saturday] ?? false,
+    日曜定休日: holidays[DayOfWeek.Sunday] ?? false,
+    祝祭定休日: holidays[DayOfWeek.Holiday] ?? false,
     定休日について: poi.holidayNotes,
     問い合わせ: poi.contact,
     'Google マップで見る': poi.googleMapsUrl,
@@ -240,8 +240,8 @@ export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInt
   // WKT形式の位置情報から緯度経度を抽出
   // 例: "POINT (138.4665294 38.319763)" → { lat: 38.319763, lng: 138.4665294 }
   const wktMatch = rawData.WKT.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
-  const lng = wktMatch ? parseFloat(wktMatch[1]) : parseFloat(rawData.東経 || '0');
-  const lat = wktMatch ? parseFloat(wktMatch[2]) : parseFloat(rawData.北緯 || '0');
+  const lng = wktMatch ? parseFloat(wktMatch[1]) : parseFloat(rawData.東経 ?? '0');
+  const lat = wktMatch ? parseFloat(wktMatch[2]) : parseFloat(rawData.北緯 ?? '0');
 
   // カテゴリーの決定
   const categories: string[] = [];
@@ -291,43 +291,35 @@ export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInt
 function determinePoiType(genre: string): POIType {
   const genreLower = genre.toLowerCase();
 
-  if (genreLower.includes('食堂') || genreLower.includes('レストラン')) {
-    return 'restaurant';
-  }
-  if (genreLower.includes('カフェ') || genreLower.includes('喫茶')) {
-    return 'restaurant';
-  }
-  if (genreLower.includes('居酒屋') || genreLower.includes('バー')) {
-    return 'restaurant';
-  }
-  if (genreLower.includes('スナック')) {
-    return 'restaurant';
-  }
-  if (genreLower.includes('宿') || genreLower.includes('ホテル') || genreLower.includes('旅館')) {
-    return 'restaurant';
-  }
-  if (genreLower.includes('駐車場')) {
-    return 'parking';
-  }
-  if (genreLower.includes('トイレ')) {
-    return 'toilet';
-  }
-  if (genreLower.includes('観光') || genreLower.includes('名所')) {
-    return 'attraction';
-  }
-  if (genreLower.includes('スーパー')) {
-    return 'shop';
-  }
-  if (genreLower.includes('コンビニ')) {
-    return 'shop';
-  }
-  if (genreLower.includes('パン')) {
-    return 'shop';
-  }
-  if (genreLower.includes('店') || genreLower.includes('販売')) {
-    return 'shop';
+  // キーワードとPOIタイプのマッピング
+  const typePatterns: Record<POIType, string[]> = {
+    restaurant: [
+      '食堂',
+      'レストラン',
+      'カフェ',
+      '喫茶',
+      '居酒屋',
+      'バー',
+      'スナック',
+      '宿',
+      'ホテル',
+      '旅館',
+    ],
+    parking: ['駐車場'],
+    toilet: ['トイレ'],
+    attraction: ['観光', '名所'],
+    shop: ['スーパー', 'コンビニ', 'パン', '店', '販売'],
+    other: [], // デフォルト用（空配列）
+  };
+
+  // 各POIタイプのパターンに対してマッチングを試行
+  for (const [poiType, patterns] of Object.entries(typePatterns) as [POIType, string[]][]) {
+    // いずれかのパターンがジャンルに含まれていればそのタイプを返す
+    if (patterns.some(pattern => genreLower.includes(pattern))) {
+      return poiType;
+    }
   }
 
-  // デフォルト
+  // マッチするパターンがない場合はデフォルト値を返す
   return 'other';
 }

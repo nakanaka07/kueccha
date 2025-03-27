@@ -82,18 +82,8 @@ export function getMarkerIcon(
   if (typeof typeOrPoi === 'object') {
     const poi = typeOrPoi;
 
-    // 型チェックの改善
-    if (poi === null) {
-      logger.warn('無効なPOIオブジェクトが渡されました', { poi });
-      // デフォルトのアイコン設定を返す
-      return {
-        url: 'https://maps.google.com/mapfiles/ms/icons/info-dot.png',
-        scaledSize: new google.maps.Size(32, 32),
-        anchor: new google.maps.Point(16, 16),
-      };
-    }
-
-    // POIの種類とカテゴリをデフォルト値と共に取得
+    // POIの種類とカテゴリを取得
+    // 空文字列もデフォルト値で置き換えるため、nullish coalescing operator(??）を使用
     const poiType = getPOITypeFromString(poi.type ?? 'other');
     const poiCategory = getCategoryFromString(poi.category ?? 'unspecified');
     const poiClosed = Boolean(poi.isClosed);
@@ -276,11 +266,6 @@ export function formatWeekdaySchedule(poi: PointOfInterest): {
   daysOff?: string;
   [key: string]: string | undefined;
 } {
-  // nullチェックを修正
-  if (poi === null) {
-    return {};
-  }
-
   // 結果オブジェクト
   const result: { [key: string]: string | undefined } = {};
 
@@ -331,8 +316,8 @@ export function isInViewport(
   const bounds = map.getBounds();
   if (!bounds) return true; // 境界が取得できない場合は表示とみなす
 
-  // 位置情報が有効かチェック（型の重複を避ける）
-  if (position === null || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
+  // 位置情報が有効かチェック（nullチェックは不要）
+  if (typeof position.lat !== 'number' || typeof position.lng !== 'number') {
     logger.warn('無効な位置情報', { position });
     return false;
   }
@@ -349,7 +334,8 @@ export function isInViewport(
 
       // パディングをパーセンテージとして算出（地図サイズの相対値）
       const div = document.getElementById('map');
-      if (div === null) return true;
+      // !演算子を使用して簡潔に
+      if (!div) return true;
 
       const mapWidth = div.clientWidth;
       const mapHeight = div.clientHeight;
