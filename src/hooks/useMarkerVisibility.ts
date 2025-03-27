@@ -57,9 +57,6 @@ export function useMarkerVisibility({
   // デバウンスタイマーの参照
   const debounceTimerRef = useRef<number | null>(null);
 
-  // イベントリスナーの参照（クリーンアップ用）
-  const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
-
   // マーカー可視性の更新処理（メモ化）
   const updateMarkerVisibility = useCallback(() => {
     const map = mapRef.current;

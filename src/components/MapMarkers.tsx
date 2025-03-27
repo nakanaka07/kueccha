@@ -92,7 +92,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   );
 
   // マーカーとクラスタリングの管理（カスタムフックに移行）
-  const { markers, clusterer } = useMapMarkers({
+  const { markers } = useMapMarkers({
     mapRef,
     pois: filteredPOIs,
     onMarkerClick: handleMarkerClick,
