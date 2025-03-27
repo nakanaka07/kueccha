@@ -24,10 +24,8 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   // マップ読み込み状態のメッセージを決定
   const getMapStatusMessage = () => {
     if (isLoaded) return null;
-    
-    return isMapElementReady 
-      ? <p>Google Maps APIを初期化中...</p>
-      : <p>マップ要素を準備中...</p>;
+
+    return isMapElementReady ? <p>Google Maps APIを初期化中...</p> : <p>マップ要素を準備中...</p>;
   };
 
   return (

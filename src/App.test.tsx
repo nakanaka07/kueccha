@@ -1,3 +1,4 @@
+import * as reactGoogleMaps from '@react-google-maps/api';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -14,7 +15,11 @@ vi.mock('@react-google-maps/api', () => {
     InfoWindow: ({ children }: { children: React.ReactNode }) => (
       <div data-testid='info-window'>{children}</div>
     ),
-    useLoadScript: () => ({ isLoaded: true, loadError: null }),
+    useLoadScript: () => ({
+      isLoaded: true,
+      loadError: undefined, // nullからundefinedに変更
+      url: 'https://maps.googleapis.com/maps/api/js',
+    }),
   };
 
   // 実際のエクスポートを返す
@@ -22,12 +27,15 @@ vi.mock('@react-google-maps/api', () => {
 });
 
 // モック設定を変更するヘルパー関数
-const updateGoogleMapsMock = (options = {}) => {
-  const mockModule = vi.mocked(require('@react-google-maps/api'));
+const updateGoogleMapsMock = (options: Partial<typeof reactGoogleMaps> = {}) => {
+  const mockModule = vi.mocked(reactGoogleMaps);
 
   // オプションで指定されたプロパティで上書き
   Object.entries(options).forEach(([key, value]) => {
-    mockModule[key] = value;
+    // 型安全なプロパティアクセスを行う
+    if (key in mockModule) {
+      (mockModule as Record<string, unknown>)[key] = value;
+    }
   });
 };
 
@@ -56,7 +64,11 @@ describe('App', () => {
   it('shows loading state when map is not loaded', () => {
     // モックを更新して地図が読み込まれていない状態をシミュレート
     updateGoogleMapsMock({
-      useLoadScript: () => ({ isLoaded: false, loadError: null }),
+      useLoadScript: () => ({
+        isLoaded: false,
+        loadError: undefined, // nullからundefinedに変更
+        url: 'https://maps.googleapis.com/maps/api/js',
+      }),
     });
 
     // App コンポーネントをレンダリング
@@ -73,6 +85,7 @@ describe('App', () => {
       useLoadScript: () => ({
         isLoaded: false,
         loadError: new Error('Failed to load Google Maps API'),
+        url: 'https://maps.googleapis.com/maps/api/js',
       }),
     });
 

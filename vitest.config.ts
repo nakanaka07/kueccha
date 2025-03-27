@@ -50,19 +50,21 @@ export default defineConfig({
     // 安定性設定
     testTimeout: 10000, // タイムアウトを10秒に設定
     retry: process.env.CI ? 2 : 0, // CI環境では失敗したテストを再試行
-    
+
     // スレッド設定 - 環境に応じた最適化
-    ...(process.env.CI ? {
-      // CI環境では限定されたリソースを効率的に使用
-      poolOptions: {
-        threads: {
-          maxThreads: 2,  // CI環境では最大2スレッドに制限
-          minThreads: 1   // 最小1スレッドを保証
+    ...(process.env.CI
+      ? {
+          // CI環境では限定されたリソースを効率的に使用
+          poolOptions: {
+            threads: {
+              maxThreads: 2, // CI環境では最大2スレッドに制限
+              minThreads: 1, // 最小1スレッドを保証
+            },
+          },
         }
-      }
-    } : {
-      // 開発環境ではデフォルト設定を使用（Vitestの自動最適化）
-      // poolOptionsプロパティ自体を省略してデフォルト動作を活用
-    }),
+      : {
+          // 開発環境ではデフォルト設定を使用（Vitestの自動最適化）
+          // poolOptionsプロパティ自体を省略してデフォルト動作を活用
+        }),
   },
 });

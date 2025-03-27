@@ -22,12 +22,12 @@ const StatusBadge: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
     const day = now.getDay(); // 0: 日曜, 1: 月曜, ...
     const dayOffKey = `${DAY_NAMES[day]}定休日` as keyof PointOfInterest;
     const isDayOff = poi[dayOffKey] === true;
-    
+
     // 定休日の場合
     if (isDayOff) {
       return 'day-off';
     }
-    
+
     // 上記以外は営業中
     return 'open';
   }, [poi]);

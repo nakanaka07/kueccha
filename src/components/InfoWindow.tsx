@@ -6,7 +6,7 @@ import {
   BusinessHoursSection,
   ContactSection,
   GoogleMapsSection,
-  FooterSection
+  FooterSection,
 } from '@/components/InfoWindowSections';
 import StatusBadge from '@/components/InfoWindowStatus';
 import { PointOfInterest } from '@/types/poi';
@@ -42,12 +42,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onClose, onViewDetails }) 
           <StatusBadge poi={poi} />
         </h2>
         {onClose && (
-          <button 
-            className='close-button' 
-            onClick={onClose} 
-            aria-label='閉じる'
-            type='button'
-          >
+          <button className='close-button' onClick={onClose} aria-label='閉じる' type='button'>
             ✕
           </button>
         )}

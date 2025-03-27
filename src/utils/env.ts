@@ -11,6 +11,30 @@
 
 /// <reference types="vite/client" />
 
+// ロガーモジュールの型定義
+interface LoggerInterface {
+  error: (message: string) => void;
+  warn: (message: string) => void;
+  info: (message: string) => void;
+  debug: (message: string) => void;
+}
+
+// 内部ロガー実装（ESLintの警告を抑制）
+const internalLogger: LoggerInterface = {
+  // eslint-disable-next-line no-console
+  error: (message: string): void => console.error(`⚠️ ${message}`),
+  // eslint-disable-next-line no-console
+  warn: (message: string): void => console.warn(`📝 ${message}`),
+  // eslint-disable-next-line no-console
+  info: (message: string): void => console.info(message),
+  debug: (message: string): void => {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug(`🔍 ${message}`);
+    }
+  },
+};
+
 // 環境変数の取得オプション
 interface EnvOptions<T> {
   /** デフォルト値 */
@@ -38,16 +62,16 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
   // 環境変数を取得
   const value = import.meta.env[fullKey] as string | undefined;
 
-  // 値が存在しない場合（undefinedまたはnull）
-  if (value === undefined || value === null) {
+  // 値が存在しない場合
+  if (value === undefined) {
     const severity = options.critical ? 'error' : 'warn';
     const message = `環境変数"${fullKey}"が設定されていません。デフォルト値を使用します。`;
 
     // 重要度に応じてログレベルを変更
     if (severity === 'error') {
-      console.error(`⚠️ ${message}`);
+      internalLogger.error(message);
     } else {
-      console.warn(`📝 ${message}`);
+      internalLogger.warn(message);
     }
 
     return defaultValue;
@@ -55,7 +79,7 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
 
   // 空文字列の場合
   if (value === '') {
-    console.warn(`📝 環境変数"${fullKey}"が空です。デフォルト値を使用します。`);
+    internalLogger.warn(`環境変数"${fullKey}"が空です。デフォルト値を使用します。`);
     return defaultValue;
   }
 
@@ -64,7 +88,8 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
     try {
       return options.transform(value);
     } catch (error) {
-      console.error(`⚠️ 環境変数"${fullKey}"の変換中にエラーが発生しました: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      internalLogger.error(`環境変数"${fullKey}"の変換中にエラーが発生しました: ${errorMessage}`);
       return defaultValue;
     }
   }
@@ -131,8 +156,11 @@ export const ENV = {
     isDev: import.meta.env.DEV,
     BASE_URL: import.meta.env.BASE_URL,
 
-    // デバッグモードを常に無効化する（警告を出さない）
-    isDebug: false,
+    // デバッグモードを環境変数から取得（デフォルトはfalse）
+    isDebug: getEnv<boolean>('DEBUG', {
+      defaultValue: false,
+      transform: toBool,
+    }),
   },
 };
 
@@ -172,22 +200,22 @@ export function validateEnv(): boolean {
 
   // 不足している環境変数がある場合
   if (missingEnvVars.length > 0) {
-    console.error(`以下の環境変数が設定されていません: ${missingEnvVars.join(', ')}`);
-    console.info(
+    internalLogger.error(`以下の環境変数が設定されていません: ${missingEnvVars.join(', ')}`);
+    internalLogger.info(
       'これらの環境変数を .env ファイルに追加してください。サンプルは .env.example を参照してください。'
     );
 
     // 重要な環境変数が不足している場合は警告レベルを上げる
     if (missingCriticalEnvVars.length > 0) {
-      console.error(
+      internalLogger.error(
         '⚠️ 重要: 以下の必須環境変数が設定されていないため、アプリケーションが正常に動作しません:'
       );
-      console.error(missingCriticalEnvVars.join(', '));
+      internalLogger.error(missingCriticalEnvVars.join(', '));
       return false;
     }
 
     // 重要ではない環境変数のみが不足している場合は警告のみ
-    console.warn('一部の機能が制限される可能性があります。');
+    internalLogger.warn('一部の機能が制限される可能性があります。');
     return true;
   }
 
@@ -203,16 +231,18 @@ export function checkEnvironment(verbose: boolean = false): void {
   const isValid = validateEnv();
 
   if (isValid && verbose && import.meta.env.DEV) {
-    console.info('✅ 環境変数の検証が完了しました。必要な環境変数はすべて設定されています。');
+    internalLogger.info(
+      '✅ 環境変数の検証が完了しました。必要な環境変数はすべて設定されています。'
+    );
 
     // 開発環境での詳細情報（デバッグ用）
-    console.info('🔧 現在の環境設定:');
-    console.info(`- 実行環境: ${import.meta.env.MODE}`);
-    console.info(`- ベースURL: ${import.meta.env.BASE_URL}`);
+    internalLogger.info('🔧 現在の環境設定:');
+    internalLogger.info(`- 実行環境: ${import.meta.env.MODE}`);
+    internalLogger.info(`- ベースURL: ${import.meta.env.BASE_URL}`);
 
     // デバッグモードの表示（新機能）
     if (ENV.env.isDebug) {
-      console.info('🔍 デバッグモードが有効です');
+      internalLogger.info('🔍 デバッグモードが有効です');
     }
   }
 }
@@ -245,3 +275,6 @@ declare global {
     // BASE_URL, MODE, DEV, PRODはViteが提供する型定義をそのまま使用
   }
 }
+
+// ロガーをエクスポートして他のモジュールから使用できるようにする
+export const logger = internalLogger;

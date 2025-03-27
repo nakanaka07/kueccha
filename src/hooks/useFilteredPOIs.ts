@@ -27,15 +27,15 @@ export interface FilterOptions {
 
 /**
  * POIデータをフィルタリングするカスタムフック
- * 
+ *
  * 指定された条件に基づいてPOIをフィルタリングし、結果をメモ化して返します。
  * フィルタリング条件が変更されない限り、同じ参照の配列が返されるため、
  * 不要な再レンダリングを防止します。
- * 
+ *
  * @param pois フィルタリング対象のPOIデータ配列
  * @param filters フィルタリング条件
  * @returns フィルタリングされたPOI配列
- * 
+ *
  * @example
  * ```tsx
  * const { categories, isOpen, searchText } = useFilterState();

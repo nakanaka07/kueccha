@@ -8,8 +8,6 @@ import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
-
-
 interface MapMarkersProps {
   /**
    * 表示するPOIデータの配列
@@ -39,12 +37,12 @@ interface MapMarkersProps {
    * POI詳細表示時のコールバック
    */
   onViewDetails?: (poi: PointOfInterest) => void;
-  
+
   /**
    * マーカーアニメーションを有効にするか
    */
   animateMarkers?: boolean;
-  
+
   /**
    * マーカークラスタリングを有効にするか
    */
@@ -62,7 +60,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   onSelectPOI,
   onViewDetails,
   animateMarkers = true,
-  enableClustering = true
+  enableClustering = true,
 }) => {
   // 選択されたPOI（情報ウィンドウに表示するもの）
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
@@ -71,11 +69,14 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   const filteredPOIs = useFilteredPOIs(pois, filters);
 
   // マーカークリック時のハンドラ
-  const handleMarkerClick = useCallback((poi: PointOfInterest) => {
-    logger.debug('マーカークリック', { poiName: poi.name });
-    setSelectedPOI(poi);
-    onSelectPOI?.(poi);
-  }, [onSelectPOI]);
+  const handleMarkerClick = useCallback(
+    (poi: PointOfInterest) => {
+      logger.debug('マーカークリック', { poiName: poi.name });
+      setSelectedPOI(poi);
+      onSelectPOI?.(poi);
+    },
+    [onSelectPOI]
+  );
 
   // 情報ウィンドウを閉じるハンドラ
   const handleInfoWindowClose = useCallback(() => {
@@ -83,9 +84,12 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   }, []);
 
   // POI詳細表示ハンドラ
-  const handleViewDetails = useCallback((poi: PointOfInterest) => {
-    onViewDetails?.(poi);
-  }, [onViewDetails]);
+  const handleViewDetails = useCallback(
+    (poi: PointOfInterest) => {
+      onViewDetails?.(poi);
+    },
+    [onViewDetails]
+  );
 
   // マーカーとクラスタリングの管理（カスタムフックに移行）
   const { markers, clusterer } = useMapMarkers({
@@ -93,7 +97,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     pois: filteredPOIs,
     onMarkerClick: handleMarkerClick,
     animateMarkers,
-    enableClustering
+    enableClustering,
   });
 
   // マーカー可視性の最適化（カスタムフックに移行）
@@ -101,9 +105,9 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     mapRef,
     markers,
     pois: filteredPOIs,
-    onVisibilityChange: (visibleCount) => {
+    onVisibilityChange: visibleCount => {
       logger.debug(`表示マーカー数: ${visibleCount}/${markers.length}`);
-    }
+    },
   });
 
   // 情報ウィンドウが表示されている場合のみレンダリング（パフォーマンス最適化）
@@ -119,7 +123,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         disableAutoPan: false, // 情報ウィンドウが見えるように地図を自動調整
       }}
     >
-      <div className="info-window-container">
+      <div className='info-window-container'>
         <InfoWindow
           poi={selectedPOI}
           onClose={handleInfoWindowClose}

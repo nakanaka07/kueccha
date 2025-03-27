@@ -1,6 +1,6 @@
 /**
  * アプリケーションログユーティリティ
- * 
+ *
  * 環境に応じた適切なログ出力を行い、将来的な外部サービス連携にも対応可能な
  * 柔軟なロギングシステムを提供します。
  */
@@ -12,14 +12,14 @@ export enum LogLevel {
   ERROR = 'error',
   WARN = 'warn',
   INFO = 'info',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 
 /**
  * ログの追加コンテキスト情報の型定義
  */
 export interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
   component?: string;
   userId?: string;
   requestId?: string;
@@ -39,16 +39,16 @@ export interface LogTransport {
 interface LoggerOptions {
   /** 最小ログレベル（これ以上のレベルのみ表示） */
   minLevel?: LogLevel;
-  
+
   /** コンソール出力を有効にするか */
   enableConsole?: boolean;
-  
+
   /** 追加のログ転送先 */
   transports?: LogTransport[];
-  
+
   /** エラーメッセージの集約（重複防止）を有効にするか */
   deduplicateErrors?: boolean;
-  
+
   /** エラーの重複チェック期間（ミリ秒） */
   deduplicationInterval?: number;
 }
@@ -62,6 +62,18 @@ const defaultOptions: LoggerOptions = {
   transports: [],
   deduplicateErrors: import.meta.env.PROD,
   deduplicationInterval: 10000, // 10秒
+};
+
+// コンソール出力用のラッパー関数（ESLint警告回避）
+const consoleWrapper = {
+  // eslint-disable-next-line no-console
+  error: (msg: string): void => console.error(msg),
+  // eslint-disable-next-line no-console
+  warn: (msg: string): void => console.warn(msg),
+  // eslint-disable-next-line no-console
+  info: (msg: string): void => console.info(msg),
+  // eslint-disable-next-line no-console
+  debug: (msg: string): void => console.debug(msg),
 };
 
 /**
@@ -88,14 +100,17 @@ class Logger {
    */
   private cleanupErrorsInterval(): void {
     if (this.options.deduplicateErrors) {
-      setInterval(() => {
-        const now = Date.now();
-        for (const [key, timestamp] of this.recentErrors.entries()) {
-          if (now - timestamp > (this.options.deduplicationInterval || 10000)) {
-            this.recentErrors.delete(key);
+      setInterval(
+        () => {
+          const now = Date.now();
+          for (const [key, timestamp] of this.recentErrors.entries()) {
+            if (now - timestamp > (this.options.deduplicationInterval ?? 10000)) {
+              this.recentErrors.delete(key);
+            }
           }
-        }
-      }, Math.min(this.options.deduplicationInterval || 10000, 60000)); // 最大1分
+        },
+        Math.min(this.options.deduplicationInterval ?? 10000, 60000)
+      ); // 最大1分
     }
   }
 
@@ -116,7 +131,7 @@ class Logger {
    */
   private logWithLevel(level: LogLevel, message: string, context?: LogContext): void {
     // レベルチェック（設定より低いレベルのログは出力しない）
-    if (this.levelPriority[level] > this.levelPriority[this.options.minLevel || LogLevel.INFO]) {
+    if (this.levelPriority[level] > this.levelPriority[this.options.minLevel ?? LogLevel.INFO]) {
       return;
     }
 
@@ -133,19 +148,19 @@ class Logger {
     // コンソール出力
     if (this.options.enableConsole) {
       const formattedMessage = this.formatMessage(level, message, context);
-      
+
       switch (level) {
         case LogLevel.ERROR:
-          console.error(formattedMessage);
+          consoleWrapper.error(formattedMessage);
           break;
         case LogLevel.WARN:
-          console.warn(formattedMessage);
+          consoleWrapper.warn(formattedMessage);
           break;
         case LogLevel.INFO:
-          console.info(formattedMessage);
+          consoleWrapper.info(formattedMessage);
           break;
         case LogLevel.DEBUG:
-          console.debug(formattedMessage);
+          consoleWrapper.debug(formattedMessage);
           break;
       }
     }
@@ -157,7 +172,8 @@ class Logger {
       } catch (err) {
         // トランスポートエラーはコンソールのみに記録し、無限ループを避ける
         if (this.options.enableConsole) {
-          console.error(`[Logger] Failed to send log to transport: ${err instanceof Error ? err.message : String(err)}`);
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          consoleWrapper.error(`[Logger] Failed to send log to transport: ${errorMessage}`);
         }
       }
     });
@@ -169,15 +185,15 @@ class Logger {
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
     const levelStr = level.toUpperCase().padEnd(5, ' ');
-    
+
     let formattedMessage = `[${timestamp}] [${levelStr}] ${message}`;
-    
+
     if (context && Object.keys(context).length > 0) {
       // コンテキスト情報の追加
       const contextStr = JSON.stringify(context);
       formattedMessage += ` | Context: ${contextStr}`;
     }
-    
+
     return formattedMessage;
   }
 
@@ -187,7 +203,7 @@ class Logger {
    */
   public error(message: string, errorOrContext?: Error | LogContext): void {
     let context: LogContext | undefined;
-    
+
     if (errorOrContext instanceof Error) {
       context = {
         errorName: errorOrContext.name,
@@ -197,7 +213,7 @@ class Logger {
     } else {
       context = errorOrContext;
     }
-    
+
     this.logWithLevel(LogLevel.ERROR, message, context);
   }
 
@@ -230,8 +246,8 @@ class Logger {
    * 処理時間を計測してログ出力します
    */
   public measureTime<T>(
-    taskName: string, 
-    task: () => T, 
+    taskName: string,
+    task: () => T,
     level: LogLevel = LogLevel.DEBUG,
     context?: LogContext
   ): T {
@@ -239,13 +255,12 @@ class Logger {
     const result = task();
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
-    
-    this.logWithLevel(
-      level, 
-      `${taskName} completed in ${duration}ms`, 
-      { ...context, durationMs: duration }
-    );
-    
+
+    this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
+      ...context,
+      durationMs: duration,
+    });
+
     return result;
   }
 
@@ -253,38 +268,34 @@ class Logger {
    * 非同期処理の時間計測用ユーティリティ
    */
   public async measureTimeAsync<T>(
-    taskName: string, 
-    task: Promise<T> | (() => Promise<T>), 
+    taskName: string,
+    task: Promise<T> | (() => Promise<T>),
     level: LogLevel = LogLevel.DEBUG,
     context?: LogContext
   ): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
       const result = typeof task === 'function' ? await task() : await task;
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
-      
-      this.logWithLevel(
-        level, 
-        `${taskName} completed in ${duration}ms`, 
-        { ...context, durationMs: duration }
-      );
-      
+
+      this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
+        ...context,
+        durationMs: duration,
+      });
+
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
-      
-      this.error(
-        `${taskName} failed after ${duration}ms`, 
-        {
-          ...context,
-          durationMs: duration,
-          error: error instanceof Error ? error.message : String(error)
-        }
-      );
-      
+
+      this.error(`${taskName} failed after ${duration}ms`, {
+        ...context,
+        durationMs: duration,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
       throw error;
     }
   }
@@ -310,7 +321,7 @@ class Logger {
    * 外部トランスポートを追加
    */
   public addTransport(transport: LogTransport): void {
-    this.options.transports = [...(this.options.transports || []), transport];
+    this.options.transports = [...(this.options.transports ?? []), transport];
   }
 }
 
@@ -335,7 +346,9 @@ if (import.meta.env.PROD) {
     // });
   } catch (err) {
     // 初期化エラーはコンソールにのみ記録
-    console.error(`[Logger] Failed to initialize external transport: ${err instanceof Error ? err.message : String(err)}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.error(`[Logger] Failed to initialize external transport: ${errorMessage}`);
   }
 }
 

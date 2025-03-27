@@ -89,16 +89,13 @@ function App() {
   const isAppLoading = !isLoaded || isLoadingPOIs;
 
   // 条件判定のメモ化（パフォーマンスと可読性の向上）
-  const shouldShowFilters = useMemo(() => 
-    isLoaded && !displayError
-  , [isLoaded, displayError]);
-  
+  const shouldShowFilters = useMemo(() => isLoaded && !displayError, [isLoaded, displayError]);
+
   // マップマーカー表示の条件判定
-  const shouldShowMarkers = useMemo(() => 
-    isLoaded && 
-    !displayError && 
-    filteredPOIs.length > 0
-  , [isLoaded, displayError, filteredPOIs.length]);
+  const shouldShowMarkers = useMemo(
+    () => isLoaded && !displayError && filteredPOIs.length > 0,
+    [isLoaded, displayError, filteredPOIs.length]
+  );
 
   // マップが実際に利用可能かどうかを確認
   const isMapAvailable = shouldShowMarkers && mapRef.current !== null;
@@ -111,9 +108,7 @@ function App() {
 
       <main>
         {/* フィルターパネル */}
-        {shouldShowFilters && (
-          <FilterPanel pois={pois} onFilterChange={handleFilterChange} />
-        )}
+        {shouldShowFilters && <FilterPanel pois={pois} onFilterChange={handleFilterChange} />}
 
         {/* マップコンテナは常に表示（環境変数エラーがない場合） */}
         {!envError && <MapContainer onMapElementReady={handleMapElementReady} />}

@@ -76,7 +76,7 @@ export const FilterPanelHeader: React.FC<FilterPanelHeaderProps> = ({
         className='filter-toggle-button'
         onClick={togglePanel}
         aria-expanded={isExpanded}
-        aria-controls="filter-content"
+        aria-controls='filter-content'
       >
         {isExpanded ? '絞り込みを閉じる' : '絞り込みを開く'}
       </button>

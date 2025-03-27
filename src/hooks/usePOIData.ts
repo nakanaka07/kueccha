@@ -5,7 +5,6 @@ import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
 import { ENV } from '@/utils/env';
 import { fetchPOIsFromSheet } from '@/utils/googleSheets';
 
-
 interface UsePOIDataOptions {
   enabled?: boolean;
 }

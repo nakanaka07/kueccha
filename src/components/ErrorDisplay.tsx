@@ -16,10 +16,10 @@ interface ErrorDisplayProps {
 /**
  * ユーザーに分かりやすくエラーを表示し、再読み込み機能を提供するコンポーネント
  */
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ 
-  message, 
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
+  message,
   onError,
-  reloadButtonText = "再読み込み" 
+  reloadButtonText = '再読み込み',
 }) => {
   // コンポーネントマウント時に追加のエラーハンドリングを実行
   React.useEffect(() => {
@@ -31,14 +31,10 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   }, []);
 
   return (
-    <div className="error-container" role="alert" aria-live="assertive">
+    <div className='error-container' role='alert' aria-live='assertive'>
       <h2>エラーが発生しました</h2>
       <p>{message}</p>
-      <button 
-        type="button" 
-        onClick={handleReload}
-        className="error-reload-button"
-      >
+      <button type='button' onClick={handleReload} className='error-reload-button'>
         {reloadButtonText}
       </button>
     </div>

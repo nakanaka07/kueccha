@@ -95,7 +95,7 @@ export const isGoogleMapsAvailable = (): boolean => {
   if (typeof window === 'undefined' || typeof window.google === 'undefined') {
     return false;
   }
-  
+
   // googleオブジェクトが存在する場合、mapsプロパティをチェック
   // Record<string, unknown>型を使用して型安全に存在確認
   const googleObj = window.google as Record<string, unknown>;

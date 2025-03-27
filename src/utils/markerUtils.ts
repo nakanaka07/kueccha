@@ -1,4 +1,5 @@
 import { POIType, POICategory, PointOfInterest } from '@/types/poi';
+import { logger } from '@/utils/logger';
 
 /**
  * マーカーアイコンの設定インターフェース
@@ -81,9 +82,9 @@ export function getMarkerIcon(
   if (typeof typeOrPoi === 'object') {
     const poi = typeOrPoi;
 
-    // 型ガード: poiオブジェクトの妥当性を確認
-    if (!poi) {
-      console.warn('無効なPOIオブジェクトが渡されました:', poi);
+    // 型チェックの改善
+    if (poi === null) {
+      logger.warn('無効なPOIオブジェクトが渡されました', { poi });
       // デフォルトのアイコン設定を返す
       return {
         url: 'https://maps.google.com/mapfiles/ms/icons/info-dot.png',
@@ -93,8 +94,8 @@ export function getMarkerIcon(
     }
 
     // POIの種類とカテゴリをデフォルト値と共に取得
-    const poiType = getPOITypeFromString(poi.type || 'other');
-    const poiCategory = getCategoryFromString(poi.category || 'unspecified');
+    const poiType = getPOITypeFromString(poi.type ?? 'other');
+    const poiCategory = getCategoryFromString(poi.category ?? 'unspecified');
     const poiClosed = Boolean(poi.isClosed);
 
     // 通常のgetMarkerIcon関数に処理を委譲（ここでは再帰呼び出し）
@@ -102,13 +103,8 @@ export function getMarkerIcon(
   }
 
   // POIタイプとカテゴリが直接渡された場合
-  // POIタイプに対応するアイコンのベース名を取得
-  const iconBase = POI_TYPE_ICON_BASE[typeOrPoi] || 'info';
-
-  // カテゴリに対応する色を取得
-  // 注: この変数は現在使用されていませんが、将来のカスタマイズ拡張用に維持
-  // const categoryValue = category || 'unspecified';
-  // const color = isClosed ? '9E9E9E' : CATEGORY_COLORS[categoryValue] || CATEGORY_COLORS.unspecified;
+  // in演算子を使用してキーの存在をチェック
+  const iconBase = typeOrPoi in POI_TYPE_ICON_BASE ? POI_TYPE_ICON_BASE[typeOrPoi] : 'info';
 
   // Google Maps Platform Icon APIのURL
   const url = `https://maps.google.com/mapfiles/ms/icons/${iconBase}-dot.png`;
@@ -165,9 +161,10 @@ export function getSvgMarkerIcon(
   isClosed = false
 ): MarkerIconOptions {
   // カテゴリに対応する色を取得
+  const defaultColor = CATEGORY_COLORS.unspecified;
   const color = isClosed
     ? '#9E9E9E'
-    : `#${CATEGORY_COLORS[category]}` || `#${CATEGORY_COLORS.unspecified}`;
+    : `#${category in CATEGORY_COLORS ? CATEGORY_COLORS[category] : defaultColor}`;
 
   // SVGのパス
   const svgPath =
@@ -195,9 +192,6 @@ export function getSvgMarkerIcon(
  * @returns マーカーラベル設定
  */
 export function getMarkerLabel(label: string, _category: POICategory): google.maps.MarkerLabel {
-  // 色の参照だけで使用していないため、未使用変数の警告を回避
-  // const color = `#${CATEGORY_COLORS[category]}` || `#${CATEGORY_COLORS.unspecified}`;
-
   return {
     text: label,
     color: 'white',
@@ -247,7 +241,7 @@ export function getDefaultCategoryFilter(): Record<string, boolean> {
  * @param map Google Maps インスタンス
  */
 export function fitMapToMarkers(markers: google.maps.Marker[], map: google.maps.Map): void {
-  if (!markers.length) return;
+  if (markers.length === 0) return;
 
   const bounds = new google.maps.LatLngBounds();
 
@@ -282,7 +276,8 @@ export function formatWeekdaySchedule(poi: PointOfInterest): {
   daysOff?: string;
   [key: string]: string | undefined;
 } {
-  if (!poi) {
+  // nullチェックを修正
+  if (poi === null) {
     return {};
   }
 
@@ -336,9 +331,9 @@ export function isInViewport(
   const bounds = map.getBounds();
   if (!bounds) return true; // 境界が取得できない場合は表示とみなす
 
-  // 位置情報が有効かチェック
-  if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
-    console.warn('無効な位置情報:', position);
+  // 位置情報が有効かチェック（型の重複を避ける）
+  if (position === null || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
+    logger.warn('無効な位置情報', { position });
     return false;
   }
 
@@ -354,7 +349,7 @@ export function isInViewport(
 
       // パディングをパーセンテージとして算出（地図サイズの相対値）
       const div = document.getElementById('map');
-      if (!div) return true;
+      if (div === null) return true;
 
       const mapWidth = div.clientWidth;
       const mapHeight = div.clientHeight;
@@ -374,7 +369,10 @@ export function isInViewport(
     // パディングなしの場合は単純に境界チェック
     return bounds.contains(new google.maps.LatLng(position.lat, position.lng));
   } catch (error) {
-    console.error('表示範囲の確認中にエラーが発生しました:', error);
+    logger.error(
+      '表示範囲の確認中にエラーが発生しました',
+      error instanceof Error ? error : undefined
+    );
     return true; // エラーの場合は表示とみなす（フォールバック）
   }
 }
