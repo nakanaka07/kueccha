@@ -1,7 +1,7 @@
-import { formatWeekdaySchedule } from '@utils/markerUtils';
 import React, { useState } from 'react';
 
 import { PointOfInterest } from '@/types/poi';
+import { formatWeekdaySchedule } from '@/utils/markerUtils';
 import '@/global.css';
 
 interface POIDetailsProps {

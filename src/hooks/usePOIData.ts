@@ -1,9 +1,10 @@
-import { parseCSVtoPOIs, combinePOIArrays } from '@utils/csvProcessor';
-import { ENV } from '@utils/env';
-import { fetchPOIsFromSheet } from '@utils/googleSheets';
 import { useState, useEffect } from 'react';
 
 import { POI, convertPOIToPointOfInterest, PointOfInterest } from '@/types/poi';
+import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
+import { ENV } from '@/utils/env';
+import { fetchPOIsFromSheet } from '@/utils/googleSheets';
+
 
 interface UsePOIDataOptions {
   enabled?: boolean;

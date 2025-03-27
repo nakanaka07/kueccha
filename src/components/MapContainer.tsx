@@ -1,6 +1,17 @@
 import { useRef, useEffect, useCallback } from 'react';
 
 /**
+ * 開発環境でのみログを出力するユーティリティ関数
+ * ESLint の console 警告を回避し、一貫したログ出力を提供
+ */
+const logDevOnly = (message: string): void => {
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log(message);
+  }
+};
+
+/**
  * MapContainerコンポーネントのプロパティ定義
  */
 interface MapContainerProps {
@@ -23,20 +34,14 @@ export const MapContainer = ({
 
   // コールバック処理を最適化：useCallbackで再レンダリングによる不要な再生成を防止
   const handleMapElementReady = useCallback(() => {
-    // 開発環境でのみログを出力
-    if (import.meta.env.DEV) {
-      console.log('MapContainer: onMapElementReady を呼び出します');
-    }
+    logDevOnly('MapContainer: onMapElementReady を呼び出します');
     onMapElementReady();
   }, [onMapElementReady]);
 
   useEffect(() => {
     // 要素が存在し、まだコールバックが発火していない場合のみ実行
     if (mapRef.current && !callbackFiredRef.current) {
-      // 開発環境でのみログを出力
-      if (import.meta.env.DEV) {
-        console.log('MapContainer: マップ要素がDOMに追加されました');
-      }
+      logDevOnly('MapContainer: マップ要素がDOMに追加されました');
 
       // コールバックの発火を記録
       callbackFiredRef.current = true;

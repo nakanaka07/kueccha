@@ -1,6 +1,6 @@
-import { ENV } from '@utils/env';
-
 import { POIType } from '@/types/poi';
+import { ENV } from '@/utils/env';
+
 
 import { parseCSVtoPOIs } from './csvProcessor';
 

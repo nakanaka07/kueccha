@@ -302,19 +302,13 @@ export default defineConfig(({ mode }): UserConfig => {
     // パス別名 - コード最適化ガイドラインに沿って設定
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src'),
-        '@assets': resolve(__dirname, './src/assets'),
-        '@components': resolve(__dirname, './src/components'),
-        '@constants': resolve(__dirname, './src/constants'),
-        '@hooks': resolve(__dirname, './src/hooks'),
-        '@types': resolve(__dirname, './src/types'),
-        '@utils': resolve(__dirname, './src/utils'),
-        '@contexts': resolve(__dirname, './src/contexts'),
-        '@layouts': resolve(__dirname, './src/layouts'),
-        '@features': resolve(__dirname, './src/features'),
-        '@api': resolve(__dirname, './src/api'),
-        '@tests': resolve(__dirname, './src/tests'),
-        '@config': resolve(__dirname, './src/config'),
+        '@/': resolve(__dirname, './src'),
+        '@/assets': resolve(__dirname, './src/assets'),
+        '@/components': resolve(__dirname, './src/components'),
+        '@/constants': resolve(__dirname, './src/constants'),
+        '@/hooks': resolve(__dirname, './src/hooks'),
+        '@/types': resolve(__dirname, './src/types'),
+        '@/utils': resolve(__dirname, './src/utils'),
       },
     },
 

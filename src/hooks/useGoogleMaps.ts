@@ -1,8 +1,8 @@
 import { Loader } from '@googlemaps/js-api-loader';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-import { MAP_ID_CONFIG, getLoaderOptions } from '../constants/maps';
-import { ENV } from '../utils/env';
+import { MAP_ID_CONFIG, getLoaderOptions } from '@/constants/maps';
+import { ENV } from '@/utils/env';
 
 export interface GoogleMapsState {
   isLoaded: boolean;

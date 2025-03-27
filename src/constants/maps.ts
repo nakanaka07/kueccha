@@ -91,7 +91,15 @@ export const MAP_ID_CONFIG = {
  * @returns google.mapsが利用可能かどうか
  */
 export const isGoogleMapsAvailable = (): boolean => {
-  return typeof google !== 'undefined' && google.maps !== undefined;
+  // グローバルスコープでgoogleオブジェクトが存在するかチェック
+  if (typeof window === 'undefined' || typeof window.google === 'undefined') {
+    return false;
+  }
+  
+  // googleオブジェクトが存在する場合、mapsプロパティをチェック
+  // Record<string, unknown>型を使用して型安全に存在確認
+  const googleObj = window.google as Record<string, unknown>;
+  return Object.prototype.hasOwnProperty.call(googleObj, 'maps') && googleObj.maps !== undefined;
 };
 
 /**
