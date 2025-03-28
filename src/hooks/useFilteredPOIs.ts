@@ -26,6 +26,48 @@ export interface FilterOptions {
 }
 
 /**
+ * カテゴリフィルタリングのロジック
+ */
+const matchesCategory = (poi: PointOfInterest, categories?: string[]): boolean => {
+  if (!categories?.length) return true;
+  return !!poi.categories?.some(category => categories.includes(category));
+};
+
+/**
+ * 営業状態フィルタリングのロジック
+ */
+const isOpenNow = (poi: PointOfInterest): boolean => {
+  // 永久閉店している場合
+  if (poi.isClosed) return false;
+
+  // 現在の曜日が定休日かチェック
+  const now = new Date();
+  const day = now.getDay();
+  const dayNames = ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜'];
+  const currentDayName = dayNames[day];
+
+  // 型安全に動的プロパティにアクセス
+  const closedKey = `${currentDayName}定休日` as keyof PointOfInterest;
+  return poi[closedKey] !== true;
+};
+
+/**
+ * テキスト検索フィルタリングのロジック
+ */
+const matchesSearchText = (poi: PointOfInterest, searchText?: string): boolean => {
+  if (!searchText) return true;
+
+  const searchLower = searchText.toLowerCase();
+
+  // 各プロパティの型に合わせて適切にアクセス
+  const name = poi.name.toLowerCase();
+  const genre = poi.genre?.toLowerCase() ?? '';
+  const address = poi.address.toLowerCase();
+
+  return name.includes(searchLower) || genre.includes(searchLower) || address.includes(searchLower);
+};
+
+/**
  * POIデータをフィルタリングするカスタムフック
  *
  * 指定された条件に基づいてPOIをフィルタリングし、結果をメモ化して返します。
@@ -51,51 +93,11 @@ export function useFilteredPOIs(
     if (!pois.length) return [];
 
     return pois.filter(poi => {
-      // カテゴリフィルタリング
-      if (filters.categories?.length) {
-        // POIがカテゴリを持つか確認し、フィルタカテゴリとの一致をチェック
-        if (!poi.categories?.some(category => filters.categories?.includes(category))) {
-          return false;
-        }
-      }
+      // すべてのフィルター条件を適用
+      if (!matchesCategory(poi, filters.categories)) return false;
+      if (filters.isOpen && !isOpenNow(poi)) return false;
+      if (!matchesSearchText(poi, filters.searchText)) return false;
 
-      // 営業中フィルタリング
-      if (filters.isOpen) {
-        // 永久閉店している場合は除外
-        if (poi.isClosed) return false;
-
-        // 現在の曜日が定休日かチェック
-        const now = new Date();
-        const day = now.getDay();
-        const dayNames = ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜'];
-        const currentDayName = dayNames[day];
-
-        // 型安全に動的プロパティにアクセス
-        // 例: 「月曜定休日」プロパティが true の場合、月曜日は除外
-        const closedKey = `${currentDayName}定休日` as keyof PointOfInterest;
-        if (poi[closedKey] === true) return false;
-      }
-
-      // テキストフィルタリング
-      if (filters.searchText) {
-        const searchLower = filters.searchText.toLowerCase();
-
-        // 検索対象フィールドの値を取得（存在しない場合は空文字列）
-        const name = poi.name.toLowerCase() || '';
-        const genre = poi.genre?.toLowerCase() || '';
-        const address = poi.address.toLowerCase() || '';
-
-        // 名称、ジャンル、住所のいずれかにマッチするか
-        const nameMatch = name.includes(searchLower);
-        const genreMatch = genre.includes(searchLower);
-        const addressMatch = address.includes(searchLower);
-
-        if (!(nameMatch || genreMatch || addressMatch)) {
-          return false;
-        }
-      }
-
-      // すべての条件を満たした場合のみtrueを返す
       return true;
     });
   }, [pois, filters.categories, filters.isOpen, filters.searchText]);

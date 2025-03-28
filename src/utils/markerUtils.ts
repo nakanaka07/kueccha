@@ -82,10 +82,14 @@ export function getMarkerIcon(
   if (typeof typeOrPoi === 'object') {
     const poi = typeOrPoi;
 
-    // POIの種類とカテゴリを取得
-    // 空文字列もデフォルト値で置き換えるため、nullish coalescing operator(??）を使用
-    const poiType = getPOITypeFromString(poi.type ?? 'other');
-    const poiCategory = getCategoryFromString(poi.category ?? 'unspecified');
+    // 型安全な方法でプロパティを取得し処理
+    // 文字列型を確実に保証するための処理
+    const typeStr = typeof poi.type === 'string' ? poi.type : '';
+    const categoryStr = typeof poi.category === 'string' ? poi.category : '';
+
+    // 空文字列の場合はデフォルト値を使用
+    const poiType = getPOITypeFromString(typeStr || 'other');
+    const poiCategory = getCategoryFromString(categoryStr || 'unspecified');
     const poiClosed = Boolean(poi.isClosed);
 
     // 通常のgetMarkerIcon関数に処理を委譲（ここでは再帰呼び出し）

@@ -69,7 +69,7 @@ export function convertValuesToCSV(values: string[][]): string {
         .map(cell => {
           // カンマを含むセルは引用符で囲む
           // nullとundefinedを処理し、空文字列にフォールバック
-          if (cell && cell.includes(',')) {
+          if (cell.includes(',')) {
             return `"${cell}"`;
           }
           return cell || '';

@@ -28,7 +28,7 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
   try {
     // CSVの行に分割
     const lines = csvText.split('\n');
-    
+
     // 空のCSVファイルの場合
     if (lines.length === 0) {
       return [];
@@ -36,7 +36,7 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
 
     // ヘッダー行（項目名）を取得
     const headers = lines[0].split(',').map(h => h.trim());
-    
+
     // ヘッダーのインデックスをマッピング
     const columnMap = createColumnMap(headers);
 
@@ -46,7 +46,10 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
       .filter(line => line.trim() !== '')
       .map((line, index) => createPOI(line, columnMap, type, index));
   } catch (error) {
-    logger.error('CSVデータの解析中にエラーが発生しました', error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      'CSVデータの解析中にエラーが発生しました',
+      error instanceof Error ? error : new Error(String(error))
+    );
     return [];
   }
 }
@@ -55,85 +58,104 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
  * 1行のCSVデータからPOIオブジェクトを作成
  * 複雑度を下げるために小さな責務に分割
  */
-function createPOI(line: string, columnMap: Record<string, number>, type: POIType, index: number): POI {
+function createPOI(
+  line: string,
+  columnMap: Record<string, number>,
+  type: POIType,
+  index: number
+): POI {
   // CSVの列を分割（カンマの中にカンマがある場合を考慮）
   const columns = parseCSVLine(line);
-  
+
   // POIの基本情報を抽出
   const basicInfo = extractBasicInfo(columns, columnMap, type, index);
-  
+
   // POIの位置情報を抽出
   const locationInfo = extractLocationInfo(columns, columnMap);
-  
+
   // POIのカテゴリ情報を抽出
   const categoryInfo = extractCategoryInfo(columns, columnMap);
-  
+
   // POIの詳細情報を抽出
   const detailInfo = extractDetailInfo(columns, columnMap);
-  
+
   // 検索用のテキストを準備
   const searchText = createSearchText(columns, columnMap);
-  
+
   // 各情報を組み合わせてPOIオブジェクトを構築
   return {
     ...basicInfo,
     ...locationInfo,
     ...categoryInfo,
     ...detailInfo,
-    searchText
+    searchText,
   };
 }
 
 /**
  * POIの基本情報を抽出
  */
-function extractBasicInfo(columns: string[], columnMap: Record<string, number>, type: POIType, index: number): Pick<POI, 'id' | 'name' | 'type' | 'isClosed'> {
+function extractBasicInfo(
+  columns: string[],
+  columnMap: Record<string, number>,
+  type: POIType,
+  index: number
+): Pick<POI, 'id' | 'name' | 'type' | 'isClosed'> {
   return {
     id: `${type}-${index}`,
     name: columns[columnMap.name]?.trim() || '名称不明',
     type,
-    isClosed: columns[columnMap.closed]?.toLowerCase() === 'true'
+    isClosed: columns[columnMap.closed]?.toLowerCase() === 'true',
   };
 }
 
 /**
  * POIの位置情報を抽出
  */
-function extractLocationInfo(columns: string[], columnMap: Record<string, number>): Pick<POI, 'position' | 'address' | 'area'> {
+function extractLocationInfo(
+  columns: string[],
+  columnMap: Record<string, number>
+): Pick<POI, 'position' | 'address' | 'area'> {
   return {
     position: parseWKT(columns[columnMap.wkt]),
     address: columns[columnMap.address]?.trim() || '',
-    area: columns[columnMap.area]?.trim() || ''
+    area: columns[columnMap.area]?.trim() || '',
   };
 }
 
 /**
  * POIのカテゴリ情報を抽出
  */
-function extractCategoryInfo(columns: string[], columnMap: Record<string, number>): Pick<POI, 'category' | 'genre'> {
+function extractCategoryInfo(
+  columns: string[],
+  columnMap: Record<string, number>
+): Pick<POI, 'category' | 'genre'> {
   const category = determineCategory(
     columns[columnMap.japaneseFood]?.toLowerCase() === 'true',
     columns[columnMap.westernFood]?.toLowerCase() === 'true',
     columns[columnMap.otherFood]?.toLowerCase() === 'true',
     columns[columnMap.retail]?.toLowerCase() === 'true'
   );
-  
+
   return {
     category,
-    genre: columns[columnMap.genre]?.trim() || ''
+    genre: columns[columnMap.genre]?.trim() || '',
   };
 }
 
 /**
  * POIの詳細情報を抽出
  */
-function extractDetailInfo(columns: string[], columnMap: Record<string, number>): Pick<POI, 'contact' | 'businessHours' | 'parkingInfo' | 'infoUrl' | 'googleMapsUrl'> {
+function extractDetailInfo(
+  columns: string[],
+  columnMap: Record<string, number>
+): Pick<POI, 'contact' | 'businessHours' | 'parkingInfo' | 'infoUrl' | 'googleMapsUrl'> {
   return {
     contact: columns[columnMap.contact]?.trim() || '',
     businessHours: columns[columnMap.businessHours]?.trim() || '',
     parkingInfo: columns[columnMap.parkingInfo]?.trim() || '',
     infoUrl: columns[columnMap.info]?.trim() || '',
-    googleMapsUrl: columns[columnMap.googleMaps]?.trim() || ''
+    googleMapsUrl: columns[columnMap.googleMaps]?.trim() || '',
   };
 }
 
@@ -144,9 +166,9 @@ function createSearchText(columns: string[], columnMap: Record<string, number>):
   const searchTextRaw = [
     columns[columnMap.name] || '',
     columns[columnMap.genre] || '',
-    columns[columnMap.address] || ''
+    columns[columnMap.address] || '',
   ].join(' ');
-  
+
   return normalizeText(searchTextRaw);
 }
 
@@ -169,7 +191,7 @@ function createColumnMap(headers: string[]): Record<string, number> {
     area: headers.indexOf('地区（入力）'),
     businessHours: headers.indexOf('営業時間'),
     info: headers.indexOf('関連情報（入力）'),
-    googleMaps: headers.indexOf('Google マップで見る（入力）')
+    googleMaps: headers.indexOf('Google マップで見る（入力）'),
   };
 }
 
@@ -225,7 +247,10 @@ function parseWKT(wkt: string): google.maps.LatLngLiteral {
     logger.warn(`無効なWKT形式の座標です: ${wkt}`);
     return DEFAULT_POSITION;
   } catch (error) {
-    logger.error('WKT座標の解析中にエラーが発生しました', error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      'WKT座標の解析中にエラーが発生しました',
+      error instanceof Error ? error : new Error(String(error))
+    );
     return DEFAULT_POSITION;
   }
 }
@@ -262,17 +287,19 @@ function determineCategory(
 function normalizeText(text: string): string {
   if (!text) return '';
 
-  return text
-    .toLowerCase()
-    // カタカナをひらがなに変換
-    .replace(/[\u30A1-\u30F6]/g, match => {
-      const chr = match.charCodeAt(0) - 0x60;
-      return String.fromCharCode(chr);
-    })
-    // 全角数字を半角に変換
-    .replace(/[０-９]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xfee0))
-    // 全角英字を半角に変換
-    .replace(/[Ａ-Ｚａ-ｚ]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xfee0));
+  return (
+    text
+      .toLowerCase()
+      // カタカナをひらがなに変換
+      .replace(/[\u30A1-\u30F6]/g, match => {
+        const chr = match.charCodeAt(0) - 0x60;
+        return String.fromCharCode(chr);
+      })
+      // 全角数字を半角に変換
+      .replace(/[０-９]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xfee0))
+      // 全角英字を半角に変換
+      .replace(/[Ａ-Ｚａ-ｚ]/g, match => String.fromCharCode(match.charCodeAt(0) - 0xfee0))
+  );
 }
 
 /**

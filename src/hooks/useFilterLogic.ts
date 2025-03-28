@@ -23,6 +23,88 @@ export interface FilterLogicResult extends FilterState {
   handleResetFilters: () => void;
 }
 
+// 共通の選択状態変更ロジックを抽出
+const useFilterSelection = () => {
+  // 全選択/全解除ハンドラの生成関数
+  const createToggleHandler = useCallback(
+    (
+      items: string[],
+      setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+    ) => {
+      return (select: boolean) => {
+        const updated: Record<string, boolean> = {};
+        items.forEach(item => {
+          updated[item] = select;
+        });
+        setFilters(updated);
+      };
+    },
+    []
+  );
+
+  // 単一項目のチェック状態変更ハンドラを生成する関数
+  const createChangeHandler = useCallback(
+    (setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>) => {
+      return (item: string, checked: boolean) => {
+        setFilters(prev => ({
+          ...prev,
+          [item]: checked,
+        }));
+      };
+    },
+    []
+  );
+
+  return { createToggleHandler, createChangeHandler };
+};
+
+// POIをフィルタリングする関数
+const filterPOIs = (
+  pois: PointOfInterest[],
+  categoryFilters: Record<string, boolean>,
+  districtFilters: Record<string, boolean>,
+  statusFilter: StatusFilter,
+  searchText: string
+): PointOfInterest[] => {
+  return pois.filter(poi => {
+    // カテゴリ・地区フィルタ
+    if (poi.category && !categoryFilters[poi.category]) return false;
+    if (poi.district && !districtFilters[poi.district]) return false;
+
+    // 営業状態フィルタ
+    if (statusFilter === 'open' && poi.isClosed) return false;
+    if (statusFilter === 'closed' && !poi.isClosed) return false;
+
+    // テキスト検索フィルタ
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      return (
+        poi.name.toLowerCase().includes(searchLower) ||
+        poi.address.toLowerCase().includes(searchLower) ||
+        (poi.genre?.toLowerCase().includes(searchLower) ?? false)
+      );
+    }
+
+    return true;
+  });
+};
+
+// ユニークカテゴリと地区を抽出する関数
+const extractUniqueValues = (pois: PointOfInterest[]) => {
+  const categoriesSet = new Set<string>();
+  const districtsSet = new Set<string>();
+
+  pois.forEach(poi => {
+    if (poi.category) categoriesSet.add(poi.category);
+    if (poi.district) districtsSet.add(poi.district);
+  });
+
+  return {
+    categories: Array.from(categoriesSet).sort(),
+    districts: Array.from(districtsSet).sort(),
+  };
+};
+
 export function useFilterLogic(
   pois: PointOfInterest[],
   onFilterChange: (filteredPois: PointOfInterest[]) => void
@@ -34,111 +116,56 @@ export function useFilterLogic(
   const [searchText, setSearchText] = useState('');
 
   // POIデータからユニークなカテゴリーと地区を抽出
-  const { categories, districts } = useMemo(() => {
-    const categoriesSet = new Set<string>();
-    const districtsSet = new Set<string>();
+  const { categories, districts } = useMemo(() => extractUniqueValues(pois), [pois]);
 
-    pois.forEach(poi => {
-      if (poi.category) categoriesSet.add(poi.category);
-      if (poi.district) districtsSet.add(poi.district);
-    });
+  // フィルター選択状態管理ロジック
+  const { createToggleHandler, createChangeHandler } = useFilterSelection();
 
-    return {
-      categories: Array.from(categoriesSet).sort(),
-      districts: Array.from(districtsSet).sort(),
-    };
-  }, [pois]);
+  // カテゴリーとディストリクト用のハンドラ
+  const handleCategoryChange = useCallback(
+    (category: string, checked: boolean) =>
+      createChangeHandler(setCategoryFilters)(category, checked),
+    [createChangeHandler]
+  );
+
+  const handleDistrictChange = useCallback(
+    (district: string, checked: boolean) =>
+      createChangeHandler(setDistrictFilters)(district, checked),
+    [createChangeHandler]
+  );
+
+  const handleToggleAllCategories = useCallback(
+    (select: boolean) => createToggleHandler(categories, setCategoryFilters)(select),
+    [createToggleHandler, categories]
+  );
+
+  const handleToggleAllDistricts = useCallback(
+    (select: boolean) => createToggleHandler(districts, setDistrictFilters)(select),
+    [createToggleHandler, districts]
+  );
 
   // 初期化時にすべてのカテゴリと地区を選択状態にする
   useEffect(() => {
-    const initialCategoryFilters: Record<string, boolean> = {};
-    const initialDistrictFilters: Record<string, boolean> = {};
-
-    categories.forEach(category => {
-      initialCategoryFilters[category] = true;
-    });
-
-    districts.forEach(district => {
-      initialDistrictFilters[district] = true;
-    });
-
-    setCategoryFilters(initialCategoryFilters);
-    setDistrictFilters(initialDistrictFilters);
-  }, [categories, districts]);
+    handleToggleAllCategories(true);
+    handleToggleAllDistricts(true);
+  }, [categories, districts, handleToggleAllCategories, handleToggleAllDistricts]);
 
   // フィルタリング処理
   const applyFilters = useCallback(() => {
-    const filtered = pois.filter(poi => {
-      // カテゴリフィルタ
-      if (poi.category && !categoryFilters[poi.category]) return false;
-
-      // 地区フィルタ
-      if (poi.district && !districtFilters[poi.district]) return false;
-
-      // 営業状態フィルタ
-      if (statusFilter === 'open' && poi.isClosed) return false;
-      if (statusFilter === 'closed' && !poi.isClosed) return false;
-
-      // テキスト検索フィルタ
-      if (searchText) {
-        const searchLower = searchText.toLowerCase();
-        const nameMatch = poi.name.toLowerCase().includes(searchLower);
-        const addressMatch = poi.address.toLowerCase().includes(searchLower);
-        const genreMatch = poi.genre?.toLowerCase().includes(searchLower);
-
-        if (!(nameMatch || addressMatch || genreMatch)) return false;
-      }
-
-      return true;
-    });
-
-    onFilterChange(filtered);
+    const filteredPois = filterPOIs(
+      pois,
+      categoryFilters,
+      districtFilters,
+      statusFilter,
+      searchText
+    );
+    onFilterChange(filteredPois);
   }, [pois, categoryFilters, districtFilters, statusFilter, searchText, onFilterChange]);
 
   // フィルタ変更時の処理
   useEffect(() => {
     applyFilters();
   }, [applyFilters]);
-
-  // カテゴリフィルタの変更ハンドラ
-  const handleCategoryChange = useCallback((category: string, checked: boolean) => {
-    setCategoryFilters(prev => ({
-      ...prev,
-      [category]: checked,
-    }));
-  }, []);
-
-  // 地区フィルタの変更ハンドラ
-  const handleDistrictChange = useCallback((district: string, checked: boolean) => {
-    setDistrictFilters(prev => ({
-      ...prev,
-      [district]: checked,
-    }));
-  }, []);
-
-  // すべてのカテゴリを選択/解除するハンドラ
-  const handleToggleAllCategories = useCallback(
-    (select: boolean) => {
-      const updated: Record<string, boolean> = {};
-      categories.forEach(category => {
-        updated[category] = select;
-      });
-      setCategoryFilters(updated);
-    },
-    [categories]
-  );
-
-  // すべての地区を選択/解除するハンドラ
-  const handleToggleAllDistricts = useCallback(
-    (select: boolean) => {
-      const updated: Record<string, boolean> = {};
-      districts.forEach(district => {
-        updated[district] = select;
-      });
-      setDistrictFilters(updated);
-    },
-    [districts]
-  );
 
   // フィルタをリセットするハンドラ
   const handleResetFilters = useCallback(() => {
