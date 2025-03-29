@@ -11,13 +11,13 @@ export default defineConfig({
   // エイリアス設定 - tsconfig.jsonと完全に同期
   resolve: {
     alias: {
-      '@': resolvePath('./src'),
-      '@assets': resolvePath('./src/assets'),
-      '@components': resolvePath('./src/components'),
-      '@constants': resolvePath('./src/constants'),
-      '@hooks': resolvePath('./src/hooks'),
-      '@types': resolvePath('./src/types'),
-      '@utils': resolvePath('./src/utils'),
+      '@/': resolvePath('./src'),
+      '@/assets': resolvePath('./src/assets'),
+      '@/components': resolvePath('./src/components'),
+      '@/constants': resolvePath('./src/constants'),
+      '@/hooks': resolvePath('./src/hooks'),
+      '@/types': resolvePath('./src/types'),
+      '@/utils': resolvePath('./src/utils'),
     },
   },
 

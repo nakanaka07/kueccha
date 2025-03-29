@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/global.css';
 import { validateEnv } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 /**
  * アプリケーションのエントリーポイント
@@ -16,13 +17,18 @@ import { validateEnv } from '@/utils/env';
 if (import.meta.env.DEV && !validateEnv()) {
   const errorMessage =
     '必要な環境変数が設定されていません。アプリケーションが正常に動作しない可能性があります。';
-  // エラー通知用のUI要素を表示（console.warnの代わり）
-  const rootElement = document.createElement('div');
-  rootElement.className = 'env-error-notification';
-  rootElement.textContent = errorMessage;
-  document.body.prepend(rootElement);
+
+  // エラー通知用のUI要素を表示
+  const errorElement = document.createElement('div');
+  errorElement.className = 'env-error-notification';
+  errorElement.textContent = errorMessage;
+  document.body.prepend(errorElement);
+
+  // デバッグ情報をログに出力 - 型エラー修正
+  logger.error('[環境変数エラー]', new Error(errorMessage));
 }
 
+// アプリケーションのマウント処理
 const rootElement = document.getElementById('root');
 
 // root要素が存在することを確認
@@ -36,4 +42,5 @@ if (rootElement) {
   // root要素が見つからない場合のエラーハンドリング
   document.body.innerHTML =
     '<div class="critical-error">アプリケーションの読み込みに失敗しました。</div>';
+  logger.error('[マウントエラー]', new Error('rootエレメントが見つかりません。'));
 }
