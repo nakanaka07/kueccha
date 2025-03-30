@@ -36,8 +36,7 @@
     // パスエイリアスの活用（code_optimization_guidelinesに記載された推奨事項）
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@App/*": ["src/App/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": [
