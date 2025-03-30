@@ -6,6 +6,7 @@ import { useCallback, useState, useMemo } from 'react';
 // プロジェクト固有のインポート
 import { useFilterLogic } from '@/hooks/useFilterLogic';
 import { PointOfInterest } from '@/types/poi';
+import { logger } from '@/utils/logger';
 
 import {
   CheckboxGroup,
@@ -27,10 +28,17 @@ interface FilterPanelProps {
  * パネルは展開/折りたたみ可能で、ユーザーは必要に応じて詳細なフィルターにアクセスできます。
  */
 const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, className = '' }) => {
+  logger.debug('FilterPanelレンダリング', { poisCount: pois.length });
   const [isExpanded, setIsExpanded] = useState(false);
   const filterLogic = useFilterLogic(pois, onFilterChange);
+
+  // トグル操作の最適化
   const togglePanel = useCallback(() => {
-    setIsExpanded(prev => !prev);
+    setIsExpanded(prev => {
+      const newState = !prev;
+      logger.debug('フィルターパネル状態変更', { expanded: newState });
+      return newState;
+    });
   }, []);
 
   // フィルターグループの定義を配列として抽象化
@@ -67,6 +75,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
     ]
   );
 
+  // リセット処理のパフォーマンス計測
+  const handleResetFilters = useCallback(() => {
+    logger.measureTime('フィルターリセット処理', () => {
+      filterLogic.handleResetFilters();
+    });
+  }, [filterLogic]);
+
   return (
     <div
       className={`filter-panel ${className} ${isExpanded ? 'expanded' : 'collapsed'}`}
@@ -79,7 +94,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
         <div
           id='filter-content'
           className='filter-panel-content'
-          // aria-expanded属性を削除（divではなくトグルボタンに属するべき属性）
+          role='group'
+          aria-labelledby='filter-heading'
         >
           {/* テキスト検索フィルター */}
           <SearchInput value={filterLogic.searchText} onChange={filterLogic.setSearchText} />
@@ -101,6 +117,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
               onDeselectAll={() => group.onToggleAll(false)}
               groupLabel={group.groupLabel}
               itemLabelPrefix={group.itemLabelPrefix}
+              id={`${group.id}-filter-group`}
               aria-labelledby={`${group.id}-filter-heading`}
             />
           ))}
@@ -109,7 +126,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
           <div className='filter-actions'>
             <button
               type='button'
-              onClick={filterLogic.handleResetFilters}
+              onClick={handleResetFilters}
               className='reset-button'
               aria-label='すべてのフィルターをリセット'
             >

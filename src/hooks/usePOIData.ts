@@ -1,14 +1,140 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { POI, convertPOIToPointOfInterest, PointOfInterest } from '@/types/poi';
+import { POI, PointOfInterest } from '@/types/poi';
 import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
 import { ENV } from '@/utils/env';
 import { fetchPOIsFromSheet } from '@/utils/googleSheets';
+import { logger, LogLevel } from '@/utils/logger';
 
 interface UsePOIDataOptions {
   enabled?: boolean;
 }
 
+/**
+ * Google Sheetsからデータを取得する関数
+ */
+async function fetchDataFromGoogleSheets(logContext: Record<string, unknown>): Promise<POI[]> {
+  logger.info('Google Sheetsからデータを取得しています', logContext);
+
+  const [restaurants, parking, toilets] = await logger.measureTimeAsync(
+    'Google Sheetsからのデータ取得',
+    () =>
+      Promise.all([
+        fetchPOIsFromSheet('restaurant', 'レストラン!A1:Z1000'),
+        fetchPOIsFromSheet('parking', '駐車場!A1:Z1000'),
+        fetchPOIsFromSheet('toilet', 'トイレ!A1:Z1000'),
+      ]),
+    LogLevel.INFO,
+    logContext
+  );
+
+  // データの結合を計測
+  return logger.measureTime(
+    'POIデータの結合処理',
+    () => combinePOIArrays(restaurants, parking, toilets),
+    LogLevel.DEBUG,
+    {
+      ...logContext,
+      counts: {
+        restaurants: restaurants.length,
+        parking: parking.length,
+        toilets: toilets.length,
+      },
+    }
+  );
+}
+
+/**
+ * CSVファイルからデータを取得する関数
+ */
+async function fetchDataFromCSVFiles(logContext: Record<string, unknown>): Promise<POI[]> {
+  logger.info('静的CSVファイルからデータを取得しています', logContext);
+
+  const restaurantCSVUrl = '/data/restaurants.csv';
+  const parkingCSVUrl = '/data/parking.csv';
+  const toiletCSVUrl = '/data/toilets.csv';
+
+  // 各CSVファイルの取得
+  const [restaurantsResponse, parkingResponse, toiletsResponse] = await logger.measureTimeAsync(
+    'CSVファイルのフェッチ',
+    () => Promise.all([fetch(restaurantCSVUrl), fetch(parkingCSVUrl), fetch(toiletCSVUrl)]),
+    LogLevel.INFO,
+    { ...logContext, urls: [restaurantCSVUrl, parkingCSVUrl, toiletCSVUrl] }
+  );
+
+  // レスポンスチェック
+  if (!restaurantsResponse.ok || !parkingResponse.ok || !toiletsResponse.ok) {
+    const failedUrls = [
+      !restaurantsResponse.ok ? restaurantCSVUrl : null,
+      !parkingResponse.ok ? parkingCSVUrl : null,
+      !toiletsResponse.ok ? toiletCSVUrl : null,
+    ].filter(Boolean);
+
+    throw new Error(`CSVファイルの取得に失敗しました: ${failedUrls.join(', ')}`);
+  }
+
+  // テキストデータへの変換
+  const [restaurantsCSV, parkingCSV, toiletsCSV] = await logger.measureTimeAsync(
+    'レスポンスのテキスト変換',
+    () => Promise.all([restaurantsResponse.text(), parkingResponse.text(), toiletsResponse.text()]),
+    LogLevel.DEBUG,
+    logContext
+  );
+
+  return processCSVData(restaurantsCSV, parkingCSV, toiletsCSV, logContext);
+}
+
+/**
+ * CSVデータを処理してPOIオブジェクトに変換する関数
+ */
+function processCSVData(
+  restaurantsCSV: string,
+  parkingCSV: string,
+  toiletsCSV: string,
+  logContext: Record<string, unknown>
+): POI[] {
+  // CSVの解析とPOIオブジェクトへの変換（パフォーマンス計測）
+  const restaurants = logger.measureTime(
+    'レストランCSV解析',
+    () => parseCSVtoPOIs(restaurantsCSV, 'restaurant'),
+    LogLevel.DEBUG,
+    logContext
+  );
+
+  const parking = logger.measureTime(
+    '駐車場CSV解析',
+    () => parseCSVtoPOIs(parkingCSV, 'parking'),
+    LogLevel.DEBUG,
+    logContext
+  );
+
+  const toilets = logger.measureTime(
+    'トイレCSV解析',
+    () => parseCSVtoPOIs(toiletsCSV, 'toilet'),
+    LogLevel.DEBUG,
+    logContext
+  );
+
+  // 全POIデータの結合（パフォーマンス計測）
+  return logger.measureTime(
+    'POIデータの結合処理',
+    () => combinePOIArrays(restaurants, parking, toilets),
+    LogLevel.DEBUG,
+    {
+      ...logContext,
+      counts: {
+        restaurants: restaurants.length,
+        parking: parking.length,
+        toilets: toilets.length,
+      },
+    }
+  );
+}
+
+/**
+ * POI（Points of Interest）データを取得・管理するカスタムフック
+ * データソースに応じて適切な方法でデータを取得し、加工して返します
+ */
 export function usePOIData(options: UsePOIDataOptions = {}) {
   const { enabled = true } = options;
   const [isLoading, setIsLoading] = useState(true);
@@ -17,91 +143,128 @@ export function usePOIData(options: UsePOIDataOptions = {}) {
 
   // データ取得ロジックをuseCallbackでメモ化
   const fetchPOIData = useCallback(async () => {
+    // コンポーネント名をコンテキストに含める
+    const logContext = { component: 'usePOIData' };
+
+    logger.info('POIデータの取得を開始', logContext);
+
     try {
       setIsLoading(true);
 
-      let allPOIs: POI[] = [];
-
       // 環境変数の確認
       const useSheets = ENV.app.USE_GOOGLE_SHEETS;
+      logger.debug('データソース設定', { ...logContext, useGoogleSheets: useSheets });
 
-      if (useSheets) {
-        // Google Sheetsからデータを取得
-        const [restaurants, parking, toilets] = await Promise.all([
-          fetchPOIsFromSheet('restaurant', 'レストラン!A1:Z1000'),
-          fetchPOIsFromSheet('parking', '駐車場!A1:Z1000'),
-          fetchPOIsFromSheet('toilet', 'トイレ!A1:Z1000'),
-        ]);
+      // データソースに応じて取得方法を切り替え
+      const allPOIs = useSheets
+        ? await fetchDataFromGoogleSheets(logContext)
+        : await fetchDataFromCSVFiles(logContext);
 
-        allPOIs = combinePOIArrays(restaurants, parking, toilets);
-      } else {
-        // 静的CSVファイルからデータを取得
-        const restaurantCSVUrl = '/data/restaurants.csv';
-        const parkingCSVUrl = '/data/parking.csv';
-        const toiletCSVUrl = '/data/toilets.csv';
+      // POI型からPointOfInterest型に変換（パフォーマンス計測）
+      const pointsOfInterest = logger.measureTime(
+        'POI型からPointOfInterest型への変換',
+        () =>
+          allPOIs.map(
+            poi =>
+              ({
+                id: poi.id,
+                name: poi.name,
+                lat: poi.position.lat,
+                lng: poi.position.lng,
+                isClosed: poi.isClosed,
+                type: poi.type,
+                category: poi.category,
+                genre: poi.genre,
+                address: poi.address,
+                district: poi.district,
+                問い合わせ: poi.contact,
+                関連情報: poi.infoUrl,
+                'Google マップで見る': poi.googleMapsUrl,
+                営業時間: poi.businessHours,
+                searchText: poi.searchText,
+                // 定休日情報があれば変換
+                ...(poi.regularHolidays && {
+                  月曜定休日: poi.regularHolidays.monday,
+                  火曜定休日: poi.regularHolidays.tuesday,
+                  水曜定休日: poi.regularHolidays.wednesday,
+                  木曜定休日: poi.regularHolidays.thursday,
+                  金曜定休日: poi.regularHolidays.friday,
+                  土曜定休日: poi.regularHolidays.saturday,
+                  日曜定休日: poi.regularHolidays.sunday,
+                  祝祭定休日: poi.regularHolidays.holiday,
+                }),
+                定休日について: poi.holidayNotes,
+              }) as PointOfInterest
+          ),
+        LogLevel.DEBUG,
+        { ...logContext, count: allPOIs.length }
+      );
 
-        // 各CSVファイルの取得
-        const [restaurantsResponse, parkingResponse, toiletsResponse] = await Promise.all([
-          fetch(restaurantCSVUrl),
-          fetch(parkingCSVUrl),
-          fetch(toiletCSVUrl),
-        ]);
-
-        // レスポンスチェック
-        if (!restaurantsResponse.ok || !parkingResponse.ok || !toiletsResponse.ok) {
-          throw new Error('POIデータの取得に失敗しました');
-        }
-
-        // テキストデータへの変換
-        const [restaurantsCSV, parkingCSV, toiletsCSV] = await Promise.all([
-          restaurantsResponse.text(),
-          parkingResponse.text(),
-          toiletsResponse.text(),
-        ]);
-
-        // CSVの解析とPOIオブジェクトへの変換
-        const restaurants = parseCSVtoPOIs(restaurantsCSV, 'restaurant');
-        const parking = parseCSVtoPOIs(parkingCSV, 'parking');
-        const toilets = parseCSVtoPOIs(toiletsCSV, 'toilet');
-
-        // 全POIデータの結合
-        allPOIs = combinePOIArrays(restaurants, parking, toilets);
-      }
-
-      // POI型からPointOfInterest型に変換
-      const pointsOfInterest = allPOIs.map(convertPOIToPointOfInterest);
+      logger.info('POIデータの取得と処理が完了しました', {
+        ...logContext,
+        totalCount: pointsOfInterest.length,
+        categories: countCategories(pointsOfInterest),
+      });
 
       setPois(pointsOfInterest);
       setError(null);
     } catch (err) {
-      // エラーログをユーザーフレンドリーなエラーメッセージに置き換え
-      setError('データの読み込みに失敗しました。ネットワーク接続を確認してください。');
-
-      // 開発環境でのみエラー詳細を表示（production環境では出力しない）
-      if (process.env.NODE_ENV !== 'production') {
-        // eslint-disable-next-line no-console
-        console.error('POIデータ取得エラー:', err);
-      }
+      handleFetchError(err, logContext, setError);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      logger.debug('POIデータ取得は無効化されています', { component: 'usePOIData', enabled });
+      return;
+    }
 
     // 非同期関数を即時実行し、クリーンアップ時にはキャンセルできるようにする
-    const fetchData = async () => {
-      await fetchPOIData();
-    };
+    void fetchPOIData();
 
-    void fetchData();
-
-    // クリーンアップ関数は必要に応じて追加
+    // クリーンアップ関数
     return () => {
+      logger.debug('usePOIData のクリーンアップを実行', { component: 'usePOIData' });
       // 必要に応じてクリーンアップロジックを実装
     };
   }, [enabled, fetchPOIData]);
 
   return { pois, isLoading, error };
+}
+
+/**
+ * エラー処理を行う関数
+ */
+function handleFetchError(
+  err: unknown,
+  logContext: Record<string, unknown>,
+  setError: (error: string | null) => void
+): void {
+  // 構造化されたエラーログ
+  logger.error(
+    'POIデータ取得中にエラーが発生しました',
+    err instanceof Error ? err : new Error(String(err))
+  );
+
+  // エラーログをユーザーフレンドリーなエラーメッセージに置き換え
+  setError('データの読み込みに失敗しました。ネットワーク接続を確認してください。');
+
+  // フォールバックデータがあれば使用できるようにログを残す
+  logger.warn('データ取得に失敗したため、フォールバックが必要かもしれません', {
+    ...logContext,
+    errorType: err instanceof Error ? err.name : 'UnknownError',
+  });
+}
+
+/**
+ * POIのカテゴリ別件数を集計するヘルパー関数
+ */
+function countCategories(pois: PointOfInterest[]): Record<string, number> {
+  return pois.reduce<Record<string, number>>((acc, poi) => {
+    const category = poi.category ?? 'unknown';
+    acc[category] = (acc[category] ?? 0) + 1;
+    return acc;
+  }, {});
 }

@@ -1,22 +1,57 @@
 /**
  * POI (Point of Interest) 関連の型定義
  * CSVデータの構造に合わせた型と、アプリケーション内での使用に最適化された型を定義
+ *
+ * このファイルでは以下を提供します：
+ * - POIの基本型とそれに関連する列挙型、インターフェース
+ * - データ変換のためのヘルパー関数
+ * - CSVデータからアプリケーション用POIオブジェクトへの変換ロジック
+ * - POIデータのフィルタリングと検索に関する機能
  */
+
+import { logger } from '@/utils/logger';
 
 /**
  * POIの種類を表す型
+ * 地図上での表示方法やフィルタリングに使用
  */
 export type POIType = 'restaurant' | 'parking' | 'toilet' | 'shop' | 'attraction' | 'other';
 
 /**
  * POIのカテゴリーを表す型
+ * 主に飲食店のジャンル分類に使用
  */
 export type POICategory = 'japanese' | 'western' | 'other' | 'fusion' | 'retail' | 'unspecified';
 
 /**
- * 営業時間の情報
+ * 営業時間の情報（文字列形式）
+ * 例: "10:00-19:00" または "10:00-14:00, 17:00-21:00"
  */
 export type BusinessHours = string;
+
+// POI種類に対応するキーワードのマッピング定数
+// 外部に露出せずジャンル判定に内部的に使用
+const POI_TYPE_PATTERNS: Record<POIType, string[]> = {
+  restaurant: [
+    '食堂',
+    'レストラン',
+    'カフェ',
+    '喫茶',
+    '居酒屋',
+    'バー',
+    'スナック',
+    '宿',
+    'ホテル',
+    '旅館',
+    '食事',
+    'ランチ',
+  ],
+  parking: ['駐車場', 'パーキング'],
+  toilet: ['トイレ', '手洗い', 'お手洗い', 'WC', '化粧室'],
+  attraction: ['観光', '名所', '史跡', '旧跡', '神社', '寺院', '公園'],
+  shop: ['スーパー', 'コンビニ', 'パン', '店', '販売', 'ショップ', '物産'],
+  other: [], // デフォルト用（空配列）
+};
 
 /**
  * POIの基本情報インターフェース
@@ -28,15 +63,15 @@ export interface POI {
   position: google.maps.LatLngLiteral; // 位置情報
   isClosed: boolean; // 閉店情報
   type: POIType; // POIタイプ（飲食店、駐車場など）
-  genre: string;
+  genre: string; // 詳細なジャンル情報（テキスト）
   category: POICategory; // カテゴリー（和食、洋食など）
   address: string; // 所在地
-  area: string;
-  contact: string;
+  area: string; // エリア情報
+  contact: string; // 連絡先情報
   businessHours: BusinessHours; // 営業時間情報
-  parkingInfo: string;
-  infoUrl: string;
-  googleMapsUrl: string;
+  parkingInfo: string; // 駐車場情報
+  infoUrl: string; // 詳細情報URL
+  googleMapsUrl: string; // Google Maps URL
   searchText: string; // 検索用正規化テキスト
   district?: string | number; // 地区情報
   regularHolidays?: RegularHolidays; // 定休日情報
@@ -173,153 +208,243 @@ export interface RawPOIData {
 
 /**
  * POI検索・フィルタリングのオプション
+ * アプリケーション全体で一貫したフィルタリング条件を表現
  */
 export interface POIFilterOptions {
-  types?: POIType[];
-  categories?: POICategory[];
-  districts?: District[];
-  isOpenNow?: boolean; // 現在営業中のみ
-  hasParking?: boolean; // 駐車場あり
-  hasCashless?: boolean; // キャッシュレス対応
-  keyword?: string; // キーワード検索
-  excludeClosed?: boolean; // 閉店した店舗を除外
+  types?: POIType[]; // POIタイプによるフィルター（飲食店、駐車場など）
+  categories?: POICategory[]; // カテゴリーによるフィルター（和食、洋食など）
+  districts?: District[]; // 地区によるフィルター（両津、相川など）
+  isOpenNow?: boolean; // 現在営業中のみを表示（true=営業中のみ）
+  hasParking?: boolean; // 駐車場の有無でフィルター（true=駐車場あり）
+  hasCashless?: boolean; // キャッシュレス対応でフィルター（true=対応あり）
+  keyword?: string; // キーワード検索（名称、住所、ジャンルなど）
+  excludeClosed?: boolean; // 閉店した店舗を除外するかどうか（true=除外する）
 }
 
 /**
  * マーカーのグループ化設定
+ * Google Mapsでマーカークラスタリングを行う際の設定
  */
 export interface MarkerClusterOptions {
-  enabled: boolean;
+  enabled: boolean; // クラスタリングを有効にするかどうか
   maxZoom?: number; // このズームレベル以上でクラスタリングを解除
   minClusterSize?: number; // クラスタを形成する最小マーカー数
-}
-
-/**
- * POI型からPointOfInterest型への変換ヘルパー関数
- * アプリケーション内でのデータ変換に使用
- */
-export function convertPOIToPointOfInterest(poi: POI): PointOfInterest {
-  // POIカテゴリーを文字列の配列に変換
-  const categoryStrings = [poi.category];
-
-  // 定休日情報の変換
-  const holidays = poi.regularHolidays ?? {};
-
-  return {
-    ...poi,
-    lat: poi.position.lat,
-    lng: poi.position.lng,
-    category: categoryStrings.length > 0 ? categoryStrings[0] : undefined,
-    categories: categoryStrings,
-    district:
-      typeof poi.district === 'string'
-        ? poi.district
-        : typeof poi.district === 'number'
-          ? District[poi.district as unknown as keyof typeof District]
-          : undefined,
-    月曜定休日: holidays[DayOfWeek.Monday] ?? false,
-    火曜定休日: holidays[DayOfWeek.Tuesday] ?? false,
-    水曜定休日: holidays[DayOfWeek.Wednesday] ?? false,
-    木曜定休日: holidays[DayOfWeek.Thursday] ?? false,
-    金曜定休日: holidays[DayOfWeek.Friday] ?? false,
-    土曜定休日: holidays[DayOfWeek.Saturday] ?? false,
-    日曜定休日: holidays[DayOfWeek.Sunday] ?? false,
-    祝祭定休日: holidays[DayOfWeek.Holiday] ?? false,
-    定休日について: poi.holidayNotes,
-    問い合わせ: poi.contact,
-    'Google マップで見る': poi.googleMapsUrl,
-    営業時間: poi.businessHours,
-  };
-}
-
-/**
- * RawPOIData型からPointOfInterest型への変換ヘルパー関数
- * CSVデータ読み込み時に使用
- */
-export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInterest {
-  // WKT形式の位置情報から緯度経度を抽出
-  // 例: "POINT (138.4665294 38.319763)" → { lat: 38.319763, lng: 138.4665294 }
-  const wktMatch = rawData.WKT.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
-  const lng = wktMatch ? parseFloat(wktMatch[1]) : parseFloat(rawData.東経 ?? '0');
-  const lat = wktMatch ? parseFloat(wktMatch[2]) : parseFloat(rawData.北緯 ?? '0');
-
-  // カテゴリーの決定
-  const categories: string[] = [];
-  if (rawData.和食カテゴリー === 'TRUE') categories.push('和食');
-  if (rawData.洋食カテゴリー === 'TRUE') categories.push('洋食');
-  if (rawData.その他カテゴリー === 'TRUE') categories.push('その他');
-  if (rawData.販売カテゴリー === 'TRUE') categories.push('販売');
-
-  // POIタイプの決定（ジャンルに基づく簡易判定）
-  const poiType = determinePoiType(rawData.ジャンル);
-
-  return {
-    id: `poi-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name: rawData.名称,
-    lat,
-    lng,
-    isClosed: rawData.閉店情報 === 'TRUE',
-    type: poiType,
-    category: categories.length > 0 ? categories[0] : undefined,
-    categories,
-    genre: rawData.ジャンル,
-    hasParking: rawData.駐車場情報 === 'TRUE',
-    hasCashless: rawData.キャッシュレス === 'TRUE',
-    address: rawData.所在地,
-    district: rawData.地区,
-    問い合わせ: rawData.問い合わせ,
-    関連情報: rawData.関連情報,
-    'Google マップで見る': rawData['Google マップで見る'],
-    営業時間: rawData.営業時間,
-    月曜定休日: rawData.月曜定休日 === 'TRUE',
-    火曜定休日: rawData.火曜定休日 === 'TRUE',
-    水曜定休日: rawData.水曜定休日 === 'TRUE',
-    木曜定休日: rawData.木曜定休日 === 'TRUE',
-    金曜定休日: rawData.金曜定休日 === 'TRUE',
-    土曜定休日: rawData.土曜定休日 === 'TRUE',
-    日曜定休日: rawData.日曜定休日 === 'TRUE',
-    祝祭定休日: rawData.祝祭定休日 === 'TRUE',
-    定休日について: rawData.定休日について,
-    // 検索用にテキストを結合して正規化
-    searchText: `${rawData.名称} ${rawData.ジャンル} ${rawData.所在地}`.toLowerCase(),
-  };
+  gridSize?: number; // クラスタリングのグリッドサイズ（ピクセル単位）
+  styles?: Record<string, unknown>[]; // カスタムクラスタースタイル（オプション）
 }
 
 /**
  * ジャンル情報からPOIタイプを推定するヘルパー関数
+ * @param genre ジャンル文字列
+ * @returns 推定されたPOIタイプ
  */
-function determinePoiType(genre: string): POIType {
+export function determinePoiType(genre: string): POIType {
+  if (!genre) return 'other';
+
   const genreLower = genre.toLowerCase();
 
-  // キーワードとPOIタイプのマッピング
-  const typePatterns: Record<POIType, string[]> = {
-    restaurant: [
-      '食堂',
-      'レストラン',
-      'カフェ',
-      '喫茶',
-      '居酒屋',
-      'バー',
-      'スナック',
-      '宿',
-      'ホテル',
-      '旅館',
-    ],
-    parking: ['駐車場'],
-    toilet: ['トイレ'],
-    attraction: ['観光', '名所'],
-    shop: ['スーパー', 'コンビニ', 'パン', '店', '販売'],
-    other: [], // デフォルト用（空配列）
-  };
-
-  // 各POIタイプのパターンに対してマッチングを試行
-  for (const [poiType, patterns] of Object.entries(typePatterns) as [POIType, string[]][]) {
+  // 定義済みのPOI_TYPE_PATTERNSを使用
+  for (const [poiType, patterns] of Object.entries(POI_TYPE_PATTERNS) as [POIType, string[]][]) {
     // いずれかのパターンがジャンルに含まれていればそのタイプを返す
     if (patterns.some(pattern => genreLower.includes(pattern))) {
       return poiType;
     }
   }
 
-  // マッチするパターンがない場合はデフォルト値を返す
+  logger.debug('未分類のPOIジャンルを検出', { genre });
   return 'other';
+}
+
+/**
+ * RawPOIData型からPointOfInterest型への変換ヘルパー関数
+ * CSVデータ読み込み時に使用
+ * @param rawData CSVから取得した生データ
+ * @returns 処理済みのPointOfInterestオブジェクト
+ */
+export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInterest {
+  try {
+    return logger.measureTime('POIデータ変換', () => {
+      // 座標データの抽出と検証を行う
+      const { lat, lng } = extractCoordinates(rawData);
+
+      // カテゴリー情報の抽出と正規化
+      const categories = extractCategories(rawData);
+
+      // POIタイプの決定（ジャンルに基づく判定）
+      const poiType = determinePoiType(rawData.ジャンル);
+
+      // 一意なIDを生成
+      const id = generateUniqueId(rawData.名称);
+
+      // 検索用テキストの正規化
+      const searchText = normalizeSearchText(rawData);
+
+      // 変換結果を返す
+      return {
+        id,
+        name: rawData.名称 || '名称不明',
+        lat,
+        lng,
+        isClosed: rawData.閉店情報 === 'TRUE',
+        type: poiType,
+        category: categories.length > 0 ? categories[0] : undefined,
+        categories,
+        genre: rawData.ジャンル,
+        hasParking: rawData.駐車場情報 === 'TRUE',
+        hasCashless: rawData.キャッシュレス === 'TRUE',
+        address: rawData.所在地 || '',
+        district: rawData.地区,
+        問い合わせ: rawData.問い合わせ,
+        関連情報: rawData.関連情報,
+        'Google マップで見る': rawData['Google マップで見る'],
+        営業時間: rawData.営業時間 ?? formatBusinessHours(rawData),
+        月曜定休日: rawData.月曜定休日 === 'TRUE',
+        火曜定休日: rawData.火曜定休日 === 'TRUE',
+        水曜定休日: rawData.水曜定休日 === 'TRUE',
+        木曜定休日: rawData.木曜定休日 === 'TRUE',
+        金曜定休日: rawData.金曜定休日 === 'TRUE',
+        土曜定休日: rawData.土曜定休日 === 'TRUE',
+        日曜定休日: rawData.日曜定休日 === 'TRUE',
+        祝祭定休日: rawData.祝祭定休日 === 'TRUE',
+        定休日について: rawData.定休日について,
+        searchText,
+      };
+    });
+  } catch (error) {
+    logger.error('POIデータ変換中にエラーが発生', { error, rawData });
+
+    // エラー時でも最低限の情報を持つオブジェクトを返す
+    return {
+      id: `error-${Date.now()}`,
+      name: rawData.名称 || '変換エラー',
+      lat: 38.0317, // 佐渡島の中心緯度
+      lng: 138.3698, // 佐渡島の中心経度
+      isClosed: true,
+      type: 'other',
+      address: rawData.所在地 || '',
+      searchText: rawData.名称 ? rawData.名称.toLowerCase() : '',
+    };
+  }
+}
+
+/**
+ * 座標データを抽出する内部ヘルパー関数
+ * @param rawData 生データ
+ * @returns 抽出された緯度経度
+ */
+function extractCoordinates(rawData: RawPOIData): { lat: number; lng: number } {
+  try {
+    let lat = 0,
+      lng = 0;
+
+    if (rawData.WKT) {
+      const wktMatch = rawData.WKT.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
+      if (wktMatch) {
+        lng = parseFloat(wktMatch[1]);
+        lat = parseFloat(wktMatch[2]);
+      }
+    }
+
+    // WKT形式から抽出できなかった場合、北緯・東経フィールドを使用
+    if (lat === 0 && lng === 0 && rawData.北緯 && rawData.東経) {
+      lat = parseFloat(rawData.北緯);
+      lng = parseFloat(rawData.東経);
+    }
+
+    // 座標が正しくない場合の検証
+    if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      logger.warn('無効な座標を検出', {
+        name: rawData.名称,
+        wkt: rawData.WKT,
+        lat,
+        lng,
+      });
+      // 無効な座標の場合は佐渡島の中心座標にフォールバック
+      lat = 38.0317; // 佐渡島の中心緯度
+      lng = 138.3698; // 佐渡島の中心経度
+    }
+
+    return { lat, lng };
+  } catch (error) {
+    logger.error('座標解析エラー', { error, name: rawData.名称, wkt: rawData.WKT });
+    // エラー時は佐渡島の中心座標にフォールバック
+    return { lat: 38.0317, lng: 138.3698 };
+  }
+}
+
+/**
+ * カテゴリー情報を抽出する内部ヘルパー関数
+ * @param rawData 生データ
+ * @returns 抽出されたカテゴリー配列
+ */
+function extractCategories(rawData: RawPOIData): string[] {
+  const categories: string[] = [];
+  if (rawData.和食カテゴリー === 'TRUE') categories.push('和食');
+  if (rawData.洋食カテゴリー === 'TRUE') categories.push('洋食');
+  if (rawData.その他カテゴリー === 'TRUE') categories.push('その他');
+  if (rawData.販売カテゴリー === 'TRUE') categories.push('販売');
+  return categories;
+}
+
+/**
+ * 検索用テキストを生成・正規化する関数
+ * @param rawData 生のPOIデータ
+ * @returns 正規化された検索用テキスト
+ */
+function normalizeSearchText(rawData: RawPOIData): string {
+  try {
+    return [rawData.名称 || '', rawData.ジャンル || '', rawData.所在地 || '', rawData.地区 || '']
+      .join(' ')
+      .toLowerCase()
+      .normalize('NFKC'); // 全角・半角の正規化
+  } catch (error) {
+    logger.warn('検索テキスト生成エラー', { error });
+    return rawData.名称 ? rawData.名称.toLowerCase() : '';
+  }
+}
+
+/**
+ * 一意なIDを生成する関数
+ * @param name POI名称
+ * @returns 生成されたID
+ */
+function generateUniqueId(name: string): string {
+  const timestamp = Date.now();
+  const randomPart = Math.random().toString(36).substring(2, 9);
+  const namePart = name ? name.substring(0, 10).replace(/\s+/g, '_').toLowerCase() : 'unknown';
+
+  return `poi-${namePart}-${timestamp}-${randomPart}`;
+}
+
+/**
+ * 営業時間情報をフォーマットする関数
+ * @param rawData 生のPOIデータ
+ * @returns フォーマットされた営業時間文字列
+ */
+function formatBusinessHours(rawData: RawPOIData): string {
+  try {
+    // 既に営業時間フィールドがある場合はそれを使用
+    if (rawData.営業時間) return rawData.営業時間;
+
+    // 営業時間が個別のフィールドに分かれている場合、それらを結合
+    const start1 = rawData.営業開始時間１;
+    const end1 = rawData.営業終了時間１;
+    const start2 = rawData.営業開始時間２;
+    const end2 = rawData.営業終了時間２;
+
+    let hours = '';
+
+    if (start1 && end1) {
+      hours = `${start1}-${end1}`;
+    }
+
+    if (start2 && end2) {
+      hours += hours ? `, ${start2}-${end2}` : `${start2}-${end2}`;
+    }
+
+    return hours;
+  } catch (error) {
+    logger.warn('営業時間フォーマットエラー', { error });
+    return '';
+  }
 }

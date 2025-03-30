@@ -1,5 +1,5 @@
 import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 
 import InfoWindow from '@/components/InfoWindow';
 import { useFilteredPOIs } from '@/hooks/useFilteredPOIs';
@@ -68,10 +68,27 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   // フィルタリングされたPOIリストを取得（カスタムフックに移行）
   const filteredPOIs = useFilteredPOIs(pois, filters);
 
+  // フィルタリング結果を記録（デバッグとパフォーマンス監視）
+  useMemo(() => {
+    logger.debug('POIフィルタリング結果', {
+      total: pois.length,
+      filtered: filteredPOIs.length,
+      filters: {
+        categories: filters.categories?.length ?? 0,
+        isOpenFilter: filters.isOpen ?? false,
+        hasSearchText: !!filters.searchText,
+      },
+    });
+  }, [filteredPOIs.length, pois.length, filters]);
+
   // マーカークリック時のハンドラ
   const handleMarkerClick = useCallback(
     (poi: PointOfInterest) => {
-      logger.debug('マーカークリック', { poiName: poi.name });
+      logger.info('マーカークリック', {
+        poiId: poi.id,
+        poiName: poi.name,
+        category: poi.category,
+      });
       setSelectedPOI(poi);
       onSelectPOI?.(poi);
     },
@@ -80,12 +97,14 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 
   // 情報ウィンドウを閉じるハンドラ
   const handleInfoWindowClose = useCallback(() => {
+    logger.debug('情報ウィンドウを閉じました');
     setSelectedPOI(null);
   }, []);
 
   // POI詳細表示ハンドラ
   const handleViewDetails = useCallback(
     (poi: PointOfInterest) => {
+      logger.info('POI詳細表示', { poiId: poi.id, poiName: poi.name });
       onViewDetails?.(poi);
     },
     [onViewDetails]
@@ -105,10 +124,31 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     mapRef,
     markers,
     pois: filteredPOIs,
-    onVisibilityChange: visibleCount => {
-      logger.debug(`表示マーカー数: ${visibleCount}/${markers.length}`);
-    },
+    onVisibilityChange: useCallback(
+      visibleCount => {
+        logger.measureTime('マーカー可視性更新', () => {
+          logger.debug(`表示マーカー数: ${visibleCount}/${markers.length}`, {
+            visiblePercent: markers.length ? Math.round((visibleCount / markers.length) * 100) : 0,
+            totalMarkers: markers.length,
+          });
+        });
+      },
+      [markers.length]
+    ),
   });
+
+  // 情報ウィンドウのメモ化（パフォーマンス最適化）
+  const infoWindowContent = useMemo(() => {
+    if (!selectedPOI) return null;
+
+    return (
+      <InfoWindow
+        poi={selectedPOI}
+        onClose={handleInfoWindowClose}
+        onViewDetails={handleViewDetails}
+      />
+    );
+  }, [selectedPOI, handleInfoWindowClose, handleViewDetails]);
 
   // 情報ウィンドウが表示されている場合のみレンダリング（パフォーマンス最適化）
   if (!selectedPOI) return null;
@@ -123,15 +163,10 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         disableAutoPan: false, // 情報ウィンドウが見えるように地図を自動調整
       }}
     >
-      <div className='info-window-container'>
-        <InfoWindow
-          poi={selectedPOI}
-          onClose={handleInfoWindowClose}
-          onViewDetails={handleViewDetails}
-        />
-      </div>
+      <div className='info-window-container'>{infoWindowContent}</div>
     </GoogleInfoWindow>
   );
 };
 
-export default MapMarkers;
+// React.memoでコンポーネントをメモ化（不要な再レンダリングを防止）
+export default memo(MapMarkers);

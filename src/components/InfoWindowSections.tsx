@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 
 import { PointOfInterest } from '@/types/poi';
 import { getCategoryClass } from '@/utils/categoryUtils';
+import { logger } from '@/utils/logger';
 import { formatWeekdaySchedule } from '@/utils/markerUtils';
 
 interface CategorySectionProps {
@@ -29,19 +30,31 @@ interface FooterSectionProps {
   onViewDetails: (poi: PointOfInterest) => void;
 }
 
-// カテゴリとジャンルのセクション
+/**
+ * POIのカテゴリとジャンル情報を表示するコンポーネント
+ *
+ * @param poi - 表示対象のPointOfInterest
+ */
 export const CategorySection: React.FC<CategorySectionProps> = ({ poi }) => (
   <section className='info-section'>
-    {poi.categories?.map((category, index) => (
-      <span key={index} className={getCategoryClass(category)}>
-        {category}
-      </span>
-    ))}
+    {poi.categories && poi.categories.length > 0 ? (
+      poi.categories.map((category, index) => (
+        <span key={index} className={getCategoryClass(category)}>
+          {category}
+        </span>
+      ))
+    ) : (
+      <span className='category-unknown'>未分類</span>
+    )}
     {poi.genre && <p className='genre'>{poi.genre}</p>}
   </section>
 );
 
-// 住所と地区のセクション
+/**
+ * POIの住所情報を表示するコンポーネント
+ *
+ * @param poi - 表示対象のPointOfInterest
+ */
 export const AddressSection: React.FC<AddressSectionProps> = ({ poi }) => (
   <section className='info-section'>
     <h3 className='section-title'>
@@ -51,15 +64,30 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ poi }) => (
       所在地
     </h3>
     <address className='address'>
-      {poi.address}
+      {poi.address || '住所情報なし'}
       {poi.district && <span className='district'>（{poi.district}地区）</span>}
     </address>
   </section>
 );
 
-// 営業情報のセクション
+/**
+ * POIの営業時間情報を表示するコンポーネント
+ * フォーマットされた営業時間を表示し、データがない場合はその旨を表示
+ *
+ * @param poi - 表示対象のPointOfInterest
+ */
 export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi }) => {
-  const scheduleInfo = useMemo(() => formatWeekdaySchedule(poi), [poi]);
+  const scheduleInfo = useMemo(() => {
+    try {
+      return formatWeekdaySchedule(poi);
+    } catch (error) {
+      logger.warn('営業時間情報のフォーマットに失敗しました', {
+        poiId: poi.id,
+        error,
+      });
+      return { regularHours: null, daysOff: null };
+    }
+  }, [poi]);
 
   return (
     <section className='info-section'>
@@ -82,9 +110,21 @@ export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi 
   );
 };
 
-// 連絡先のセクション
+/**
+ * POIの連絡先情報を表示するコンポーネント
+ * 連絡先がない場合は何も表示しない
+ *
+ * @param poi - 表示対象のPointOfInterest
+ */
 export const ContactSection: React.FC<ContactSectionProps> = ({ poi }) => {
   if (!poi.問い合わせ) return null;
+
+  const handlePhoneClick = () => {
+    logger.info('電話番号がクリックされました', {
+      poiId: poi.id,
+      phoneNumber: poi.問い合わせ,
+    });
+  };
 
   return (
     <section className='info-section'>
@@ -95,7 +135,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ poi }) => {
         連絡先
       </h3>
       <p className='contact'>
-        <a href={`tel:${poi.問い合わせ}`} className='phone-link'>
+        <a href={`tel:${poi.問い合わせ}`} className='phone-link' onClick={handlePhoneClick}>
           {poi.問い合わせ}
         </a>
       </p>
@@ -103,9 +143,21 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ poi }) => {
   );
 };
 
-// Google Mapsリンクのセクション
+/**
+ * POIのGoogle Maps連携リンクを表示するコンポーネント
+ * リンクがない場合は何も表示しない
+ *
+ * @param poi - 表示対象のPointOfInterest
+ */
 export const GoogleMapsSection: React.FC<GoogleMapsSectionProps> = ({ poi }) => {
   if (!poi['Google マップで見る']) return null;
+
+  const handleGoogleMapsClick = () => {
+    logger.info('Google Mapsリンクがクリックされました', {
+      poiId: poi.id,
+      mapUrl: poi['Google マップで見る'],
+    });
+  };
 
   return (
     <section className='info-section'>
@@ -115,6 +167,7 @@ export const GoogleMapsSection: React.FC<GoogleMapsSectionProps> = ({ poi }) => 
         rel='noopener noreferrer'
         className='google-maps-link'
         aria-label='Google マップで見る'
+        onClick={handleGoogleMapsClick}
       >
         Google マップで見る
       </a>
@@ -122,13 +175,27 @@ export const GoogleMapsSection: React.FC<GoogleMapsSectionProps> = ({ poi }) => 
   );
 };
 
-// フッターセクション
+/**
+ * 情報ウィンドウのフッターを表示するコンポーネント
+ * 詳細情報を見るボタンを提供する
+ *
+ * @param poi - 表示対象のPointOfInterest
+ * @param onViewDetails - 詳細表示時のコールバック関数
+ */
 export const FooterSection: React.FC<FooterSectionProps> = ({ poi, onViewDetails }) => {
+  const handleViewDetails = () => {
+    logger.info('詳細情報ボタンがクリックされました', {
+      poiId: poi.id,
+      poiName: poi.name,
+    });
+    onViewDetails(poi);
+  };
+
   return (
     <footer className='info-window-footer'>
       <button
         className='details-button'
-        onClick={() => onViewDetails(poi)}
+        onClick={handleViewDetails}
         aria-label='詳細情報を見る'
         type='button'
       >

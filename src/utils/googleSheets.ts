@@ -1,5 +1,6 @@
 import { POIType } from '@/types/poi';
-import { ENV, logger } from '@/utils/env';
+import { ENV } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 import { parseCSVtoPOIs } from './csvProcessor';
 

@@ -11,29 +11,8 @@
 
 /// <reference types="vite/client" />
 
-// ロガーモジュールの型定義
-interface LoggerInterface {
-  error: (message: string) => void;
-  warn: (message: string) => void;
-  info: (message: string) => void;
-  debug: (message: string) => void;
-}
-
-// 内部ロガー実装（ESLintの警告を抑制）
-const internalLogger: LoggerInterface = {
-  // eslint-disable-next-line no-console
-  error: (message: string): void => console.error(`⚠️ ${message}`),
-  // eslint-disable-next-line no-console
-  warn: (message: string): void => console.warn(`📝 ${message}`),
-  // eslint-disable-next-line no-console
-  info: (message: string): void => console.info(message),
-  debug: (message: string): void => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.debug(`🔍 ${message}`);
-    }
-  },
-};
+// 自前のロガーインポートに変更（パッケージドキュメントのベストプラクティスに準拠）
+import { logger } from '@/utils/logger';
 
 // 環境変数の取得オプション
 interface EnvOptions<T> {
@@ -69,9 +48,9 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
 
     // 重要度に応じてログレベルを変更
     if (severity === 'error') {
-      internalLogger.error(message);
+      logger.error(message);
     } else {
-      internalLogger.warn(message);
+      logger.warn(message);
     }
 
     return defaultValue;
@@ -79,7 +58,7 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
 
   // 空文字列の場合
   if (value === '') {
-    internalLogger.warn(`環境変数"${fullKey}"が空です。デフォルト値を使用します。`);
+    logger.warn(`環境変数"${fullKey}"が空です。デフォルト値を使用します。`);
     return defaultValue;
   }
 
@@ -89,7 +68,7 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
       return options.transform(value);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      internalLogger.error(`環境変数"${fullKey}"の変換中にエラーが発生しました: ${errorMessage}`);
+      logger.error(`環境変数"${fullKey}"の変換中にエラーが発生しました: ${errorMessage}`);
       return defaultValue;
     }
   }
@@ -117,6 +96,27 @@ export const toNumber = (value: string): number => {
 };
 
 /**
+ * 環境種別を判定するユーティリティ関数（ロギングガイドラインに準拠）
+ */
+export const isDevEnvironment = (): boolean => {
+  return import.meta.env.DEV === true;
+};
+
+export const isProdEnvironment = (): boolean => {
+  return import.meta.env.PROD === true;
+};
+
+/**
+ * デバッグモードの判定（環境変数とロギングガイドラインに準拠）
+ */
+export const isDebugMode = (): boolean => {
+  return getEnv<boolean>('DEBUG', {
+    defaultValue: false,
+    transform: toBool,
+  });
+};
+
+/**
  * 型安全な環境変数へのアクセスを提供するオブジェクト
  */
 export const ENV = {
@@ -141,9 +141,8 @@ export const ENV = {
     DESCRIPTION: getEnv('APP_DESCRIPTION', {
       defaultValue: '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。',
     }),
-    // USE_GOOGLE_SHEETS プロパティの修正 - 型を明示的にbooleanに指定
     USE_GOOGLE_SHEETS: getEnv<boolean>('APP_USE_GOOGLE_SHEETS', {
-      defaultValue: false, // 文字列ではなくブール値として指定
+      defaultValue: false,
       transform: toBool,
     }),
   },
@@ -155,12 +154,7 @@ export const ENV = {
     isProd: import.meta.env.PROD,
     isDev: import.meta.env.DEV,
     BASE_URL: import.meta.env.BASE_URL,
-
-    // デバッグモードを環境変数から取得（デフォルトはfalse）
-    isDebug: getEnv<boolean>('DEBUG', {
-      defaultValue: false,
-      transform: toBool,
-    }),
+    isDebug: isDebugMode(),
   },
 };
 
@@ -200,22 +194,22 @@ export function validateEnv(): boolean {
 
   // 不足している環境変数がある場合
   if (missingEnvVars.length > 0) {
-    internalLogger.error(`以下の環境変数が設定されていません: ${missingEnvVars.join(', ')}`);
-    internalLogger.info(
+    logger.error(`以下の環境変数が設定されていません: ${missingEnvVars.join(', ')}`);
+    logger.info(
       'これらの環境変数を .env ファイルに追加してください。サンプルは .env.example を参照してください。'
     );
 
     // 重要な環境変数が不足している場合は警告レベルを上げる
     if (missingCriticalEnvVars.length > 0) {
-      internalLogger.error(
+      logger.error(
         '⚠️ 重要: 以下の必須環境変数が設定されていないため、アプリケーションが正常に動作しません:'
       );
-      internalLogger.error(missingCriticalEnvVars.join(', '));
+      logger.error(missingCriticalEnvVars.join(', '));
       return false;
     }
 
     // 重要ではない環境変数のみが不足している場合は警告のみ
-    internalLogger.warn('一部の機能が制限される可能性があります。');
+    logger.warn('一部の機能が制限される可能性があります。');
     return true;
   }
 
@@ -230,19 +224,19 @@ export function validateEnv(): boolean {
 export function checkEnvironment(verbose: boolean = false): void {
   const isValid = validateEnv();
 
-  if (isValid && verbose && import.meta.env.DEV) {
-    internalLogger.info(
-      '✅ 環境変数の検証が完了しました。必要な環境変数はすべて設定されています。'
-    );
+  if (isValid && verbose && isDevEnvironment()) {
+    logger.info('✅ 環境変数の検証が完了しました。必要な環境変数はすべて設定されています。');
 
     // 開発環境での詳細情報（デバッグ用）
-    internalLogger.info('🔧 現在の環境設定:');
-    internalLogger.info(`- 実行環境: ${import.meta.env.MODE}`);
-    internalLogger.info(`- ベースURL: ${import.meta.env.BASE_URL}`);
+    logger.info('🔧 現在の環境設定:', {
+      environment: import.meta.env.MODE,
+      baseUrl: import.meta.env.BASE_URL,
+      debugMode: isDebugMode(),
+    });
 
     // デバッグモードの表示（新機能）
-    if (ENV.env.isDebug) {
-      internalLogger.info('🔍 デバッグモードが有効です');
+    if (isDebugMode()) {
+      logger.info('🔍 デバッグモードが有効です');
     }
   }
 }
@@ -276,5 +270,5 @@ declare global {
   }
 }
 
-// ロガーをエクスポートして他のモジュールから使用できるようにする
-export const logger = internalLogger;
+// モジュールのエクスポート
+export default ENV;

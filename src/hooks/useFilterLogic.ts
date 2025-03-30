@@ -1,9 +1,16 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 
 import { PointOfInterest } from '@/types/poi';
+import { logger, LogLevel } from '@/utils/logger';
 
+/**
+ * ステータスフィルターの型定義
+ */
 export type StatusFilter = 'all' | 'open' | 'closed';
 
+/**
+ * フィルター状態の型定義
+ */
 export interface FilterState {
   categoryFilters: Record<string, boolean>;
   districtFilters: Record<string, boolean>;
@@ -11,6 +18,9 @@ export interface FilterState {
   searchText: string;
 }
 
+/**
+ * フィルターロジック結果の型定義
+ */
 export interface FilterLogicResult extends FilterState {
   categories: string[];
   districts: string[];
@@ -23,7 +33,9 @@ export interface FilterLogicResult extends FilterState {
   handleResetFilters: () => void;
 }
 
-// 共通の選択状態変更ロジックを抽出
+/**
+ * 共通の選択状態変更ロジックを提供するカスタムフック
+ */
 const useFilterSelection = () => {
   // 全選択/全解除ハンドラの生成関数
   const createToggleHandler = useCallback(
@@ -32,6 +44,8 @@ const useFilterSelection = () => {
       setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
     ) => {
       return (select: boolean) => {
+        logger.debug('フィルター全選択/解除', { itemCount: items.length, select });
+
         const updated: Record<string, boolean> = {};
         items.forEach(item => {
           updated[item] = select;
@@ -46,6 +60,8 @@ const useFilterSelection = () => {
   const createChangeHandler = useCallback(
     (setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>) => {
       return (item: string, checked: boolean) => {
+        logger.debug('フィルター項目変更', { item, checked });
+
         setFilters(prev => ({
           ...prev,
           [item]: checked,
@@ -58,7 +74,22 @@ const useFilterSelection = () => {
   return { createToggleHandler, createChangeHandler };
 };
 
-// POIをフィルタリングする関数
+/**
+ * テキスト検索条件に基づいてPOIをフィルタリングする関数
+ */
+const matchesSearchText = (poi: PointOfInterest, searchLower: string): boolean => {
+  if (!searchLower) return true;
+
+  return (
+    poi.name.toLowerCase().includes(searchLower) ||
+    poi.address.toLowerCase().includes(searchLower) ||
+    !!poi.genre?.toLowerCase().includes(searchLower)
+  );
+};
+
+/**
+ * POIをフィルタリングする関数
+ */
 const filterPOIs = (
   pois: PointOfInterest[],
   categoryFilters: Record<string, boolean>,
@@ -66,49 +97,69 @@ const filterPOIs = (
   statusFilter: StatusFilter,
   searchText: string
 ): PointOfInterest[] => {
-  return pois.filter(poi => {
-    // カテゴリ・地区フィルタ
-    if (poi.category && !categoryFilters[poi.category]) return false;
-    if (poi.district && !districtFilters[poi.district]) return false;
+  return logger.measureTime(
+    'POIのフィルタリング処理',
+    () => {
+      const searchLower = searchText.toLowerCase().trim();
 
-    // 営業状態フィルタ
-    if (statusFilter === 'open' && poi.isClosed) return false;
-    if (statusFilter === 'closed' && !poi.isClosed) return false;
+      const filteredResults = pois.filter(poi => {
+        // カテゴリ・地区フィルタ
+        if (poi.category && !categoryFilters[poi.category]) return false;
+        if (poi.district && !districtFilters[poi.district]) return false;
 
-    // テキスト検索フィルタ
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      return (
-        poi.name.toLowerCase().includes(searchLower) ||
-        poi.address.toLowerCase().includes(searchLower) ||
-        (poi.genre?.toLowerCase().includes(searchLower) ?? false)
-      );
-    }
+        // 営業状態フィルタ
+        if (statusFilter === 'open' && poi.isClosed) return false;
+        if (statusFilter === 'closed' && !poi.isClosed) return false;
 
-    return true;
-  });
+        // テキスト検索フィルタ
+        return matchesSearchText(poi, searchLower);
+      });
+
+      return filteredResults;
+    },
+    LogLevel.DEBUG,
+    { totalPOIs: pois.length }
+  );
 };
 
-// ユニークカテゴリと地区を抽出する関数
+/**
+ * ユニークカテゴリと地区を抽出する関数
+ */
 const extractUniqueValues = (pois: PointOfInterest[]) => {
-  const categoriesSet = new Set<string>();
-  const districtsSet = new Set<string>();
+  return logger.measureTime(
+    'ユニークカテゴリと地区の抽出',
+    () => {
+      const categoriesSet = new Set<string>();
+      const districtsSet = new Set<string>();
 
-  pois.forEach(poi => {
-    if (poi.category) categoriesSet.add(poi.category);
-    if (poi.district) districtsSet.add(poi.district);
-  });
+      pois.forEach(poi => {
+        if (poi.category) categoriesSet.add(poi.category);
+        if (poi.district) districtsSet.add(poi.district);
+      });
 
-  return {
-    categories: Array.from(categoriesSet).sort(),
-    districts: Array.from(districtsSet).sort(),
-  };
+      // 並び替えしたカテゴリと地区の配列を返す
+      return {
+        categories: Array.from(categoriesSet).sort(),
+        districts: Array.from(districtsSet).sort(),
+      };
+    },
+    LogLevel.DEBUG
+  );
 };
 
+/**
+ * POIフィルタリングロジックを提供するカスタムフック
+ *
+ * @param pois フィルタリング対象のPOI配列
+ * @param onFilterChange フィルタリング結果の変更時に呼び出されるコールバック
+ * @returns フィルタリング状態と操作メソッドを含むオブジェクト
+ */
 export function useFilterLogic(
   pois: PointOfInterest[],
   onFilterChange: (filteredPois: PointOfInterest[]) => void
 ): FilterLogicResult {
+  logger.debug('useFilterLogic が呼び出されました', { poisCount: pois.length });
+
   // フィルター状態
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({});
   const [districtFilters, setDistrictFilters] = useState<Record<string, boolean>>({});
@@ -146,6 +197,11 @@ export function useFilterLogic(
 
   // 初期化時にすべてのカテゴリと地区を選択状態にする
   useEffect(() => {
+    logger.info('フィルターの初期化', {
+      categoriesCount: categories.length,
+      districtsCount: districts.length,
+    });
+
     handleToggleAllCategories(true);
     handleToggleAllDistricts(true);
   }, [categories, districts, handleToggleAllCategories, handleToggleAllDistricts]);
@@ -159,6 +215,16 @@ export function useFilterLogic(
       statusFilter,
       searchText
     );
+
+    logger.info('フィルター適用結果', {
+      totalPOIs: pois.length,
+      filteredCount: filteredPois.length,
+      categoryFiltersCount: Object.values(categoryFilters).filter(Boolean).length,
+      districtFiltersCount: Object.values(districtFilters).filter(Boolean).length,
+      statusFilter,
+      hasSearchText: !!searchText,
+    });
+
     onFilterChange(filteredPois);
   }, [pois, categoryFilters, districtFilters, statusFilter, searchText, onFilterChange]);
 
@@ -169,6 +235,8 @@ export function useFilterLogic(
 
   // フィルタをリセットするハンドラ
   const handleResetFilters = useCallback(() => {
+    logger.info('フィルターをリセット');
+
     handleToggleAllCategories(true);
     handleToggleAllDistricts(true);
     setStatusFilter('all');

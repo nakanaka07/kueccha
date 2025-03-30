@@ -35,13 +35,12 @@ export type CategoryFilter = {
 
 /**
  * POIの種類に基づくマーカーアイコンのベースURL
+ * 各タイプごとにGoogle Maps Platform Icon APIで使用される識別子を定義
  */
-const POI_TYPE_ICON_BASE: Record<string, string> = {
+const POI_TYPE_ICON_BASE: Record<POIType, string> = {
   restaurant: 'restaurant',
-  cafe: 'cafe',
-  bar: 'bar',
-  supermarket: 'grocery_or_supermarket',
-  convenience: 'convenience_store',
+  shop: 'shopping',
+  attraction: 'attraction',
   toilet: 'toilets',
   parking: 'parking',
   other: 'info',
@@ -49,8 +48,9 @@ const POI_TYPE_ICON_BASE: Record<string, string> = {
 
 /**
  * POIカテゴリに基づくアイコンの色
+ * 各カテゴリの視覚的な区別のための色コード（16進数）
  */
-const CATEGORY_COLORS: Record<string, string> = {
+const CATEGORY_COLORS: Record<POICategory, string> = {
   japanese: '0095DA', // 青
   western: 'B8002B', // 赤
   other: 'FFC700', // 黄
@@ -75,43 +75,65 @@ export function getMarkerIcon(
 ): MarkerIconOptions;
 export function getMarkerIcon(
   typeOrPoi: POIType | PointOfInterest,
-  _category?: POICategory, // アンダースコアを追加して未使用変数を示す
+  category?: POICategory,
   isClosed = false
 ): MarkerIconOptions {
-  // POIオブジェクトが渡された場合
-  if (typeof typeOrPoi === 'object') {
-    const poi = typeOrPoi;
+  try {
+    // POIオブジェクトが渡された場合
+    if (typeof typeOrPoi === 'object') {
+      const poi = typeOrPoi;
+      logger.debug('POIオブジェクトからマーカーアイコンを生成', {
+        poiId: poi.id,
+        name: poi.name,
+        type: poi.type,
+        category: poi.category,
+        isClosed: poi.isClosed,
+      });
 
-    // 型安全な方法でプロパティを取得し処理
-    // 文字列型を確実に保証するための処理
-    const typeStr = typeof poi.type === 'string' ? poi.type : '';
-    const categoryStr = typeof poi.category === 'string' ? poi.category : '';
+      // 型安全な方法でプロパティを取得し処理
+      const typeStr = poi.type;
+      const categoryStr = poi.category ?? 'unspecified';
 
-    // 空文字列の場合はデフォルト値を使用
-    const poiType = getPOITypeFromString(typeStr || 'other');
-    const poiCategory = getCategoryFromString(categoryStr || 'unspecified');
-    const poiClosed = Boolean(poi.isClosed);
+      const poiType = getPOITypeFromString(typeStr);
+      const poiCategory = getCategoryFromString(categoryStr);
+      const poiClosed = Boolean(poi.isClosed);
 
-    // 通常のgetMarkerIcon関数に処理を委譲（ここでは再帰呼び出し）
-    return getMarkerIcon(poiType, poiCategory, poiClosed);
+      // 再帰呼び出しで通常のgetMarkerIcon関数に処理を委譲
+      return getMarkerIcon(poiType, poiCategory, poiClosed);
+    }
+
+    // POIタイプとカテゴリが直接渡された場合
+    const iconType = typeOrPoi;
+    const iconBase = POI_TYPE_ICON_BASE[iconType] || POI_TYPE_ICON_BASE.other;
+
+    // Google Maps Platform Icon APIのURL
+    const url = `https://maps.google.com/mapfiles/ms/icons/${iconBase}-dot.png`;
+
+    // 閉店している場合は色を薄くする
+    const iconOpacity = isClosed ? 0.5 : 1.0;
+
+    return {
+      url,
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16),
+      opacity: iconOpacity,
+    };
+  } catch (error) {
+    // エラーが発生した場合はログに記録し、デフォルトアイコンを返す
+    logger.error('マーカーアイコン生成中にエラーが発生しました', {
+      error: error instanceof Error ? error.message : String(error),
+      type: typeof typeOrPoi === 'object' ? typeOrPoi.type : typeOrPoi,
+      category: typeof typeOrPoi === 'object' ? typeOrPoi.category : category,
+    });
+
+    // フォールバック: デフォルトのアイコンを返す
+    return {
+      url: 'https://maps.google.com/mapfiles/ms/icons/info-dot.png',
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16),
+      opacity: 1.0,
+    };
   }
-
-  // POIタイプとカテゴリが直接渡された場合
-  // in演算子を使用してキーの存在をチェック
-  const iconBase = typeOrPoi in POI_TYPE_ICON_BASE ? POI_TYPE_ICON_BASE[typeOrPoi] : 'info';
-
-  // Google Maps Platform Icon APIのURL
-  const url = `https://maps.google.com/mapfiles/ms/icons/${iconBase}-dot.png`;
-
-  // 閉店している場合は色を薄くする
-  const iconOpacity = isClosed ? 0.5 : 1.0;
-
-  return {
-    url,
-    scaledSize: new google.maps.Size(32, 32),
-    anchor: new google.maps.Point(16, 16),
-    opacity: iconOpacity,
-  };
 }
 
 /**
@@ -121,10 +143,9 @@ export function getMarkerIcon(
  * @returns POIType列挙型の値
  */
 function getPOITypeFromString(typeStr: string): POIType {
-  if (Object.keys(POI_TYPE_ICON_BASE).includes(typeStr)) {
-    return typeStr as POIType;
-  }
-  return 'other' as POIType;
+  // 型安全な方法でチェック
+  const normalizedType = typeStr.toLowerCase();
+  return normalizedType in POI_TYPE_ICON_BASE ? (normalizedType as POIType) : 'other';
 }
 
 /**
@@ -134,10 +155,11 @@ function getPOITypeFromString(typeStr: string): POIType {
  * @returns POICategory列挙型の値
  */
 function getCategoryFromString(categoryStr: string): POICategory {
-  if (Object.keys(CATEGORY_COLORS).includes(categoryStr)) {
-    return categoryStr as POICategory;
-  }
-  return 'unspecified' as POICategory;
+  // 型安全な方法でチェック
+  const normalizedCategory = categoryStr.toLowerCase();
+  return normalizedCategory in CATEGORY_COLORS
+    ? (normalizedCategory as POICategory)
+    : 'unspecified';
 }
 
 /**
@@ -150,32 +172,51 @@ function getCategoryFromString(categoryStr: string): POICategory {
  * @returns SVGベースのマーカーアイコン設定
  */
 export function getSvgMarkerIcon(
-  _type: POIType,
+  type: POIType,
   category: POICategory,
   isClosed = false
 ): MarkerIconOptions {
-  // カテゴリに対応する色を取得
-  const defaultColor = CATEGORY_COLORS.unspecified;
-  const color = isClosed
-    ? '#9E9E9E'
-    : `#${category in CATEGORY_COLORS ? CATEGORY_COLORS[category] : defaultColor}`;
+  try {
+    // パフォーマンス計測ポイント
+    logger.debug('SVGマーカーアイコンの生成', { type, category, isClosed });
 
-  // SVGのパス
-  const svgPath =
-    'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z';
+    // カテゴリに対応する色を取得
+    const color = isClosed
+      ? '#9E9E9E' // 閉店の場合はグレー
+      : `#${CATEGORY_COLORS[category] || CATEGORY_COLORS.unspecified}`;
 
-  // SVGデータURI
-  const svgIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"><path d="${svgPath}" fill="${encodeURIComponent(color)}" /></svg>`;
+    // SVGのパス - マップマーカーの形状
+    const svgPath =
+      'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z';
 
-  // 閉店している場合は半透明にする
-  const iconOpacity = isClosed ? 0.5 : 1.0;
+    // SVGデータURI - ブラウザが直接読み込める形式
+    const svgIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"><path d="${svgPath}" fill="${encodeURIComponent(color)}" /></svg>`;
 
-  return {
-    url: svgIcon,
-    scaledSize: new google.maps.Size(36, 36),
-    anchor: new google.maps.Point(18, 36),
-    opacity: iconOpacity,
-  };
+    // 閉店している場合は半透明にする
+    const iconOpacity = isClosed ? 0.5 : 1.0;
+
+    return {
+      url: svgIcon,
+      scaledSize: new google.maps.Size(36, 36),
+      anchor: new google.maps.Point(18, 36), // マーカーの先端が座標に合うように
+      opacity: iconOpacity,
+    };
+  } catch (error) {
+    // エラーが発生した場合はログに記録し、デフォルトアイコンを返す
+    logger.error('SVGマーカーアイコン生成中にエラーが発生しました', {
+      error: error instanceof Error ? error.message : String(error),
+      type,
+      category,
+    });
+
+    // フォールバック: デフォルトのアイコンを返す
+    return {
+      url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 32),
+      opacity: 1.0,
+    };
+  }
 }
 
 /**
@@ -199,13 +240,11 @@ export function getMarkerLabel(label: string, _category: POICategory): google.ma
  *
  * @returns デフォルトのマーカー表示状態
  */
-export function getDefaultMarkerVisibility(): Record<string, boolean> {
+export function getDefaultMarkerVisibility(): MarkerVisibility {
   return {
     restaurant: true,
-    cafe: true,
-    bar: true,
-    supermarket: true,
-    convenience: true,
+    shop: true,
+    attraction: true,
     toilet: false, // デフォルトでは公共トイレを非表示
     parking: false, // デフォルトでは駐車場を非表示
     other: true,

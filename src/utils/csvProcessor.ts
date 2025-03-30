@@ -1,5 +1,5 @@
 import { POI, POICategory, POIType } from '@/types/poi';
-import logger from '@/utils/logger';
+import { logger, LogLevel } from '@/utils/logger';
 
 /**
  * CSVデータを処理するユーティリティ
@@ -21,35 +21,63 @@ const DEFAULT_POSITION = { lat: 38.0413, lng: 138.3689 };
  */
 export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
   if (!csvText) {
-    logger.warn('空のCSVデータが渡されました');
+    logger.warn('空のCSVデータが渡されました', { type });
     return [];
   }
 
   try {
-    // CSVの行に分割
-    const lines = csvText.split('\n');
+    return logger.measureTime(
+      'CSV解析処理',
+      () => {
+        // CSVの行に分割
+        const lines = csvText.split('\n');
 
-    // 空のCSVファイルの場合
-    if (lines.length === 0) {
-      return [];
-    }
+        // 空のCSVファイルの場合
+        if (lines.length === 0) {
+          return [];
+        }
 
-    // ヘッダー行（項目名）を取得
-    const headers = lines[0].split(',').map(h => h.trim());
+        // ヘッダー行（項目名）を取得
+        const headers = lines[0].split(',').map(h => h.trim());
 
-    // ヘッダーのインデックスをマッピング
-    const columnMap = createColumnMap(headers);
+        // ヘッダーのインデックスをマッピング
+        const columnMap = createColumnMap(headers);
 
-    // ヘッダーの後の行からデータを処理
-    return lines
-      .slice(1)
-      .filter(line => line.trim() !== '')
-      .map((line, index) => createPOI(line, columnMap, type, index));
-  } catch (error) {
-    logger.error(
-      'CSVデータの解析中にエラーが発生しました',
-      error instanceof Error ? error : new Error(String(error))
+        // 無効なヘッダーがあるかチェック
+        const requiredColumns = ['name', 'wkt'];
+        const missingColumns = requiredColumns.filter(col => columnMap[col] === -1);
+
+        if (missingColumns.length > 0) {
+          logger.warn('CSVに必須カラムが不足しています', {
+            missingColumns,
+            availableColumns: headers,
+          });
+        }
+
+        // ヘッダーの後の行からデータを処理
+        const results = lines
+          .slice(1)
+          .filter(line => line.trim() !== '')
+          .map((line, index) => createPOI(line, columnMap, type, index));
+
+        logger.info('CSVデータ解析完了', {
+          type,
+          totalEntries: results.length,
+          validEntries: results.filter(p => isValidLatLng(p.position.lat, p.position.lng)).length,
+        });
+
+        return results;
+      },
+      LogLevel.INFO
     );
+  } catch (error) {
+    logger.error('CSVデータの解析中にエラーが発生しました', {
+      type,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      csvTextLength: csvText.length,
+      csvTextPreview: csvText.substring(0, 100),
+    });
     return [];
   }
 }
@@ -103,9 +131,9 @@ function extractBasicInfo(
 ): Pick<POI, 'id' | 'name' | 'type' | 'isClosed'> {
   return {
     id: `${type}-${index}`,
-    name: columns[columnMap.name]?.trim() || '名称不明',
+    name: getSafeColumnValue(columns, columnMap.name, '名称不明'),
     type,
-    isClosed: columns[columnMap.closed]?.toLowerCase() === 'true',
+    isClosed: getSafeColumnValue(columns, columnMap.closed, '').toLowerCase() === 'true',
   };
 }
 
@@ -117,9 +145,9 @@ function extractLocationInfo(
   columnMap: Record<string, number>
 ): Pick<POI, 'position' | 'address' | 'area'> {
   return {
-    position: parseWKT(columns[columnMap.wkt]),
-    address: columns[columnMap.address]?.trim() || '',
-    area: columns[columnMap.area]?.trim() || '',
+    position: parseWKT(getSafeColumnValue(columns, columnMap.wkt, '')),
+    address: getSafeColumnValue(columns, columnMap.address, ''),
+    area: getSafeColumnValue(columns, columnMap.area, ''),
   };
 }
 
@@ -131,15 +159,15 @@ function extractCategoryInfo(
   columnMap: Record<string, number>
 ): Pick<POI, 'category' | 'genre'> {
   const category = determineCategory(
-    columns[columnMap.japaneseFood]?.toLowerCase() === 'true',
-    columns[columnMap.westernFood]?.toLowerCase() === 'true',
-    columns[columnMap.otherFood]?.toLowerCase() === 'true',
-    columns[columnMap.retail]?.toLowerCase() === 'true'
+    isColumnTrue(columns, columnMap.japaneseFood),
+    isColumnTrue(columns, columnMap.westernFood),
+    isColumnTrue(columns, columnMap.otherFood),
+    isColumnTrue(columns, columnMap.retail)
   );
 
   return {
     category,
-    genre: columns[columnMap.genre]?.trim() || '',
+    genre: getSafeColumnValue(columns, columnMap.genre, ''),
   };
 }
 
@@ -151,11 +179,11 @@ function extractDetailInfo(
   columnMap: Record<string, number>
 ): Pick<POI, 'contact' | 'businessHours' | 'parkingInfo' | 'infoUrl' | 'googleMapsUrl'> {
   return {
-    contact: columns[columnMap.contact]?.trim() || '',
-    businessHours: columns[columnMap.businessHours]?.trim() || '',
-    parkingInfo: columns[columnMap.parkingInfo]?.trim() || '',
-    infoUrl: columns[columnMap.info]?.trim() || '',
-    googleMapsUrl: columns[columnMap.googleMaps]?.trim() || '',
+    contact: getSafeColumnValue(columns, columnMap.contact, ''),
+    businessHours: getSafeColumnValue(columns, columnMap.businessHours, ''),
+    parkingInfo: getSafeColumnValue(columns, columnMap.parkingInfo, ''),
+    infoUrl: getSafeColumnValue(columns, columnMap.info, ''),
+    googleMapsUrl: getSafeColumnValue(columns, columnMap.googleMaps, ''),
   };
 }
 
@@ -164,12 +192,32 @@ function extractDetailInfo(
  */
 function createSearchText(columns: string[], columnMap: Record<string, number>): string {
   const searchTextRaw = [
-    columns[columnMap.name] || '',
-    columns[columnMap.genre] || '',
-    columns[columnMap.address] || '',
+    getSafeColumnValue(columns, columnMap.name, ''),
+    getSafeColumnValue(columns, columnMap.genre, ''),
+    getSafeColumnValue(columns, columnMap.address, ''),
   ].join(' ');
 
   return normalizeText(searchTextRaw);
+}
+
+/**
+ * カラム値を安全に取得するヘルパー関数
+ */
+function getSafeColumnValue(columns: string[], columnIndex: number, defaultValue: string): string {
+  if (columnIndex === -1 || columnIndex >= columns.length) {
+    return defaultValue;
+  }
+  return columns[columnIndex]?.trim() || defaultValue;
+}
+
+/**
+ * カラム値がtrueかどうかをチェックするヘルパー関数
+ */
+function isColumnTrue(columns: string[], columnIndex: number): boolean {
+  if (columnIndex === -1 || columnIndex >= columns.length) {
+    return false;
+  }
+  return columns[columnIndex]?.toLowerCase() === 'true';
 }
 
 /**
@@ -199,27 +247,36 @@ function createColumnMap(headers: string[]): Record<string, number> {
  * CSVの行を適切に解析する関数（引用符で囲まれたカンマを処理）
  */
 function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let currentValue = '';
-  let inQuotes = false;
+  try {
+    const result: string[] = [];
+    let currentValue = '';
+    let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
 
-    if (char === '"' && (i === 0 || line[i - 1] !== '\\')) {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(currentValue);
-      currentValue = '';
-    } else {
-      currentValue += char;
+      if (char === '"' && (i === 0 || line[i - 1] !== '\\')) {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(currentValue);
+        currentValue = '';
+      } else {
+        currentValue += char;
+      }
     }
+
+    // 最後の値を追加
+    result.push(currentValue);
+
+    return result;
+  } catch (error) {
+    logger.warn('CSV行の解析中にエラーが発生しました', {
+      line: line.substring(0, 50) + (line.length > 50 ? '...' : ''),
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    // エラーが発生した場合は単純にカンマで分割
+    return line.split(',');
   }
-
-  // 最後の値を追加
-  result.push(currentValue);
-
-  return result;
 }
 
 /**
@@ -229,6 +286,7 @@ function parseCSVLine(line: string): string[] {
 function parseWKT(wkt: string): google.maps.LatLngLiteral {
   try {
     if (!wkt) {
+      logger.warn('空のWKTが渡されました', { wkt });
       return DEFAULT_POSITION;
     }
 
@@ -244,13 +302,14 @@ function parseWKT(wkt: string): google.maps.LatLngLiteral {
       }
     }
 
-    logger.warn(`無効なWKT形式の座標です: ${wkt}`);
+    logger.warn('無効なWKT形式の座標です', { wkt });
     return DEFAULT_POSITION;
   } catch (error) {
-    logger.error(
-      'WKT座標の解析中にエラーが発生しました',
-      error instanceof Error ? error : new Error(String(error))
-    );
+    logger.error('WKT座標の解析中にエラーが発生しました', {
+      wkt,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return DEFAULT_POSITION;
   }
 }
@@ -309,7 +368,13 @@ function normalizeText(text: string): string {
  * @returns 結合されたPOI配列
  */
 export function combinePOIArrays(...poiArrays: POI[][]): POI[] {
-  return poiArrays.flat();
+  const combined = poiArrays.flat();
+  logger.debug('POI配列を結合しました', {
+    inputArrayCount: poiArrays.length,
+    totalPOICount: combined.length,
+    poiCountByType: poiArrays.map(arr => arr.length),
+  });
+  return combined;
 }
 
 /**
@@ -325,7 +390,74 @@ export function filterPOIsByCategory(pois: POI[], categories: POICategory[]): PO
     return pois;
   }
 
-  return pois.filter(poi => categories.includes(poi.category));
+  const filtered = pois.filter(poi => categories.includes(poi.category));
+  logger.debug('カテゴリでPOIをフィルタリングしました', {
+    originalCount: pois.length,
+    filteredCount: filtered.length,
+    categories,
+  });
+  return filtered;
+}
+
+/**
+ * POIデータを地区でフィルタリング
+ *
+ * @param pois - フィルタリングするPOI配列
+ * @param areas - 表示する地区の配列
+ * @returns フィルタリングされたPOI配列
+ */
+export function filterPOIsByArea(pois: POI[], areas: string[]): POI[] {
+  // 空の地区配列の場合はフィルタリングしない
+  if (areas.length === 0) {
+    return pois;
+  }
+
+  const filtered = pois.filter(poi => areas.includes(poi.area));
+  logger.debug('地区でPOIをフィルタリングしました', {
+    originalCount: pois.length,
+    filteredCount: filtered.length,
+    areas,
+  });
+  return filtered;
+}
+
+/**
+ * POIデータの営業状態でフィルタリング
+ *
+ * @param pois - フィルタリングするPOI配列
+ * @param includeOpen - 営業中のPOIを含める
+ * @param includeClosed - 閉店したPOIを含める
+ * @returns フィルタリングされたPOI配列
+ */
+export function filterPOIsByStatus(
+  pois: POI[],
+  includeOpen: boolean = true,
+  includeClosed: boolean = false
+): POI[] {
+  // 両方含める場合はフィルタリングしない
+  if (includeOpen && includeClosed) {
+    return pois;
+  }
+
+  // 両方含めない場合は空配列を返す
+  if (!includeOpen && !includeClosed) {
+    return [];
+  }
+
+  const filtered = pois.filter(poi => {
+    return (includeOpen && !poi.isClosed) || (includeClosed && poi.isClosed);
+  });
+
+  logger.debug('営業状態でPOIをフィルタリングしました', {
+    originalCount: pois.length,
+    filteredCount: filtered.length,
+    includeOpen,
+    includeClosed,
+    openCount: filtered.filter(poi => !poi.isClosed).length,
+    closedCount: filtered.filter(poi => poi.isClosed).length,
+  });
+
+  return filtered;
 }
 
 /**
@@ -341,12 +473,23 @@ export function filterPOIsBySearchText(pois: POI[], searchText: string): POI[] {
   }
 
   const normalizedSearchText = normalizeText(searchText);
+  const startTime = performance.now();
 
-  return pois.filter(
+  const filtered = pois.filter(
     poi =>
       poi.searchText.includes(normalizedSearchText) ||
       normalizeText(poi.name).includes(normalizedSearchText) ||
       normalizeText(poi.genre).includes(normalizedSearchText) ||
       normalizeText(poi.address).includes(normalizedSearchText)
   );
+
+  const duration = performance.now() - startTime;
+  logger.debug('テキスト検索でPOIをフィルタリングしました', {
+    searchText: normalizedSearchText,
+    originalCount: pois.length,
+    filteredCount: filtered.length,
+    durationMs: duration.toFixed(2),
+  });
+
+  return filtered;
 }

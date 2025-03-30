@@ -5,6 +5,8 @@
  * 柔軟なロギングシステムを提供します。
  */
 
+import { ENV } from '@/utils/env';
+
 /**
  * ログレベルの定義
  */
@@ -34,6 +36,11 @@ export interface LogTransport {
 }
 
 /**
+ * コンテキストフォーマッター関数の型定義
+ */
+export type ContextFormatter = (context?: LogContext) => LogContext | undefined;
+
+/**
  * ロガーの設定オプション
  */
 interface LoggerOptions {
@@ -51,17 +58,32 @@ interface LoggerOptions {
 
   /** エラーの重複チェック期間（ミリ秒） */
   deduplicationInterval?: number;
+
+  /** タイムスタンプを含めるか */
+  includeTimestamps?: boolean;
+
+  /** コンテキスト情報を拡張するフォーマッター */
+  contextFormatter?: ContextFormatter;
 }
 
 /**
  * デフォルトのロガー設定
+ * env.tsと連携して環境変数を統一的に扱う
  */
 const defaultOptions: LoggerOptions = {
-  minLevel: import.meta.env.DEV ? LogLevel.DEBUG : LogLevel.WARN,
+  minLevel: ENV.env.isDev ? LogLevel.DEBUG : LogLevel.WARN,
   enableConsole: true,
   transports: [],
-  deduplicateErrors: import.meta.env.PROD,
+  deduplicateErrors: ENV.env.isProd,
   deduplicationInterval: 10000, // 10秒
+  includeTimestamps: true,
+  contextFormatter: context => {
+    return {
+      ...context,
+      appName: ENV.app.NAME,
+      environment: ENV.env.MODE,
+    };
+  },
 };
 
 // コンソール出力用のラッパー関数（ESLint警告回避）
@@ -183,14 +205,27 @@ class Logger {
    * メッセージをフォーマットする
    */
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
-    const timestamp = new Date().toISOString();
     const levelStr = level.toUpperCase().padEnd(5, ' ');
+    let formattedMessage = '';
 
-    let formattedMessage = `[${timestamp}] [${levelStr}] ${message}`;
+    // タイムスタンプ表示設定に基づいて処理
+    if (this.options.includeTimestamps) {
+      const timestamp = new Date().toISOString();
+      formattedMessage = `[${timestamp}] [${levelStr}] ${message}`;
+    } else {
+      formattedMessage = `[${levelStr}] ${message}`;
+    }
 
-    if (context && Object.keys(context).length > 0) {
+    // コンテキストフォーマッター適用（設定されている場合）
+    let formattedContext = context;
+    if (this.options.contextFormatter && context) {
+      formattedContext = this.options.contextFormatter(context);
+    }
+
+    // フォーマット済みコンテキストがある場合に追加
+    if (formattedContext && Object.keys(formattedContext).length > 0) {
       // コンテキスト情報の追加
-      const contextStr = JSON.stringify(context);
+      const contextStr = JSON.stringify(formattedContext);
       formattedMessage += ` | Context: ${contextStr}`;
     }
 
@@ -323,6 +358,14 @@ class Logger {
   public addTransport(transport: LogTransport): void {
     this.options.transports = [...(this.options.transports ?? []), transport];
   }
+
+  /**
+   * リソース解放のためのメソッド
+   */
+  public dispose(): void {
+    this.options.transports = [];
+    this.recentErrors.clear();
+  }
 }
 
 /**
@@ -333,9 +376,10 @@ export const logger = new Logger();
 /**
  * プロダクション環境でのみ外部エラー追跡サービスを統合
  */
-if (import.meta.env.PROD) {
-  // 例: Sentryなどの外部サービスとの統合
+if (ENV.env.isProd) {
+  // 外部エラー追跡サービス（例: Sentry）との統合
   try {
+    logger.info('外部エラー追跡サービスとの連携を初期化しています');
     // 将来的な外部サービス連携のためのスケルトン
     // logger.addTransport({
     //   log(level, message, context) {
@@ -344,11 +388,12 @@ if (import.meta.env.PROD) {
     //     }
     //   }
     // });
+    logger.info('外部エラー追跡サービスの統合が完了しました');
   } catch (err) {
     // 初期化エラーはコンソールにのみ記録
     const errorMessage = err instanceof Error ? err.message : String(err);
     // eslint-disable-next-line no-console
-    console.error(`[Logger] Failed to initialize external transport: ${errorMessage}`);
+    console.error(`[Logger] 外部トランスポートの初期化に失敗しました: ${errorMessage}`);
   }
 }
 

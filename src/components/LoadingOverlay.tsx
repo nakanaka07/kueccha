@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
+import { logger } from '@/utils/logger';
 
 /**
  * ローディングオーバーレイのプロパティ
@@ -21,21 +23,35 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   isLoaded,
   isMapElementReady,
 }) => {
+  // ロード状態の変更をログに記録
+  useEffect(() => {
+    logger.info('読み込み状態が変更されました', {
+      isLoadingPOIs,
+      isLoaded,
+      isMapElementReady,
+    });
+  }, [isLoadingPOIs, isLoaded, isMapElementReady]);
+
   // マップ読み込み状態のメッセージを決定
   const getMapStatusMessage = () => {
     if (isLoaded) return null;
 
-    return isMapElementReady ? <p>Google Maps APIを初期化中...</p> : <p>マップ要素を準備中...</p>;
+    return isMapElementReady ? (
+      <p role='status'>Google Maps APIを初期化中...</p>
+    ) : (
+      <p role='status'>マップ要素を準備中...</p>
+    );
   };
 
   return (
-    <div className='loading-overlay'>
-      <div className='loading-spinner'></div>
-      <p>地図とデータを読み込んでいます...</p>
-      {isLoadingPOIs && <p>施設データを準備中...</p>}
+    <div className='loading-overlay' role='progressbar' aria-busy='true' aria-live='polite'>
+      <div className='loading-spinner' aria-hidden='true'></div>
+      <p role='status'>地図とデータを読み込んでいます...</p>
+      {isLoadingPOIs && <p role='status'>施設データを準備中...</p>}
       {getMapStatusMessage()}
     </div>
   );
 };
 
-export default LoadingOverlay;
+// React.memoを使用してパフォーマンスを最適化
+export default React.memo(LoadingOverlay);

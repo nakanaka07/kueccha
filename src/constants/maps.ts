@@ -1,7 +1,8 @@
 import { Libraries } from '@googlemaps/js-api-loader';
 
 import { ENV } from '@/utils/env';
-// Libraries型をインポート
+import { logger, LogLevel } from '@/utils/logger';
+// 必要なインポートを追加（logger, LogLevelの追加）
 
 /**
  * Google Maps API関連の定数
@@ -91,15 +92,30 @@ export const MAP_ID_CONFIG = {
  * @returns google.mapsが利用可能かどうか
  */
 export const isGoogleMapsAvailable = (): boolean => {
-  // グローバルスコープでgoogleオブジェクトが存在するかチェック
-  if (typeof window === 'undefined' || typeof window.google === 'undefined') {
-    return false;
-  }
+  // 処理をロギングで計測
+  return logger.measureTime(
+    'Google Maps利用可能性チェック',
+    () => {
+      // グローバルスコープでgoogleオブジェクトが存在するかチェック
+      if (typeof window === 'undefined' || typeof window.google === 'undefined') {
+        logger.debug('Google Mapsオブジェクトが利用できません');
+        return false;
+      }
 
-  // googleオブジェクトが存在する場合、mapsプロパティをチェック
-  // Record<string, unknown>型を使用して型安全に存在確認
-  const googleObj = window.google as Record<string, unknown>;
-  return Object.prototype.hasOwnProperty.call(googleObj, 'maps') && googleObj.maps !== undefined;
+      // googleオブジェクトが存在する場合、mapsプロパティをチェック
+      // Record<string, unknown>型を使用して型安全に存在確認
+      const googleObj = window.google as Record<string, unknown>;
+      const mapsAvailable =
+        Object.prototype.hasOwnProperty.call(googleObj, 'maps') && googleObj.maps !== undefined;
+
+      if (mapsAvailable) {
+        logger.debug('Google Mapsオブジェクトが利用可能です');
+      }
+
+      return mapsAvailable;
+    },
+    LogLevel.DEBUG
+  );
 };
 
 /**
@@ -231,16 +247,33 @@ export const LOADER_OPTIONS = {
  * @returns LoaderOptions
  */
 export const getLoaderOptions = () => {
-  const apiKey = ENV.google.API_KEY;
-  const mapId = MAP_ID_CONFIG.MAIN;
+  return logger.measureTime(
+    'Loader設定の取得',
+    () => {
+      const apiKey = ENV.google.API_KEY;
+      const mapId = MAP_ID_CONFIG.MAIN;
 
-  return {
-    ...LOADER_OPTIONS,
-    apiKey,
-    // マップIDが有効な場合のみ追加
-    ...(MAP_ID_CONFIG.isValid(mapId) ? { mapIds: [mapId] } : {}),
-  };
+      logger.debug('Google Maps API設定を生成', {
+        hasApiKey: !!apiKey,
+        hasMapId: !!mapId,
+        isMapIdValid: MAP_ID_CONFIG.isValid(mapId),
+      });
+
+      return {
+        ...LOADER_OPTIONS,
+        apiKey,
+        // マップIDが有効な場合のみ追加
+        ...(MAP_ID_CONFIG.isValid(mapId) ? { mapIds: [mapId] } : {}),
+      };
+    },
+    LogLevel.DEBUG
+  );
 };
+
+/**
+ * デバイス検出のためのブレークポイント値（ピクセル）
+ */
+export const DEVICE_BREAKPOINT = 768;
 
 /**
  * デバイスタイプ検出
@@ -248,7 +281,12 @@ export const getLoaderOptions = () => {
  * @returns モバイルデバイスかどうか
  */
 export const isMobileDevice = (): boolean => {
-  return window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // 型安全なチェックを追加
+  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+  const hasTouchSupport =
+    typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+  return windowWidth <= DEVICE_BREAKPOINT || hasTouchSupport;
 };
 
 /**
@@ -256,5 +294,17 @@ export const isMobileDevice = (): boolean => {
  * @returns マップ初期化オプション
  */
 export const getResponsiveMapOptions = () => {
-  return isMobileDevice() ? MOBILE_MAP_OPTIONS : DEFAULT_MAP_OPTIONS;
+  return logger.measureTime(
+    'レスポンシブマップオプションの決定',
+    () => {
+      const isMobile = isMobileDevice();
+      logger.debug('デバイスタイプに基づくマップオプションを選択', {
+        isMobileDevice: isMobile,
+        selectedOption: isMobile ? 'MOBILE_MAP_OPTIONS' : 'DEFAULT_MAP_OPTIONS',
+      });
+
+      return isMobile ? MOBILE_MAP_OPTIONS : DEFAULT_MAP_OPTIONS;
+    },
+    LogLevel.DEBUG
+  );
 };

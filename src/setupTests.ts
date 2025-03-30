@@ -2,7 +2,10 @@
 import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
 import 'whatwg-fetch'; // fetch APIのポリフィル
-import { vi, beforeAll, afterEach } from 'vitest'; // Vitestのインポートを追加
+import { vi, beforeAll, afterEach, afterAll } from 'vitest';
+
+// プロジェクト固有のインポート（パスエイリアスを活用）
+import { logger } from '@/utils/logger';
 
 // テスト環境でのconsole.errorとwarningの処理
 // ESLintの警告が出ないよう変数定義を修正
@@ -31,7 +34,9 @@ configure({
 });
 
 // Google Maps APIのモック用の型定義
-type PlacesServiceStatus =
+// 名前空間の代わりにESモジュール構文を使用
+// PlacesServiceのステータス型
+export type PlacesServiceStatus =
   | 'OK'
   | 'ZERO_RESULTS'
   | 'OVER_QUERY_LIMIT'
@@ -39,15 +44,91 @@ type PlacesServiceStatus =
   | 'INVALID_REQUEST'
   | 'UNKNOWN_ERROR';
 
-// Google Maps APIのモック
+export interface MapOptions {
+  center?: { lat: number; lng: number };
+  zoom?: number;
+  mapTypeId?: string;
+  [key: string]: unknown;
+}
+
+export interface MarkerOptions {
+  position?: { lat: number; lng: number };
+  map?: MockMap | null;
+  title?: string;
+  icon?: unknown;
+  [key: string]: unknown;
+}
+
+export interface PlacesServiceRequest {
+  placeId?: string;
+  [key: string]: unknown;
+}
+
+export interface PlacesServiceResult {
+  geometry: MockGeometry;
+  [key: string]: unknown;
+}
+
+// イベント関連の型を整理
+export interface EventMock {
+  addListener: ReturnType<typeof vi.fn>;
+  removeListener: ReturnType<typeof vi.fn>;
+  prototype: Record<string, unknown>;
+  addDomListener: ReturnType<typeof vi.fn>;
+  addDomListenerOnce: ReturnType<typeof vi.fn>;
+  addListenerOnce: ReturnType<typeof vi.fn>;
+  clearInstanceListeners: ReturnType<typeof vi.fn>;
+  clearListeners: ReturnType<typeof vi.fn>;
+  hasListeners: ReturnType<typeof vi.fn>;
+  trigger: ReturnType<typeof vi.fn>;
+}
+
+// GoogleMapsのモックの型定義
+export interface GoogleMapsNamespaceMock extends Record<string, unknown> {
+  Map: typeof MockMap;
+  Marker: typeof MockMarker;
+  LatLng: typeof MockLatLng;
+  places: {
+    PlacesService: typeof MockPlacesService;
+  };
+  event: EventMock;
+  ControlPosition: {
+    RIGHT_BOTTOM: number;
+    RIGHT_CENTER: number;
+    RIGHT_TOP: number;
+    TOP_RIGHT: number;
+    LEFT_TOP: number;
+  };
+  MapTypeControlStyle: {
+    DROPDOWN_MENU: number;
+  };
+  MapTypeId: {
+    ROADMAP: string;
+    SATELLITE: string;
+    HYBRID: string;
+    TERRAIN: string;
+  };
+  importLibrary: () => Promise<unknown>;
+}
+
+// グローバルのgoogleオブジェクト型
+export interface GlobalWithGoogle {
+  google: {
+    maps: GoogleMapsNamespaceMock;
+  };
+}
+
+// Google Maps APIのモック実装
+// 位置情報のモッククラス
 class MockGeometry {
+  // 東京駅の座標をデフォルト値として使用
   location = {
     lat: () => 35.6812,
     lng: () => 139.7671,
-  }; // 東京駅の座標
+  };
 }
 
-// 正しい型定義を持つMockLatLngクラス
+// 地理座標のモッククラス
 class MockLatLng {
   private lat_value: number;
   private lng_value: number;
@@ -75,21 +156,16 @@ class MockLatLng {
   }
 }
 
-interface MapOptions {
-  center?: { lat: number; lng: number };
-  zoom?: number;
-  mapTypeId?: string;
-  [key: string]: unknown;
-}
-
-// Mapクラスの必要なメソッドをモック
+// 地図オブジェクトのモック
 class MockMap {
   static DEMO_MAP_ID = 'DEMO_MAP_ID';
 
   controls: unknown[] = [];
   data = {};
 
-  constructor(_mapDiv: HTMLElement, _opts?: MapOptions) {}
+  constructor(_mapDiv: HTMLElement, _opts?: MapOptions) {
+    logger.debug('MockMap constructed', { element: _mapDiv.id, options: _opts });
+  }
 
   setCenter(): void {}
   setZoom(): void {}
@@ -111,20 +187,20 @@ class MockMap {
   }
 }
 
-interface MarkerOptions {
-  position?: { lat: number; lng: number };
-  map?: MockMap | null;
-  title?: string;
-  [key: string]: unknown;
-}
-
-// Markerクラスの必要なメソッドをモック
+// マーカーのモッククラス
 class MockMarker {
   static MAX_ZINDEX = 999;
+  private options: MarkerOptions;
 
-  constructor(_opts?: MarkerOptions) {}
+  constructor(options?: MarkerOptions) {
+    this.options = options ?? {};
+    logger.debug('MockMarker constructed', { options });
+  }
 
-  setMap(): void {}
+  setMap(_map: MockMap | null): void {
+    this.options.map = _map;
+  }
+
   getAnimation() {
     return null;
   }
@@ -138,19 +214,21 @@ class MockMarker {
     return false;
   }
   getIcon() {
-    return null;
+    return this.options.icon ?? null;
   }
   getLabel() {
     return null;
   }
   getPosition() {
-    return new MockLatLng(0, 0);
+    return this.options.position
+      ? new MockLatLng(this.options.position.lat, this.options.position.lng)
+      : new MockLatLng(0, 0);
   }
   getShape() {
     return null;
   }
   getTitle() {
-    return '';
+    return this.options.title ?? '';
   }
   getVisible() {
     return true;
@@ -160,24 +238,17 @@ class MockMarker {
   }
 }
 
-interface PlacesServiceRequest {
-  placeId?: string;
-  [key: string]: unknown;
-}
-
-interface PlacesServiceResult {
-  geometry: MockGeometry;
-  [key: string]: unknown;
-}
-
 // PlacesServiceクラスのモック
 class MockPlacesService {
-  constructor(_attrContainer: unknown) {}
+  constructor(_attrContainer: unknown) {
+    logger.debug('MockPlacesService constructed');
+  }
 
   getDetails(
-    _request: PlacesServiceRequest,
+    request: PlacesServiceRequest,
     callback: (result: PlacesServiceResult, status: PlacesServiceStatus) => void
   ): void {
+    logger.debug('PlacesService.getDetails called', { request });
     callback({ geometry: new MockGeometry() }, 'OK');
   }
 
@@ -187,64 +258,22 @@ class MockPlacesService {
   textSearch(): void {}
 }
 
-// eventの型定義
-interface EventMock {
-  addListener: ReturnType<typeof vi.fn>;
-  removeListener: ReturnType<typeof vi.fn>;
-  prototype: Record<string, unknown>;
-  addDomListener: ReturnType<typeof vi.fn>;
-  addDomListenerOnce: ReturnType<typeof vi.fn>;
-  addListenerOnce: ReturnType<typeof vi.fn>;
-  clearInstanceListeners: ReturnType<typeof vi.fn>;
-  clearListeners: ReturnType<typeof vi.fn>;
-  hasListeners: ReturnType<typeof vi.fn>;
-  trigger: ReturnType<typeof vi.fn>;
-}
-
-// eventMockオブジェクトの作成
+// イベント関連のモック
 const eventMock: EventMock = {
-  addListener: vi.fn(),
+  addListener: vi.fn().mockReturnValue({ remove: vi.fn() }),
   removeListener: vi.fn(),
   prototype: {},
-  addDomListener: vi.fn(),
-  addDomListenerOnce: vi.fn(),
-  addListenerOnce: vi.fn(),
+  addDomListener: vi.fn().mockReturnValue({ remove: vi.fn() }),
+  addDomListenerOnce: vi.fn().mockReturnValue({ remove: vi.fn() }),
+  addListenerOnce: vi.fn().mockReturnValue({ remove: vi.fn() }),
   clearInstanceListeners: vi.fn(),
   clearListeners: vi.fn(),
-  hasListeners: vi.fn(),
+  hasListeners: vi.fn().mockReturnValue(false),
   trigger: vi.fn(),
 };
 
-// テスト環境用のモックオブジェクト型定義
-// 実際のGoogle Maps APIの型定義と完全に一致させる必要はない
-type GoogleMapsNamespaceMock = Record<string, unknown> & {
-  Map: typeof MockMap;
-  Marker: typeof MockMarker;
-  LatLng: typeof MockLatLng;
-  places: {
-    PlacesService: typeof MockPlacesService;
-  };
-  event: EventMock;
-  ControlPosition: {
-    RIGHT_BOTTOM: number;
-    RIGHT_CENTER: number;
-    RIGHT_TOP: number;
-    TOP_RIGHT: number;
-    LEFT_TOP: number;
-  };
-  MapTypeControlStyle: {
-    DROPDOWN_MENU: number;
-  };
-  MapTypeId: {
-    ROADMAP: string;
-    SATELLITE: string;
-    HYBRID: string;
-    TERRAIN: string;
-  };
-  importLibrary: () => Promise<unknown>;
-};
-
-// 型安全なグローバルGoogle APIモックの作成
+// GoogleMaps APIモックの集約
+// 型名と実装の重複を排除し、名前空間を一貫して使用
 const googleMapsMock: GoogleMapsNamespaceMock = {
   Map: MockMap,
   Marker: MockMarker,
@@ -269,40 +298,60 @@ const googleMapsMock: GoogleMapsNamespaceMock = {
     HYBRID: 'hybrid',
     TERRAIN: 'terrain',
   },
-  importLibrary: () => Promise.resolve({}),
+  // 非同期APIライブラリインポートのモック
+  importLibrary: vi.fn().mockImplementation(library => {
+    logger.debug('Google Maps library import requested', { library });
+    return Promise.resolve({});
+  }),
 
-  // 他のGoogle Mapsで必要なプロパティに対応するためのダミー値
+  // その他の必要なプロパティをスッキリ設定
   CollisionBehavior: {},
   ColorScheme: {},
   Containment: {},
   Data: {},
-
-  // 他にエラーで言及されているプロパティがあれば追加
 };
 
-// google をグローバル変数として宣言 (ファイル内スコープ)
-interface GlobalWithGoogle {
-  google: {
-    maps: GoogleMapsNamespaceMock;
-  };
-}
-
-// 既存のglobalオブジェクトを拡張
+// グローバル変数としてgoogleを登録
 const globalWithGoogle = global as unknown as GlobalWithGoogle;
 globalWithGoogle.google = {
   maps: googleMapsMock,
 };
 
-// 環境変数のモック設定
+// テスト環境のセットアップ
 beforeAll(() => {
-  process.env = {
-    ...process.env,
+  // 環境変数のモック設定（ロギングのためのコンテキスト追加）
+  const mockEnv = {
     VITE_GOOGLE_MAPS_API_KEY: 'test-api-key',
     VITE_SHEET_ID: 'test-sheet-id',
   };
+
+  process.env = {
+    ...process.env,
+    ...mockEnv,
+  };
+
+  // ロガーの設定（テスト環境用）
+  logger.info('テスト環境セットアップ完了', {
+    environment: 'test',
+    mockEnv: Object.keys(mockEnv),
+  });
 });
 
 // テスト間でモックをリセット
 afterEach(() => {
   vi.clearAllMocks();
+  logger.debug('テスト間のモックリセット完了');
+});
+
+// 全テスト完了後のクリーンアップ
+afterAll(() => {
+  /* eslint-disable no-console */
+  // コンソールのオリジナル関数を復元
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+  /* eslint-enable no-console */
+
+  // ロガーの破棄
+  logger.dispose();
+  logger.info('テスト環境のクリーンアップ完了');
 });
