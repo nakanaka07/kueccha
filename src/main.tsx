@@ -1,8 +1,8 @@
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 
-import App from '@/App';
 import '@/global.css';
+import App from '@/App';
 import { ENV, validateEnv } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
 

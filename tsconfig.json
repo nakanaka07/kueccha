@@ -34,7 +34,6 @@
       "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["src/types/*"],
       "@/utils/*": ["src/utils/*"],
-      "@/App/*": ["src/App/*"]
     }
   },
   "include": ["src", "vite-env.d.ts", "react-extensions.d.ts"],
