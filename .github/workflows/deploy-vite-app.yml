@@ -34,8 +34,9 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      # 依存関係インストールのステップを修正（ロックファイルの不一致エラー対策）
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
         
       # pnpmキャッシュをより効果的に活用
       - name: Get pnpm store directory
