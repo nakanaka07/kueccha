@@ -1,8 +1,13 @@
-import { Libraries } from '@googlemaps/js-api-loader';
-
-import { ENV } from '@/utils/env';
+import { ENV, getMapsApiVersion, getMapsLibraries, isDevEnvironment } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
-// 必要なインポートを追加（logger, LogLevelの追加）
+// 環境ユーティリティ関数を追加インポート
+
+// Libraries型を正しく定義
+import type { LoaderOptions } from '@googlemaps/js-api-loader';
+// Google Maps APIで使用される有効なライブラリの型定義
+type Libraries = Array<
+  'maps' | 'core' | 'places' | 'geometry' | 'drawing' | 'marker' | 'visualization'
+>;
 
 /**
  * Google Maps API関連の定数
@@ -156,21 +161,32 @@ export const DEFAULT_MAP_OPTIONS = {
   /** マップタイプコントロール */
   mapTypeControl: true,
   get mapTypeControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' && google.maps;
+
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.TOP_RIGHT
-        : CONTROL_POSITIONS.TOP_RIGHT,
-      style: isGoogleMapsAvailable()
-        ? google.maps.MapTypeControlStyle.DROPDOWN_MENU
-        : MAP_TYPE_CONTROL_STYLES.DROPDOWN_MENU,
-      mapTypeIds: isGoogleMapsAvailable()
-        ? [
-            google.maps.MapTypeId.ROADMAP,
-            google.maps.MapTypeId.SATELLITE,
-            google.maps.MapTypeId.HYBRID,
-            google.maps.MapTypeId.TERRAIN,
-          ]
-        : [MAP_TYPE_IDS.ROADMAP, MAP_TYPE_IDS.SATELLITE, MAP_TYPE_IDS.HYBRID, MAP_TYPE_IDS.TERRAIN],
+      position:
+        isGoogleMapsAvailable() && googleMaps
+          ? googleMaps.ControlPosition.TOP_RIGHT
+          : CONTROL_POSITIONS.TOP_RIGHT,
+      style:
+        isGoogleMapsAvailable() && googleMaps
+          ? googleMaps.MapTypeControlStyle.DROPDOWN_MENU
+          : MAP_TYPE_CONTROL_STYLES.DROPDOWN_MENU,
+      mapTypeIds:
+        isGoogleMapsAvailable() && googleMaps
+          ? [
+              googleMaps.MapTypeId.ROADMAP,
+              googleMaps.MapTypeId.SATELLITE,
+              googleMaps.MapTypeId.HYBRID,
+              googleMaps.MapTypeId.TERRAIN,
+            ]
+          : [
+              MAP_TYPE_IDS.ROADMAP,
+              MAP_TYPE_IDS.SATELLITE,
+              MAP_TYPE_IDS.HYBRID,
+              MAP_TYPE_IDS.TERRAIN,
+            ],
     };
   },
 
@@ -226,13 +242,14 @@ export const MOBILE_MAP_OPTIONS = {
 /**
  * Loader設定
  * Google Maps JavaScript APIのロード設定
+ * 環境変数から設定を取得
  */
 export const LOADER_OPTIONS = {
-  /** APIバージョン */
-  version: 'weekly',
+  /** APIバージョン - 環境変数から取得 */
+  version: getMapsApiVersion(),
 
-  /** 読み込む追加ライブラリ */
-  libraries: ['places', 'geometry'] as Libraries,
+  /** 読み込む追加ライブラリ - 環境変数から取得 */
+  libraries: getMapsLibraries(),
 
   /** 言語設定 - デフォルトは日本語 */
   language: 'ja',
@@ -246,24 +263,34 @@ export const LOADER_OPTIONS = {
  * 環境に応じた適切な設定を返す
  * @returns LoaderOptions
  */
-export const getLoaderOptions = () => {
+export const getLoaderOptions = (): LoaderOptions => {
   return logger.measureTime(
     'Loader設定の取得',
     () => {
       const apiKey = ENV.google.API_KEY;
       const mapId = MAP_ID_CONFIG.MAIN;
+      const version = getMapsApiVersion();
+      // ライブラリ文字列を明示的に型変換して安全に扱う
+      const libraryStrings = getMapsLibraries();
+      const libraries = libraryStrings.filter(lib =>
+        ['maps', 'core', 'places', 'geometry', 'drawing', 'marker', 'visualization'].includes(lib)
+      ) as Libraries;
 
-      logger.debug('Google Maps API設定を生成', {
+      logger.info('Google Maps API設定を生成', {
         hasApiKey: !!apiKey,
-        hasMapId: !!mapId,
-        isMapIdValid: MAP_ID_CONFIG.isValid(mapId),
+        hasMapId: MAP_ID_CONFIG.isValid(mapId),
+        version,
+        libraries,
+        environment: isDevEnvironment() ? 'development' : 'production',
       });
 
       return {
-        ...LOADER_OPTIONS,
-        apiKey,
-        // マップIDが有効な場合のみ追加
-        ...(MAP_ID_CONFIG.isValid(mapId) ? { mapIds: [mapId] } : {}),
+        apiKey: apiKey || '',
+        version,
+        libraries,
+        language: 'ja',
+        region: 'JP',
+        mapIds: mapId ? [mapId] : undefined,
       };
     },
     LogLevel.DEBUG
@@ -283,8 +310,15 @@ export const DEVICE_BREAKPOINT = 768;
 export const isMobileDevice = (): boolean => {
   // 型安全なチェックを追加
   const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+
+  // navigatorオブジェクトの存在と型安全なプロパティアクセスを確保
   const hasTouchSupport =
-    typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    typeof window !== 'undefined' &&
+    typeof navigator !== 'undefined' &&
+    ('ontouchstart' in window ||
+      ('maxTouchPoints' in navigator &&
+        typeof navigator.maxTouchPoints === 'number' &&
+        navigator.maxTouchPoints > 0));
 
   return windowWidth <= DEVICE_BREAKPOINT || hasTouchSupport;
 };
@@ -293,7 +327,7 @@ export const isMobileDevice = (): boolean => {
  * 現在のデバイスに適したマップオプションを取得
  * @returns マップ初期化オプション
  */
-export const getResponsiveMapOptions = () => {
+export const getResponsiveMapOptions = (): google.maps.MapOptions => {
   return logger.measureTime(
     'レスポンシブマップオプションの決定',
     () => {

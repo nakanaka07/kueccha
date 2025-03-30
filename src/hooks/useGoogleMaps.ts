@@ -1,8 +1,8 @@
 import { Loader } from '@googlemaps/js-api-loader';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-import { getLoaderOptions, RETRY_CONFIG, getResponsiveMapOptions } from '@/constants/maps';
-import { ENV } from '@/utils/env';
+import { getLoaderOptions } from '@/constants/maps';
+import { ENV, isDevEnvironment, getMapsApiVersion } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
 
 export interface GoogleMapsState {
@@ -80,9 +80,9 @@ const getMapElementWithRetry = async (elementId: string): Promise<HTMLElement> =
       mapElement = tryGetMapElement(elementId);
 
       if (!mapElement) {
-        throw new Error(
-          `マップ要素が見つかりません。ID "${elementId}"のHTML要素が存在し、CSSで適切なサイズが設定されていることを確認してください。`
-        );
+        // エラーメッセージを生成し、型安全に処理
+        const errorMessage = `マップ要素が見つかりません。ID "${elementId}"のHTML要素が存在し、CSSで適切なサイズが設定されていることを確認してください。`;
+        throw new Error(errorMessage);
       }
     }
   }
@@ -103,10 +103,10 @@ const createMapInstance = (
   zoom: number
 ): google.maps.Map => {
   // レスポンシブなマップオプションを取得
-  const mapOptions = getResponsiveMapOptions();
+  const mapOptions: google.maps.MapOptions = getResponsiveMapOptions();
 
   // 引数で渡された値を優先
-  const options = {
+  const options: google.maps.MapOptions = {
     ...mapOptions,
     center,
     zoom,
@@ -114,6 +114,26 @@ const createMapInstance = (
 
   // マップインスタンスの作成
   return new google.maps.Map(mapElement, options);
+};
+
+/**
+ * 現在のデバイスに適したマップオプションを取得
+ * @returns マップ初期化オプション
+ */
+export const getResponsiveMapOptions = (): google.maps.MapOptions => {
+  return logger.measureTime(
+    'レスポンシブマップオプションの決定',
+    () => {
+      const isMobile = isMobileDevice();
+      logger.debug('デバイスタイプに基づくマップオプションを選択', {
+        isMobileDevice: isMobile,
+        selectedOption: isMobile ? 'MOBILE_MAP_OPTIONS' : 'DEFAULT_MAP_OPTIONS',
+      });
+
+      return isMobile ? MOBILE_MAP_OPTIONS : DEFAULT_MAP_OPTIONS;
+    },
+    LogLevel.DEBUG
+  );
 };
 
 /**
@@ -130,89 +150,109 @@ const loadAndInitializeMap = async (
   center: { lat: number; lng: number },
   zoom: number
 ): Promise<google.maps.Map> => {
-  // Loaderオプションを取得
+  // Loaderオプションを取得（環境に応じた最適な設定）
   const loaderOptions = getLoaderOptions();
 
-  // ロギング操作をタスクとして分離（デバッグ/開発用）
-  const logMapInitStart = () => {
-    logger.debug('Google Maps APIをロード中...');
-  };
-
   // 初期化開始のログ
-  logMapInitStart();
-
-  // Google Maps APIのロード
-  const loader = new Loader({
-    ...loaderOptions,
-    apiKey,
+  logger.debug('Google Maps APIをロード中...', {
+    version: loaderOptions.version,
+    libraries: loaderOptions.libraries,
   });
 
-  // APIをロード（パフォーマンス計測と連携）
-  await logger.measureTimeAsync('Google Maps APIライブラリのロード', () =>
-    loader.importLibrary('maps')
-  );
-
-  logger.debug('Google Maps APIのロードが完了しました');
-
-  // マップ要素の取得（パフォーマンス計測と連携）
-  logger.debug(`マップ要素ID "${elementId}" を検索中...`);
-
-  const mapElement = await logger.measureTimeAsync('マップ要素の取得', () =>
-    getMapElementWithRetry(elementId)
-  );
-
-  logger.debug('マップ要素が見つかりました。地図を初期化します...');
-
-  // 要素にサイズがない場合は警告
-  if (mapElement.clientWidth === 0 || mapElement.clientHeight === 0) {
-    logger.warn('マップ要素のサイズが0です。CSSが正しく適用されているか確認してください。', {
-      elementId,
-      element: elementId,
+  try {
+    // Google Maps APIのロード
+    const loader = new Loader({
+      ...loaderOptions,
+      apiKey,
     });
-  } else {
-    logger.debug(`マップ要素のサイズ: ${mapElement.clientWidth} x ${mapElement.clientHeight}`);
+
+    // APIをロード（パフォーマンス計測と連携）
+    await logger.measureTimeAsync('Google Maps APIライブラリのロード', () => loader.load());
+
+    logger.debug('Google Maps APIのロードが完了しました');
+
+    // マップ要素の取得（パフォーマンス計測と連携）
+    logger.debug(`マップ要素ID "${elementId}" を検索中...`);
+    const mapElement = await logger.measureTimeAsync('マップ要素の取得', () =>
+      getMapElementWithRetry(elementId)
+    );
+
+    // マップインスタンスの作成（パフォーマンス計測と連携）
+    const mapInstance = logger.measureTime(
+      'マップインスタンスの作成',
+      () => createMapInstance(mapElement, center, zoom),
+      LogLevel.DEBUG
+    );
+
+    // APIバージョン情報のログ記録
+    if (google.maps.version) {
+      logger.info('Google Maps API初期化完了', {
+        apiVersion: google.maps.version,
+        requestedVersion: loaderOptions.version,
+        environment: isDevEnvironment() ? 'development' : 'production',
+      });
+    }
+
+    // マーカーライブラリのチェック
+    const hasMarkerLibrary =
+      Array.isArray(loaderOptions.libraries) && loaderOptions.libraries.includes('marker');
+
+    if (hasMarkerLibrary) {
+      // マーカー名前空間の存在確認
+      const hasMarkerNamespace = typeof google.maps.marker !== 'undefined';
+
+      if (!hasMarkerNamespace) {
+        logger.warn('マーカーライブラリが読み込まれていません', {
+          requestedLibraries: loaderOptions.libraries,
+        });
+      }
+      // AdvancedMarkerElementの存在確認
+      else if (!hasAdvancedMarkerSupport()) {
+        logger.warn(
+          'Advanced Markerライブラリが使用できません。基本的なマーカー機能のみ利用可能です',
+          {
+            requestedLibraries: loaderOptions.libraries,
+            markerApiAvailable: true,
+          }
+        );
+      }
+    }
+
+    return mapInstance;
+  } catch (rawError: unknown) {
+    // エラーを型安全に処理する
+    const errorMessage = rawError instanceof Error ? rawError.message : String(rawError);
+
+    // APIロードエラーの詳細なログ
+    logger.error('Google Maps APIのロードに失敗しました', {
+      version: loaderOptions.version,
+      errorMessage,
+      apiKeyValid: !!apiKey && apiKey.length > 10,
+      elementId,
+    });
+
+    // 常に安全なErrorオブジェクトをスロー
+    throw new Error(`Google Maps APIのロードエラー: ${errorMessage}`);
   }
-
-  // マップインスタンスの作成（パフォーマンス計測と連携）
-  const mapInstance = logger.measureTime(
-    'マップインスタンスの作成',
-    () => createMapInstance(mapElement, center, zoom),
-    LogLevel.DEBUG
-  );
-
-  logger.info('Google Maps初期化が完了しました', {
-    center: mapInstance.getCenter()?.toJSON(),
-    zoom: mapInstance.getZoom(),
-  });
-
-  return mapInstance;
 };
 
 /**
- * 再試行ロジックを処理する
- * @param retryCount 現在の試行回数
- * @param setRetryCount 試行回数の状態を更新する関数
- * @param initMap マップ初期化関数
- * @returns 再試行したかどうか
+ * Advanced Marker APIがサポートされているか確認する
+ * APIの存在確認を型安全に行う
  */
-const handleRetry = (
-  retryCount: number,
-  setRetryCount: React.Dispatch<React.SetStateAction<number>>,
-  initMap: () => Promise<void>
-): boolean => {
-  const { MAX_RETRIES, RETRY_DELAY } = RETRY_CONFIG;
+function hasAdvancedMarkerSupport(): boolean {
+  if (typeof google === 'undefined') return false;
+  if (typeof google.maps === 'undefined') return false;
+  if (typeof google.maps.marker === 'undefined') return false;
 
-  if (retryCount < MAX_RETRIES) {
-    logger.debug(`初期化に失敗したため再試行します... (${retryCount + 1}/${MAX_RETRIES})`);
-    setRetryCount(prev => prev + 1);
-    // 少し待ってから再試行
-    setTimeout(() => {
-      void initMap();
-    }, RETRY_DELAY);
-    return true;
-  }
-  return false;
-};
+  // google.maps.markerをオブジェクトとして扱い、プロパティの存在をチェック
+  const markerNamespace = google.maps.marker as object;
+  return (
+    'AdvancedMarkerElement' in markerNamespace &&
+    // 念のため関数かどうかもチェック
+    typeof (markerNamespace as Record<string, unknown>).AdvancedMarkerElement === 'function'
+  );
+}
 
 /**
  * エラー状態を設定する処理
@@ -223,14 +263,24 @@ const setErrorState = (
   err: unknown,
   setState: React.Dispatch<React.SetStateAction<GoogleMapsState>>
 ): void => {
-  // エラーメッセージの生成（エラーオブジェクトかどうかで分岐）
+  // エラーメッセージの生成
   const errorMessage =
     err instanceof Error
       ? `地図の読み込みに失敗しました: ${err.message}`
       : '地図の読み込みに失敗しました。ネットワーク接続を確認してください。';
 
+  // APIバージョン関連のエラーを検出
+  const isVersionError =
+    err instanceof Error && (err.message.includes('version') || err.message.includes('library'));
+
   // エラーの詳細をログに記録
-  logger.error('マップ初期化エラー', err instanceof Error ? err : { message: String(err) });
+  logger.error('マップ初期化エラー', {
+    error: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+    apiVersion: getMapsApiVersion(),
+    isVersionRelated: isVersionError,
+    environment: isDevEnvironment() ? 'development' : 'production',
+  });
 
   // 状態の更新
   setState(prev => ({
@@ -265,10 +315,179 @@ const setupInitTimeout = (
 };
 
 /**
+ * マウント時の初期化処理
+ * @param initMap 初期化関数
+ * @param skipInit 初期化スキップフラグ
+ * @param cleanupTimeout タイムアウトクリーンアップ関数
+ */
+const useMapInitialization = (
+  initMap: () => Promise<void>,
+  skipInit: boolean,
+  cleanupTimeout: () => void
+) => {
+  useEffect(() => {
+    logger.debug('useGoogleMaps useEffect トリガー', { skipInit });
+
+    // skipInitがfalseの場合のみ初期化
+    if (!skipInit) {
+      logger.debug('初期化を実行します');
+
+      // 即時実行ではなく少し遅延させる
+      const timeoutId = setTimeout(() => {
+        void initMap();
+      }, 100);
+
+      // クリーンアップ
+      return () => {
+        clearTimeout(timeoutId);
+        cleanupTimeout();
+      };
+    }
+
+    return undefined;
+  }, [initMap, skipInit, cleanupTimeout]);
+};
+
+/**
+ * マップの初期化を管理するためのフック
+ */
+const useMapInitializer = (
+  elementId: string,
+  center: { lat: number; lng: number },
+  zoom: number
+) => {
+  // マップの初期化コア処理
+  return useCallback(async () => {
+    logger.info('Google Maps初期化を開始します...', { center, zoom, elementId });
+
+    // APIキーの取得と検証
+    const apiKey = validateInitRequirements();
+
+    // 地図の読み込みと初期化
+    return await loadAndInitializeMap(apiKey, elementId, center, zoom);
+  }, [center, zoom, elementId]);
+};
+
+/**
+ * 初期化のリトライを管理するためのフック
+ */
+const useRetryHandler = (
+  retryCount: number,
+  setRetryCount: React.Dispatch<React.SetStateAction<number>>
+) => {
+  // リトライ処理の実装
+  return useCallback(
+    (retryFunc: () => void) => {
+      // 最大再試行回数
+      const MAX_RETRIES = 3;
+
+      if (retryCount < MAX_RETRIES) {
+        const nextCount = retryCount + 1;
+        logger.warn(`Google Maps初期化を再試行します (${nextCount}/${MAX_RETRIES})...`);
+        setRetryCount(nextCount);
+
+        // 遅延を入れて再試行
+        setTimeout(retryFunc, 1000 * nextCount); // 再試行ごとに待ち時間を増やす
+        return true;
+      }
+      return false;
+    },
+    [retryCount, setRetryCount]
+  );
+};
+
+/**
+ * タイムアウト処理を管理するためのフック
+ */
+const useTimeoutHandler = () => {
+  // タイムアウト処理用のref
+  const timeoutIdRef = useRef<number | null>(null);
+
+  // タイムアウト処理を管理する
+  const cleanupTimeout = useCallback(() => {
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+    }
+  }, []);
+
+  return { timeoutIdRef, cleanupTimeout, setupInitTimeout };
+};
+
+/**
+ * 初期化の成功処理を管理するためのフック
+ */
+const useSuccessHandler = (
+  mapInstanceRef: React.MutableRefObject<google.maps.Map | null>,
+  cleanupTimeout: () => void,
+  setState: React.Dispatch<React.SetStateAction<GoogleMapsState>>,
+  onMapLoaded?: (map: google.maps.Map) => void
+) => {
+  return useCallback(
+    (mapInstance: google.maps.Map) => {
+      // マップインスタンスをrefに保存
+      mapInstanceRef.current = mapInstance;
+
+      // タイムアウトをクリア
+      cleanupTimeout();
+
+      // 状態の更新
+      setState({
+        isLoaded: true,
+        error: null,
+        map: mapInstance,
+      });
+
+      // コールバック呼び出し
+      if (onMapLoaded) {
+        logger.debug('onMapLoaded コールバック実行');
+        onMapLoaded(mapInstance);
+      }
+    },
+    [cleanupTimeout, onMapLoaded, setState, mapInstanceRef]
+  );
+};
+
+/**
+ * マップの初期化スキップ条件を評価するためのフック
+ */
+const useSkipHandler = (
+  mapInstanceRef: React.MutableRefObject<google.maps.Map | null>,
+  skipInit: boolean,
+  setState: React.Dispatch<React.SetStateAction<GoogleMapsState>>
+) => {
+  // 初期化済みのマップを返す
+  const updateWithExistingMap = useCallback(() => {
+    if (mapInstanceRef.current) {
+      setState({
+        isLoaded: true,
+        error: null,
+        map: mapInstanceRef.current,
+      });
+    }
+  }, [setState, mapInstanceRef]);
+
+  // 初期化スキップ条件の検証
+  return useCallback(() => {
+    // すでに初期化済みの場合
+    if (mapInstanceRef.current) {
+      logger.debug('マップはすでに初期化されています');
+      updateWithExistingMap();
+      return true;
+    }
+
+    // skipInitフラグがtrueの場合
+    if (skipInit) {
+      logger.debug('マップの初期化をスキップします。要素が準備できるのを待機中...', { skipInit });
+      return true;
+    }
+
+    return false;
+  }, [skipInit, updateWithExistingMap, mapInstanceRef]);
+};
+
+/**
  * Google Maps APIを初期化・管理するカスタムフック（最適化版）
- *
- * @param options マップ初期化オプション
- * @returns マップの状態（読み込み状態、エラー、マップインスタンス）
  */
 export const useGoogleMaps = (options: UseGoogleMapsOptions): GoogleMapsState => {
   const {
@@ -293,125 +512,117 @@ export const useGoogleMaps = (options: UseGoogleMapsOptions): GoogleMapsState =>
   // 再試行カウンター
   const [retryCount, setRetryCount] = useState(0);
 
-  // タイムアウト処理用のref
-  const timeoutIdRef = useRef<number | null>(null);
+  // タイムアウト管理
+  const { timeoutIdRef, cleanupTimeout } = useTimeoutHandler();
 
-  // マップ初期化関数
+  // 初期化スキップ条件
+  const shouldSkipInit = useSkipHandler(mapInstanceRef, skipInit, setState);
+
+  // 成功時の処理
+  const handleInitSuccess = useSuccessHandler(
+    mapInstanceRef,
+    cleanupTimeout,
+    setState,
+    onMapLoaded
+  );
+
+  // 初期化処理
+  const initializeMap = useMapInitializer(elementId, center, zoom);
+
+  // リトライ処理
+  const retryInitialization = useRetryHandler(retryCount, setRetryCount);
+
+  // メイン初期化プロセス
   const initMap = useCallback(async () => {
-    // すでに初期化済みの場合はスキップ
-    if (mapInstanceRef.current) {
-      logger.debug('マップはすでに初期化されています');
-      setState({
-        isLoaded: true,
-        error: null,
-        map: mapInstanceRef.current,
-      });
+    // 初期化をスキップすべき条件をチェック
+    if (shouldSkipInit()) {
       return;
     }
 
-    // skipInitがtrueの場合は初期化をスキップ
-    if (skipInit) {
-      logger.debug('マップの初期化をスキップします。要素が準備できるのを待機中...', {
-        elementId,
-        skipInit,
-      });
-      return;
-    }
-
-    // 以前のタイムアウトをクリア
-    if (timeoutIdRef.current) {
-      clearTimeout(timeoutIdRef.current);
-      timeoutIdRef.current = null;
-    }
-
-    // タイムアウト処理の設定
+    // タイムアウト設定
+    cleanupTimeout();
     timeoutIdRef.current = setupInitTimeout(initTimeout, setState);
 
     try {
-      // パフォーマンス計測でラップした初期化処理
-      logger.info('Google Maps初期化を開始します...', {
-        center,
-        zoom,
-        elementId,
+      // 初期化実行
+      const mapInstance = await initializeMap();
+      handleInitSuccess(mapInstance);
+    } catch (rawError: unknown) {
+      // エラーを型安全に処理
+      const error = rawError instanceof Error ? rawError : new Error(String(rawError));
+
+      logger.error('Google Maps APIの初期化に失敗しました', {
+        errorMessage: error.message,
+        errorType: error.name,
       });
 
-      // APIキーのチェック
-      const apiKey = ENV.google.API_KEY;
-      if (!apiKey) {
-        throw new Error(
-          'Google Maps APIキーが設定されていません。.envファイルを確認してください。'
-        );
-      }
-
-      // マップの読み込みと初期化
-      const mapInstance = await loadAndInitializeMap(apiKey, elementId, center, zoom);
-
-      // マップインスタンスをrefに保存
-      mapInstanceRef.current = mapInstance;
-
       // タイムアウトをクリア
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
+      cleanupTimeout();
 
-      // 状態の更新
-      setState({
-        isLoaded: true,
-        error: null,
-        map: mapInstance,
-      });
-
-      // コールバック呼び出し
-      if (onMapLoaded) {
-        logger.debug('onMapLoaded コールバック実行');
-        onMapLoaded(mapInstance);
-      }
-    } catch (err) {
-      logger.error('Google Maps APIの初期化に失敗しました', err instanceof Error ? err : undefined);
-
-      // タイムアウトをクリア
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
-
-      // 再試行ロジック
-      if (handleRetry(retryCount, setRetryCount, initMap)) {
+      // 再試行処理
+      if (
+        retryInitialization(() => {
+          void initMap();
+        })
+      ) {
         return;
       }
 
-      // 再試行回数を超えた場合はエラー状態を設定
-      setErrorState(err, setState);
+      // 再試行回数超過でエラー状態設定
+      setErrorState(error, setState);
     }
-  }, [elementId, center, zoom, onMapLoaded, retryCount, skipInit, initTimeout]);
+  }, [
+    shouldSkipInit,
+    cleanupTimeout,
+    timeoutIdRef,
+    initTimeout,
+    setState,
+    initializeMap,
+    handleInitSuccess,
+    retryInitialization,
+  ]);
 
-  // マウント時の初期化および依存関係の変更時
-  useEffect(() => {
-    logger.debug('useGoogleMaps useEffect トリガー', { skipInit });
-
-    // skipInitがfalseになった時だけ初期化を実行
-    if (!skipInit) {
-      logger.debug('skipInitがfalseになりました。マップ初期化を開始します...');
-
-      // すでに初期化済みの場合は不要な処理を避ける
-      if (!mapInstanceRef.current) {
-        const timeoutId = setTimeout(() => {
-          void initMap();
-        }, 100);
-
-        return () => {
-          clearTimeout(timeoutId);
-          if (timeoutIdRef.current) {
-            clearTimeout(timeoutIdRef.current);
-            timeoutIdRef.current = null;
-          }
-        };
-      } else {
-        logger.debug('マップはすでに初期化されています。処理をスキップします。');
-      }
-    }
-  }, [initMap, skipInit]);
+  // マウント時の初期化処理
+  useMapInitialization(initMap, skipInit, cleanupTimeout);
 
   return state;
+};
+
+/**
+ * 初期化のための前提条件をチェックし、APIキーの検証を行う
+ * @returns APIキー（検証済み）
+ * @throws APIキーがない場合はエラー
+ */
+const validateInitRequirements = (): string => {
+  // APIキーのチェック
+  const apiKey = ENV.google.API_KEY;
+  if (!apiKey) {
+    throw new Error('Google Maps APIキーが設定されていません。.envファイルを確認してください。');
+  }
+  return apiKey;
+};
+
+/**
+ * モバイルデバイスかどうかを判定する
+ * @returns モバイルデバイスの場合はtrue
+ */
+function isMobileDevice(): boolean {
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+}
+
+// デフォルトのマップオプション
+const DEFAULT_MAP_OPTIONS: google.maps.MapOptions = {
+  zoomControl: true,
+  mapTypeControl: true,
+  streetViewControl: true,
+  fullscreenControl: true,
+};
+
+// モバイル向けマップオプション
+const MOBILE_MAP_OPTIONS: google.maps.MapOptions = {
+  zoomControl: true,
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: false,
 };

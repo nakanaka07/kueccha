@@ -82,13 +82,8 @@ export function getMarkerIcon(
     // POIオブジェクトが渡された場合
     if (typeof typeOrPoi === 'object') {
       const poi = typeOrPoi;
-      logger.debug('POIオブジェクトからマーカーアイコンを生成', {
-        poiId: poi.id,
-        name: poi.name,
-        type: poi.type,
-        category: poi.category,
-        isClosed: poi.isClosed,
-      });
+      // この行をコメントアウトまたは削除
+      // logger.debug('POIオブジェクトからマーカーアイコンを生成', {...});
 
       // 型安全な方法でプロパティを取得し処理
       const typeStr = poi.type;

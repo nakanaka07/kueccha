@@ -5,9 +5,52 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import a11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
+import fs from 'node:fs';
+import path from 'node:path';
 
-// 共通の除外パターン
-const commonIgnores = ['node_modules/**', 'dist/**', 'dev-dist/**', 'coverage/**', '.git/**'];
+// .gitignoreからパターンを読み込む関数
+function readGitignorePatterns() {
+  try {
+    const gitignoreContent = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf8');
+    return gitignoreContent
+      .split('\n')
+      .filter(line => line.trim() && !line.startsWith('#'))
+      .map(line => line.trim());
+  } catch (error) {
+    // console.warn だと警告が出るので置き換え
+    /* ファイルが存在しない場合は無視 */
+    return [];
+  }
+}
+
+// 共通の除外パターン + .gitignoreの内容
+const gitignorePatterns = readGitignorePatterns();
+
+// ServiceWorkerファイル（完全に除外）
+const devDistFiles = [
+  // dev-distディレクトリ全体
+  'dev-dist/**',
+  '**/dev-dist/**',
+  // 具体的なファイル名を指定
+  'dev-dist/sw.js',
+  'dev-dist/registerSW.js',
+  'dev-dist/workbox-20a2f87f.js',
+  // その他のdev-dist内のファイル
+  'dev-dist/*.js',
+  'dev-dist/*.js.map',
+];
+
+// 明示的に除外するパターン
+const explicitIgnores = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/coverage/**',
+  '**/.git/**',
+  ...devDistFiles,
+];
+
+// すべての除外パターンを統合
+const commonIgnores = [...explicitIgnores, ...gitignorePatterns];
 
 // 設定ファイルパターン（型チェックから除外する）
 const configFiles = [
@@ -17,6 +60,7 @@ const configFiles = [
   'vite.config.ts',
   '.prettierrc.js',
   '.eslintrc.js',
+  'eslint.config.js',
   'jest.config.js',
 ];
 
@@ -29,14 +73,14 @@ export default tseslint.config(
   {
     ignores: commonIgnores,
     linterOptions: {
-      reportUnusedDisableDirectives: true, // 未使用のルール無効化ディレクティブを報告
+      reportUnusedDisableDirectives: true,
+      noInlineConfig: false,
     },
     rules: {
       ...eslint.configs.recommended.rules,
     },
   },
 
-  // TypeScript基本設定（型チェックなし）
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
     ignores: commonIgnores,
@@ -46,17 +90,12 @@ export default tseslint.config(
   // TypeScript型チェック設定
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: [
-      ...commonIgnores,
-      ...configFiles, // 型チェックから設定ファイルを除外
-      'env.d.ts',
-      '**/*.d.ts', // すべての型定義ファイルを除外
-    ],
+    ignores: [...commonIgnores, ...configFiles, 'env.d.ts', '**/*.d.ts'],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: true, // tsconfig.jsonを使用
+        project: true,
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
@@ -284,5 +323,50 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
     },
+  },
+
+  // ServiceWorkerファイル用の特別な設定（すべてのルールを無効化）
+  {
+    files: devDistFiles,
+    ignores: [],
+    rules: {
+      // ServiceWorkerファイルに対してすべてのルールを無効化
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      // ... 他のすべてのルールも無効化
+      'import/no-duplicates': 'off',
+      'import/order': 'off',
+    },
   }
 );
+
+// 設定適用完了時のログ出力（プロセス起動時の一度だけ実行される）
+try {
+  const { logger } = await import('./src/utils/logger.js').catch(() => {
+    // ロガーが読み込めない場合は簡易的なログ機能を提供
+    return {
+      logger: {
+        // ESLintルール違反を回避するためにサフィックスコメントを使用
+        info: (...args) => console.info('[ESLint Config]', ...args), // eslint-disable-line no-console
+        warn: (...args) => console.warn('[ESLint Config]', ...args), // eslint-disable-line no-console
+        error: (...args) => console.error('[ESLint Config]', ...args), // eslint-disable-line no-console
+      },
+    };
+  });
+
+  // 設定の概要をログに記録
+  logger.info('ESLint設定を適用しました', {
+    ignorePatterns: commonIgnores.length,
+    configFiles: configFiles.length,
+    environment: process.env.NODE_ENV || 'development',
+    typescript: true,
+    react: true,
+  });
+} catch (error) {
+  // エラーが発生した場合でも設定自体は適用されるようにする
+  console.warn('[ESLint Config] 設定適用後のログ出力に失敗しました', error); // eslint-disable-line no-console
+}

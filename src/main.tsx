@@ -13,6 +13,16 @@ import { logger, LogLevel } from '@/utils/logger';
  * - グローバルスタイルを適用
  */
 
+// グローバルオブジェクトの型拡張（ファイルのトップレベルに定義）
+declare global {
+  interface Window {
+    // デバッグ用の関数を定義
+    enableDebugMode?: () => void;
+    disableDebugMode?: () => void;
+    getDebugLogs?: () => ReturnType<typeof logger.getRecentLogs>;
+  }
+}
+
 // アプリケーション初期化をログに記録
 logger.info('アプリケーションを初期化しています', {
   environment: ENV.env.MODE,
@@ -20,12 +30,55 @@ logger.info('アプリケーションを初期化しています', {
   build: ENV.env.isProd ? 'production' : 'development',
 });
 
+// ログの設定を最適化
+logger.configure({
+  // 基本レベルはINFO（開発環境）、WARN（本番環境）
+  minLevel: ENV.env.isDev ? LogLevel.INFO : LogLevel.WARN,
+
+  // 特定コンポーネントのログレベルを個別設定
+  componentLevels: {
+    useMapMarkers: LogLevel.WARN, // マーカー処理は警告以上のみ
+    useFilterLogic: LogLevel.WARN, // フィルタ処理は警告以上のみ
+    useMarkerVisibility: LogLevel.WARN, // 可視性処理は警告以上のみ
+    usePOIData: LogLevel.INFO, // POIデータは情報以上
+  },
+
+  // サンプリングレート設定（頻繁に発生するログを間引く）
+  samplingRates: {
+    マーカー: 10, // マーカー関連は10回に1回記録
+    マーカー可視性更新: 5, // 可視性更新は5回に1回記録
+    'マーカー生成/更新': 2, // マーカー生成は2回に1回記録
+  },
+});
+
+// デバッグモードを有効にする関数
+function enableDebugMode(): void {
+  logger.configure({ minLevel: LogLevel.DEBUG });
+  logger.info('デバッグモードが有効になりました');
+}
+
+// デバッグモードを無効にする関数
+function disableDebugMode(): void {
+  logger.configure({ minLevel: ENV.env.isDev ? LogLevel.INFO : LogLevel.WARN });
+  logger.info('デバッグモードが無効になりました');
+}
+
 // 環境変数の検証とエラー処理を実行
 const isEnvValid = logger.measureTime(
   '環境変数の検証',
   validateEnv,
   ENV.env.isDev ? LogLevel.INFO : LogLevel.DEBUG
 );
+
+// ブラウザのグローバルスコープにデバッグ用の関数を公開（開発環境のみ）
+if (ENV.env.isDev) {
+  // グローバル関数を設定
+  window.enableDebugMode = enableDebugMode;
+  window.disableDebugMode = disableDebugMode;
+  window.getDebugLogs = () => logger.getRecentLogs();
+
+  logger.info('デバッグ機能: コンソールで enableDebugMode() を実行すると詳細ログが有効になります');
+}
 
 if (import.meta.env.DEV && !isEnvValid) {
   const errorMessage =

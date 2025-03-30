@@ -8,6 +8,13 @@ import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
+// マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
+function isAdvancedMarkerElement(
+  marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker
+): marker is google.maps.marker.AdvancedMarkerElement {
+  return 'content' in marker;
+}
+
 interface MapMarkersProps {
   /**
    * 表示するPOIデータの配列
@@ -111,13 +118,18 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   );
 
   // マーカーとクラスタリングの管理（カスタムフックに移行）
-  const { markers } = useMapMarkers({
+  const { markers: mixedMarkers } = useMapMarkers({
     mapRef,
     pois: filteredPOIs,
     onMarkerClick: handleMarkerClick,
     animateMarkers,
     enableClustering,
   });
+
+  // AdvancedMarkerElementのみにフィルタリング
+  const markers = useMemo(() => {
+    return mixedMarkers.filter(isAdvancedMarkerElement);
+  }, [mixedMarkers]);
 
   // マーカー可視性の最適化（カスタムフックに移行）
   useMarkerVisibility({

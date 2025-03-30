@@ -118,7 +118,9 @@ const filterPOIs = (
       return filteredResults;
     },
     LogLevel.DEBUG,
-    { totalPOIs: pois.length }
+    { component: 'useFilterLogic', totalPOIs: pois.length },
+    // 50ms以上かかった場合のみログに記録
+    50
   );
 };
 
@@ -126,25 +128,20 @@ const filterPOIs = (
  * ユニークカテゴリと地区を抽出する関数
  */
 const extractUniqueValues = (pois: PointOfInterest[]) => {
-  return logger.measureTime(
-    'ユニークカテゴリと地区の抽出',
-    () => {
-      const categoriesSet = new Set<string>();
-      const districtsSet = new Set<string>();
+  // ログ出力を削除し、処理のみ実行（頻繁に呼ばれる処理）
+  const categoriesSet = new Set<string>();
+  const districtsSet = new Set<string>();
 
-      pois.forEach(poi => {
-        if (poi.category) categoriesSet.add(poi.category);
-        if (poi.district) districtsSet.add(poi.district);
-      });
+  pois.forEach(poi => {
+    if (poi.category) categoriesSet.add(poi.category);
+    if (poi.district) districtsSet.add(poi.district);
+  });
 
-      // 並び替えしたカテゴリと地区の配列を返す
-      return {
-        categories: Array.from(categoriesSet).sort(),
-        districts: Array.from(districtsSet).sort(),
-      };
-    },
-    LogLevel.DEBUG
-  );
+  // 並び替えしたカテゴリと地区の配列を返す
+  return {
+    categories: Array.from(categoriesSet).sort(),
+    districts: Array.from(districtsSet).sort(),
+  };
 };
 
 /**

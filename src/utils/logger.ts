@@ -28,6 +28,16 @@ export interface LogContext {
 }
 
 /**
+ * ログバッファアイテムの型定義
+ */
+interface LogBufferItem {
+  level: LogLevel;
+  message: string;
+  timestamp: number;
+  context: LogContext | undefined;
+}
+
+/**
  * 外部ログサービス連携用のインターフェース
  * 将来的な拡張ポイント
  */
@@ -64,6 +74,12 @@ interface LoggerOptions {
 
   /** コンテキスト情報を拡張するフォーマッター */
   contextFormatter?: ContextFormatter;
+
+  /** 特定コンポーネントのログレベル設定（グローバル設定をオーバーライド） */
+  componentLevels?: Record<string, LogLevel>;
+
+  /** サンプリングレート設定 (例: 10なら10回に1回のみログを出力) */
+  samplingRates?: Record<string, number>;
 }
 
 /**
@@ -71,7 +87,7 @@ interface LoggerOptions {
  * env.tsと連携して環境変数を統一的に扱う
  */
 const defaultOptions: LoggerOptions = {
-  minLevel: ENV.env.isDev ? LogLevel.DEBUG : LogLevel.WARN,
+  minLevel: ENV.env.isDev ? LogLevel.INFO : LogLevel.WARN, // DEBUGからINFOに変更
   enableConsole: true,
   transports: [],
   deduplicateErrors: ENV.env.isProd,
@@ -105,12 +121,19 @@ const consoleWrapper = {
 class Logger {
   private options: LoggerOptions;
   private recentErrors: Map<string, number> = new Map();
+  // ログバッファを追加
+  private logBuffer: LogBufferItem[] = [];
+  private readonly LOG_BUFFER_MAX = 500; // 最大500件のログを保持
+
   private readonly levelPriority: Record<LogLevel, number> = {
     [LogLevel.ERROR]: 0,
     [LogLevel.WARN]: 1,
     [LogLevel.INFO]: 2,
     [LogLevel.DEBUG]: 3,
   };
+
+  // サンプリング用のカウンター
+  private samplingCounters: Record<string, number> = {};
 
   constructor(options: LoggerOptions = {}) {
     this.options = { ...defaultOptions, ...options };
@@ -149,45 +172,85 @@ class Logger {
   }
 
   /**
-   * 指定レベルでログを出力します
+   * ログレベルフィルタリングチェック
+   * 指定されたログレベルが出力すべきレベルかどうかを判定
    */
-  private logWithLevel(level: LogLevel, message: string, context?: LogContext): void {
-    // レベルチェック（設定より低いレベルのログは出力しない）
-    if (this.levelPriority[level] > this.levelPriority[this.options.minLevel ?? LogLevel.INFO]) {
-      return;
+  private shouldLogAtLevel(level: LogLevel, context?: LogContext): boolean {
+    // コンポーネント固有のログレベルチェック
+    if (context?.component && this.options.componentLevels?.[context.component]) {
+      if (
+        this.levelPriority[level] >
+        this.levelPriority[this.options.componentLevels[context.component]]
+      ) {
+        return false; // コンポーネント固有の設定によりスキップ
+      }
+      return true;
     }
 
-    // エラー重複抑制（エラーレベルのみ）
+    // グローバルなレベルチェック（設定より低いレベルのログは出力しない）
+    return this.levelPriority[level] <= this.levelPriority[this.options.minLevel ?? LogLevel.INFO];
+  }
+
+  /**
+   * サンプリングレートに基づくフィルタリング
+   * 指定されたメッセージがサンプリングレートに基づいて出力すべきかを判定
+   */
+  private shouldLogBySamplingRate(message: string): boolean {
+    const sampleKey = message.split(' ')[0]; // メッセージの最初の単語をキーとして使用
+    if (this.options.samplingRates?.[sampleKey]) {
+      const rate = this.options.samplingRates[sampleKey];
+      this.samplingCounters[sampleKey] = (this.samplingCounters[sampleKey] || 0) + 1;
+      if (this.samplingCounters[sampleKey] % rate !== 0) {
+        return false; // サンプリングレートに従ってスキップ
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 重複エラーチェック
+   * 同一エラーメッセージの重複出力を防止
+   */
+  private shouldLogDuplicateError(level: LogLevel, message: string, context?: LogContext): boolean {
     if (level === LogLevel.ERROR && this.options.deduplicateErrors) {
       const logKey = this.createLogKey(message, context);
       const now = Date.now();
       if (this.recentErrors.has(logKey)) {
-        return; // 最近出力したエラーなのでスキップ
+        return false; // 最近出力したエラーなのでスキップ
       }
       this.recentErrors.set(logKey, now);
     }
+    return true;
+  }
 
-    // コンソール出力
-    if (this.options.enableConsole) {
-      const formattedMessage = this.formatMessage(level, message, context);
+  /**
+   * コンソールへのログ出力
+   */
+  private outputToConsole(level: LogLevel, message: string, context?: LogContext): void {
+    if (!this.options.enableConsole) return;
 
-      switch (level) {
-        case LogLevel.ERROR:
-          consoleWrapper.error(formattedMessage);
-          break;
-        case LogLevel.WARN:
-          consoleWrapper.warn(formattedMessage);
-          break;
-        case LogLevel.INFO:
-          consoleWrapper.info(formattedMessage);
-          break;
-        case LogLevel.DEBUG:
-          consoleWrapper.debug(formattedMessage);
-          break;
-      }
+    const formattedMessage = this.formatMessage(level, message, context);
+
+    switch (level) {
+      case LogLevel.ERROR:
+        consoleWrapper.error(formattedMessage);
+        break;
+      case LogLevel.WARN:
+        consoleWrapper.warn(formattedMessage);
+        break;
+      case LogLevel.INFO:
+        consoleWrapper.info(formattedMessage);
+        break;
+      case LogLevel.DEBUG:
+        consoleWrapper.debug(formattedMessage);
+        break;
     }
+  }
 
-    // 外部トランスポートへの送信
+  /**
+   * 外部トランスポートへのログ送信
+   */
+  private sendToTransports(level: LogLevel, message: string, context?: LogContext): void {
     this.options.transports?.forEach(transport => {
       try {
         transport.log(level, message, context);
@@ -199,6 +262,45 @@ class Logger {
         }
       }
     });
+  }
+
+  /**
+   * ログバッファへの追加
+   */
+  private addToLogBuffer(level: LogLevel, message: string, context?: LogContext): void {
+    this.logBuffer.push({ level, message, timestamp: Date.now(), context });
+    if (this.logBuffer.length > this.LOG_BUFFER_MAX) {
+      this.logBuffer.shift(); // 古いログを削除
+    }
+  }
+
+  /**
+   * 指定レベルでログを出力します
+   */
+  private logWithLevel(level: LogLevel, message: string, context?: LogContext): void {
+    // レベルに基づいたフィルタリング
+    if (!this.shouldLogAtLevel(level, context)) {
+      return;
+    }
+
+    // サンプリングレートに基づくフィルタリング
+    if (!this.shouldLogBySamplingRate(message)) {
+      return;
+    }
+
+    // 重複エラーチェック
+    if (!this.shouldLogDuplicateError(level, message, context)) {
+      return;
+    }
+
+    // コンソールへの出力
+    this.outputToConsole(level, message, context);
+
+    // 外部トランスポートへの送信
+    this.sendToTransports(level, message, context);
+
+    // ログバッファへの追加
+    this.addToLogBuffer(level, message, context);
   }
 
   /**
@@ -284,17 +386,22 @@ class Logger {
     taskName: string,
     task: () => T,
     level: LogLevel = LogLevel.DEBUG,
-    context?: LogContext
+    context?: LogContext,
+    // 実行時間の閾値（ミリ秒）- これ以下の処理時間の場合はログを出力しない
+    thresholdMs: number = 0
   ): T {
     const startTime = performance.now();
     const result = task();
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
 
-    this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
-      ...context,
-      durationMs: duration,
-    });
+    // 閾値を超えた場合のみログを出力
+    if (duration > thresholdMs) {
+      this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
+        ...context,
+        durationMs: duration,
+      });
+    }
 
     return result;
   }
@@ -306,7 +413,9 @@ class Logger {
     taskName: string,
     task: Promise<T> | (() => Promise<T>),
     level: LogLevel = LogLevel.DEBUG,
-    context?: LogContext
+    context?: LogContext,
+    // 実行時間の閾値（ミリ秒）- これ以下の処理時間の場合はログを出力しない
+    thresholdMs: number = 0
   ): Promise<T> {
     const startTime = performance.now();
 
@@ -315,10 +424,13 @@ class Logger {
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
 
-      this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
-        ...context,
-        durationMs: duration,
-      });
+      // 閾値を超えた場合のみログを出力
+      if (duration > thresholdMs) {
+        this.logWithLevel(level, `${taskName} completed in ${duration}ms`, {
+          ...context,
+          durationMs: duration,
+        });
+      }
 
       return result;
     } catch (error) {
@@ -357,6 +469,18 @@ class Logger {
    */
   public addTransport(transport: LogTransport): void {
     this.options.transports = [...(this.options.transports ?? []), transport];
+  }
+
+  /**
+   * 最近のログを取得する
+   * 例外発生時などにログ履歴を確認するために使用
+   * @param level 取得するログの最低レベル（指定レベル以上のログのみ取得）
+   * @param count 取得する最大件数（デフォルト100件）
+   */
+  public getRecentLogs(level: LogLevel = LogLevel.DEBUG, count: number = 100): LogBufferItem[] {
+    return this.logBuffer
+      .filter(log => this.levelPriority[log.level] <= this.levelPriority[level])
+      .slice(-Math.min(count, this.logBuffer.length));
   }
 
   /**

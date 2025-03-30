@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 
 import { PointOfInterest } from '@/types/poi';
-import { logger } from '@/utils/logger';
+import { logger, LogLevel } from '@/utils/logger';
 import { isInViewport } from '@/utils/markerUtils';
 
 /**
@@ -28,18 +28,14 @@ interface UseMarkerVisibilityParams {
 }
 
 /**
- * マーカーの可視性をチェックして更新する関数
+ * 地図表示領域に基づいて拡張された境界を計算する
  */
-function checkAndUpdateMarkerVisibility(
+function calculateExtendedBounds(
   map: google.maps.Map,
-  markers: google.maps.marker.AdvancedMarkerElement[],
-  pois: PointOfInterest[],
-  visibilityMargin: number,
-  visibleCountRef: React.MutableRefObject<number>,
-  onVisibilityChange?: (visibleMarkers: number) => void
-): void {
+  visibilityMargin: number
+): google.maps.LatLngBounds | null {
   const bounds = map.getBounds();
-  if (!bounds) return;
+  if (!bounds) return null;
 
   // 画面サイズを取得（マージン計算用）
   const mapDiv = map.getDiv();
@@ -52,10 +48,25 @@ function checkAndUpdateMarkerVisibility(
   const latMargin = (ne.lat() - sw.lat()) * (visibilityMargin / mapHeight);
   const lngMargin = (ne.lng() - sw.lng()) * (visibilityMargin / mapWidth);
 
-  const extendedBounds = new google.maps.LatLngBounds(
+  return new google.maps.LatLngBounds(
     new google.maps.LatLng(sw.lat() - latMargin, sw.lng() - lngMargin),
     new google.maps.LatLng(ne.lat() + latMargin, ne.lng() + lngMargin)
   );
+}
+
+/**
+ * マーカーの可視性をチェックして更新する関数
+ */
+function checkAndUpdateMarkerVisibility(
+  map: google.maps.Map,
+  markers: google.maps.marker.AdvancedMarkerElement[],
+  pois: PointOfInterest[],
+  visibilityMargin: number,
+  visibleCountRef: React.MutableRefObject<number>,
+  onVisibilityChange?: (visibleMarkers: number) => void
+): void {
+  const extendedBounds = calculateExtendedBounds(map, visibilityMargin);
+  if (!extendedBounds) return;
 
   let visibleCount = 0;
   let invisibleCount = 0;
@@ -142,16 +153,23 @@ export function useMarkerVisibility({
     if (!map) return;
 
     try {
-      logger.measureTime('マーカー可視性更新', () => {
-        checkAndUpdateMarkerVisibility(
-          map,
-          markers,
-          pois,
-          visibilityMargin,
-          visibleCountRef,
-          onVisibilityChange
-        );
-      });
+      logger.measureTime(
+        'マーカー可視性更新',
+        () => {
+          checkAndUpdateMarkerVisibility(
+            map,
+            markers,
+            pois,
+            visibilityMargin,
+            visibleCountRef,
+            onVisibilityChange
+          );
+        },
+        LogLevel.DEBUG,
+        { component: 'useMarkerVisibility' },
+        // 50ms以上かかった場合のみログに記録
+        50
+      );
     } catch (error: unknown) {
       // エラーオブジェクトを型安全に渡す
       if (error instanceof Error) {
@@ -160,14 +178,14 @@ export function useMarkerVisibility({
         logger.error('マーカー可視性更新エラー', new Error(String(error)));
       }
 
-      // 最適化ガイドラインに沿ったエラー詳細のコンテキスト追加
+      // エラー詳細のコンテキスト追加
       const errorContext = {
         markersCount: markers.length,
         poisCount: pois.length,
         mapLoaded: !!map,
         hasBounds: map.getBounds() ? true : false,
         visibilityMargin,
-        componentName: 'useMarkerVisibility',
+        component: 'useMarkerVisibility',
       };
 
       logger.debug('マーカー可視性更新エラー詳細コンテキスト', errorContext);
@@ -191,19 +209,7 @@ export function useMarkerVisibility({
   // 地図イベント監視の設定・クリーンアップ
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      logger.warn('地図インスタンスが利用できないため、マーカー可視性監視を設定できません', {
-        componentName: 'useMarkerVisibility',
-      });
-      return;
-    }
-
-    logger.info('マーカー可視性監視を設定しています', {
-      markersCount: markers.length,
-      debounceMs,
-      visibilityMargin,
-      componentName: 'useMarkerVisibility',
-    });
+    if (!map) return;
 
     // イベントリスナーの設定
     const events = ['idle', 'zoom_changed', 'dragend'];
@@ -217,38 +223,17 @@ export function useMarkerVisibility({
     // クリーンアップ関数
     return () => {
       // イベントリスナーを削除
-      listeners.forEach(listener => {
-        google.maps.event.removeListener(listener);
-      });
+      listeners.forEach(listener => google.maps.event.removeListener(listener));
 
       // 保留中のデバウンスタイマーをクリア
       if (debounceTimerRef.current !== null) {
         window.clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
       }
-
-      logger.debug('マーカー可視性監視を終了しました', {
-        componentName: 'useMarkerVisibility',
-      });
     };
-  }, [
-    mapRef,
-    markers.length,
-    debouncedUpdateVisibility,
-    updateMarkerVisibility,
-    debounceMs,
-    visibilityMargin,
-  ]);
+  }, [mapRef, debouncedUpdateVisibility, updateMarkerVisibility]);
 
   // マーカーまたはPOIリストが変更された時に可視性を更新
   useEffect(() => {
-    // マーカー配列またはPOIデータの変更時にログを出力
-    logger.debug('マーカーまたはPOIデータが変更されました', {
-      markersCount: markers.length,
-      poisCount: pois.length,
-      componentName: 'useMarkerVisibility',
-    });
-
     updateMarkerVisibility();
   }, [markers, pois, updateMarkerVisibility]);
 }

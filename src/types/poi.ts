@@ -114,6 +114,7 @@ export interface PointOfInterest {
   hasCashless?: boolean | undefined;
   businessHours?: BusinessHours | undefined;
   regularHolidays?: RegularHolidays | undefined;
+  isRecommended?: boolean | undefined; // おすすめフラグ（マーカー表示用）
 }
 
 /**

@@ -4,6 +4,7 @@ import ErrorDisplay from '@/components/ErrorDisplay';
 import FilterPanel from '@/components/FilterPanel';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { MapContainer } from '@/components/MapContainer';
+import MapLoadingError from '@/components/MapLoadingError'; // 新しいコンポーネントをインポート
 import MapMarkers from '@/components/MapMarkers';
 import POIDetails from '@/components/POIDetails';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
@@ -191,21 +192,53 @@ const useUIState = (
 };
 
 /**
+ * エラー表示コンポーネントを選択する関数
+ */
+const selectErrorComponent = (
+  displayError: string | null,
+  mapError: string | null,
+  retryCount: number,
+  handleRetryMapLoad: () => void
+) => {
+  if (!displayError) return null;
+
+  // 地図読み込みエラーの特別処理
+  if (mapError) {
+    logger.debug('地図読み込みエラーのため専用エラー表示を使用', {
+      error: mapError,
+      retryCount,
+    });
+    return <MapLoadingError error={displayError} onRetry={handleRetryMapLoad} />;
+  }
+
+  // その他のエラー
+  return <ErrorDisplay message={displayError} />;
+};
+
+/**
  * メインアプリケーションコンポーネント
  * 地図の表示とPOIデータの管理を行います
  */
 function App() {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // マップ読み込み完了時のコールバック
   const handleMapLoaded = useCallback((map: google.maps.Map) => {
     logger.info('Google Maps APIの読み込みが完了しました', {
       center: map.getCenter()?.toJSON(),
       zoom: map.getZoom(),
+      apiVersion: google.maps.version, // APIバージョンを記録
     });
 
     mapRef.current = map;
   }, []);
+
+  // 地図読み込み再試行ハンドラ
+  const handleRetryMapLoad = useCallback(() => {
+    logger.info('地図読み込みの再試行を実行', { retryCount: retryCount + 1 });
+    setRetryCount(prev => prev + 1);
+  }, [retryCount]);
 
   // 環境変数のバリデーション
   const envError = useEnvValidation();
@@ -238,6 +271,12 @@ function App() {
     }
     return currentError;
   }, [envError, mapError, poisError]);
+
+  // エラーコンポーネントの選択（外部関数に移動）
+  const errorComponent = useMemo(
+    () => selectErrorComponent(displayError, mapError, retryCount, handleRetryMapLoad),
+    [displayError, mapError, retryCount, handleRetryMapLoad]
+  );
 
   // ローディング状態の判定
   const isAppLoading = useMemo(() => {
@@ -297,7 +336,7 @@ function App() {
         )}
 
         {/* エラー表示 */}
-        {displayError && <ErrorDisplay message={displayError} />}
+        {errorComponent}
       </main>
 
       <footer className='app-footer'>
