@@ -50,57 +50,114 @@ async function fetchDataFromGoogleSheets(logContext: Record<string, unknown>): P
 async function fetchDataFromCSVFiles(logContext: Record<string, unknown>): Promise<POI[]> {
   logger.info('静的CSVファイルからデータを取得しています', logContext);
 
-  const restaurantCSVUrl = '/data/restaurants.csv';
-  const parkingCSVUrl = '/data/parking.csv';
-  const toiletCSVUrl = '/data/toilets.csv';
+  // 実際のファイル名に合わせてパスを修正
+  const restaurantCSVUrls = [
+    '/data/まとめータベース - おすすめ.csv',
+    '/data/まとめータベース - 両津・相川地区.csv',
+    '/data/まとめータベース - 金井・佐和田・新穂・畑野・真野地区.csv',
+    '/data/まとめータベース - 赤泊・羽茂・小木地区.csv',
+    '/data/まとめータベース - スナック.csv',
+  ];
+  const parkingCSVUrl = '/data/まとめータベース - 駐車場.csv';
+  const toiletCSVUrl = '/data/まとめータベース - 公共トイレ.csv';
 
-  // 各CSVファイルの取得
-  const [restaurantsResponse, parkingResponse, toiletsResponse] = await logger.measureTimeAsync(
-    'CSVファイルのフェッチ',
-    () => Promise.all([fetch(restaurantCSVUrl), fetch(parkingCSVUrl), fetch(toiletCSVUrl)]),
-    LogLevel.INFO,
-    { ...logContext, urls: [restaurantCSVUrl, parkingCSVUrl, toiletCSVUrl] }
-  );
+  try {
+    // レストランデータの取得（複数ファイルから）
+    logger.info('レストランデータを複数ファイルから読み込んでいます', {
+      ...logContext,
+      files: restaurantCSVUrls,
+    });
 
-  // レスポンスチェック
-  if (!restaurantsResponse.ok || !parkingResponse.ok || !toiletsResponse.ok) {
-    const failedUrls = [
-      !restaurantsResponse.ok ? restaurantCSVUrl : null,
-      !parkingResponse.ok ? parkingCSVUrl : null,
-      !toiletsResponse.ok ? toiletCSVUrl : null,
-    ].filter(Boolean);
+    // 各CSVファイルを取得して結合
+    const restaurantResponses = await logger.measureTimeAsync(
+      'レストランCSVファイルのフェッチ',
+      () => Promise.all(restaurantCSVUrls.map(url => fetch(url))),
+      LogLevel.INFO,
+      { ...logContext, urls: restaurantCSVUrls }
+    );
 
-    throw new Error(`CSVファイルの取得に失敗しました: ${failedUrls.join(', ')}`);
+    // レスポンスの確認
+    const failedRestaurantUrls = restaurantResponses
+      .map((res, idx) => (!res.ok ? restaurantCSVUrls[idx] : null))
+      .filter(Boolean);
+
+    if (failedRestaurantUrls.length > 0) {
+      logger.warn('一部のレストランCSVファイルの取得に失敗しました', {
+        ...logContext,
+        failedUrls: failedRestaurantUrls,
+      });
+    }
+
+    // テキストに変換
+    const restaurantCSVs = await logger.measureTimeAsync(
+      'レストランレスポンスのテキスト変換',
+      () => Promise.all(restaurantResponses.filter(res => res.ok).map(res => res.text())),
+      LogLevel.DEBUG,
+      logContext
+    );
+
+    // 駐車場とトイレのデータ取得
+    const [parkingResponse, toiletsResponse] = await logger.measureTimeAsync(
+      '駐車場・トイレCSVファイルのフェッチ',
+      () => Promise.all([fetch(parkingCSVUrl), fetch(toiletCSVUrl)]),
+      LogLevel.INFO,
+      { ...logContext, urls: [parkingCSVUrl, toiletCSVUrl] }
+    );
+
+    // レスポンスチェック
+    if (!parkingResponse.ok || !toiletsResponse.ok) {
+      const failedUrls = [
+        !parkingResponse.ok ? parkingCSVUrl : null,
+        !toiletsResponse.ok ? toiletCSVUrl : null,
+      ].filter(Boolean);
+
+      throw new Error(`CSVファイルの取得に失敗しました: ${failedUrls.join(', ')}`);
+    }
+
+    // テキストデータへの変換
+    const [parkingCSV, toiletsCSV] = await logger.measureTimeAsync(
+      '駐車場・トイレレスポンスのテキスト変換',
+      () => Promise.all([parkingResponse.text(), toiletsResponse.text()]),
+      LogLevel.DEBUG,
+      logContext
+    );
+
+    return processMultipleCSVData(restaurantCSVs, parkingCSV, toiletsCSV, logContext);
+  } catch (error) {
+    logger.error('CSVデータ取得中にエラーが発生しました', {
+      ...logContext,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
   }
-
-  // テキストデータへの変換
-  const [restaurantsCSV, parkingCSV, toiletsCSV] = await logger.measureTimeAsync(
-    'レスポンスのテキスト変換',
-    () => Promise.all([restaurantsResponse.text(), parkingResponse.text(), toiletsResponse.text()]),
-    LogLevel.DEBUG,
-    logContext
-  );
-
-  return processCSVData(restaurantsCSV, parkingCSV, toiletsCSV, logContext);
 }
 
 /**
- * CSVデータを処理してPOIオブジェクトに変換する関数
+ * 複数のCSVデータを処理してPOIオブジェクトに変換する関数
  */
-function processCSVData(
-  restaurantsCSV: string,
+function processMultipleCSVData(
+  restaurantCSVs: string[],
   parkingCSV: string,
   toiletsCSV: string,
   logContext: Record<string, unknown>
 ): POI[] {
-  // CSVの解析とPOIオブジェクトへの変換（パフォーマンス計測）
-  const restaurants = logger.measureTime(
-    'レストランCSV解析',
-    () => parseCSVtoPOIs(restaurantsCSV, 'restaurant'),
-    LogLevel.DEBUG,
-    logContext
-  );
+  // レストランCSVを個別に解析し、結果を結合
+  const allRestaurants = restaurantCSVs.reduce<POI[]>((acc, csv, index) => {
+    const sourceInfo = { ...logContext, csvIndex: index };
+    const pois = logger.measureTime(
+      `レストランCSV解析 (ファイル ${index + 1}/${restaurantCSVs.length})`,
+      () => parseCSVtoPOIs(csv, 'restaurant'),
+      LogLevel.DEBUG,
+      sourceInfo
+    );
+    logger.info(`レストランデータ解析完了 (ファイル ${index + 1})`, {
+      ...sourceInfo,
+      count: pois.length,
+    });
+    return [...acc, ...pois];
+  }, []);
 
+  // 駐車場データの解析
   const parking = logger.measureTime(
     '駐車場CSV解析',
     () => parseCSVtoPOIs(parkingCSV, 'parking'),
@@ -108,6 +165,7 @@ function processCSVData(
     logContext
   );
 
+  // トイレデータの解析
   const toilets = logger.measureTime(
     'トイレCSV解析',
     () => parseCSVtoPOIs(toiletsCSV, 'toilet'),
@@ -118,12 +176,12 @@ function processCSVData(
   // 全POIデータの結合（パフォーマンス計測）
   return logger.measureTime(
     'POIデータの結合処理',
-    () => combinePOIArrays(restaurants, parking, toilets),
+    () => combinePOIArrays(allRestaurants, parking, toilets),
     LogLevel.DEBUG,
     {
       ...logContext,
       counts: {
-        restaurants: restaurants.length,
+        restaurants: allRestaurants.length,
         parking: parking.length,
         toilets: toilets.length,
       },
