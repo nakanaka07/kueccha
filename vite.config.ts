@@ -5,12 +5,9 @@ import { resolve } from 'path';
 import fs from 'fs';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-/**
- * ログユーティリティ - 環境変数を活用した動的プレフィックス対応ロガー
- * @description 環境に応じたログ出力を管理し、プロジェクト名に依存しない実装
- */
-const logger = (() => {
-  // プロジェクト名を環境変数から動的に取得（変更に強い実装）
+// @utils/loggerを直接importするとESMの循環依存問題が発生するため、
+// Vite設定ファイル専用のシンプルなロガーを実装
+const configLogger = (() => {
   const getPrefix = () => {
     const appName = process.env.VITE_APP_SHORT_NAME || 'App';
     const env = process.env.NODE_ENV || 'development';
@@ -61,8 +58,8 @@ function validateEnv(env: Record<string, string>): void {
   const missingVars = requiredVars.filter(name => !env[name]);
 
   if (missingVars.length > 0) {
-    logger.warn(`次の環境変数が未設定です: ${missingVars.join(', ')}`);
-    logger.info('本番環境では、これらの環境変数がGitHub Secretsから自動的に取得されます');
+    configLogger.warn(`次の環境変数が未設定です: ${missingVars.join(', ')}`);
+    configLogger.info('本番環境では、これらの環境変数がGitHub Secretsから自動的に取得されます');
   }
 }
 
@@ -210,7 +207,7 @@ function getHttpsOptions(isProd: boolean): Record<string, any> | undefined {
         cert: fs.readFileSync(certPath),
       };
     } catch (error) {
-      logger.error(`HTTPS証明書の読み込みに失敗しました: ${(error as Error).message}`);
+      configLogger.error(`HTTPS証明書の読み込みに失敗しました: ${(error as Error).message}`);
       return undefined;
     }
   }

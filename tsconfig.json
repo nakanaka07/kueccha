@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "ESNext"],
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
 
     /* Type Checking */
     "strict": true,
@@ -23,6 +24,21 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "exactOptionalPropertyTypes": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "allowUnreachableCode": false,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+
+    /* パフォーマンス最適化 */
+    "importsNotUsedAsValues": "remove",
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+
+    /* デバッグ支援 */
+    "sourceMap": true,
+    "pretty": true,
 
     /* Path Aliases */
     "baseUrl": ".",
@@ -36,7 +52,13 @@
       "@/utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src", "vite-env.d.ts", "react-extensions.d.ts"],
-  "exclude": ["node_modules", "dist", "build"],
+  "include": [
+    "src",
+    "vite-env.d.ts",
+    "react-extensions.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": ["node_modules", "dist", "build", ".tsbuildinfo"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,32 +1,189 @@
+// コアモジュールを最初にインポート
+import fs from 'node:fs';
+import path from 'node:path';
+
+// ESLintとプラグイン関連のインポート
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import importPlugin from 'eslint-plugin-import';
+
+// Reactエコシステム関連のインポート
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import a11y from 'eslint-plugin-jsx-a11y';
-import importPlugin from 'eslint-plugin-import';
-import fs from 'node:fs';
-import path from 'node:path';
 
-// .gitignoreからパターンを読み込む関数
-function readGitignorePatterns() {
-  try {
-    const gitignoreContent = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf8');
-    return gitignoreContent
-      .split('\n')
-      .filter(line => line.trim() && !line.startsWith('#'))
-      .map(line => line.trim());
-  } catch (error) {
-    // console.warn だと警告が出るので置き換え
-    /* ファイルが存在しない場合は無視 */
-    return [];
-  }
-}
+// 環境変数から本番環境かどうかを判断する
+const isProduction = process.env.NODE_ENV === 'production';
+
+// インポートマッピング（プラグイン設定の一貫性向上）
+const plugins = {
+  '@typescript-eslint': tseslint.plugin,
+  react,
+  'react-hooks': reactHooks,
+  'react-refresh': reactRefresh,
+  'jsx-a11y': a11y,
+  import: importPlugin,
+};
+
+// 共通ルールを定義（コード重複の削減とメンテナンス性向上）
+const commonRules = {
+  // コード品質関連の基本ルール
+  'no-console': isProduction ? 'error' : 'warn', // 本番環境ではconsole文を禁止
+  'no-debugger': isProduction ? 'error' : 'warn', // 本番環境ではdebugger文を禁止
+  'no-unused-vars': 'off', // TypeScriptのルールを優先
+  'no-var': 'error', // varの使用禁止
+  'prefer-const': 'warn', // 再代入不要な変数はconstを使用
+  'dot-notation': 'warn', // オブジェクトアクセスにはドット記法を優先
+  eqeqeq: ['warn', 'always', { null: 'ignore' }], // 厳密等価演算子を推奨
+};
+
+// TypeScript固有ルール
+const tsRules = {
+  '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+  '@typescript-eslint/explicit-function-return-type': 'off', // 戻り値の型は推論可能な場合は省略可
+  '@typescript-eslint/no-explicit-any': 'warn', // any型の使用を警告
+  '@typescript-eslint/no-non-null-assertion': 'warn', // 非nullアサーションの使用を警告
+  '@typescript-eslint/no-floating-promises': 'warn', // Promiseの戻り値を無視しない
+  '@typescript-eslint/no-unnecessary-condition': 'warn', // 不要な条件式を警告
+  '@typescript-eslint/prefer-nullish-coalescing': 'warn', // null/undefined用に??演算子を推奨
+  '@typescript-eslint/prefer-optional-chain': 'warn', // プロパティチェーンに?.演算子を推奨
+  '@typescript-eslint/no-unnecessary-type-assertion': 'warn', // 不要な型アサーションを警告
+};
+
+// React関連ルール
+const reactRules = {
+  'react-hooks/rules-of-hooks': 'error', // フックのルールを厳格に適用
+  'react-hooks/exhaustive-deps': 'warn', // 依存配列の不完全な指定を警告
+  'react-refresh/only-export-components': ['warn', { allowConstantExport: true }], // Fast Refreshの最適化
+  'react/prop-types': 'off', // TypeScriptを使用しているため不要
+  'react/react-in-jsx-scope': 'off', // React 17以降では不要
+};
+
+// A11yルール（アクセシビリティ）
+const a11yRules = {
+  // 画像要素に代替テキストを必須にする（スクリーンリーダー対応）
+  'jsx-a11y/alt-text': 'error',
+  // アンカーには内容が必要（スクリーンリーダーが認識できるコンテンツ）
+  'jsx-a11y/anchor-has-content': 'error',
+  // ARIAプロパティが有効なものであることを確認
+  'jsx-a11y/aria-props': 'error',
+  // ARIAプロパティの値が正しいことを確認
+  'jsx-a11y/aria-proptypes': [
+    'error',
+    {
+      config: {
+        'aria-selected': ['true', 'false'], // 選択状態を示すARIA属性
+        'aria-pressed': ['true', 'false', 'mixed'], // ボタン状態を示すARIA属性
+        'aria-checked': ['true', 'false', 'mixed'], // チェックボックス状態を示すARIA属性
+        'aria-current': ['page', 'step', 'location', 'date', 'time', 'true', 'false'], // 現在地を示すARIA属性
+      },
+    },
+  ],
+  // role属性が有効な値であることを確認
+  'jsx-a11y/aria-role': ['error', { ignoreNonDOM: true }], // 非DOMコンポーネントでは無視
+  // ロールに必要なARIA属性が設定されていることを確認
+  'jsx-a11y/role-has-required-aria-props': 'error',
+  // クリック可能な要素がキーボード操作可能か確認
+  'jsx-a11y/click-events-have-key-events': 'warn',
+  // インタラクティブな要素に適切なロールがあるか確認
+  'jsx-a11y/no-noninteractive-element-interactions': 'warn',
+  // フォーカス可能な要素に適切なロールがあるか確認
+  'jsx-a11y/interactive-supports-focus': 'warn',
+  // tabIndexの使用を制限（キーボードナビゲーション順序の混乱防止）
+  'jsx-a11y/tabindex-no-positive': 'warn',
+  // 見出し要素の適切な階層を確認
+  'jsx-a11y/heading-has-content': 'error',
+};
+
+// インポート関連ルール
+const importRules = {
+  // 重複インポートの禁止
+  'import/no-duplicates': 'error',
+  // インポート順序の整理
+  'import/order': [
+    'warn',
+    {
+      // インポートのグループ化とグループ間の改行
+      'newlines-between': 'always',
+      // グループの並び順
+      groups: [
+        'builtin', // Node.js組み込みモジュール
+        'external', // npmパッケージ
+        'internal', // エイリアスによる内部インポート
+        'parent', // 親ディレクトリからのインポート
+        'sibling', // 同じディレクトリからのインポート
+        'index', // 同じディレクトリのインデックスファイル
+        'object', // オブジェクトインポート
+        'type', // 型インポート
+      ],
+      // 特定のパターンに対するカスタムグループ設定
+      pathGroups: [
+        // エイリアスパターンを内部モジュールとして扱う
+        {
+          pattern: '@/**',
+          group: 'internal',
+          position: 'after',
+        },
+        // アセットを最後に配置
+        {
+          pattern: '*.{css,scss,sass,less,styl}',
+          group: 'object',
+          patternOptions: { matchBase: true },
+          position: 'after',
+        },
+        // 画像ファイルを最後に配置
+        {
+          pattern: '*.{png,jpg,jpeg,gif,svg}',
+          group: 'object',
+          patternOptions: { matchBase: true },
+          position: 'after',
+        },
+      ],
+      // アルファベット順に並び替え
+      alphabetize: { order: 'asc', caseInsensitive: true },
+    },
+  ],
+};
+
+// 複雑性制限ルール
+const complexityRules = {
+  // 関数の循環的複雑度を制限（条件分岐が多すぎる関数を防止）
+  complexity: ['warn', 15],
+  // ネストされた条件やループの深さを制限（可読性とデバッグ容易性のため）
+  'max-depth': ['warn', 4],
+  // 関数あたりの行数を制限（長すぎる関数を分割促進）
+  'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
+};
+
+// .gitignoreからパターンを読み込む関数 (キャッシュ最適化)
+const readGitignorePatterns = (() => {
+  let patterns = null;
+
+  return () => {
+    if (patterns !== null) {
+      return patterns; // キャッシュを返す
+    }
+
+    try {
+      const gitignoreContent = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf8');
+      patterns = gitignoreContent
+        .split('\n')
+        .filter(line => line.trim() && !line.startsWith('#'))
+        .map(line => line.trim());
+      return patterns;
+    } catch (error) {
+      patterns = [];
+      return patterns;
+    }
+  };
+})();
 
 // 共通の除外パターン + .gitignoreの内容
 const gitignorePatterns = readGitignorePatterns();
 
 // ServiceWorkerファイル（完全に除外）
+// devDistFilesはServiceWorkerファイルを含む
 const devDistFiles = [
   // dev-distディレクトリ全体
   'dev-dist/**',
@@ -53,6 +210,7 @@ const explicitIgnores = [
 const commonIgnores = [...explicitIgnores, ...gitignorePatterns];
 
 // 設定ファイルパターン（型チェックから除外する）
+// configFilesは設定ファイルを含む
 const configFiles = [
   '*.config.js',
   '*.config.ts',
@@ -63,9 +221,6 @@ const configFiles = [
   'eslint.config.js',
   'jest.config.js',
 ];
-
-// 環境変数から本番環境かどうかを判断する
-const isProduction = process.env.NODE_ENV === 'production';
 
 // typescript-eslintの設定
 export default tseslint.config(
@@ -78,6 +233,12 @@ export default tseslint.config(
     },
     rules: {
       ...eslint.configs.recommended.rules,
+      ...commonRules,
+      ...tsRules,
+      ...reactRules,
+      ...a11yRules,
+      ...importRules,
+      ...complexityRules,
     },
   },
 
@@ -109,14 +270,7 @@ export default tseslint.config(
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     ignores: commonIgnores,
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-      react: react,
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-      'jsx-a11y': a11y,
-      import: importPlugin,
-    },
+    plugins,
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -143,123 +297,6 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }], // Fast Refreshの最適化
       'react/prop-types': 'off', // TypeScriptを使用しているため不要
       'react/react-in-jsx-scope': 'off', // React 17以降では不要
-
-      // コード品質関連のルール
-      'no-console': isProduction ? 'error' : 'warn', // 本番環境ではconsole文を禁止
-      'no-debugger': isProduction ? 'error' : 'warn', // 本番環境ではdebugger文を禁止
-      'no-unused-vars': 'off', // TypeScriptのルールを優先
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }], // 未使用変数を警告（_で始まる引数は除外）
-      '@typescript-eslint/explicit-function-return-type': 'off', // 戻り値の型は推論可能な場合は省略可
-      '@typescript-eslint/no-explicit-any': 'warn', // any型の使用を警告
-      '@typescript-eslint/no-non-null-assertion': 'warn', // 非nullアサーションの使用を警告
-
-      // 複雑性の制限
-      // 関数の循環的複雑度を制限（条件分岐が多すぎる関数を防止）
-      complexity: ['warn', 15],
-      // ネストされた条件やループの深さを制限（可読性とデバッグ容易性のため）
-      'max-depth': ['warn', 4],
-      // 関数あたりの行数を制限（長すぎる関数を分割促進）
-      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
-
-      // アクセシビリティルール（jsx-a11y）
-      // 画像要素に代替テキストを必須にする（スクリーンリーダー対応）
-      'jsx-a11y/alt-text': 'error',
-      // アンカーには内容が必要（スクリーンリーダーが認識できるコンテンツ）
-      'jsx-a11y/anchor-has-content': 'error',
-      // ARIAプロパティが有効なものであることを確認
-      'jsx-a11y/aria-props': 'error',
-      // ARIAプロパティの値が正しいことを確認
-      'jsx-a11y/aria-proptypes': [
-        'error',
-        {
-          config: {
-            // 'aria-expanded': ['true', 'false'], <- この行を削除しました
-            'aria-selected': ['true', 'false'], // 選択状態を示すARIA属性
-            'aria-pressed': ['true', 'false', 'mixed'], // ボタン状態を示すARIA属性
-            'aria-checked': ['true', 'false', 'mixed'], // チェックボックス状態を示すARIA属性
-            'aria-current': ['page', 'step', 'location', 'date', 'time', 'true', 'false'], // 現在地を示すARIA属性
-          },
-        },
-      ],
-      // role属性が有効な値であることを確認
-      'jsx-a11y/aria-role': ['error', { ignoreNonDOM: true }], // 非DOMコンポーネントでは無視
-      // ロールに必要なARIA属性が設定されていることを確認
-      'jsx-a11y/role-has-required-aria-props': 'error',
-      // クリック可能な要素がキーボード操作可能か確認
-      'jsx-a11y/click-events-have-key-events': 'warn',
-      // インタラクティブな要素に適切なロールがあるか確認
-      'jsx-a11y/no-noninteractive-element-interactions': 'warn',
-      // フォーカス可能な要素に適切なロールがあるか確認
-      'jsx-a11y/interactive-supports-focus': 'warn',
-      // tabIndexの使用を制限（キーボードナビゲーション順序の混乱防止）
-      'jsx-a11y/tabindex-no-positive': 'warn',
-      // 見出し要素の適切な階層を確認
-      'jsx-a11y/heading-has-content': 'error',
-
-      // インポート順序と整理
-      'import/order': [
-        'warn',
-        {
-          // インポートのグループ化とグループ間の改行
-          'newlines-between': 'always',
-          // グループの並び順
-          groups: [
-            'builtin', // Node.js組み込みモジュール
-            'external', // npmパッケージ
-            'internal', // エイリアスによる内部インポート
-            'parent', // 親ディレクトリからのインポート
-            'sibling', // 同じディレクトリからのインポート
-            'index', // 同じディレクトリのインデックスファイル
-            'object', // オブジェクトインポート
-            'type', // 型インポート
-          ],
-          // 特定のパターンに対するカスタムグループ設定
-          pathGroups: [
-            // エイリアスパターンを内部モジュールとして扱う
-            {
-              pattern: '@/**',
-              group: 'internal',
-              position: 'after',
-            },
-            // アセットを最後に配置
-            {
-              pattern: '*.{css,scss,sass,less,styl}',
-              group: 'object',
-              patternOptions: { matchBase: true },
-              position: 'after',
-            },
-            // 画像ファイルを最後に配置
-            {
-              pattern: '*.{png,jpg,jpeg,gif,svg}',
-              group: 'object',
-              patternOptions: { matchBase: true },
-              position: 'after',
-            },
-          ],
-          // アルファベット順に並び替え
-          alphabetize: { order: 'asc', caseInsensitive: true },
-        },
-      ],
-      // 重複インポートの禁止
-      'import/no-duplicates': 'error',
-      // 等価演算子の厳格な使用（==よりも===を推奨）
-      eqeqeq: ['warn', 'always', { null: 'ignore' }],
-      // 再代入不要な変数はconstを使用
-      'prefer-const': 'warn',
-      // varの使用禁止
-      'no-var': 'error',
-      // Promiseを返す関数の戻り値を無視しない
-      '@typescript-eslint/no-floating-promises': 'warn',
-      // 常に真または偽になる条件式を警告
-      '@typescript-eslint/no-unnecessary-condition': 'warn',
-      // null/undefinedチェックに??演算子を推奨
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      // プロパティチェーンに?.演算子を推奨
-      '@typescript-eslint/prefer-optional-chain': 'warn',
-      // TypeScriptの不要なキャストを警告
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
-      // オブジェクトの値へのアクセスでbracket notationよりもdot notationを推奨
-      'dot-notation': 'warn',
     },
   },
 

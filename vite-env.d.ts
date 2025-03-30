@@ -45,5 +45,21 @@ declare namespace NodeJS {
      */
     VITE_ENABLE_ANALYTICS?: 'true' | 'false'; // アナリティクス機能の有効化
     VITE_ENABLE_OFFLINE_MODE?: 'true' | 'false'; // オフラインモードサポート
+
+    /**
+     * ログ設定
+     * ログレベルや詳細度の制御
+     */
+    VITE_LOG_LEVEL?: 'debug' | 'info' | 'warn' | 'error'; // ログの詳細度
+    VITE_ENABLE_VERBOSE_LOGGING?: 'true' | 'false'; // 詳細ログの有効化
+
+    /**
+     * マップ設定
+     * 地図表示の初期設定値
+     */
+    VITE_MAP_INITIAL_ZOOM?: string; // 初期ズームレベル
+    VITE_MAP_INITIAL_CENTER_LAT?: string; // 初期中心緯度
+    VITE_MAP_INITIAL_CENTER_LNG?: string; // 初期中心経度
+    VITE_MAP_ENABLE_CLUSTERING?: 'true' | 'false'; // マーカークラスタリングの有効化
   }
 }

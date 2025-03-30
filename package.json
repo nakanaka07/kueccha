@@ -29,66 +29,46 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:a11y": "vitest run a11y",
+    "test:ui": "vitest --ui",
+    "// パフォーマンス関連": "----------------------------",
+    "analyze:bundle": "cross-env ANALYZE=true vite build",
+    "analyze:runtime": "cross-env NODE_ENV=development MEASURE_PERFORMANCE=true vite",
     "// プロジェクト管理": "----------------------------",
     "prepare": "husky install",
     "clean": "rimraf dist dev-dist stats.html",
-    "reset": "rimraf node_modules pnpm-lock.yaml dist dev-dist stats.html .husky && pnpm store prune"
+    "clean:all": "rimraf node_modules pnpm-lock.yaml dist dev-dist stats.html .husky && pnpm store prune",
+    "update": "pnpm update --latest"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/material": "^7.0.1",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@googlemaps/markerclusterer": "^2.5.3",
+    "@mui/material": "^7.0.1",
     "@react-google-maps/api": "^2.20.6",
     "axios": "^1.8.4",
     "dayjs": "^1.11.13",
     "lodash-es": "^4.17.21",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "zustand": "^5.0.3"
   },
-  "_dependenciesComments": {
-    "ui": [
-      "@emotion/react",
-      "@emotion/styled",
-      "@mui/material",
-      "react",
-      "react-dom"
-    ],
-    "maps": [
-      "@googlemaps/js-api-loader",
-      "@googlemaps/markerclusterer",
-      "@react-google-maps/api"
-    ],
-    "utils": [
-      "axios",
-      "dayjs",
-      "lodash-es",
-      "zustand"
-    ]
-  },
   "devDependencies": {
-    "@types/node": "^22.13.14",
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
-    "typescript": "^5.8.2",
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
-    "typescript-eslint": "^8.28.0",
-    "vite": "^6.2.3",
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite-plugin-pwa": "^1.0.0",
-    "rollup-plugin-visualizer": "^5.14.0",
-    "vitest": "^3.0.9",
-    "@vitest/coverage-v8": "^3.0.9",
+    "@eslint/js": "^9.23.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
-    "jsdom": "^26.0.0",
-    "whatwg-fetch": "^3.6.20",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.0.9",
+    "@vitest/ui": "^3.0.9",
+    "cross-env": "^7.0.3",
+    "depcheck": "^1.4.7",
     "eslint": "^9.23.0",
-    "@eslint/js": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-import-resolver-typescript": "^4.3.1",
     "eslint-plugin-import": "^2.31.0",
@@ -96,57 +76,19 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
-    "prettier": "^3.5.3",
-    "cross-env": "^7.0.3",
-    "depcheck": "^1.4.7",
     "husky": "^9.1.7",
+    "jsdom": "^26.0.0",
     "lint-staged": "^15.5.0",
-    "rimraf": "^6.0.1"
-  },
-  "_devDependenciesComments": {
-    "typescript": [
-      "@types/node",
-      "@types/react",
-      "@types/react-dom",
-      "typescript",
-      "@typescript-eslint/eslint-plugin",
-      "@typescript-eslint/parser",
-      "typescript-eslint"
-    ],
-    "buildTools": [
-      "vite",
-      "@vitejs/plugin-react",
-      "vite-plugin-pwa",
-      "rollup-plugin-visualizer"
-    ],
-    "testTools": [
-      "vitest",
-      "@vitest/coverage-v8",
-      "@testing-library/jest-dom",
-      "@testing-library/react",
-      "@testing-library/user-event",
-      "jsdom",
-      "whatwg-fetch"
-    ],
-    "lintFormat": [
-      "eslint",
-      "@eslint/js",
-      "eslint-config-prettier",
-      "eslint-import-resolver-typescript",
-      "eslint-plugin-import",
-      "eslint-plugin-jsx-a11y",
-      "eslint-plugin-react",
-      "eslint-plugin-react-hooks",
-      "eslint-plugin-react-refresh",
-      "prettier"
-    ],
-    "utils": [
-      "cross-env",
-      "depcheck",
-      "husky",
-      "lint-staged",
-      "rimraf"
-    ]
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "rollup-plugin-visualizer": "^5.14.0",
+    "sort-package-json": "^3.0.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0",
+    "vite": "^6.2.3",
+    "vite-plugin-pwa": "^1.0.0",
+    "vitest": "^3.0.9",
+    "whatwg-fetch": "^3.6.20"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -158,7 +100,8 @@
       "eslint --fix --ignore-path .gitignore",
       "prettier --write"
     ],
-    "*.{json,css,md,html}": "prettier --write"
+    "*.{json,css,md,html}": "prettier --write",
+    "package.json": "sort-package-json"
   },
   "browserslist": [
     ">0.2%",

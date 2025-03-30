@@ -19,6 +19,7 @@ package-lock.json
 .git
 .husky
 .github
+.hintrc
 
 # 環境変数ファイル
 .env*
@@ -31,3 +32,20 @@ stats.html
 # PWA関連
 **/sw*.js
 **/workbox-*.js*
+
+# その他のバイナリファイル
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+
+# データファイル
+public/data/*.csv
+
+# エディタ設定
+.idea
+.vscode
+*.sublime-*
+.DS_Store
