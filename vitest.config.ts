@@ -18,6 +18,7 @@ export default defineConfig({
       '@/hooks': resolvePath('./src/hooks'),
       '@/types': resolvePath('./src/types'),
       '@/utils': resolvePath('./src/utils'),
+      '@/App': resolvePath('./src/App'),
     },
   },
 

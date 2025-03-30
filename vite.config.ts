@@ -309,6 +309,7 @@ export default defineConfig(({ mode }): UserConfig => {
         '@/hooks': resolve(__dirname, './src/hooks'),
         '@/types': resolve(__dirname, './src/types'),
         '@/utils': resolve(__dirname, './src/utils'),
+        '@/App': resolve(__dirname, './src/App'),
       },
     },
 
@@ -327,8 +328,8 @@ export default defineConfig(({ mode }): UserConfig => {
       },
       preprocessorOptions: {
         scss: {
-          // SASSを使用するプロジェクトのため最適化
-          additionalData: '@import "@styles/variables.scss";',
+          // SCSSの正しいパスに修正
+          additionalData: '@import "./src/styles/variables.scss";',
         },
       },
     },
