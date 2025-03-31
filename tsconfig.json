@@ -59,6 +59,13 @@
     "**/*.ts",
     "**/*.tsx"
   ],
-  "exclude": ["node_modules", "dist", "build", ".tsbuildinfo"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".tsbuildinfo",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

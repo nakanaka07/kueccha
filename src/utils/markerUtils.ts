@@ -284,7 +284,7 @@ export function fitMapToMarkers(markers: google.maps.Marker[], map: google.maps.
   map.fitBounds(bounds);
 
   // マーカーが1つだけの場合は適切なズームレベルを設定
-  if (markers.length === 1) {
+  if (markers.length === 1 && markers[0]) {
     const position = markers[0].getPosition();
     if (position) {
       map.setCenter(position);

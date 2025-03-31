@@ -340,7 +340,7 @@ function extractCoordinates(rawData: RawPOIData): { lat: number; lng: number } {
 
     if (rawData.WKT) {
       const wktMatch = rawData.WKT.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
-      if (wktMatch) {
+      if (wktMatch?.[1] && wktMatch[2]) {
         lng = parseFloat(wktMatch[1]);
         lat = parseFloat(wktMatch[2]);
       }

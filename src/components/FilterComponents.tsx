@@ -64,7 +64,7 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = React.memo(
             <label key={item} className='checkbox-label'>
               <input
                 type='checkbox'
-                checked={selectedItems[item] || false}
+                checked={selectedItems[item] ?? false}
                 onChange={e => handleChange(item, e.target.checked)}
                 aria-label={`${item}${itemLabelPrefix}`}
               />

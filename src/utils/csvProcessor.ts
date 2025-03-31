@@ -38,7 +38,13 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
         }
 
         // ヘッダー行（項目名）を取得
-        const headers = lines[0].split(',').map(h => h.trim());
+        const headerLine = lines[0];
+        if (!headerLine) {
+          logger.warn('CSVにヘッダー行がありません', { type });
+          return [];
+        }
+
+        const headers = headerLine.split(',').map(h => h.trim());
 
         // ヘッダーのインデックスをマッピング
         const columnMap = createColumnMap(headers);
@@ -88,7 +94,7 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
  */
 function createPOI(
   line: string,
-  columnMap: Record<string, number>,
+  columnMap: Record<string, number | undefined>,
   type: POIType,
   index: number
 ): POI {
@@ -125,7 +131,7 @@ function createPOI(
  */
 function extractBasicInfo(
   columns: string[],
-  columnMap: Record<string, number>,
+  columnMap: Record<string, number | undefined>,
   type: POIType,
   index: number
 ): Pick<POI, 'id' | 'name' | 'type' | 'isClosed'> {
@@ -142,7 +148,7 @@ function extractBasicInfo(
  */
 function extractLocationInfo(
   columns: string[],
-  columnMap: Record<string, number>
+  columnMap: Record<string, number | undefined>
 ): Pick<POI, 'position' | 'address' | 'area'> {
   return {
     position: parseWKT(getSafeColumnValue(columns, columnMap.wkt, '')),
@@ -156,7 +162,7 @@ function extractLocationInfo(
  */
 function extractCategoryInfo(
   columns: string[],
-  columnMap: Record<string, number>
+  columnMap: Record<string, number | undefined>
 ): Pick<POI, 'category' | 'genre'> {
   const category = determineCategory(
     isColumnTrue(columns, columnMap.japaneseFood),
@@ -176,7 +182,7 @@ function extractCategoryInfo(
  */
 function extractDetailInfo(
   columns: string[],
-  columnMap: Record<string, number>
+  columnMap: Record<string, number | undefined>
 ): Pick<POI, 'contact' | 'businessHours' | 'parkingInfo' | 'infoUrl' | 'googleMapsUrl'> {
   return {
     contact: getSafeColumnValue(columns, columnMap.contact, ''),
@@ -190,7 +196,10 @@ function extractDetailInfo(
 /**
  * 検索用のテキストを作成
  */
-function createSearchText(columns: string[], columnMap: Record<string, number>): string {
+function createSearchText(
+  columns: string[],
+  columnMap: Record<string, number | undefined>
+): string {
   const searchTextRaw = [
     getSafeColumnValue(columns, columnMap.name, ''),
     getSafeColumnValue(columns, columnMap.genre, ''),
@@ -203,18 +212,22 @@ function createSearchText(columns: string[], columnMap: Record<string, number>):
 /**
  * カラム値を安全に取得するヘルパー関数
  */
-function getSafeColumnValue(columns: string[], columnIndex: number, defaultValue: string): string {
-  if (columnIndex === -1 || columnIndex >= columns.length) {
+function getSafeColumnValue(
+  columns: string[],
+  columnIndex: number | undefined,
+  defaultValue: string
+): string {
+  if (columnIndex === undefined || columnIndex === -1 || columnIndex >= columns.length) {
     return defaultValue;
   }
-  return columns[columnIndex]?.trim() || defaultValue;
+  return columns[columnIndex]?.trim() ?? defaultValue;
 }
 
 /**
  * カラム値がtrueかどうかをチェックするヘルパー関数
  */
-function isColumnTrue(columns: string[], columnIndex: number): boolean {
-  if (columnIndex === -1 || columnIndex >= columns.length) {
+function isColumnTrue(columns: string[], columnIndex: number | undefined): boolean {
+  if (columnIndex === undefined || columnIndex === -1 || columnIndex >= columns.length) {
     return false;
   }
   return columns[columnIndex]?.toLowerCase() === 'true';
@@ -223,7 +236,7 @@ function isColumnTrue(columns: string[], columnIndex: number): boolean {
 /**
  * ヘッダー行からカラムのインデックスマップを作成
  */
-function createColumnMap(headers: string[]): Record<string, number> {
+function createColumnMap(headers: string[]): Record<string, number | undefined> {
   return {
     name: headers.indexOf('名称（入力）'),
     wkt: headers.indexOf('WKT（入力）'),
@@ -292,7 +305,7 @@ function parseWKT(wkt: string): google.maps.LatLngLiteral {
 
     // POINT形式のWKTを解析
     const match = wkt.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
-    if (match && match.length >= 3) {
+    if (match && match.length >= 3 && match[1] && match[2]) {
       const lng = parseFloat(match[1]);
       const lat = parseFloat(match[2]);
 

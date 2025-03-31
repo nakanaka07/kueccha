@@ -284,7 +284,7 @@ const loadAndInitializeMap = async (
   center: { lat: number; lng: number },
   zoom: number
 ): Promise<google.maps.Map> => {
-  const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID;
+  const mapId = ENV.google.MAPS_MAP_ID;
   const { loaderOptions, mapIds, libraries } = prepareLoaderOptions(mapId);
 
   try {

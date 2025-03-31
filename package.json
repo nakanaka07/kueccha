@@ -20,7 +20,7 @@
     "analyze": "cross-env ANALYZE=true vite build",
     "// コード品質": "----------------------------",
     "format": "prettier --write .",
-    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" --ignore-pattern \"dev-dist/**\" --fix",
+    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" --ignore-pattern \"dev-dist/**\" --fix --config eslint.config.js",
     "lint:unused": "pnpm dlx depcheck",
     "lint:all": "pnpm lint && pnpm format && pnpm typecheck",
     "typecheck": "tsc --noEmit",

@@ -231,6 +231,7 @@ export default tseslint.config(
       reportUnusedDisableDirectives: true,
       noInlineConfig: false,
     },
+    plugins, // この行を追加してプラグインを設定
     rules: {
       ...eslint.configs.recommended.rules,
       ...commonRules,

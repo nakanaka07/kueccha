@@ -177,18 +177,26 @@ class Logger {
    */
   private shouldLogAtLevel(level: LogLevel, context?: LogContext): boolean {
     // コンポーネント固有のログレベルチェック
-    if (context?.component && this.options.componentLevels?.[context.component]) {
-      if (
-        this.levelPriority[level] >
-        this.levelPriority[this.options.componentLevels[context.component]]
-      ) {
-        return false; // コンポーネント固有の設定によりスキップ
+    if (context?.component && this.options.componentLevels) {
+      // コンポーネントのログレベル設定が存在するか確認
+      if (Object.prototype.hasOwnProperty.call(this.options.componentLevels, context.component)) {
+        // 安全にアクセス
+        const componentLevel = this.options.componentLevels[context.component];
+
+        // componentLevelが有効なLogLevelの値であることを確認
+        if (componentLevel && Object.values(LogLevel).includes(componentLevel)) {
+          // 有効な場合のみ比較を行う
+          if (this.levelPriority[level] > this.levelPriority[componentLevel]) {
+            return false; // コンポーネント固有の設定によりスキップ
+          }
+          return true;
+        }
       }
-      return true;
     }
 
     // グローバルなレベルチェック（設定より低いレベルのログは出力しない）
-    return this.levelPriority[level] <= this.levelPriority[this.options.minLevel ?? LogLevel.INFO];
+    const minLevel = this.options.minLevel ?? LogLevel.INFO;
+    return this.levelPriority[level] <= this.levelPriority[minLevel];
   }
 
   /**
@@ -196,13 +204,33 @@ class Logger {
    * 指定されたメッセージがサンプリングレートに基づいて出力すべきかを判定
    */
   private shouldLogBySamplingRate(message: string): boolean {
-    const sampleKey = message.split(' ')[0]; // メッセージの最初の単語をキーとして使用
-    if (this.options.samplingRates?.[sampleKey]) {
+    // メッセージの最初の単語をキーとして使用（空白で分割）
+    const parts = message.split(' ');
+    // 空の配列の可能性を考慮
+    if (parts.length === 0) return true;
+
+    const sampleKey = parts[0];
+    // sampleKeyが空文字列でないことを確認
+    if (!sampleKey) return true;
+
+    // samplingRatesが存在し、sampleKeyがキーとして存在する場合
+    if (
+      this.options.samplingRates &&
+      Object.prototype.hasOwnProperty.call(this.options.samplingRates, sampleKey)
+    ) {
+      // 型安全なアクセス
       const rate = this.options.samplingRates[sampleKey];
-      this.samplingCounters[sampleKey] = (this.samplingCounters[sampleKey] || 0) + 1;
-      if (this.samplingCounters[sampleKey] % rate !== 0) {
-        return false; // サンプリングレートに従ってスキップ
+      // rateが有効な数値であることを確認
+      if (typeof rate !== 'number' || isNaN(rate) || rate <= 0) {
+        // 無効なレートの場合は常にログを出力
+        return true;
       }
+
+      // カウンターの更新（nullish結合演算子を使用）
+      this.samplingCounters[sampleKey] = (this.samplingCounters[sampleKey] ?? 0) + 1;
+
+      // サンプリングレートに基づくフィルタリング
+      return this.samplingCounters[sampleKey] % rate === 0;
     }
     return true;
   }
