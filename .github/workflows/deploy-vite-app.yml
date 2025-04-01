@@ -67,6 +67,9 @@ jobs:
       # 環境変数検証スクリプト作成
       - name: Create environment variable verification script
         run: |
+          # 先にディレクトリ作成
+          mkdir -p scripts
+          
           cat > scripts/verify-env.js << 'EOF'
           // 環境変数の存在確認と検証を行うスクリプト
           const requiredVars = [
@@ -101,7 +104,7 @@ jobs:
 
           console.log('✅ 環境変数の検証に成功しました');
           EOF
-          mkdir -p scripts
+          
           chmod +x scripts/verify-env.js
 
       - name: Build
