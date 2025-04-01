@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 import { POI, PointOfInterest } from '@/types/poi';
 import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
@@ -47,19 +47,12 @@ async function fetchDataFromGoogleSheets(logContext: Record<string, unknown>): P
 /**
  * CSVファイルからデータを取得する関数
  */
-async function fetchDataFromCSVFiles(logContext: Record<string, unknown>): Promise<POI[]> {
+async function fetchDataFromCSVFiles(
+  logContext: Record<string, unknown>,
+  restaurantCSVUrls: string[],
+  utilityCSVUrls: string[]
+): Promise<POI[]> {
   logger.info('静的CSVファイルからデータを取得しています', logContext);
-
-  // 実際のファイル名に合わせてパスを修正
-  const restaurantCSVUrls = [
-    '/data/まとめータベース - おすすめ.csv',
-    '/data/まとめータベース - 両津・相川地区.csv',
-    '/data/まとめータベース - 金井・佐和田・新穂・畑野・真野地区.csv',
-    '/data/まとめータベース - 赤泊・羽茂・小木地区.csv',
-    '/data/まとめータベース - スナック.csv',
-  ];
-  const parkingCSVUrl = '/data/まとめータベース - 駐車場.csv';
-  const toiletCSVUrl = '/data/まとめータベース - 公共トイレ.csv';
 
   try {
     // レストランデータの取得（複数ファイルから）
@@ -99,16 +92,20 @@ async function fetchDataFromCSVFiles(logContext: Record<string, unknown>): Promi
     // 駐車場とトイレのデータ取得
     const [parkingResponse, toiletsResponse] = await logger.measureTimeAsync(
       '駐車場・トイレCSVファイルのフェッチ',
-      () => Promise.all([fetch(parkingCSVUrl), fetch(toiletCSVUrl)]),
+      () =>
+        Promise.all([
+          fetch(utilityCSVUrls[0] ?? ''), // 空の文字列をデフォルト値として提供
+          fetch(utilityCSVUrls[1] ?? ''), // 型エラーを解決
+        ]),
       LogLevel.INFO,
-      { ...logContext, urls: [parkingCSVUrl, toiletCSVUrl] }
+      { ...logContext, urls: utilityCSVUrls }
     );
 
     // レスポンスチェック
     if (!parkingResponse.ok || !toiletsResponse.ok) {
       const failedUrls = [
-        !parkingResponse.ok ? parkingCSVUrl : null,
-        !toiletsResponse.ok ? toiletCSVUrl : null,
+        !parkingResponse.ok ? utilityCSVUrls[0] : null,
+        !toiletsResponse.ok ? utilityCSVUrls[1] : null,
       ].filter(Boolean);
 
       throw new Error(`CSVファイルの取得に失敗しました: ${failedUrls.join(', ')}`);
@@ -190,106 +187,50 @@ function processMultipleCSVData(
 }
 
 /**
- * POI（Points of Interest）データを取得・管理するカスタムフック
- * データソースに応じて適切な方法でデータを取得し、加工して返します
+ * POI型からPointOfInterest型に変換する関数
  */
-export function usePOIData(options: UsePOIDataOptions = {}) {
-  const { enabled = true } = options;
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pois, setPois] = useState<PointOfInterest[]>([]);
-
-  // データ取得ロジックをuseCallbackでメモ化
-  const fetchPOIData = useCallback(async () => {
-    // コンポーネント名をコンテキストに含める
-    const logContext = { component: 'usePOIData' };
-
-    logger.info('POIデータの取得を開始', logContext);
-
-    try {
-      setIsLoading(true);
-
-      // 環境変数の確認
-      const useSheets = ENV.app.USE_GOOGLE_SHEETS;
-      logger.debug('データソース設定', { ...logContext, useGoogleSheets: useSheets });
-
-      // データソースに応じて取得方法を切り替え
-      const allPOIs = useSheets
-        ? await fetchDataFromGoogleSheets(logContext)
-        : await fetchDataFromCSVFiles(logContext);
-
-      // POI型からPointOfInterest型に変換（パフォーマンス計測）
-      const pointsOfInterest = logger.measureTime(
-        'POI型からPointOfInterest型への変換',
-        () =>
-          allPOIs.map(
-            poi =>
-              ({
-                id: poi.id,
-                name: poi.name,
-                lat: poi.position.lat,
-                lng: poi.position.lng,
-                isClosed: poi.isClosed,
-                type: poi.type,
-                category: poi.category,
-                genre: poi.genre,
-                address: poi.address,
-                district: poi.district,
-                問い合わせ: poi.contact,
-                関連情報: poi.infoUrl,
-                'Google マップで見る': poi.googleMapsUrl,
-                営業時間: poi.businessHours,
-                searchText: poi.searchText,
-                // 定休日情報があれば変換
-                ...(poi.regularHolidays && {
-                  月曜定休日: poi.regularHolidays.monday,
-                  火曜定休日: poi.regularHolidays.tuesday,
-                  水曜定休日: poi.regularHolidays.wednesday,
-                  木曜定休日: poi.regularHolidays.thursday,
-                  金曜定休日: poi.regularHolidays.friday,
-                  土曜定休日: poi.regularHolidays.saturday,
-                  日曜定休日: poi.regularHolidays.sunday,
-                  祝祭定休日: poi.regularHolidays.holiday,
-                }),
-                定休日について: poi.holidayNotes,
-              }) as PointOfInterest
-          ),
-        LogLevel.DEBUG,
-        { ...logContext, count: allPOIs.length }
-      );
-
-      logger.info('POIデータの取得と処理が完了しました', {
-        ...logContext,
-        totalCount: pointsOfInterest.length,
-        categories: countCategories(pointsOfInterest),
-      });
-
-      setPois(pointsOfInterest);
-      setError(null);
-    } catch (err) {
-      handleFetchError(err, logContext, setError);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!enabled) {
-      logger.debug('POIデータ取得は無効化されています', { component: 'usePOIData', enabled });
-      return;
-    }
-
-    // 非同期関数を即時実行し、クリーンアップ時にはキャンセルできるようにする
-    void fetchPOIData();
-
-    // クリーンアップ関数
-    return () => {
-      logger.debug('usePOIData のクリーンアップを実行', { component: 'usePOIData' });
-      // 必要に応じてクリーンアップロジックを実装
-    };
-  }, [enabled, fetchPOIData]);
-
-  return { pois, isLoading, error };
+function convertPOIsToPointsOfInterest(
+  pois: POI[],
+  logContext: Record<string, unknown>
+): PointOfInterest[] {
+  return logger.measureTime(
+    'POI型からPointOfInterest型への変換',
+    () =>
+      pois.map(
+        poi =>
+          ({
+            id: poi.id,
+            name: poi.name,
+            lat: poi.position.lat,
+            lng: poi.position.lng,
+            isClosed: poi.isClosed,
+            type: poi.type,
+            category: poi.category,
+            genre: poi.genre,
+            address: poi.address,
+            district: poi.district,
+            問い合わせ: poi.contact,
+            関連情報: poi.infoUrl,
+            'Google マップで見る': poi.googleMapsUrl,
+            営業時間: poi.businessHours,
+            searchText: poi.searchText,
+            // 定休日情報があれば変換
+            ...(poi.regularHolidays && {
+              月曜定休日: poi.regularHolidays.monday,
+              火曜定休日: poi.regularHolidays.tuesday,
+              水曜定休日: poi.regularHolidays.wednesday,
+              木曜定休日: poi.regularHolidays.thursday,
+              金曜定休日: poi.regularHolidays.friday,
+              土曜定休日: poi.regularHolidays.saturday,
+              日曜定休日: poi.regularHolidays.sunday,
+              祝祭定休日: poi.regularHolidays.holiday,
+            }),
+            定休日について: poi.holidayNotes,
+          }) as PointOfInterest
+      ),
+    LogLevel.DEBUG,
+    { ...logContext, count: pois.length }
+  );
 }
 
 /**
@@ -325,4 +266,106 @@ function countCategories(pois: PointOfInterest[]): Record<string, number> {
     acc[category] = (acc[category] ?? 0) + 1;
     return acc;
   }, {});
+}
+
+/**
+ * POI（Points of Interest）データを取得・管理するカスタムフック
+ * データソースに応じて適切な方法でデータを取得し、加工して返します
+ */
+export function usePOIData(options: UsePOIDataOptions = {}) {
+  const { enabled = true } = options;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pois, setPois] = useState<PointOfInterest[]>([]);
+  // データ重複取得防止用のフラグ
+  const dataFetchedRef = useRef(false);
+
+  // ファイルリストのメモ化
+  const restaurantCSVUrls = useMemo(
+    () => [
+      '/data/まとめータベース - おすすめ.csv',
+      '/data/まとめータベース - 両津・相川地区.csv',
+      '/data/まとめータベース - 金井・佐和田・新穂・畑野・真野地区.csv',
+      '/data/まとめータベース - 赤泊・羽茂・小木地区.csv',
+      '/data/まとめータベース - スナック.csv',
+    ],
+    []
+  );
+
+  const utilityCSVUrls = useMemo(
+    () => ['/data/まとめータベース - 駐車場.csv', '/data/まとめータベース - 公共トイレ.csv'],
+    []
+  );
+
+  // データ取得ロジックをuseCallbackでメモ化
+  const fetchPOIData = useCallback(async () => {
+    // 既に取得済みの場合は処理をスキップ
+    if (dataFetchedRef.current) {
+      logger.debug('POIデータは既に取得済みのため、再取得をスキップします', {
+        component: 'usePOIData',
+      });
+      return;
+    }
+
+    // コンポーネント名をコンテキストに含める
+    const logContext = { component: 'usePOIData' };
+
+    logger.info('POIデータの取得を開始', logContext);
+
+    try {
+      setIsLoading(true);
+
+      // 環境変数の確認
+      const useSheets = ENV.app.USE_GOOGLE_SHEETS;
+      logger.debug('データソース設定', { ...logContext, useGoogleSheets: useSheets });
+
+      // データソースに応じて取得方法を切り替え
+      const allPOIs = useSheets
+        ? await fetchDataFromGoogleSheets(logContext)
+        : await fetchDataFromCSVFiles(logContext, restaurantCSVUrls, utilityCSVUrls);
+
+      // POIデータを変換
+      const pointsOfInterest = convertPOIsToPointsOfInterest(allPOIs, logContext);
+
+      logger.info('POIデータの取得と処理が完了しました', {
+        ...logContext,
+        totalCount: pointsOfInterest.length,
+        categories: countCategories(pointsOfInterest),
+      });
+
+      setPois(pointsOfInterest);
+      setError(null);
+
+      // データ取得完了をマーク
+      dataFetchedRef.current = true;
+    } catch (err) {
+      handleFetchError(err, logContext, setError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [restaurantCSVUrls, utilityCSVUrls]);
+
+  useEffect(() => {
+    if (!enabled) {
+      logger.debug('POIデータ取得は無効化されています', { component: 'usePOIData', enabled });
+      return;
+    }
+
+    // 既にデータ取得済みの場合はスキップ
+    if (dataFetchedRef.current) {
+      logger.debug('POIデータは既に取得済みです', { component: 'usePOIData' });
+      return;
+    }
+
+    // 非同期関数を即時実行し、クリーンアップ時にはキャンセルできるようにする
+    void fetchPOIData();
+
+    // クリーンアップ関数
+    return () => {
+      logger.debug('usePOIData のクリーンアップを実行', { component: 'usePOIData' });
+      // 必要に応じてクリーンアップロジックを実装
+    };
+  }, [enabled, fetchPOIData]);
+
+  return { pois, isLoading, error };
 }

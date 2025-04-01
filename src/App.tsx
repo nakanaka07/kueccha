@@ -4,7 +4,7 @@ import ErrorDisplay from '@/components/ErrorDisplay';
 import FilterPanel from '@/components/FilterPanel';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { MapContainer } from '@/components/MapContainer';
-import MapLoadingError from '@/components/MapLoadingError'; // 新しいコンポーネントをインポート
+import MapLoadingError from '@/components/MapLoadingError';
 import MapMarkers from '@/components/MapMarkers';
 import POIDetails from '@/components/POIDetails';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
@@ -16,8 +16,12 @@ import { logger, LogLevel } from '@/utils/logger';
 // 環境バリデーション用のフック
 const useEnvValidation = () => {
   const [envError, setEnvError] = useState<string | null>(null);
+  const initDoneRef = useRef(false); // 初期化済みフラグ
 
   useEffect(() => {
+    // 既に初期化済みなら処理をスキップ
+    if (initDoneRef.current) return;
+
     logger.info('アプリケーション初期化開始');
 
     try {
@@ -35,6 +39,9 @@ const useEnvValidation = () => {
       logger.error(errorMsg, error instanceof Error ? error : new Error(String(error)));
       setEnvError(errorMsg);
     }
+
+    // 初期化完了をマーク
+    initDoneRef.current = true;
 
     return () => {
       logger.info('アプリケーションクリーンアップ');

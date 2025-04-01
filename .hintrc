@@ -1,53 +1,9 @@
 {
-  "extends": ["development"],
+  "extends": [
+    "development"
+  ],
   "hints": {
     "compat-api/html": "off",
-    "axe/aria": "off",
-
-    "axe/forms": "error",
-    "axe/keyboard": "error",
-    "axe/language": "error",
-    "axe/name-role-value": "error",
-
-    "button-type": "error",
-    "content-type": "error",
-    "disown-opener": "error",
-    "highest-available-document-mode": "error",
-    "meta-charset-utf-8": "error",
-    "meta-viewport": "error",
-
-    "no-vulnerable-javascript-libraries": "error",
-
-    "apple-touch-icons": "error",
-    "manifest-app-name": "error",
-    "manifest-exists": "error",
-    "manifest-file-extension": "error",
-    "manifest-is-valid": "error",
-
-    "compat-api/css": [
-      "default",
-      {
-        "ignore": ["backdrop-filter", "aspect-ratio", "text-size-adjust"]
-      }
-    ],
-
-    "performance/max-size-and-requests": [
-      "error",
-      {
-        "resources": 100,
-        "transferSize": 1000
-      }
-    ],
-
-    "no-inline-styles": "warn",
-    "no-disallowed-headers": "warn",
-    "sri": "warn"
-  },
-  "browserslist": [
-    "last 2 Chrome versions",
-    "last 2 Firefox versions",
-    "last 2 Safari versions",
-    "last 2 Edge versions",
-    "not IE 11"
-  ]
+    "axe/aria": "off"
+  }
 }

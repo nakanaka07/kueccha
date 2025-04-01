@@ -105,11 +105,15 @@ const createMapInstance = (
   // レスポンシブなマップオプションを取得
   const mapOptions: google.maps.MapOptions = getResponsiveMapOptions();
 
-  // 引数で渡された値を優先
+  // マップIDの取得
+  const mapId = ENV.google.MAPS_MAP_ID;
+
+  // 引数で渡された値とマップIDを優先
   const options: google.maps.MapOptions = {
     ...mapOptions,
     center,
     zoom,
+    ...(mapId ? { mapId } : {}),
   };
 
   // マップインスタンスの作成
