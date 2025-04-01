@@ -64,6 +64,46 @@ jobs:
       - name: Run type check
         run: pnpm typecheck || echo "::warning::Type check issues found, but continuing build"
 
+      # 環境変数検証スクリプト作成
+      - name: Create environment variable verification script
+        run: |
+          cat > scripts/verify-env.js << 'EOF'
+          // 環境変数の存在確認と検証を行うスクリプト
+          const requiredVars = [
+            'VITE_GOOGLE_API_KEY',
+            'VITE_GOOGLE_MAPS_MAP_ID',
+            'VITE_EMAILJS_SERVICE_ID',
+            'VITE_EMAILJS_TEMPLATE_ID',
+            'VITE_EMAILJS_PUBLIC_KEY',
+          ];
+
+          const warnings = [];
+          const errors = [];
+
+          // 必須環境変数の存在確認
+          for (const varName of requiredVars) {
+            if (!process.env[varName]) {
+              errors.push(`必須環境変数 ${varName} が設定されていません`);
+            }
+          }
+
+          // 警告やエラーがあれば出力
+          if (warnings.length > 0) {
+            console.warn('⚠️ 環境変数の警告:');
+            warnings.forEach(warning => console.warn(`- ${warning}`));
+          }
+
+          if (errors.length > 0) {
+            console.error('❌ 環境変数のエラー:');
+            errors.forEach(error => console.error(`- ${error}`));
+            process.exit(1);
+          }
+
+          console.log('✅ 環境変数の検証に成功しました');
+          EOF
+          mkdir -p scripts
+          chmod +x scripts/verify-env.js
+
       - name: Build
         env:
           # Google API関連設定
@@ -86,7 +126,20 @@ jobs:
           
           # 本番環境であることを明示
           NODE_ENV: production
-        run: pnpm build
+          
+          # ロギング設定 (追加)
+          VITE_LOG_LEVEL: warn  # 本番環境ではWARN以上のみ表示
+          
+          # 機能フラグの明示的な設定 (追加)
+          VITE_ENABLE_MARKER_CLUSTERING: 'true'
+          VITE_ENABLE_GEOLOCATION: 'true'
+          VITE_ENABLE_OFFLINE_MODE: 'false'
+        run: |
+          # 環境変数検証を実行
+          node scripts/verify-env.js || echo "::warning::Environment variable issues found, but continuing build"
+          
+          # ビルド実行
+          pnpm build
 
       # ビルド結果の検証（任意のファイルが存在することを確認）
       - name: Verify build output

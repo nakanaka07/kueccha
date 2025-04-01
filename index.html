@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
+    <!-- クロスブラウザPWA対応 -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+    <meta name="msapplication-navbutton-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta
       name="keywords"
       content="佐渡,佐渡島,飲食店,レストラン,カフェ,観光,グルメ,駐車場,公共トイレ,地図情報,佐渡で食えっちゃ"
@@ -23,7 +27,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://nakanaka07.github.io/sadodekueccha/" />
-    <meta property="og:image" content="/ogp-image.jpg" />
+    <meta property="og:image" content="<%= import.meta.env.BASE_URL %>ogp-image.jpg" />
     <meta property="og:site_name" content="佐渡で食えっちゃ" />
     <meta property="og:locale" content="ja_JP" />
 
@@ -32,9 +36,9 @@
     <meta name="twitter:title" content="佐渡で食えっちゃ - 佐渡島グルメ・施設マップ" />
     <meta
       name="twitter:description"
-      content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートです。"
+      content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。"
     />
-    <meta name="twitter:image" content="/ogp-image.jpg" />
+    <meta name="twitter:image" content="<%= import.meta.env.BASE_URL %>ogp-image.jpg" />
 
     <!-- プリコネクトとプリロード設定 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
