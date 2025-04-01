@@ -9,8 +9,6 @@
  * - 文字列以外の型への変換サポート
  */
 
-/// <reference types="vite/client" />
-
 // 環境変数の取得オプション
 interface EnvOptions<T> {
   /** デフォルト値 */
@@ -86,7 +84,7 @@ const safeLogger = {
 /**
  * 環境変数を安全に取得するユーティリティ
  *
- * @param key 環境変数のキー（VITE_プレフィックスは自動的に処理）
+ * @param key 環境変数のキー（必ず VITE_ プレフィックス付きで指定）
  * @param options 取得オプション（デフォルト値、変換関数など）
  * @returns 環境変数の値、変換された値、またはデフォルト値
  */
@@ -94,16 +92,13 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
   // デフォルト値の設定
   const defaultValue = options.defaultValue as T;
 
-  // keyが'VITE_'で始まっていない場合は追加する
-  const fullKey = key.startsWith('VITE_') ? key : `VITE_${key}`;
-
   // 環境変数を取得
-  const value = import.meta.env[fullKey] as string | undefined;
+  const value = import.meta.env[key] as string | undefined;
 
   // 値が存在しない場合
   if (value === undefined) {
     const severity = options.critical ? 'error' : 'warn';
-    const message = `環境変数"${fullKey}"が設定されていません。デフォルト値を使用します。`;
+    const message = `環境変数"${key}"が設定されていません。デフォルト値を使用します。`;
 
     // 安全なロガーを使用
     if (severity === 'error') {
@@ -117,7 +112,7 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
 
   // 空文字列の場合
   if (value === '') {
-    safeLogger.warn(`環境変数"${fullKey}"が空です。デフォルト値を使用します。`);
+    safeLogger.warn(`環境変数"${key}"が空です。デフォルト値を使用します。`);
     return defaultValue;
   }
 
@@ -127,7 +122,7 @@ export function getEnv<T = string>(key: string, options: EnvOptions<T> = {}): T 
       return options.transform(value);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      safeLogger.error(`環境変数"${fullKey}"の変換中にエラーが発生しました: ${errorMessage}`);
+      safeLogger.error(`環境変数"${key}"の変換中にエラーが発生しました: ${errorMessage}`);
       return defaultValue;
     }
   }
@@ -176,46 +171,49 @@ export function disableDebugMode(): void {
  * 開発環境ではweekly、本番環境ではquarterlyを使用
  */
 export const getMapsApiVersion = (): string => {
-  return getEnv('GOOGLE_MAPS_VERSION', { defaultValue: 'quarterly' });
+  return getEnv('VITE_GOOGLE_MAPS_VERSION', { defaultValue: 'quarterly' });
 };
 
 /**
  * Maps APIで使用するライブラリを取得
  */
 export const getMapsLibraries = (): string[] => {
-  const libraries = getEnv('GOOGLE_MAPS_LIBRARIES', { defaultValue: 'places,geometry,marker' });
+  const libraries = getEnv('VITE_GOOGLE_MAPS_LIBRARIES', {
+    defaultValue: 'places,geometry,marker',
+  });
   return libraries.split(',');
 };
 
 /**
  * 型安全な環境変数へのアクセスを提供するオブジェクト
+ * ガイドラインに準拠したカテゴリ分け
  */
 export const ENV = {
   // Google API関連
   google: {
-    API_KEY: getEnv('GOOGLE_API_KEY', { critical: true }),
-    MAPS_MAP_ID: getEnv('GOOGLE_MAPS_MAP_ID'),
-    SPREADSHEET_ID: getEnv('GOOGLE_SPREADSHEET_ID', { critical: true }),
-    // Google Maps API バージョン設定を追加
+    API_KEY: getEnv('VITE_GOOGLE_API_KEY', { critical: true }),
+    MAPS_MAP_ID: getEnv('VITE_GOOGLE_MAPS_MAP_ID'),
+    SPREADSHEET_ID: getEnv('VITE_GOOGLE_SPREADSHEET_ID', { critical: true }),
+    // Google Maps API バージョン設定
     MAPS_VERSION: getMapsApiVersion(),
     MAPS_LIBRARIES: getMapsLibraries(),
   },
 
   // EmailJS関連
   emailjs: {
-    SERVICE_ID: getEnv('EMAILJS_SERVICE_ID'),
-    TEMPLATE_ID: getEnv('EMAILJS_TEMPLATE_ID'),
-    PUBLIC_KEY: getEnv('EMAILJS_PUBLIC_KEY'),
+    SERVICE_ID: getEnv('VITE_EMAILJS_SERVICE_ID'),
+    TEMPLATE_ID: getEnv('VITE_EMAILJS_TEMPLATE_ID'),
+    PUBLIC_KEY: getEnv('VITE_EMAILJS_PUBLIC_KEY'),
   },
 
-  // PWA関連
+  // アプリケーション基本情報
   app: {
-    NAME: getEnv('APP_NAME', { defaultValue: '佐渡で食えっちゃ' }),
-    SHORT_NAME: getEnv('APP_SHORT_NAME', { defaultValue: '食えっちゃ' }),
-    DESCRIPTION: getEnv('APP_DESCRIPTION', {
+    NAME: getEnv('VITE_APP_NAME', { defaultValue: '佐渡で食えっちゃ' }),
+    SHORT_NAME: getEnv('VITE_APP_SHORT_NAME', { defaultValue: '食えっちゃ' }),
+    DESCRIPTION: getEnv('VITE_APP_DESCRIPTION', {
       defaultValue: '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。',
     }),
-    USE_GOOGLE_SHEETS: getEnv<boolean>('APP_USE_GOOGLE_SHEETS', {
+    USE_GOOGLE_SHEETS: getEnv<boolean>('VITE_APP_USE_GOOGLE_SHEETS', {
       defaultValue: false,
       transform: toBool,
     }),
@@ -312,40 +310,6 @@ export function checkEnvironment(verbose: boolean = false): void {
     if (isDebugMode()) {
       safeLogger.info('🔍 デバッグモードが有効です');
     }
-  }
-}
-
-// 環境変数の型定義（TypeScript補完のため）
-declare global {
-  interface ImportMetaEnv {
-    // Google API関連
-    readonly VITE_GOOGLE_API_KEY: string;
-    readonly VITE_GOOGLE_MAPS_MAP_ID: string;
-    readonly VITE_GOOGLE_SPREADSHEET_ID: string;
-
-    // Google Maps API バージョン関連を追加
-    readonly VITE_GOOGLE_MAPS_VERSION?: string;
-    readonly VITE_GOOGLE_MAPS_LIBRARIES?: string;
-
-    // その他は変更なし
-    // EmailJS関連
-    readonly VITE_EMAILJS_SERVICE_ID: string;
-    readonly VITE_EMAILJS_TEMPLATE_ID: string;
-    readonly VITE_EMAILJS_PUBLIC_KEY: string;
-
-    // PWA関連
-    readonly VITE_APP_NAME: string;
-    readonly VITE_APP_SHORT_NAME: string;
-    readonly VITE_APP_DESCRIPTION: string;
-
-    // 追加: Google Sheets使用フラグ
-    readonly VITE_APP_USE_GOOGLE_SHEETS?: string;
-
-    // 拡張: デバッグモード設定
-    readonly VITE_DEBUG?: string;
-
-    // Vite標準の環境変数はここで再定義しない
-    // BASE_URL, MODE, DEV, PRODはViteが提供する型定義をそのまま使用
   }
 }
 
