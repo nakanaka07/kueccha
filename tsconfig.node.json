@@ -1,0 +1,63 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "NodeNext", // NodeJSスクリプト実行に最適な設定に変更
+    "moduleResolution": "NodeNext", // NodeJSスクリプト実行に最適な設定に変更
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "target": "ESNext",
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client", "vitest/globals"],
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    // 型チェック強化のための追加設定
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true, // オプショナルプロパティの型チェックを厳密化
+    "noImplicitReturns": true, // すべての関数で戻り値を明示的に定義
+    "noFallthroughCasesInSwitch": true, // switch文のフォールスルーを防止
+    "allowUnreachableCode": false, // 到達不可能なコードを禁止
+    "noUncheckedIndexedAccess": true, // インデックスアクセスの型安全性を強化
+
+    // デバッグ支援の改善
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true, // 型定義ファイルのソースマップ生成
+    "pretty": true, // エラーメッセージを整形して表示
+
+    // ビルドパフォーマンス向上
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "skipDefaultLibCheck": true, // デフォルトライブラリのチェックをスキップ
+    "assumeChangesOnlyAffectDirectDependencies": true, // ビルドパフォーマンス最適化
+
+    // パスエイリアスの拡張（code_optimization_guidelinesに準拠）
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/assets/*": ["src/assets/*"],
+      "@/components/*": ["src/components/*"],
+      "@/constants/*": ["src/constants/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/scripts/*": ["scripts/*"]
+    }
+  },
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "*.d.ts",
+    "env.d.ts",
+    "vite-env.d.ts",
+    "scripts/*.ts",
+    "scripts/*.js"
+  ],
+  "exclude": ["node_modules", "dist", ".tsbuildinfo"]
+}

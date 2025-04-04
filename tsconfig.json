@@ -1,0 +1,78 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+
+    /* Type Checking */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "allowUnreachableCode": false,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "noImplicitOverride": true, // 明示的なoverrideキーワード使用を促進
+
+    /* パフォーマンス最適化 */
+    "verbatimModuleSyntax": true, // 非推奨のimportsNotUsedAsValuesに代わり使用
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "assumeChangesOnlyAffectDirectDependencies": true, // ビルドパフォーマンス向上
+    "skipDefaultLibCheck": true, // ビルドパフォーマンス向上
+
+    /* デバッグ支援 */
+    "sourceMap": true,
+    "pretty": true,
+    "declaration": true, // 型宣言ファイル生成
+    "declarationMap": true, // 型定義ファイルのソースマップ
+
+    /* Path Aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/assets/*": ["src/assets/*"],
+      "@/components/*": ["src/components/*"],
+      "@/constants/*": ["src/constants/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/scripts/*": ["scripts/*"] // tsconfig.node.jsonと整合性確保
+    }
+  },
+  "include": [
+    "src",
+    "vite-env.d.ts",
+    "env.d.ts", // 環境変数型定義を明示的に含める
+    "react-extensions.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".tsbuildinfo",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
