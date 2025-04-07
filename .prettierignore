@@ -1,62 +1,29 @@
-# ビルドとキャッシュディレクトリ
-node_modules
-dist
-dev-dist
-build
-coverage
-.vite
+# 一時ファイルと生成ファイル - ビルドプロセスで生成される一時ファイルやキャッシュ
 .cache
 .temp
 .temp-optimized
 .local
 
-# パッケージマネージャーファイル - 自動生成ファイル
+# パッケージマネージャーファイル - 自動生成ファイルは整形対象外
 pnpm-lock.yaml
 yarn.lock
 package-lock.json
 
-# 設定ファイル
+# バージョン管理とツール設定 - システムファイルやツール設定
 .git
 .husky
 .github
 .hintrc
 
-# 環境変数ファイル - .env.exampleは除外して整形対象に
+# 環境変数ファイル - セキュリティ保護のため整形対象外
 .env
 .env.development
 .env.production
 .env.test
 .env.*.local
-# .env.example は整形対象
+# .env.example は整形対象（ドキュメントの一部として扱う）
 
-# ロギングとパフォーマンス分析
+# ログとシステムファイル - デバッグ情報とシステム生成ファイル
 *.log
 debug.log*
-npm-debug.log*
-yarn-debug.log*
-stats.html
-*.tsbuildinfo
-**/logs/*
-
-# PWA関連 - Service Workerは自動生成
-**/sw*.js
-**/workbox-*.js*
-**/manifest.*.js
-
-# その他のバイナリファイル
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.ico
-*.svg
-
-# データファイル
-public/data/*.csv
-public/data/*.json
-
-# エディタ設定
-.idea
-.vscode
-*.sublime-*
 .DS_Store

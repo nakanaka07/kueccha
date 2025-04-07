@@ -2,8 +2,9 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
-    "module": "NodeNext", // NodeJSスクリプト実行に最適な設定に変更
-    "moduleResolution": "NodeNext", // NodeJSスクリプト実行に最適な設定に変更
+    // NodeJSスクリプト実行用設定
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "target": "ESNext",
@@ -13,51 +14,40 @@
     "esModuleInterop": true,
     "isolatedModules": true,
 
-    // 型チェック強化のための追加設定
+    // 型チェック強化設定 - コード最適化ガイドラインに基づく
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true, // オプショナルプロパティの型チェックを厳密化
-    "noImplicitReturns": true, // すべての関数で戻り値を明示的に定義
-    "noFallthroughCasesInSwitch": true, // switch文のフォールスルーを防止
-    "allowUnreachableCode": false, // 到達不可能なコードを禁止
-    "noUncheckedIndexedAccess": true, // インデックスアクセスの型安全性を強化
-
-    // デバッグ支援の改善
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true, // 型定義ファイルのソースマップ生成
-    "pretty": true, // エラーメッセージを整形して表示
-
-    // ビルドパフォーマンス向上
-    "incremental": true,
-    "tsBuildInfoFile": "./.tsbuildinfo",
-    "skipDefaultLibCheck": true, // デフォルトライブラリのチェックをスキップ
-    "assumeChangesOnlyAffectDirectDependencies": true, // ビルドパフォーマンス最適化
-
-    // パスエイリアスの拡張（code_optimization_guidelinesに準拠）
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "noUncheckedIndexedAccess": true,
+    
+    // パスエイリアス設定 - メインのtsconfig.jsonと揃える
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/assets/*": ["src/assets/*"],
-      "@/components/*": ["src/components/*"],
-      "@/constants/*": ["src/constants/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/scripts/*": ["scripts/*"]
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./src/assets/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/constants/*": ["./src/constants/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"]
     }
   },
+  
+  // Node.js環境で処理するファイル
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
-    "*.d.ts",
-    "env.d.ts",
-    "vite-env.d.ts",
-    "scripts/*.ts",
-    "scripts/*.js"
+    "scripts/**/*.ts",
+    "env.d.ts"
   ],
-  "exclude": ["node_modules", "dist", ".tsbuildinfo"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

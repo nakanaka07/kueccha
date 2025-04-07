@@ -90,8 +90,11 @@ const selectedPOI = usePOIStore(state => state.selectedPOI); // 必要な状態�
 
 - プロジェクトで定義されているパスエイリアス：
   - `@/*` → `src/*`
+  - `@/assets/*` → `src/assets/*`
   - `@/components/*` → `src/components/*` 
+  - `@/constants/*` → `src/constants/*`
   - `@/hooks/*` → `src/hooks/*`
+  - `@/types/*` → `src/types/*`
   - `@/utils/*` → `src/utils/*`
 - 新規ファイル作成時は常にエイリアスを使用
 - インポート群のアルファベット順配置

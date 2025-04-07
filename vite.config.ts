@@ -8,49 +8,159 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // 最適化プラグインのインポート
 import tsconfigPaths from 'vite-tsconfig-paths';
 import checker from 'vite-plugin-checker';
-import compression from 'vite-plugin-compression';
-import { chunkSplitPlugin } from 'vite-plugin-chunk-split';
-import mkcert from 'vite-plugin-mkcert';
-import imagemin from 'vite-plugin-imagemin';
+// 圧縮プラグインと画像最適化プラグインをCommonJSスタイルで直接インポート
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const compressionPlugin = require('vite-plugin-compression');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const imageminPlugin = require('vite-plugin-imagemin');
 import inspect from 'vite-plugin-inspect';
 
-// @utils/loggerを直接importするとESMの循環依存問題が発生するため、
-// Vite設定ファイル専用の構造化ロガーを実装
+/**
+ * Vite設定専用のロガー（標準ロガーと連携）
+ * @description バンドル設定フェーズで使用するロガー（循環依存を防止）
+ */
 const configLogger = (() => {
-  type LogLevel = 'error' | 'warn' | 'info' | 'debug';
-  type LogContext = Record<string, unknown>;
+  // 標準ロガーと型定義を合わせる
+  enum LogLevel {
+    ERROR = 'error',
+    WARN = 'warn',
+    INFO = 'info',
+    DEBUG = 'debug',
+  }
 
-  const getPrefix = () => {
-    const appName = process.env.VITE_APP_SHORT_NAME || 'App';
-    const env = process.env.NODE_ENV || 'development';
-    return `[${appName}:${env}]`;
+  // パフォーマンス測定のユーティリティ
+  const measureTime = <T>(
+    taskName: string,
+    task: () => T,
+    context?: Record<string, unknown>,
+    thresholdMs: number = 0
+  ): T => {
+    const startTime = performance.now();
+    const result = task();
+    const duration = Math.round(performance.now() - startTime);
+
+    if (duration > thresholdMs) {
+      debug(`${taskName} completed in ${duration}ms`, {
+        ...context,
+        durationMs: duration,
+        component: 'vite-config',
+        action: 'measure-time',
+      });
+    }
+
+    return result;
   };
 
+  // 非同期パフォーマンス測定のユーティリティ
+  const measureTimeAsync = async <T>(
+    taskName: string,
+    task: Promise<T> | (() => Promise<T>),
+    context?: Record<string, unknown>,
+    thresholdMs: number = 0
+  ): Promise<T> => {
+    const startTime = performance.now();
+
+    try {
+      const result = typeof task === 'function' ? await task() : await task;
+      const duration = Math.round(performance.now() - startTime);
+
+      if (duration > thresholdMs) {
+        debug(`${taskName} completed in ${duration}ms`, {
+          ...context,
+          durationMs: duration,
+          component: 'vite-config',
+          action: 'measure-time-async',
+        });
+      }
+
+      return result;
+    } catch (error: unknown) {
+      const duration = Math.round(performance.now() - startTime);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // errorは関数名なので、ここで直接呼び出す
+      configLogger.error(`${taskName} failed after ${duration}ms`, {
+        ...context,
+        durationMs: duration,
+        error: errorMessage, // 型安全な形式に変換
+        component: 'vite-config',
+        action: 'measure-time-async-error',
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 現在の環境がログレベルに該当するかチェック
+   */
   const shouldLog = (level: LogLevel): boolean => {
-    // 本番環境ではwarn, errorのみ出力
     if (process.env.NODE_ENV === 'production') {
-      return ['error', 'warn'].includes(level);
+      return [LogLevel.ERROR, LogLevel.WARN].includes(level);
     }
     return true;
   };
 
-  // 構造化ログ出力
-  const log = (level: LogLevel, message: string, context?: LogContext): void => {
-    if (!shouldLog(level)) return;
-
+  /**
+   * ログメッセージのフォーマット
+   */
+  const formatLogMessage = (
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>
+  ): string => {
+    const appName = process.env.VITE_APP_SHORT_NAME || 'Kueccha';
+    const env = process.env.NODE_ENV || 'development';
     const timestamp = new Date().toISOString();
-    const prefix = getPrefix();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    const prefix = `${timestamp} [${appName}:${env}] [${level.toUpperCase()}]`;
 
-    // eslint-disable-next-line no-console
-    console[level](`${timestamp} ${prefix} ${message}${contextStr}`);
+    // コンテキスト情報を統一形式で提供
+    const enhancedContext = {
+      ...context,
+      component: context?.component || 'vite-config',
+    };
+
+    const contextStr = enhancedContext ? ` ${JSON.stringify(enhancedContext)}` : '';
+
+    return `${prefix} ${message}${contextStr}`;
+  };
+
+  // ロギング関数
+  const error = (message: string, context?: Record<string, unknown>): void => {
+    if (shouldLog(LogLevel.ERROR)) {
+      // eslint-disable-next-line no-console
+      console.error(formatLogMessage(LogLevel.ERROR, message, context));
+    }
+  };
+
+  const warn = (message: string, context?: Record<string, unknown>): void => {
+    if (shouldLog(LogLevel.WARN)) {
+      // eslint-disable-next-line no-console
+      console.warn(formatLogMessage(LogLevel.WARN, message, context));
+    }
+  };
+
+  const info = (message: string, context?: Record<string, unknown>): void => {
+    if (shouldLog(LogLevel.INFO)) {
+      // eslint-disable-next-line no-console
+      console.info(formatLogMessage(LogLevel.INFO, message, context));
+    }
+  };
+
+  const debug = (message: string, context?: Record<string, unknown>): void => {
+    if (shouldLog(LogLevel.DEBUG)) {
+      // eslint-disable-next-line no-console
+      console.debug(formatLogMessage(LogLevel.DEBUG, message, context));
+    }
   };
 
   return {
-    error: (message: string, context?: LogContext): void => log('error', message, context),
-    warn: (message: string, context?: LogContext): void => log('warn', message, context),
-    info: (message: string, context?: LogContext): void => log('info', message, context),
-    debug: (message: string, context?: LogContext): void => log('debug', message, context),
+    error,
+    warn,
+    info,
+    debug,
+    LogLevel,
+    measureTime,
+    measureTimeAsync,
   };
 })();
 
@@ -61,42 +171,42 @@ const configLogger = (() => {
 const dependencies = {
   // Reactコア（基本レンダリング機能）
   react: ['react', 'react-dom', 'react-router-dom'],
-
-  // 地図関連ライブラリ（地図機能に必要なものをグループ化）
+  // 地図関連ライブラリ
   maps: ['@googlemaps/js-api-loader', '@googlemaps/markerclusterer', '@react-google-maps/api'],
-
-  // UIコンポーネント（Material UIとスタイリングライブラリ）
+  // UIコンポーネント
   mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-
-  // 状態管理（グローバル状態とストア関連）
+  // 状態管理
   state: ['zustand', 'immer'],
-
-  // ユーティリティ（日時処理、データ操作、APIなど）
+  // ユーティリティ
   utils: ['dayjs', 'axios', 'lodash-es', 'csv-parse'],
-
-  // ベンダーライブラリ（サードパーティ依存）
+  // ベンダーライブラリ
   vendor: ['uuid', 'query-string'],
-
-  // データ可視化コンポーネント（遅延ロードに最適）
+  // データ可視化コンポーネント
   charts: ['chart.js', 'react-chartjs-2'],
-
-  // PWA関連の機能（オフラインサポートなど）
+  // PWA関連
   pwa: ['workbox-window', 'workbox-routing', 'workbox-strategies', 'workbox-precaching'],
 };
 
 /**
  * ページ単位の動的インポート設定
- * @description ルートベースのコード分割のためのエントリポイント
  */
 const pages = {
-  // メインページエントリポイント
   main: 'src/main.tsx',
-  // 将来的に他のエントリポイントを追加可能
 };
 
 /**
+ * 環境変数検証の型定義
+ */
+interface EnvCheck {
+  name: string;
+  validator: (value: string) => boolean;
+  required: boolean;
+  message?: string;
+}
+
+/**
  * 型安全な環境変数アクセス
- * @description 環境変数を型安全に取得するユーティリティ
+ * @description 環境変数管理ガイドラインに準拠した実装
  */
 function getEnvVar<T>({
   key,
@@ -118,70 +228,139 @@ function getEnvVar<T>({
     return defaultValue as T;
   }
 
-  return transform ? transform(value) : (value as unknown as T);
+  if (value === '') {
+    if (required) {
+      throw new Error(`必須環境変数 "${key}" が空です`);
+    }
+    configLogger.warn(`環境変数 "${key}" が空です。デフォルト値を使用します。`);
+    return defaultValue as T;
+  }
+
+  if (transform) {
+    try {
+      return transform(value);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      configLogger.error(`環境変数 "${key}" の変換中にエラーが発生しました`, {
+        error: errorMessage,
+      });
+      return defaultValue as T;
+    }
+  }
+
+  return value as unknown as T;
 }
 
 /**
  * 真偽値変換関数
- * @description 文字列をブール値に変換
  */
 function toBool(value: string): boolean {
   return value.toLowerCase() === 'true';
 }
 
 /**
- * 環境変数検証の型定義
- */
-interface EnvCheck {
-  name: string;
-  validator: (value: string) => boolean;
-  required: boolean;
-  message?: string;
-}
-
-/**
  * 環境変数バリデーション
  * @description 必須の環境変数と値の形式を検証
  */
-function validateEnv(env: Record<string, string>): void {
-  // 検証ルール定義
-  const envChecks: EnvCheck[] = [
-    {
-      name: 'VITE_GOOGLE_API_KEY',
-      validator: value => typeof value === 'string' && value.length > 10,
-      required: true,
-      message: 'Google APIキーが設定されていないか無効です',
-    },
-    {
-      name: 'VITE_GOOGLE_SPREADSHEET_ID',
-      validator: value => typeof value === 'string' && value.length > 5,
-      required: true,
-      message: 'Google SpreadsheetIDが設定されていないか無効です',
-    },
-    {
-      name: 'VITE_APP_NAME',
-      validator: value => typeof value === 'string' && value.length > 0,
-      required: false,
-      message: 'アプリ名が設定されていません',
-    },
-    {
-      name: 'VITE_GOOGLE_MAPS_MAP_ID',
-      validator: value => typeof value === 'string',
-      required: false,
-      message: 'GoogleマップIDが正しい形式ではありません',
-    },
-    // 必要に応じて検証ルールを追加
-  ];
-
+function validateEnv(env: Record<string, string>): boolean {
+  // 検証結果を保存するための変数
   let isValid = true;
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // 各環境変数の検証を実行
-  envChecks.forEach(check => {
-    try {
-      const value = env[check.name];
+  // APIと認証情報のカテゴリ検証
+  function validateApiCredentials(): void {
+    const apiChecks: EnvCheck[] = [
+      {
+        name: 'VITE_GOOGLE_API_KEY',
+        validator: value => typeof value === 'string' && value.length > 10,
+        required: true,
+        message: 'Google APIキーが設定されていないか無効です',
+      },
+      {
+        name: 'VITE_GOOGLE_SPREADSHEET_ID',
+        validator: value => typeof value === 'string' && value.length > 5,
+        required: true,
+        message: 'Google SpreadsheetIDが設定されていないか無効です',
+      },
+    ];
 
+    for (const check of apiChecks) {
+      validateSingleEnvVar(check, env[check.name]);
+    }
+
+    // APIキーのセキュリティ強化（ガイドラインに基づく）
+    if (env.VITE_GOOGLE_API_KEY && !env.VITE_GOOGLE_API_KEY_RESTRICTIONS) {
+      warnings.push(
+        'Google APIキーにHTTPリファラ制限が設定されていない可能性があります。本番環境では必ず制限を設定してください'
+      );
+    }
+  }
+
+  // Googleマップ関連設定の検証
+  function validateGoogleMapsSettings(): void {
+    const mapChecks: EnvCheck[] = [
+      {
+        name: 'VITE_GOOGLE_MAPS_MAP_ID',
+        // MapIDの検証強化（ガイドラインに基づく）
+        validator: value => {
+          if (!value) return true; // 未設定の場合は許容（任意項目）
+          // 形式検証: 英数字、アンダースコア、ハイフンのみ許可、長さ4-100文字
+          return /^[a-zA-Z0-9_-]{4,100}$/.test(value);
+        },
+        required: false,
+        message:
+          'GoogleマップIDが正しい形式ではありません（英数字、アンダースコア、ハイフンのみ使用可能）',
+      },
+      // WebGLレンダリングサポートに関連する設定
+      {
+        name: 'VITE_GOOGLE_MAPS_WEBGL',
+        validator: value => ['true', 'false', ''].includes(value.toLowerCase()),
+        required: false,
+        message: 'Google Maps WebGLサポート設定が無効です。"true"または"false"を指定してください',
+      },
+    ];
+
+    for (const check of mapChecks) {
+      validateSingleEnvVar(check, env[check.name]);
+    }
+
+    // MapIDとWebGL設定の整合性チェック
+    const mapId = env.VITE_GOOGLE_MAPS_MAP_ID;
+    const webGLEnabled = env.VITE_GOOGLE_MAPS_WEBGL?.toLowerCase() === 'true';
+
+    if (mapId && !webGLEnabled) {
+      warnings.push(
+        'MapIDが設定されていますが、WebGLレンダリングが無効化されています。最適なパフォーマンスのためにWebGLを有効にすることを推奨します'
+      );
+    }
+  }
+
+  // アプリケーション設定の検証
+  function validateAppSettings(): void {
+    const appChecks: EnvCheck[] = [
+      {
+        name: 'VITE_APP_NAME',
+        validator: value => typeof value === 'string' && value.length > 0,
+        required: false,
+        message: 'アプリ名が設定されていません',
+      },
+      {
+        name: 'VITE_APP_SHORT_NAME',
+        validator: value => typeof value === 'string' && value.length > 0,
+        required: false,
+        message: 'アプリ短縮名が設定されていません',
+      },
+    ];
+
+    for (const check of appChecks) {
+      validateSingleEnvVar(check, env[check.name]);
+    }
+  }
+
+  // 単一の環境変数を検証する共通ロジック
+  function validateSingleEnvVar(check: EnvCheck, value: string | undefined): void {
+    try {
       // 値が未定義の場合
       if (value === undefined) {
         if (check.required) {
@@ -209,11 +388,20 @@ function validateEnv(env: Record<string, string>): void {
       isValid = false;
       errors.push(`${check.name}: ${(error as Error).message}`);
     }
-  });
+  }
 
-  // 警告がある場合は出力（エラーではない）
+  // カテゴリごとの検証実行
+  validateApiCredentials();
+  validateGoogleMapsSettings();
+  validateAppSettings();
+
+  // 警告がある場合は出力
   if (warnings.length > 0) {
-    configLogger.warn('環境変数の警告', { warnings });
+    configLogger.warn('環境変数の警告', {
+      warnings,
+      component: 'EnvValidator',
+      action: 'validate_env_warnings',
+    });
   }
 
   // エラーがある場合は処理
@@ -221,6 +409,8 @@ function validateEnv(env: Record<string, string>): void {
     configLogger.error('環境変数検証エラー', {
       errors,
       environment: env.NODE_ENV || 'development',
+      component: 'EnvValidator',
+      action: 'validate_env_errors',
       timestamp: new Date().toISOString(),
     });
 
@@ -231,9 +421,12 @@ function validateEnv(env: Record<string, string>): void {
   } else {
     configLogger.info('環境変数検証に成功しました', {
       environment: env.NODE_ENV || 'development',
-      validatedVars: envChecks.map(check => check.name),
+      component: 'EnvValidator',
+      action: 'validate_env_success',
     });
   }
+
+  return isValid;
 }
 
 /**
@@ -270,10 +463,10 @@ function createPWAManifest(basePath: string): Partial<ManifestOptions> {
 }
 
 /**
- * PWAキャッシュ戦略を生成
- * @description オフラインモードの有無に応じた最適なキャッシュ戦略を生成
+ * Google Maps APIのキャッシュ戦略を生成
+ * @description Google Maps統合ガイドラインに準拠したキャッシング戦略
  */
-function createPWACachingStrategy(isOfflineEnabled: boolean) {
+function createGoogleMapsCachingStrategy(isOfflineEnabled: boolean) {
   // StrategyName型を明示的に使用して型の互換性を確保
   type StrategyName =
     | 'CacheFirst'
@@ -282,6 +475,7 @@ function createPWACachingStrategy(isOfflineEnabled: boolean) {
     | 'NetworkOnly'
     | 'StaleWhileRevalidate';
 
+  // Google Maps統合ガイドラインに基づくキャッシュ設定
   return [
     {
       // Google Fontsスタイルシート
@@ -329,14 +523,14 @@ function createPWACachingStrategy(isOfflineEnabled: boolean) {
       },
     },
     {
-      // Map Tiles
+      // Map Tiles - ガイドラインP580に基づく最適化
       urlPattern: /^https:\/\/maps\.gstatic\.com\/.*/i,
       handler: 'CacheFirst' as StrategyName,
       options: {
         cacheName: 'google-maps-tiles',
         expiration: {
-          maxEntries: 500, // タイル数を増加
-          maxAgeSeconds: 60 * 60 * 24 * 30, // 30日
+          maxEntries: 1000, // ガイドライン推奨値：より多くのタイルをキャッシュ
+          maxAgeSeconds: 60 * 60 * 24 * 14, // 2週間（P580推奨値）
         },
         cacheableResponse: {
           statuses: [0, 200],
@@ -407,9 +601,8 @@ function createPWAConfig(basePath: string): VitePWAOptions {
       navigateFallback: 'index.html',
       maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB
       // オフラインモードに応じたキャッシュ戦略を適用
-      runtimeCaching: createPWACachingStrategy(isOfflineEnabled),
+      runtimeCaching: createGoogleMapsCachingStrategy(isOfflineEnabled),
     },
-    // VitePWAOptionsに必要なプロパティ
     injectRegister: 'auto',
     minify: true,
     injectManifest: {}, // 空オブジェクトを設定（必須プロパティのため）
@@ -457,85 +650,62 @@ function createPlugins(mode: string, env: Record<string, string>): PluginOption[
     // PWA対応
     VitePWA(createPWAConfig(isProd ? env.BASE_PATH || '/kueccha/' : '/')),
 
-    // TypeScriptパスエイリアスのサポート（tsconfig.jsonとの統合）
+    // TypeScriptパスエイリアスのサポート
     tsconfigPaths(),
-
-    // 開発時のみのプラグイン
-    ...(!isProd
-      ? [
-          // 型チェックの高速化
-          checker({
-            typescript: true,
-            eslint: {
-              lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
-            },
-            overlay: true,
-          }),
-
-          // 開発用HTTPSサポート
-          mkcert(),
-
-          // Viteプラグインのデバッグ支援
-          inspect(),
-        ]
-      : []),
-
-    // 本番環境のみのプラグイン
-    ...(isProd
-      ? [
-          // コード圧縮
-          compression({
-            algorithm: 'brotliCompress',
-            ext: '.br',
-          }),
-          compression({
-            algorithm: 'gzip',
-            ext: '.gz',
-          }),
-
-          // 画像最適化
-          imagemin({
-            gifsicle: {
-              optimizationLevel: 3,
-              interlaced: false,
-            },
-            optipng: {
-              optimizationLevel: 5,
-            },
-            mozjpeg: {
-              quality: 80,
-            },
-            pngquant: {
-              quality: [0.7, 0.9],
-              speed: 4,
-            },
-            svgo: {
-              plugins: [
-                {
-                  name: 'removeViewBox',
-                },
-                {
-                  name: 'removeEmptyAttrs',
-                  active: false,
-                },
-              ],
-            },
-          }),
-
-          // チャンクの最適分割
-          chunkSplitPlugin({
-            strategy: 'default',
-            customSplitting: {
-              // 依存関係定義を活用した分割戦略
-              'react-vendor': dependencies.react,
-              'maps-vendor': dependencies.maps,
-              'mui-vendor': dependencies.mui,
-              'utils-vendor': dependencies.utils,
-            },
-          }),
-        ]
-      : []),
   ];
+
+  // 開発時のみのプラグイン
+  if (!isProd) {
+    plugins.push(
+      // 型チェックの高速化
+      checker({
+        typescript: true,
+        eslint: {
+          lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
+        },
+        overlay: true,
+      }),
+      // Viteプラグインのデバッグ支援
+      inspect()
+    );
+  }
+
+  // 本番環境のみのプラグイン
+  if (isProd) {
+    plugins.push(
+      // コード圧縮
+      compressionPlugin({ algorithm: 'brotliCompress', ext: '.br' }),
+      compressionPlugin({ algorithm: 'gzip', ext: '.gz' }),
+      // 画像最適化
+      imageminPlugin({
+        gifsicle: {
+          optimizationLevel: 3,
+          interlaced: false,
+        },
+        optipng: {
+          optimizationLevel: 5,
+        },
+        mozjpeg: {
+          quality: 80,
+        },
+        pngquant: {
+          quality: [0.7, 0.9],
+          speed: 4,
+        },
+        svgo: {
+          plugins: [
+            {
+              name: 'removeViewBox',
+            },
+            {
+              name: 'removeEmptyAttrs',
+              active: false,
+            },
+          ],
+        },
+      })
+    );
+  }
 
   // バンドル分析を条件付きで追加
   if (process.env.ANALYZE === 'true') {
@@ -555,7 +725,6 @@ function createPlugins(mode: string, env: Record<string, string>): PluginOption[
   }
 
   configLogger.debug(`${plugins.length}個のプラグインを設定しました`, {
-    plugins: plugins.map(p => (p as any)?.name || 'unknown').join(', '),
     mode,
   });
 
@@ -569,7 +738,7 @@ function createPlugins(mode: string, env: Record<string, string>): PluginOption[
  * - パフォーマンス: 効率的なコード分割と読み込み最適化
  */
 export default defineConfig(({ mode }): UserConfig => {
-  // 環境変数ロード - .envファイルまたはGitHub Actionsから注入された変数を取得
+  // 環境変数ロード
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
 
@@ -590,13 +759,12 @@ export default defineConfig(({ mode }): UserConfig => {
   configLogger.debug(`ベースパス設定`, {
     basePath,
     environment: mode,
-    component: 'vite-config',
   });
 
   // HTTPSオプションの取得
   const httpsOptions = getHttpsOptions(isProd);
 
-  // プラグイン配列を型安全に構築
+  // プラグイン配列を構築
   const plugins = createPlugins(mode, env);
 
   return {
@@ -643,20 +811,18 @@ export default defineConfig(({ mode }): UserConfig => {
               }
             }
 
-            // その他のベンダーライブラリは一般的なベンダーチャンクに含める
+            // その他のベンダーライブラリ
             if (id.includes('node_modules')) {
               return 'vendor-common';
             }
 
-            // ページ単位のコード分割（必要に応じて）
+            // ページ単位のコード分割
             for (const [pageName, entryPath] of Object.entries(pages)) {
               if (id.includes(entryPath)) {
                 return `page-${pageName}`;
               }
             }
 
-            // 明示的に割り当てられなかったものはundefinedを返す
-            // (デフォルトのチャンク割り当てを使用)
             return undefined;
           },
           entryFileNames: 'assets/[name].[hash].js',
@@ -666,7 +832,7 @@ export default defineConfig(({ mode }): UserConfig => {
       },
     },
 
-    // パス別名 - 最適化されたエイリアス設定
+    // パス別名
     resolve: {
       alias: {
         '@': resolve(__dirname, './src'),
@@ -679,7 +845,7 @@ export default defineConfig(({ mode }): UserConfig => {
       },
     },
 
-    // 型チェックと依存関係の最適化
+    // 依存関係の最適化
     optimizeDeps: {
       include: Object.values(dependencies).flat(),
       esbuildOptions: {
@@ -694,7 +860,6 @@ export default defineConfig(({ mode }): UserConfig => {
       },
       preprocessorOptions: {
         scss: {
-          // SCSSの正しいパスに修正
           additionalData: '@import "./src/styles/variables.scss";',
         },
       },

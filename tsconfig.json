@@ -2,7 +2,13 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "ES2020", 
+      "DOM", 
+      "DOM.Iterable", 
+      "ESNext",
+      "WebWorker"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
@@ -18,34 +24,33 @@
     "jsxImportSource": "react",
 
     /* Type Checking */
-    "strict": true,
+    "strict": true, // 以下の厳格チェックをすべて含む
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "exactOptionalPropertyTypes": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "allowUnreachableCode": false,
-    "noImplicitThis": true,
-    "strictNullChecks": true,
-    "noImplicitOverride": true, // 明示的なoverrideキーワード使用を促進
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noErrorTruncation": true,
 
     /* パフォーマンス最適化 */
-    "verbatimModuleSyntax": true, // 非推奨のimportsNotUsedAsValuesに代わり使用
+    "verbatimModuleSyntax": true,
     "incremental": true,
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
-    "assumeChangesOnlyAffectDirectDependencies": true, // ビルドパフォーマンス向上
-    "skipDefaultLibCheck": true, // ビルドパフォーマンス向上
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "skipDefaultLibCheck": true,
+    "disableSizeLimit": false,
 
     /* デバッグ支援 */
     "sourceMap": true,
     "pretty": true,
-    "declaration": true, // 型宣言ファイル生成
-    "declarationMap": true, // 型定義ファイルのソースマップ
+    "declaration": false, 
+    "declarationMap": false,
 
-    /* Path Aliases */
+    /* Path Aliases - コード最適化ガイドラインに従う */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -54,14 +59,12 @@
       "@/constants/*": ["src/constants/*"],
       "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/scripts/*": ["scripts/*"] // tsconfig.node.jsonと整合性確保
+      "@/utils/*": ["src/utils/*"]
     }
   },
   "include": [
     "src",
-    "vite-env.d.ts",
-    "env.d.ts", // 環境変数型定義を明示的に含める
+    "env.d.ts", // 環境変数型定義
     "react-extensions.d.ts",
     "**/*.ts",
     "**/*.tsx"
@@ -71,8 +74,7 @@
     "dist",
     "build",
     ".tsbuildinfo",
-    "vite.config.ts",
-    "vitest.config.ts"
+    "coverage"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

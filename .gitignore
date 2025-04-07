@@ -1,12 +1,48 @@
 # ==============================================================================
-# 依存関係 - npm/pnpm/yarn管理ファイル
+# 依存関係 - パッケージマネージャー管理ファイル
 # ==============================================================================
 node_modules/
-.npm
+.npm/
 .pnpm-store/
+.yarn/
 
 # ==============================================================================
-# ログファイル - 統合版
+# ビルド出力 - コンパイルおよび生成された成果物
+# ==============================================================================
+# コンパイル済みコード
+dist/
+dist-ssr/
+build/
+.vite/
+stats.html
+
+# TypeScript生成ファイル
+*.tsbuildinfo
+
+# PWA関連の生成ファイル
+dev-dist/
+**/sw.js.map
+**/workbox-*.js
+**/workbox-*.js.map
+**/service-worker.js
+**/*.js.LICENSE.txt
+**/pwa-cache/
+**/pwa-assets/
+
+# ==============================================================================
+# ローカル開発ファイル
+# ==============================================================================
+*.local
+# ローカル環境ディレクトリ
+.local/
+!.local/localhost.crt
+!.local/localhost.key
+!.local/ssl/
+!.local/ssl/*.key
+!.local/ssl/*.crt
+
+# ==============================================================================
+# ログファイル - ロガー使用ガイドラインに準拠
 # ==============================================================================
 logs/
 *.log
@@ -15,26 +51,17 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
-# ログ解析用の一時ファイル（ロガーガイドラインに準拠）
+
+# ログ解析用の一時ファイル
 .log-archive/
 .log-temp/
-# 環境別ログファイルは除外するが、サンプルファイルは含める
+.performance-reports/
+.performance-snapshots/
+*perf-report*
+
+# 環境別ログファイル - サンプルを除外対象から除外
 .env.*.log
 !.env.*.log.example
-
-# ==============================================================================
-# ビルド出力 - GitHub Pages向け設定
-# ==============================================================================
-dist/
-dist-ssr/
-build/
-.vite/
-*.local
-coverage/
-*.tsbuildinfo
-stats.html
-# 画像最適化の一時ファイル
-.temp-optimized/
 
 # ==============================================================================
 # テスト関連
@@ -49,27 +76,32 @@ __snapshots__/
 .vitest-cache/
 
 # ==============================================================================
-# 環境変数 - セキュリティとCI/CD
+# 環境変数 - 環境変数管理ガイドラインに準拠
 # ==============================================================================
 # すべての環境ファイルを除外
 .env*
-# 例外：サンプル環境ファイル（環境変数管理ガイドラインに準拠）
+
+# サンプル環境ファイルは除外対象から除外
 !.env.example
 !.env.local.example
 !.env.development.example
 !.env.production.example
 !.env.test.example
-# GitHub Actions用シークレット（ローカルテスト用）
+
+# GitHub Actions用シークレット
 .github/secrets/
 
 # ==============================================================================
-# エディタ設定
+# エディタ設定 - プロジェクト共有の設定ファイルを除く
 # ==============================================================================
+# VS Code
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/launch.json
 !.vscode/tasks.json
+
+# その他のエディタ
 .idea/
 *.sublime-*
 *.swp
@@ -101,15 +133,11 @@ ehthumbs_vista.db
 .parcel-cache
 .rpt2_cache/
 .rts2_cache*/
-# ローカル環境ディレクトリ（開発用証明書を除外対象から除外）
-.local/
-!.local/localhost.crt
-!.local/localhost.key
-!.local/ssl/
 .rollup.cache/
 .turbo/
 .wireit/
 .temp/
+.temp-optimized/
 tmp/
 *.bak
 *.tmp
@@ -123,11 +151,13 @@ tmp/
 *.key
 *.crt
 *secrets*
+
 # 開発用証明書は保持する
 !.local/localhost.key
 !.local/localhost.crt
 !.local/ssl/*.key
 !.local/ssl/*.crt
+
 # 認証情報を含む可能性のあるファイル
 *auth*config*
 *credentials*
@@ -135,32 +165,12 @@ tmp/
 *.pfx
 
 # ==============================================================================
-# GitHub Pages特有の除外設定
+# GitHub Pages関連
 # ==============================================================================
-# ローカルでのGitHub Pages検証用ファイル
 _site/
 .jekyll-cache/
 .jekyll-metadata
 .jekyll-nowdocs/
-
-# ==============================================================================
-# PWA関連 - コード最適化ガイドラインに準拠
-# ==============================================================================
-# サービスワーカーのデバッグファイル
-dev-dist/
-**/sw.js.map
-**/workbox-*.js
-**/workbox-*.js.map
-**/service-worker.js
-**/*.js.LICENSE.txt
-# PWAキャッシュとマニフェスト関連
-**/pwa-cache/
-**/pwa-assets/
-**/*.webmanifest
-!manifest.webmanifest
-!public/*.webmanifest
-# PWA設定ファイルのバックアップ
-**/*.manifest.bak
 
 # ==============================================================================
 # モバイル・ハイブリッドアプリ関連
@@ -173,16 +183,11 @@ capacitor.config.*.json
 .sourcemaps/
 
 # ==============================================================================
-# プロジェクト固有の一時ファイル
+# プロジェクト固有の分析/デバッグファイル
 # ==============================================================================
-# プロジェクト内で生成される分析データやデバッグ情報
 .analyze/
 size-plugin.json
 bundle-stats.json
 .lighthouse/
 .local/lighthouse/
 .local/*benchmark*
-# パフォーマンス解析データ（コード最適化ガイドラインに準拠）
-.performance-reports/
-.performance-snapshots/
-*perf-report*

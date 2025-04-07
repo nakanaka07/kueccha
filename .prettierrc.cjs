@@ -8,10 +8,11 @@
  * - 行の最大長 100文字 (printWidth: 100)
  * - 末尾カンマは ES5 互換 (trailingComma: 'es5')
  *
- * 最適化ポイント:
- * - TypeScript/React固有の設定を強化
- * - 環境変数とロガー使用ガイドラインとの整合性向上
- * - コード構造と設計原則に沿った一貫性のある設定
+ * ガイドライン準拠:
+ * - コード最適化ガイドライン: シンプルさと明確さを優先
+ * - 環境変数管理ガイドライン: 一貫した命名規則と構造
+ * - ロガー使用ガイドライン: 構造化データの読みやすさ向上
+ * - Google Maps統合ガイドライン: JSコード品質の一貫性確保
  */
 module.exports = {
   // 基本コードスタイル
@@ -26,21 +27,21 @@ module.exports = {
   quoteProps: 'as-needed', // 必要な場合のみプロパティ名を引用符で囲む
 
   // コード構文とフォーマット
-  trailingComma: 'es5', // ES5で有効な場所に末尾カンマを追加（オブジェクト、配列など）
+  trailingComma: 'es5', // ES5で有効な場所に末尾カンマを追加
   bracketSpacing: true, // オブジェクトリテラルの括弧の間にスペースを入れる
   bracketSameLine: false, // 複数行のHTML要素の閉じ括弧を次の行に配置
   arrowParens: 'avoid', // 可能な場合、アロー関数の引数に括弧を省略
 
   // 環境とファイル設定
   endOfLine: 'auto', // プラットフォームに合わせて改行コードを自動選択
-
-  // 多言語対応
   embeddedLanguageFormatting: 'auto', // 埋め込まれた言語を自動的にフォーマット
+
+  // HTMLと文書関連の設定
   htmlWhitespaceSensitivity: 'css', // HTMLの空白の扱いをCSSの表示方法に基づいて決定
   vueIndentScriptAndStyle: false, // Vueファイルのscriptとstyleブロックをインデントしない
   proseWrap: 'preserve', // マークダウンのテキスト折り返しを維持
 
-  // モダンJavaScript機能のサポート強化
+  // パーサー設定
   parser: 'babel', // 最新のJavaScript機能をサポート
 
   // ファイル形式ごとの個別設定
@@ -50,6 +51,7 @@ module.exports = {
       files: '*.{ts,tsx}',
       options: {
         parser: 'typescript',
+        // コード最適化ガイドラインに準拠したインポート順序
         importOrder: [
           '^@/types/(.*)$', // 型定義を最初に
           '^@/constants/(.*)$', // 定数を次に
@@ -59,54 +61,60 @@ module.exports = {
           '^@/assets/(.*)$', // アセット
           '^[./]', // 相対パスのインポートを最後に
         ],
-        importOrderSeparation: true, // インポート宣言グループ間に空行を追加
+        importOrderSeparation: true, // インポートグループ間に空行を追加
         importOrderGroupNamespaceSpecifiers: true, // 名前空間インポートをグループ化
       },
     },
-    // マークダウンファイル用の設定
+
+    // マークダウンファイル用の設定（ドキュメントガイドラインに準拠）
     {
       files: '*.md',
       options: {
-        proseWrap: 'always', // マークダウンファイルでは常にテキストを折り返す
-        printWidth: 80, // マークダウンドキュメントは読みやすさのために行長を短く
+        proseWrap: 'always', // 常にテキストを折り返す
+        printWidth: 80, // 読みやすさのために行長を短く
       },
     },
-    // JSONファイル用の設定（ロガー構造化データに最適化）
+
+    // JSONファイル用の設定（ロガーガイドラインに準拠）
     {
       files: ['*.json', '*.jsonc'],
       options: {
-        printWidth: 80, // JSONファイルは行長を短く
+        printWidth: 80, // ロガー出力の読みやすさを向上
         tabWidth: 2,
       },
     },
-    // CSS関連ファイル用の設定
+
+    // CSSファイル用の設定
     {
       files: '*.{css,scss,less}',
       options: {
         singleQuote: false, // CSSファイルでは二重引用符を使用
-        printWidth: 100, // CSSファイルの行長
+        printWidth: 100,
       },
     },
+
     // HTMLファイル用の設定
     {
       files: '*.html',
       options: {
-        printWidth: 120, // HTMLファイルは長い行を許容
-        htmlWhitespaceSensitivity: 'strict', // HTML要素間の空白を厳密に扱う
+        printWidth: 120,
+        htmlWhitespaceSensitivity: 'strict',
       },
     },
-    // 環境変数関連ファイル用の設定
+
+    // 環境変数ファイル用の設定（環境変数ガイドラインに準拠）
     {
       files: ['*.env', '.env.*', '*.env.example'],
       options: {
-        parser: 'sh', // 環境変数ファイルをシェルスクリプトとして解析
+        parser: 'sh',
       },
     },
+
     // テストファイル用の設定
     {
       files: ['*.test.{js,ts,jsx,tsx}', '**/__tests__/**/*.{js,ts,jsx,tsx}'],
       options: {
-        printWidth: 120, // テストファイルでは長いテストケース名を許容
+        printWidth: 120, // テストの記述に十分な幅を確保
       },
     },
   ],
