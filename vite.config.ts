@@ -8,11 +8,11 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // 最適化プラグインのインポート
 import tsconfigPaths from 'vite-tsconfig-paths';
 import checker from 'vite-plugin-checker';
-// 圧縮プラグインと画像最適化プラグインをCommonJSスタイルで直接インポート
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const compressionPlugin = require('vite-plugin-compression');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const imageminPlugin = require('vite-plugin-imagemin');
+// ESMとCommonJSの互換性問題を解決するため、requireを使用
+// @ts-ignore - 型エラーを抑制するためのディレクティブ
+const viteCompression = require('vite-plugin-compression');
+// @ts-ignore - 型エラーを抑制するためのディレクティブ
+const viteImagemin = require('vite-plugin-imagemin');
 import inspect from 'vite-plugin-inspect';
 
 /**
@@ -672,39 +672,86 @@ function createPlugins(mode: string, env: Record<string, string>): PluginOption[
 
   // 本番環境のみのプラグイン
   if (isProd) {
-    plugins.push(
-      // コード圧縮
-      compressionPlugin({ algorithm: 'brotliCompress', ext: '.br' }),
-      compressionPlugin({ algorithm: 'gzip', ext: '.gz' }),
-      // 画像最適化
-      imageminPlugin({
-        gifsicle: {
-          optimizationLevel: 3,
-          interlaced: false,
-        },
-        optipng: {
-          optimizationLevel: 5,
-        },
-        mozjpeg: {
-          quality: 80,
-        },
-        pngquant: {
-          quality: [0.7, 0.9],
-          speed: 4,
-        },
-        svgo: {
-          plugins: [
-            {
-              name: 'removeViewBox',
-            },
-            {
-              name: 'removeEmptyAttrs',
-              active: false,
-            },
-          ],
-        },
-      })
-    );
+    // プラグインが関数型であることを確認して呼び出す
+    // CommonJSとESM両方のインポート形式に対応
+    if (typeof viteCompression === 'function') {
+      plugins.push(
+        viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
+        viteCompression({ algorithm: 'gzip', ext: '.gz' })
+      );
+    } else if (viteCompression && typeof viteCompression.default === 'function') {
+      plugins.push(
+        viteCompression.default({ algorithm: 'brotliCompress', ext: '.br' }),
+        viteCompression.default({ algorithm: 'gzip', ext: '.gz' })
+      );
+    } else {
+      configLogger.warn('vite-plugin-compressionプラグインが正しくロードできませんでした');
+    }
+
+    // 画像最適化プラグインの呼び出し
+    if (typeof viteImagemin === 'function') {
+      plugins.push(
+        viteImagemin({
+          gifsicle: {
+            optimizationLevel: 3,
+            interlaced: false,
+          },
+          optipng: {
+            optimizationLevel: 5,
+          },
+          mozjpeg: {
+            quality: 80,
+          },
+          pngquant: {
+            quality: [0.7, 0.9],
+            speed: 4,
+          },
+          svgo: {
+            plugins: [
+              {
+                name: 'removeViewBox',
+              },
+              {
+                name: 'removeEmptyAttrs',
+                active: false,
+              },
+            ],
+          },
+        })
+      );
+    } else if (viteImagemin && typeof viteImagemin.default === 'function') {
+      plugins.push(
+        viteImagemin.default({
+          gifsicle: {
+            optimizationLevel: 3,
+            interlaced: false,
+          },
+          optipng: {
+            optimizationLevel: 5,
+          },
+          mozjpeg: {
+            quality: 80,
+          },
+          pngquant: {
+            quality: [0.7, 0.9],
+            speed: 4,
+          },
+          svgo: {
+            plugins: [
+              {
+                name: 'removeViewBox',
+              },
+              {
+                name: 'removeEmptyAttrs',
+                active: false,
+              },
+            ],
+          },
+        })
+      );
+    } else {
+      configLogger.warn('vite-plugin-imageminプラグインが正しくロードできませんでした');
+    }
   }
 
   // バンドル分析を条件付きで追加
