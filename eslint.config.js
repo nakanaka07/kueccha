@@ -16,11 +16,26 @@ import a11y from 'eslint-plugin-jsx-a11y';
 // カスタムルールセットをインポート - モジュール分割
 import { tsRules, typeDefinitionRules, testFileRules } from './rules/typescript.js';
 
-// 環境変数アクセスの最適化 - utils/envからインポート
-// （このファイルが読み込まれる時点ではESMのimport.metaは使えないためディレクティブインポートを使用）
-import { getEnv, isDevEnvironment, isProdEnvironment } from './src/utils/env.js';
+/**
+ * 環境変数アクセスユーティリティ
+ * 環境変数管理ガイドラインに基づく実装
+ */
+const getEnv = (name, options = {}) => {
+  const { defaultValue, required = false, transform } = options || {};
+  const value = process.env[name] !== undefined ? process.env[name] : defaultValue;
 
-// 環境変数から本番環境かどうかを型安全に判断する
+  if (value === undefined && required) {
+    throw new Error(`必須環境変数 "${name}" が設定されていません。`);
+  }
+
+  return transform && value !== undefined ? transform(value) : value;
+};
+
+// 環境検出ユーティリティ
+const isDevEnvironment = () => process.env.NODE_ENV !== 'production';
+const isProdEnvironment = () => process.env.NODE_ENV === 'production';
+
+// 環境変数から本番環境かどうかを判断する
 const isProduction =
   getEnv('NODE_ENV', {
     defaultValue: 'development',
@@ -154,46 +169,65 @@ const complexityRules = {
   'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
 };
 
-// .gitignoreからパターンを読み込む関数 (キャッシュ最適化)
+// Google Mapsコード用の特殊ルール（Google Maps統合ガイドラインに準拠）
+const mapsRules = {
+  // Google Maps関連ファイルでは複雑な関数を許可
+  'max-lines-per-function': ['warn', { max: 150, skipBlankLines: true, skipComments: true }],
+  // APIキーなどのセキュリティリスク
+  'no-hardcoded-credentials': 'error',
+  // APIリクエスト制限に関する警告
+  'max-params': ['warn', 5],
+};
+
+/**
+ * .gitignoreからパターンを読み込む関数
+ *
+ * ロガー使用ガイドラインに準拠したパフォーマンス計測を実装
+ */
 const readGitignorePatterns = (() => {
   let patterns = null;
+  let lastReadTime = 0;
+  const MAX_CACHE_AGE_MS = 60000; // 1分間キャッシュを有効に
 
   return () => {
-    if (patterns !== null) {
-      return patterns; // キャッシュを返す
+    const now = Date.now();
+
+    // 有効期限内のキャッシュがある場合
+    if (patterns !== null && now - lastReadTime < MAX_CACHE_AGE_MS) {
+      return patterns;
     }
 
     try {
+      const startTime = performance.now();
       const gitignoreContent = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf8');
       patterns = gitignoreContent
         .split('\n')
         .filter(line => line.trim() && !line.startsWith('#'))
         .map(line => line.trim());
+
+      lastReadTime = now;
+
+      const duration = performance.now() - startTime;
+      if (duration > 50) {
+        // 50ms以上かかる場合のみ、警告ログを出力
+        console.warn(`[ESLint Config] .gitignoreの読み込みに${Math.round(duration)}ms要しました`);
+      }
+
       return patterns;
     } catch (error) {
+      console.error(
+        '[ESLint Config] .gitignoreの読み込みに失敗:',
+        error instanceof Error ? error.message : error
+      );
       patterns = [];
+      lastReadTime = now;
       return patterns;
     }
   };
 })();
 
-// 共通の除外パターン + .gitignoreの内容
-const gitignorePatterns = readGitignorePatterns();
-
 // ServiceWorkerファイル（完全に除外）
-// devDistFilesはServiceWorkerファイルを含む
-const devDistFiles = [
-  // dev-distディレクトリ全体
-  'dev-dist/**',
-  '**/dev-dist/**',
-  // 具体的なファイル名を指定
-  'dev-dist/sw.js',
-  'dev-dist/registerSW.js',
-  'dev-dist/workbox-20a2f87f.js',
-  // その他のdev-dist内のファイル
-  'dev-dist/*.js',
-  'dev-dist/*.js.map',
-];
+const devDistFiles = ['dev-dist/**', '**/dev-dist/**'];
 
 // 明示的に除外するパターン
 const explicitIgnores = [
@@ -205,21 +239,54 @@ const explicitIgnores = [
 ];
 
 // すべての除外パターンを統合
-const commonIgnores = [...explicitIgnores, ...gitignorePatterns];
+const commonIgnores = [...explicitIgnores, ...readGitignorePatterns()];
 
-// 設定ファイルパターン（型チェックから除外する）
+// 設定ファイルパターン
 const configFiles = [
   '*.config.js',
   '*.config.ts',
   '.*.js',
   'vite.config.ts',
-  '.prettierrc.js',
-  '.eslintrc.js',
   'eslint.config.js',
-  'jest.config.js',
+  'rules/*.js',
+  'scripts/*.js',
 ];
 
-// typescript-eslintの設定
+// Google Maps関連ファイル
+const mapsFiles = [
+  '**/hooks/useGoogleMaps.ts',
+  '**/components/Map*.{ts,tsx}',
+  '**/utils/markerUtils.ts',
+  '**/utils/googleMaps*.ts',
+];
+
+// 設定ファイル用のルール
+const configFileRules = {
+  ...typeDefinitionRules,
+  '@typescript-eslint/no-confusing-void-expression': 'off',
+  '@typescript-eslint/await-thenable': 'off',
+  '@typescript-eslint/no-unsafe-argument': 'off',
+  '@typescript-eslint/no-unsafe-assignment': 'off',
+  '@typescript-eslint/no-unsafe-call': 'off',
+  '@typescript-eslint/no-unsafe-member-access': 'off',
+  '@typescript-eslint/no-unsafe-return': 'off',
+  'import/order': 'off', // 設定ファイルではインポート順序を緩和
+  'max-lines-per-function': 'off', // 設定ファイルでは関数の長さ制限を緩和
+};
+
+// 型定義ファイル専用ルール
+const dtsSpecificRules = {
+  ...typeDefinitionRules,
+  '@typescript-eslint/no-confusing-void-expression': 'off',
+  '@typescript-eslint/await-thenable': 'off',
+  '@typescript-eslint/no-unsafe-argument': 'off',
+  '@typescript-eslint/no-unsafe-assignment': 'off',
+  '@typescript-eslint/no-unsafe-call': 'off',
+  '@typescript-eslint/no-unsafe-member-access': 'off',
+  '@typescript-eslint/no-unsafe-return': 'off',
+};
+
+// ESLint設定エクスポート
 export default tseslint.config(
   // 基本設定（すべてのファイルに適用）
   {
@@ -228,11 +295,11 @@ export default tseslint.config(
       reportUnusedDisableDirectives: true,
       noInlineConfig: false,
     },
-    plugins, // この行を追加してプラグインを設定
+    plugins,
     rules: {
       ...eslint.configs.recommended.rules,
       ...commonRules,
-      ...tsRules, // 分離したTypeScriptルールを参照
+      ...tsRules,
       ...reactRules,
       ...a11yRules,
       ...importRules,
@@ -240,16 +307,17 @@ export default tseslint.config(
     },
   },
 
+  // TypeScript設定
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
     ignores: commonIgnores,
     extends: [tseslint.configs.recommended],
   },
 
-  // TypeScript型チェック設定
+  // TypeScript型チェック
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: [...commonIgnores, ...configFiles, 'env.d.ts', '**/*.d.ts'],
+    ignores: [...commonIgnores, ...configFiles, '**/*.d.ts'],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parser: tseslint.parser,
@@ -264,7 +332,25 @@ export default tseslint.config(
     },
   },
 
-  // React、JSX、その他のルール設定
+  // 型定義ファイル専用
+  {
+    files: ['**/*.d.ts', 'env.d.ts'],
+    ignores: commonIgnores,
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: false,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: dtsSpecificRules,
+  },
+
+  // React、JSX
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     ignores: commonIgnores,
@@ -280,7 +366,7 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: 'detect', // Reactバージョンの自動検出
+        version: 'detect',
       },
       'import/resolver': {
         node: {
@@ -288,17 +374,16 @@ export default tseslint.config(
         },
       },
     },
-    rules: {
-      // React関連のルール
-      'react-hooks/rules-of-hooks': 'error', // フックのルールを厳格に適用
-      'react-hooks/exhaustive-deps': 'warn', // 依存配列の不完全な指定を警告
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }], // Fast Refreshの最適化
-      'react/prop-types': 'off', // TypeScriptを使用しているため不要
-      'react/react-in-jsx-scope': 'off', // React 17以降では不要
-    },
   },
 
-  // テストファイル用の特別な設定
+  // Google Maps関連ファイル（Maps統合ガイドラインに準拠）
+  {
+    files: mapsFiles,
+    ignores: commonIgnores,
+    rules: mapsRules,
+  },
+
+  // テストファイル
   {
     files: ['**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
     ignores: commonIgnores,
@@ -306,86 +391,83 @@ export default tseslint.config(
       '@typescript-eslint': tseslint.plugin,
     },
     rules: {
-      ...testFileRules, // 分離したテストファイル用ルールを使用
-      'no-console': 'off', // テストでのコンソール出力を許可
-      'max-lines-per-function': 'off', // テストは長くなる傾向がある
-      'max-depth': 'off', // テストでは複雑なネストが必要な場合がある
-      complexity: 'off', // テストでは複雑なケースを扱う必要がある
+      ...testFileRules,
+      'no-console': 'off',
+      'max-lines-per-function': 'off',
+      'max-depth': 'off',
+      complexity: 'off',
     },
   },
 
-  // 設定ファイルとビルド生成物用の設定
+  // 設定ファイル
   {
     files: [...configFiles, 'dist/**'],
     ignores: commonIgnores,
     plugins: {
       '@typescript-eslint': tseslint.plugin,
     },
-    rules: {
-      // 簡略化のために、ほとんどのルールを無効化
-      ...typeDefinitionRules, // 型定義ファイル用のルールを流用（同様のルール緩和が適用されるため）
-      'import/order': 'off', // 設定ファイルではインポート順序を緩和
-      'max-lines-per-function': 'off', // 設定ファイルでは関数の長さ制限を緩和
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: false,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
     },
+    rules: configFileRules,
   },
 
-  // 型定義ファイル専用の設定（型チェックルールを無効化）
-  {
-    files: ['**/*.d.ts'],
-    ignores: commonIgnores,
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-    },
-    rules: typeDefinitionRules, // 分離した型定義ファイル用ルールを使用
-  },
-
-  // ServiceWorkerファイル用の特別な設定（すべてのルールを無効化）
+  // ServiceWorker
   {
     files: devDistFiles,
     ignores: [],
     rules: {
-      // ServiceWorkerファイルに対してすべてのルールを無効化
+      // すべてのルールを無効化
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-floating-promises': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      // ... 他のすべてのルールも無効化
       'import/no-duplicates': 'off',
       'import/order': 'off',
     },
   }
 );
 
-// 設定適用完了時のログ出力（最適化版）
-try {
-  // ロガーモジュールを環境変数ガイドラインに準拠した形で使用
-  const { logger } = await import('./src/utils/logger.js').catch(() => {
-    // フォールバックロガーを環境変数ガイドラインに準拠させる
-    const isDev = !isProduction;
-    return {
-      logger: {
-        info: (...args) => isDev && console.info('[ESLint Config]', ...args), // eslint-disable-line no-console
-        warn: (...args) => console.warn('[ESLint Config]', ...args), // eslint-disable-line no-console
-        error: (...args) => console.error('[ESLint Config]', ...args), // eslint-disable-line no-console
-      },
-    };
-  });
+/**
+ * 設定適用完了時のログ出力
+ * ロガー使用ガイドライン準拠
+ */
+(async () => {
+  try {
+    // ロガーモジュールの動的インポート
+    const { logger } = await import('./src/utils/logger.js').catch(() => {
+      // フォールバックロガー
+      const isDev = !isProduction;
+      return {
+        logger: {
+          info: (...args) => isDev && console.info('[ESLint Config]', ...args),
+          warn: (...args) => console.warn('[ESLint Config]', ...args),
+          error: (...args) => console.error('[ESLint Config]', ...args),
+          debug: (...args) => isDev && console.debug('[ESLint Config]', ...args),
+        },
+      };
+    });
 
-  // 設定の概要をログに記録（構造化ロギングを使用）
-  logger.info('ESLint設定を適用しました', {
-    component: 'ESLintConfig',
-    ignorePatterns: commonIgnores.length,
-    configFiles: configFiles.length,
-    environment: isProduction ? '本番環境' : '開発環境',
-    typescript: true,
-    react: true,
-    moduleSplit: true, // モジュール分割フラグを追加
-  });
-} catch (error) {
-  // エラーが発生した場合でも設定自体は適用されるようにする
-  // エラー情報をより構造化された形で提供
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  console.warn('[ESLint Config] 設定適用後のログ出力に失敗しました:', errorMessage); // eslint-disable-line no-console
-}
+    // 構造化ロギングを使用
+    logger.info('ESLint設定を適用しました', {
+      component: 'ESLintConfig',
+      ignorePatterns: commonIgnores.length,
+      configFiles: configFiles.length,
+      mapsFiles: mapsFiles.length,
+      environment: isProduction ? '本番環境' : '開発環境',
+    });
+  } catch (error) {
+    // エラー情報を構造化
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : 'Unknown';
+    console.warn('[ESLint Config] 設定適用後のログ出力に失敗しました:', {
+      error: errorMessage,
+      type: errorName,
+      timestamp: new Date().toISOString(),
+    });
+  }
+})();

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { logger } from '@/utils/logger';
+
 import { getEnvVar } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 /**
  * MapLoadingErrorコンポーネントのプロパティ

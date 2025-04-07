@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 const COMPONENT_NAME = 'POIFooter';
 
@@ -87,7 +87,7 @@ export const POIFooter: React.FC<POIFooterProps> = ({ poi }) => {
 
   // 有効な座標または問い合わせ先がない場合
   const validCoordinates = hasValidCoordinates();
-  const validPhone = poi.問い合わせ && poi.問い合わせ !== '情報なし';
+  const validPhone = Boolean(poi.問い合わせ) && poi.問い合わせ !== '情報なし';
 
   if (!validCoordinates && !validPhone) {
     logger.warn('POIに有効な連絡手段がありません', {
@@ -113,7 +113,7 @@ export const POIFooter: React.FC<POIFooterProps> = ({ poi }) => {
             ここへの道順
           </a>
         )}
-        {validPhone && (
+        {Boolean(validPhone) && (
           <a
             href={`tel:${poi.問い合わせ}`}
             className='call-button'

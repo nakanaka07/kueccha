@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
 
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 /**
  * ローディングオーバーレイのプロパティ

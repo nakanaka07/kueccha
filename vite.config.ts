@@ -132,12 +132,12 @@ function toBool(value: string): boolean {
 /**
  * 環境変数検証の型定義
  */
-type EnvCheck = {
+interface EnvCheck {
   name: string;
   validator: (value: string) => boolean;
   required: boolean;
   message?: string;
-};
+}
 
 /**
  * 環境変数バリデーション

@@ -1,5 +1,5 @@
-import { logger } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 /**
  * カテゴリー定義
@@ -56,7 +56,7 @@ export const isSupportedCategory = (category: string): category is CategoryType 
  */
 export const getCategoryClass = (category: CategoryType): string => {
   // 開発環境でのみデバッグログを出力
-  if (ENV?.env?.isDev) {
+  if (ENV.env.isDev) {
     logger.debug('カテゴリークラスを取得', {
       category,
       component: 'categoryUtils',

@@ -1,8 +1,8 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel, type LogContext } from '@/utils/logger';
 
 /**
  * POIフィルタリングのオプション
@@ -27,17 +27,47 @@ export interface FilterOptions {
   searchText?: string;
 }
 
-// 環境変数から取得したパフォーマンス設定
-const PERFORMANCE_CONFIG = {
-  // フィルタリング処理時間の警告閾値（ミリ秒）
-  // 指定時間を超えた場合は警告ログを出力
-  SLOW_FILTER_THRESHOLD_MS: ENV.env.isProd ? 300 : 100,
-  // サンプリングレート (prod環境では20回に1回、開発環境では5回に1回ログを出力)
-  LOG_SAMPLING_RATE: ENV.env.isProd ? 20 : 5,
-};
+// パフォーマンス分析用の拡張ログコンテキスト型
+interface FilterLogContext extends LogContext {
+  component: string;
+  batchId: string;
+  environment: string;
+  inputSize: number;
+  entityId: string;
+  action: string;
+  filterConfig: {
+    categoriesCount: number;
+    isOpen: boolean;
+    hasSearchText: boolean;
+  };
+  performanceMetrics?: {
+    executionTimeMs: number;
+    itemsPerMs: number;
+    filteringEfficiency: number;
+    performanceChangeRate: string; // 'N/A', '+10%', '-5%' などの値を含む
+  };
+}
 
 // コンポーネント識別子（ログ出力で使用）
 const COMPONENT_NAME = 'useFilteredPOIs';
+
+// 環境変数から取得したパフォーマンス設定
+// 型安全な環境変数アクセスを確保
+const PERFORMANCE_CONFIG = {
+  // フィルタリング処理時間の警告閾値（ミリ秒）
+  SLOW_FILTER_THRESHOLD_MS: typeof ENV.env.isProd === 'boolean' && ENV.env.isProd ? 300 : 100,
+  // サンプリングレート設定
+  LOG_SAMPLING_RATE: typeof ENV.env.isProd === 'boolean' && ENV.env.isProd ? 20 : 5,
+  // 結果が有意にフィルタリングされたと判断する閾値（元のデータ量に対する比率）
+  SIGNIFICANT_FILTER_RATIO: 0.9,
+};
+
+// モジュールのトップレベルでロガーを設定（コンポーネントインスタンス毎にではなく一度だけ）
+logger.configure({
+  samplingRates: {
+    poi_filtering: PERFORMANCE_CONFIG.LOG_SAMPLING_RATE,
+  },
+});
 
 /**
  * カテゴリフィルタリングのロジック
@@ -45,12 +75,12 @@ const COMPONENT_NAME = 'useFilteredPOIs';
  * @param categories フィルタリング対象のカテゴリ配列
  * @returns 選択されたカテゴリに一致する場合はtrue
  */
-const matchesCategory = (poi: PointOfInterest, categories?: string[]): boolean => {
-  // カテゴリが未指定の場合は全て対象（早期リターン）
-  if (!categories?.length) return true;
+const matchesCategory = (poi: PointOfInterest, categories: string[] | undefined): boolean => {
+  // カテゴリが未指定または空の場合は全て対象
+  if (!categories || categories.length === 0) return true;
 
-  // POIのcategoriesが未定義の場合はfalse（早期リターン）
-  if (!poi.categories?.length) return false;
+  // POIのcategoriesがない場合は一致しない
+  if (!poi.categories || poi.categories.length === 0) return false;
 
   // いずれかのカテゴリが一致すればtrue
   return poi.categories.some(category => categories.includes(category));
@@ -62,8 +92,8 @@ const matchesCategory = (poi: PointOfInterest, categories?: string[]): boolean =
  * @returns 現在営業中であればtrue
  */
 const isOpenNow = (poi: PointOfInterest): boolean => {
-  // 永久閉店している場合は早期リターン
-  if (poi.isClosed) return false;
+  // 永久閉店している場合はfalse
+  if (poi.isClosed === true) return false;
 
   // 現在の曜日が定休日かチェック
   const now = new Date();
@@ -78,12 +108,14 @@ const isOpenNow = (poi: PointOfInterest): boolean => {
 
 /**
  * 検索テキスト正規化関数
- * searchTextの正規化を行いキャッシュの効率性を高める
  * @param searchText 検索テキスト
  * @returns 正規化された検索テキスト
  */
-const normalizeSearchText = (searchText?: string): string | undefined => {
-  if (!searchText) return undefined;
+const normalizeSearchText = (searchText: string | undefined): string | undefined => {
+  // 明示的にundefinedをチェック
+  if (searchText === undefined) return undefined;
+  // 明示的に空文字列をチェック
+  if (searchText.trim() === '') return undefined;
   return searchText.toLowerCase().trim();
 };
 
@@ -93,22 +125,149 @@ const normalizeSearchText = (searchText?: string): string | undefined => {
  * @param searchText 検索テキスト（正規化済み）
  * @returns 検索テキストが含まれる場合はtrue
  */
-const matchesSearchText = (poi: PointOfInterest, searchText?: string): boolean => {
-  // 検索テキストが未指定の場合は全て対象（早期リターン）
-  if (!searchText) return true;
+const matchesSearchText = (poi: PointOfInterest, searchText: string | undefined): boolean => {
+  // 明示的にundefinedをチェック
+  if (searchText === undefined) return true;
+  // 明示的に空文字列をチェック
+  if (searchText === '') return true;
 
-  // 各プロパティの型に合わせて適切にアクセス
   // searchTextプロパティがある場合はそれを優先的に使用
-  if (poi.searchText) {
+  if (typeof poi.searchText === 'string' && poi.searchText !== '') {
     return poi.searchText.includes(searchText);
   }
 
-  // searchTextがない場合は個別のプロパティを検索
-  const name = poi.name.toLowerCase();
-  const genre = poi.genre?.toLowerCase() ?? '';
-  const address = poi.address.toLowerCase();
+  // 個別のプロパティを検索（正規化済みでコンパクトに）
+  const searchTargets = [
+    poi.name.toLowerCase(),
+    typeof poi.genre === 'string' ? poi.genre.toLowerCase() : '',
+    poi.address.toLowerCase(),
+  ];
 
-  return name.includes(searchText) || genre.includes(searchText) || address.includes(searchText);
+  // いずれかの項目にsearchTextが含まれればtrue
+  return searchTargets.some(target => target.includes(searchText));
+};
+
+/**
+ * POIのフィルタリングを実行する関数（純粋関数）
+ */
+const filterPOIs = (
+  pois: PointOfInterest[],
+  filters: FilterOptions,
+  normalizedSearchText?: string
+): PointOfInterest[] => {
+  // 入力データが空の場合は早期リターン
+  if (pois.length === 0) return [];
+
+  // フィルタリング前の最適化 - コスト計算とフィルタ順序決定
+  const hasCategoryFilter = filters.categories !== undefined && filters.categories.length > 0;
+  const hasOpenFilter = filters.isOpen === true;
+  const hasSearchFilter = normalizedSearchText !== undefined;
+
+  // フィルタが何もない場合は元の配列をそのまま返す（参照の同一性を維持）
+  if (!hasCategoryFilter && !hasOpenFilter && !hasSearchFilter) {
+    return pois;
+  }
+
+  // コスト評価に基づくフィルタリング順序の最適化
+  return pois.filter(poi => {
+    try {
+      // 早期リターン戦略：コスト低・除外効果高の順に評価
+      if (hasOpenFilter && !isOpenNow(poi)) return false;
+      if (hasCategoryFilter && !matchesCategory(poi, filters.categories)) return false;
+      if (hasSearchFilter && !matchesSearchText(poi, normalizedSearchText)) return false;
+
+      return true;
+    } catch (error) {
+      // エラーログを記録し、問題のあるPOIは除外
+      logger.warn(`POI フィルタリングエラー`, {
+        component: COMPONENT_NAME,
+        action: 'filter_error',
+        entityId: poi.id || 'unknown',
+        poiName: poi.name || 'unknown',
+        error:
+          error instanceof Error ? { message: error.message, stack: error.stack } : String(error),
+        categories: poi.categories,
+        isClosed: poi.isClosed,
+      });
+      return false;
+    }
+  });
+};
+
+/**
+ * POIフィルタリング結果を記録するヘルパー関数
+ */
+const logFilteringResults = (
+  baseLogContext: FilterLogContext,
+  pois: PointOfInterest[],
+  result: PointOfInterest[],
+  prevResultSize: number | null
+): number => {
+  const resultRatio = pois.length > 0 ? result.length / pois.length : 0;
+  const isSignificantFiltering = resultRatio < PERFORMANCE_CONFIG.SIGNIFICANT_FILTER_RATIO;
+
+  // 前回との変化傾向を計算
+  let trend: string | undefined;
+  if (prevResultSize !== null) {
+    if (result.length > prevResultSize) {
+      trend = 'increase';
+    } else if (result.length < prevResultSize) {
+      trend = 'decrease';
+    } else {
+      trend = 'stable';
+    }
+  }
+
+  logger.debug('POIフィルタリング完了', {
+    ...baseLogContext,
+    action: 'filter_complete',
+    filteredCount: result.length,
+    excludedCount: pois.length - result.length,
+    filterRatio: Number(resultRatio.toFixed(4)),
+    isSignificantFiltering,
+    trend,
+    performanceClass: result.length > 1000 ? 'large' : result.length > 100 ? 'medium' : 'small',
+  });
+
+  return result.length;
+};
+
+/**
+ * パフォーマンス計測付きでPOIフィルタリングを実行するヘルパー関数
+ */
+const filterPOIsWithPerfTracking = (
+  pois: PointOfInterest[],
+  filters: FilterOptions,
+  normalizedSearchText: string | undefined,
+  baseLogContext: FilterLogContext,
+  lastExecutionTime: number | null
+): { result: PointOfInterest[]; executionTime: number; performanceChangeRate: string | null } => {
+  const startTime = performance.now();
+
+  // パフォーマンス計測付きでフィルタリング実行
+  const result = logger.measureTime(
+    'POIフィルタリング処理',
+    () => filterPOIs(pois, filters, normalizedSearchText),
+    LogLevel.DEBUG,
+    {
+      ...baseLogContext,
+      action: 'filter_execute',
+      thresholdMs: PERFORMANCE_CONFIG.SLOW_FILTER_THRESHOLD_MS,
+    }
+  );
+
+  const executionTime = performance.now() - startTime;
+
+  // 前回からのパフォーマンス変化率を計算
+  let performanceChangeRate: string | null = null;
+  if (lastExecutionTime !== null && lastExecutionTime > 0) {
+    const changePercent = Math.round(
+      ((executionTime - lastExecutionTime) / lastExecutionTime) * 100
+    );
+    performanceChangeRate = `${(changePercent > 0 ? '+' : '') + changePercent}%`;
+  }
+
+  return { result, executionTime, performanceChangeRate };
 };
 
 /**
@@ -134,6 +293,10 @@ export function useFilteredPOIs(
 ): PointOfInterest[] {
   // サンプリングレート制御用のカウンター
   const sampleCounterRef = useRef(0);
+  // 前回のフィルタリング結果サイズを保存（パフォーマンス傾向の分析用）
+  const prevResultSizeRef = useRef<number | null>(null);
+  // 前回の実行時間を保存
+  const prevExecutionTimeRef = useRef<number | null>(null);
 
   // 検索テキストを正規化（メモ化の最適化のため）
   const normalizedSearchText = useMemo(
@@ -141,112 +304,79 @@ export function useFilteredPOIs(
     [filters.searchText]
   );
 
-  return useMemo(() => {
-    // 入力データが空の場合は早期リターン
-    if (!pois.length) return [];
+  // フィルタリング設定の安定した参照を作成
+  // exactOptionalPropertyTypes: true に対応するために、明示的に undefined を含む型を処理
+  const stableFilters = useMemo(
+    () =>
+      ({
+        // 明示的に undefined の可能性を考慮した型安全な割り当て
+        categories: filters.categories ?? undefined,
+        isOpen: filters.isOpen ?? undefined,
+      }) as FilterOptions,
+    [filters.categories, filters.isOpen]
+  );
 
+  // ベースログコンテキスト生成関数をメモ化
+  const createBaseLogContext = useCallback(
+    (batchId: string): FilterLogContext => ({
+      component: COMPONENT_NAME,
+      batchId,
+      environment: typeof ENV.env.mode === 'string' ? ENV.env.mode : 'unknown',
+      inputSize: pois.length,
+      entityId: `filter-${batchId}`,
+      action: 'poi_filtering',
+      filterConfig: {
+        categoriesCount: stableFilters.categories?.length ?? 0,
+        isOpen: stableFilters.isOpen === true,
+        hasSearchText: normalizedSearchText !== undefined,
+      },
+    }),
+    [pois.length, stableFilters, normalizedSearchText]
+  );
+
+  return useMemo(() => {
     // サンプリングレート制御 - N回に1回だけログを出力
     const shouldLog = ++sampleCounterRef.current % PERFORMANCE_CONFIG.LOG_SAMPLING_RATE === 0;
+    const batchId = `filter-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    if (shouldLog) {
+    // 基本ログコンテキスト - 条件付きで生成（ログを出力する場合のみ）
+    const baseLogContext = shouldLog ? createBaseLogContext(batchId) : null;
+
+    // フィルタリング開始ログ（サンプリングレートに基づく）
+    if (shouldLog && baseLogContext) {
       logger.debug('POIフィルタリング開始', {
-        total: pois.length,
-        filters: {
-          categoriesCount: filters.categories?.length,
-          isOpen: filters.isOpen,
-          hasSearchText: !!normalizedSearchText,
-        },
-        component: COMPONENT_NAME,
+        ...baseLogContext,
         action: 'filter_start',
       });
     }
 
-    // フィルタリング処理の性能を計測
-    const result = logger.measureTime(
-      'POIフィルタリング処理',
-      () => {
-        // フィルタリング前の最適化 - コスト計算とフィルタ順序決定
-        const hasCategoryFilter = filters.categories?.length ?? 0 > 0;
-        const hasOpenFilter = filters.isOpen === true;
-        const hasSearchFilter = !!normalizedSearchText;
+    // フィルタリング処理実行（ログ有効時はパフォーマンス測定付き）
+    let result: PointOfInterest[];
 
-        // フィルタが何もない場合は元の配列をそのまま返す（参照の同一性を維持）
-        if (!hasCategoryFilter && !hasOpenFilter && !hasSearchFilter) {
-          return pois;
-        }
+    if (shouldLog && baseLogContext) {
+      const perfTrackingResult = filterPOIsWithPerfTracking(
+        pois,
+        stableFilters,
+        normalizedSearchText,
+        baseLogContext,
+        prevExecutionTimeRef.current
+      );
 
-        // コスト評価に基づくフィルタリング順序の最適化
-        // 最も計算コストが低く、除外効果が高いフィルタを先に適用
-        return pois.filter(poi => {
-          try {
-            // 早期リターン戦略の強化 - 可能な限り早くfalseを返す
-            // isOpenフィルターを優先的に実行（計算コストが低く除外効果が高いため）
-            if (hasOpenFilter && !isOpenNow(poi)) return false;
+      result = perfTrackingResult.result;
+      prevExecutionTimeRef.current = perfTrackingResult.executionTime;
 
-            // カテゴリフィルターを次に実行
-            if (hasCategoryFilter && !matchesCategory(poi, filters.categories)) return false;
-
-            // テキスト検索フィルターを最後に実行（最もコストが高い）
-            if (hasSearchFilter && !matchesSearchText(poi, normalizedSearchText)) return false;
-
-            return true;
-          } catch (error) {
-            // フィルタリング中のエラーを詳細に記録し、エラーが発生したPOIは除外
-            logger.warn(`POI '${poi.name}' のフィルタリング中にエラーが発生しました`, {
-              poiId: poi.id,
-              error:
-                error instanceof Error
-                  ? { message: error.message, stack: error.stack }
-                  : String(error),
-              component: COMPONENT_NAME,
-              action: 'filter_error',
-              categories: poi.categories,
-              isClosed: poi.isClosed,
-              // 最初のエラーのみ詳細記録
-              poiDetails:
-                sampleCounterRef.current === 1
-                  ? {
-                      name: poi.name,
-                      address: poi.address,
-                      type: poi.type,
-                    }
-                  : undefined,
-            });
-            return false;
-          }
-        });
-      },
-      shouldLog ? LogLevel.DEBUG : LogLevel.INFO, // NONEではなくINFOを使用（DEBUGよりも低いレベル）
-      {
-        component: COMPONENT_NAME,
-        action: 'filter_execute',
-        thresholdMs: PERFORMANCE_CONFIG.SLOW_FILTER_THRESHOLD_MS,
-      }
-    );
-
-    // 結果の統計情報をサンプリングレートに基づいて記録
-    if (shouldLog) {
-      // フィルタリング結果比率を計算
-      const resultRatio = pois.length > 0 ? result.length / pois.length : 0;
-      const isSignificantFiltering = resultRatio < 0.9; // 90%以下に削減された場合は有意な絞り込みと判断
-
-      logger.debug('POIフィルタリング完了', {
-        filteredCount: result.length,
-        excludedCount: pois.length - result.length,
-        filterRatio: resultRatio.toFixed(2),
-        isSignificantFiltering,
-        component: COMPONENT_NAME,
-        action: 'filter_complete',
-        duration: 'measureTimeにより自動計測',
-        environment: ENV.env.mode,
-      });
+      // 結果の統計情報をログに記録
+      prevResultSizeRef.current = logFilteringResults(
+        baseLogContext,
+        pois,
+        result,
+        prevResultSizeRef.current
+      );
+    } else {
+      // ログ無効時は直接実行
+      result = filterPOIs(pois, stableFilters, normalizedSearchText);
     }
 
     return result;
-  }, [
-    pois,
-    filters.categories,
-    filters.isOpen,
-    normalizedSearchText, // 正規化済み検索テキストを使用して再計算回数を削減
-  ]);
+  }, [pois, normalizedSearchText, stableFilters, createBaseLogContext]);
 }

@@ -10,8 +10,8 @@ import {
 } from '@/components/InfoWindowSections';
 import StatusBadge from '@/components/InfoWindowStatus';
 import type { PointOfInterest } from '@/types/poi';
-import { logger } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger } from '@/utils/logger';
 import '@/global.css';
 
 interface InfoWindowProps {
@@ -30,6 +30,42 @@ interface InfoWindowProps {
    */
   onViewDetails?: (poi: PointOfInterest) => void;
 }
+
+/**
+ * エラー発生時に表示するコンポーネント
+ */
+const ErrorDisplay = ({
+  error,
+  poi,
+  onClose,
+}: {
+  error: unknown;
+  poi: PointOfInterest;
+  onClose: (() => void) | undefined;
+}) => {
+  // ガイドラインに準拠したより詳細なエラーログ
+  logger.error('情報ウィンドウのレンダリングでエラーが発生しました', {
+    component: 'InfoWindow',
+    action: 'render',
+    entityId: poi.id,
+    entityName: poi.name,
+    errorType: error instanceof Error ? error.name : 'UnknownError',
+    errorMessage: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+
+  return (
+    <div className='info-window-error' role='alert'>
+      <h3>表示エラー</h3>
+      <p>情報の表示中に問題が発生しました。</p>
+      {onClose && (
+        <button onClick={onClose} type='button'>
+          閉じる
+        </button>
+      )}
+    </div>
+  );
+};
 
 /**
  * 地図上のマーカーをクリックした際に表示される情報ウィンドウコンポーネント
@@ -128,27 +164,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ poi, onClose, onViewDetails }) 
       </article>
     );
   } catch (error) {
-    // ガイドラインに準拠したより詳細なエラーログ
-    logger.error('情報ウィンドウのレンダリングでエラーが発生しました', {
-      component: 'InfoWindow',
-      action: 'render',
-      entityId: poi.id,
-      entityName: poi.name,
-      errorType: error instanceof Error ? error.name : 'UnknownError',
-      errorMessage: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return (
-      <div className='info-window-error' role='alert'>
-        <h3>表示エラー</h3>
-        <p>情報の表示中に問題が発生しました。</p>
-        {onClose && (
-          <button onClick={onClose} type='button'>
-            閉じる
-          </button>
-        )}
-      </div>
-    );
+    return <ErrorDisplay error={error} poi={poi} onClose={onClose} />;
   }
 };
 

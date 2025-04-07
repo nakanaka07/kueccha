@@ -6,8 +6,8 @@ import { useCallback, useState, useMemo } from 'react';
 // プロジェクト固有のインポート
 import { useFilterLogic } from '@/hooks/useFilterLogic';
 import type { PointOfInterest } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 import {
   CheckboxGroup,
@@ -24,6 +24,66 @@ interface FilterPanelProps {
   onFilterChange: (filteredPois: PointOfInterest[]) => void;
   className?: string;
 }
+
+/**
+ * フィルターパネルの内容部分を描画するコンポーネント
+ */
+const FilterPanelContent: React.FC<{
+  filterLogic: ReturnType<typeof useFilterLogic>;
+  filterGroups: Array<{
+    id: string;
+    groupLabel: string;
+    itemLabelPrefix: string;
+    items: string[];
+    selectedItems: Record<string, boolean>;
+    onChange: (item: string, isChecked: boolean) => void;
+    onToggleAll: (selectAll: boolean) => void;
+  }>;
+  handleResetFilters: () => void;
+}> = ({ filterLogic, filterGroups, handleResetFilters }) => {
+  return (
+    <div
+      id='filter-content'
+      className='filter-panel-content'
+      role='group'
+      aria-labelledby='filter-heading'
+    >
+      {/* テキスト検索フィルター */}
+      <SearchInput value={filterLogic.searchText} onChange={filterLogic.setSearchText} />
+
+      {/* 営業状態フィルター */}
+      <StatusFilterInput value={filterLogic.statusFilter} onChange={filterLogic.setStatusFilter} />
+
+      {/* フィルターグループの宣言的レンダリング */}
+      {filterGroups.map(group => (
+        <CheckboxGroup
+          key={group.id}
+          items={group.items}
+          selectedItems={group.selectedItems}
+          onChange={group.onChange}
+          onSelectAll={() => group.onToggleAll(true)}
+          onDeselectAll={() => group.onToggleAll(false)}
+          groupLabel={group.groupLabel}
+          itemLabelPrefix={group.itemLabelPrefix}
+          id={`${group.id}-filter-group`}
+          aria-labelledby={`${group.id}-filter-heading`}
+        />
+      ))}
+
+      {/* リセットボタンセクション */}
+      <div className='filter-actions'>
+        <button
+          type='button'
+          onClick={handleResetFilters}
+          className='reset-button'
+          aria-label='すべてのフィルターをリセット'
+        >
+          フィルターをリセット
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /**
  * POIデータのフィルタリングを行うパネルコンポーネント
@@ -117,65 +177,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
     );
   }, [filterLogic]);
 
-  // パネルが折りたたまれている場合、内部コンテンツをメモ化して不要なレンダリングを防止
-  const panelContent = useMemo(() => {
-    if (!isExpanded) return null;
-
-    return (
-      <div
-        id='filter-content'
-        className='filter-panel-content'
-        role='group'
-        aria-labelledby='filter-heading'
-      >
-        {/* テキスト検索フィルター */}
-        <SearchInput value={filterLogic.searchText} onChange={filterLogic.setSearchText} />
-
-        {/* 営業状態フィルター */}
-        <StatusFilterInput
-          value={filterLogic.statusFilter}
-          onChange={filterLogic.setStatusFilter}
-        />
-
-        {/* フィルターグループの宣言的レンダリング */}
-        {filterGroups.map(group => (
-          <CheckboxGroup
-            key={group.id}
-            items={group.items}
-            selectedItems={group.selectedItems}
-            onChange={group.onChange}
-            onSelectAll={() => group.onToggleAll(true)}
-            onDeselectAll={() => group.onToggleAll(false)}
-            groupLabel={group.groupLabel}
-            itemLabelPrefix={group.itemLabelPrefix}
-            id={`${group.id}-filter-group`}
-            aria-labelledby={`${group.id}-filter-heading`}
-          />
-        ))}
-
-        {/* リセットボタンセクション */}
-        <div className='filter-actions'>
-          <button
-            type='button'
-            onClick={handleResetFilters}
-            className='reset-button'
-            aria-label='すべてのフィルターをリセット'
-          >
-            フィルターをリセット
-          </button>
-        </div>
-      </div>
-    );
-  }, [
-    isExpanded,
-    filterLogic.searchText,
-    filterLogic.statusFilter,
-    filterGroups,
-    handleResetFilters,
-    filterLogic.setSearchText,
-    filterLogic.setStatusFilter,
-  ]);
-
   return (
     <div
       className={`filter-panel ${className} ${isExpanded ? 'expanded' : 'collapsed'}`}
@@ -183,7 +184,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ pois, onFilterChange, classNa
       aria-label='フィルターパネル'
     >
       <FilterPanelHeader isExpanded={isExpanded} togglePanel={togglePanel} />
-      {panelContent}
+      {isExpanded && (
+        <FilterPanelContent
+          filterLogic={filterLogic}
+          filterGroups={filterGroups}
+          handleResetFilters={handleResetFilters}
+        />
+      )}
     </div>
   );
 };

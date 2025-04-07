@@ -43,7 +43,7 @@ export const CONTROL_POSITIONS = {
   RIGHT_CENTER: 3, // google.maps.ControlPosition.RIGHT_CENTER
   RIGHT_TOP: 6, // google.maps.ControlPosition.RIGHT_TOP
   TOP_RIGHT: 2, // google.maps.ControlPosition.TOP_RIGHT
-  LEFT_TOP: 5, // google.maps.ControlPosition.LEFT_TOP
+  LEFT_TOP: 5, // google.maps.ControlPosition.LEFT_TOP,
 };
 
 /**
@@ -223,10 +223,19 @@ export const DEFAULT_MAP_OPTIONS = {
   /** ズームコントロール */
   zoomControl: true,
   get zoomControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
+
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.RIGHT_BOTTOM,
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.RIGHT_BOTTOM
-        : CONTROL_POSITIONS.RIGHT_BOTTOM,
+      position: CONTROL_POSITIONS.RIGHT_BOTTOM,
     };
   },
 
@@ -234,51 +243,70 @@ export const DEFAULT_MAP_OPTIONS = {
   mapTypeControl: true,
   get mapTypeControlOptions() {
     // 型安全なアクセスを確保
-    const googleMaps = typeof google !== 'undefined' && google.maps;
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
 
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.TOP_RIGHT,
+        style: googleMaps.MapTypeControlStyle.DROPDOWN_MENU,
+        mapTypeIds: [
+          googleMaps.MapTypeId.ROADMAP,
+          googleMaps.MapTypeId.SATELLITE,
+          googleMaps.MapTypeId.HYBRID,
+          googleMaps.MapTypeId.TERRAIN,
+        ],
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position:
-        isGoogleMapsAvailable() && googleMaps
-          ? googleMaps.ControlPosition.TOP_RIGHT
-          : CONTROL_POSITIONS.TOP_RIGHT,
-      style:
-        isGoogleMapsAvailable() && googleMaps
-          ? googleMaps.MapTypeControlStyle.DROPDOWN_MENU
-          : MAP_TYPE_CONTROL_STYLES.DROPDOWN_MENU,
-      mapTypeIds:
-        isGoogleMapsAvailable() && googleMaps
-          ? [
-              googleMaps.MapTypeId.ROADMAP,
-              googleMaps.MapTypeId.SATELLITE,
-              googleMaps.MapTypeId.HYBRID,
-              googleMaps.MapTypeId.TERRAIN,
-            ]
-          : [
-              MAP_TYPE_IDS.ROADMAP,
-              MAP_TYPE_IDS.SATELLITE,
-              MAP_TYPE_IDS.HYBRID,
-              MAP_TYPE_IDS.TERRAIN,
-            ],
+      position: CONTROL_POSITIONS.TOP_RIGHT,
+      style: MAP_TYPE_CONTROL_STYLES.DROPDOWN_MENU,
+      mapTypeIds: [
+        MAP_TYPE_IDS.ROADMAP,
+        MAP_TYPE_IDS.SATELLITE,
+        MAP_TYPE_IDS.HYBRID,
+        MAP_TYPE_IDS.TERRAIN,
+      ],
     };
   },
 
   /** ストリートビューコントロール */
   streetViewControl: true,
   get streetViewControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
+
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.RIGHT_BOTTOM,
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.RIGHT_BOTTOM
-        : CONTROL_POSITIONS.RIGHT_BOTTOM,
+      position: CONTROL_POSITIONS.RIGHT_BOTTOM,
     };
   },
 
   /** フルスクリーンコントロール */
   fullscreenControl: true,
   get fullscreenControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
+
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.RIGHT_TOP,
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.RIGHT_TOP
-        : CONTROL_POSITIONS.RIGHT_TOP,
+      position: CONTROL_POSITIONS.RIGHT_TOP,
     };
   },
 };
@@ -296,17 +324,35 @@ export const MOBILE_MAP_OPTIONS = {
   streetViewControl: false,
   // モバイルでは操作しやすい位置に
   get zoomControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
+
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.RIGHT_CENTER,
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.RIGHT_CENTER
-        : CONTROL_POSITIONS.RIGHT_CENTER,
+      position: CONTROL_POSITIONS.RIGHT_CENTER,
     };
   },
   get fullscreenControlOptions() {
+    // 型安全なアクセスを確保
+    const googleMaps = typeof google !== 'undefined' ? google.maps : undefined;
+
+    // isGoogleMapsAvailable()の結果に基づいてさらにgoogleMapsオブジェクトの存在を確認
+    if (isGoogleMapsAvailable() && googleMaps) {
+      return {
+        position: googleMaps.ControlPosition.LEFT_TOP,
+      };
+    }
+
+    // フォールバック値を返す
     return {
-      position: isGoogleMapsAvailable()
-        ? google.maps.ControlPosition.LEFT_TOP
-        : CONTROL_POSITIONS.LEFT_TOP,
+      position: CONTROL_POSITIONS.LEFT_TOP,
     };
   },
 };
@@ -407,15 +453,25 @@ function buildLoaderOptions(options: {
   libraries: Libraries;
   hasValidMapId: boolean;
 }): LoaderOptions {
-  return {
+  // 基本設定を作成
+  const baseOptions: LoaderOptions = {
     apiKey: options.apiKey || '',
     version: options.version,
     libraries: options.libraries,
     language: 'ja',
     region: 'JP',
-    // マップIDが有効な場合のみ設定、undefined時はプロパティ自体を含めない
-    ...(options.hasValidMapId ? { mapIds: [options.mapId] } : {}),
   };
+
+  // マップIDが有効な場合のみマップID設定を追加
+  if (options.hasValidMapId) {
+    return {
+      ...baseOptions,
+      mapIds: [options.mapId],
+    };
+  }
+
+  // それ以外は基本設定のみを返す
+  return baseOptions;
 }
 
 /**

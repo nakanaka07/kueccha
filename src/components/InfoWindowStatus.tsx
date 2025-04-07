@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
-import { logger } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 // 曜日名の定数配列（コンポーネント外部で定義し、再レンダリング時の再生成を防止）
 const DAY_NAMES = ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜'] as const;
@@ -64,17 +64,7 @@ const InfoWindowStatus: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
 
     // 上記以外は営業中
     return 'open' as const;
-  }, [
-    poi.id,
-    poi.isClosed,
-    poi.日曜定休日,
-    poi.月曜定休日,
-    poi.火曜定休日,
-    poi.水曜定休日,
-    poi.木曜定休日,
-    poi.金曜定休日,
-    poi.土曜定休日,
-  ]); // 依存配列を最適化: poiオブジェクト全体ではなく必要なプロパティのみを指定
+  }, [poi]); // poiオブジェクトのみを依存配列に指定（すべてのプロパティの変更を検知）
 
   // 現在のステータスに対応する設定を取得
   const currentConfig = STATUS_CONFIG[status];

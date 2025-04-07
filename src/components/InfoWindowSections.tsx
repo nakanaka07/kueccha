@@ -37,7 +37,7 @@ interface FooterSectionProps {
  */
 export const CategorySection: React.FC<CategorySectionProps> = ({ poi }) => {
   // カテゴリが存在するかチェック
-  const hasCategories = poi.categories && poi.categories.length > 0;
+  const hasCategories = !!poi.categories && poi.categories.length > 0;
 
   return (
     <section className='info-section'>
@@ -57,7 +57,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({ poi }) => {
       ) : (
         <span className='category-unknown'>未分類</span>
       )}
-      {poi.genre && <p className='genre'>{poi.genre}</p>}
+      {poi.genre !== undefined && poi.genre !== '' && <p className='genre'>{poi.genre}</p>}
     </section>
   );
 };
@@ -77,7 +77,9 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ poi }) => (
     </h3>
     <address className='address'>
       {poi.address || '住所情報なし'}
-      {poi.district && <span className='district'>（{poi.district}地区）</span>}
+      {poi.district !== undefined && poi.district !== '' && (
+        <span className='district'>（{poi.district}地区）</span>
+      )}
     </address>
   </section>
 );
@@ -99,7 +101,7 @@ export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi 
         poiId: poi.id,
         error: error instanceof Error ? error.message : String(error),
       });
-      return { regularHours: null, daysOff: null };
+      return { regularHours: undefined, daysOff: undefined };
     }
   }, [poi]);
 
@@ -111,11 +113,15 @@ export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi 
         </span>
         営業情報
       </h3>
-      {scheduleInfo.regularHours ? (
+      {scheduleInfo.regularHours !== undefined && scheduleInfo.regularHours !== '' ? (
         <div className='business-hours'>
           <p className='hours'>{scheduleInfo.regularHours}</p>
-          {scheduleInfo.daysOff && <p className='days-off'>定休日: {scheduleInfo.daysOff}</p>}
-          {poi.定休日について && <p className='special-note'>{poi.定休日について}</p>}
+          {scheduleInfo.daysOff !== undefined && scheduleInfo.daysOff !== '' && (
+            <p className='days-off'>定休日: {scheduleInfo.daysOff}</p>
+          )}
+          {poi.定休日について !== undefined && poi.定休日について !== '' && (
+            <p className='special-note'>{poi.定休日について}</p>
+          )}
         </div>
       ) : (
         <p className='no-info'>営業時間情報がありません</p>
@@ -131,7 +137,7 @@ export const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ poi 
  * @param poi - 表示対象のPointOfInterest
  */
 export const ContactSection: React.FC<ContactSectionProps> = ({ poi }) => {
-  if (!poi.問い合わせ) return null;
+  if (poi.問い合わせ === undefined || poi.問い合わせ === '') return null;
 
   const handlePhoneClick = () => {
     logger.info('電話番号がクリックされました', {
@@ -166,7 +172,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ poi }) => {
  * @param poi - 表示対象のPointOfInterest
  */
 export const GoogleMapsSection: React.FC<GoogleMapsSectionProps> = ({ poi }) => {
-  if (!poi['Google マップで見る']) return null;
+  if (poi['Google マップで見る'] === undefined || poi['Google マップで見る'] === '') return null;
 
   const handleGoogleMapsClick = () => {
     logger.info('Google Mapsリンクがクリックされました', {

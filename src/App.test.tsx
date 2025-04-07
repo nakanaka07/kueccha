@@ -13,7 +13,7 @@ vi.mock('@/utils/logger', () => ({
     warn: vi.fn(),
     debug: vi.fn(),
     measureTime: vi.fn((_name: string, fn: () => unknown) => fn()),
-    measureTimeAsync: vi.fn(async (_name: string, fn: () => Promise<unknown>) => await fn()),
+    measureTimeAsync: vi.fn(async (_name: string, fn: () => Promise<unknown>) => fn()),
   },
 }));
 

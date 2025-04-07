@@ -173,7 +173,7 @@ export interface EnvAwareLoaderOptions {
 /**
  * マップ関連の型をまとめたエクスポート
  */
-export type MapTypes = {
+export interface MapTypes {
   MapCenter: MapCenter;
   MapIdConfig: MapIdConfig;
   ControlPositions: ControlPositions;
@@ -183,4 +183,4 @@ export type MapTypes = {
   DeviceBreakpoint: DeviceBreakpoint;
   MapInitOptions: MapInitOptions;
   EnvAwareLoaderOptions: EnvAwareLoaderOptions;
-};
+}

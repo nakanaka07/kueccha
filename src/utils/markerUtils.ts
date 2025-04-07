@@ -1,7 +1,7 @@
 // 型のインポートは明示的にimport type構文を使用
 import type { POIType, POICategory, PointOfInterest } from '@/types/poi';
-import { logger } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 /**
  * マーカーアイコンの設定インターフェース
@@ -175,7 +175,7 @@ export function getSvgMarkerIcon(
 ): MarkerIconOptions {
   try {
     // パフォーマンスに影響するデバッグログは環境変数に基づいて制御
-    if (ENV.env.isDev && ENV.logging?.level === 'debug') {
+    if (ENV.env.isDev && ENV.logging.level === 'debug') {
       logger.debug('SVGマーカーアイコンの生成', {
         component: 'MarkerUtils',
         action: 'getSvgMarkerIcon',

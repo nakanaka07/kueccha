@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { logger, LogLevel } from '@/utils/logger';
+
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 // コンポーネント名を定数化して再利用（ロガーガイドライン準拠）
 const COMPONENT_NAMES = {
@@ -14,8 +15,15 @@ const COMPONENT_NAMES = {
 const LOG_SAMPLING_RATE = ENV.env.isProd ? 20 : 5; // 本番では20回に1回、開発では5回に1回ログ出力
 let logCounter = 0;
 
+// ロガーのコンテキスト型を統一
+interface LogContext {
+  component: string;
+  action: string;
+  [key: string]: unknown; // anyをunknownに置き換えることでより型安全に
+}
+
 // 条件付きロギング用ヘルパー関数
-const logIfEnabled = (message: string, level: LogLevel, context: Record<string, any>) => {
+const logIfEnabled = (message: string, level: LogLevel, context: LogContext): void => {
   // 開発環境または詳細ログが有効な場合のみログ出力
   if (ENV.env.isDev || ENV.features.verboseLogging) {
     // 高頻度操作の場合はサンプリング

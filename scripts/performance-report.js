@@ -12,439 +12,538 @@
  * - npm run perf:report
  */
 
-// @ts-ignore
 import { fileURLToPath } from 'url';
-// @ts-ignore
 import { dirname, resolve } from 'path';
-// @ts-ignore
-import * as fs from 'fs';
-// @ts-ignore
-import * as path from 'path';
+import * as fs from 'fs/promises';
+import { createReadStream } from 'fs';
+import { createInterface } from 'readline';
+import { LogLevel } from '../src/utils/logger.js';
 
 // ESM環境でのファイルパス取得
-// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = resolve(__dirname, '..');
 
-// パフォーマンスログファイルのパス
-const PERF_LOG_DIR = resolve(rootDir, 'logs');
-const PERF_LOG_FILE = resolve(PERF_LOG_DIR, 'performance.json');
-const REPORT_FILE = resolve(rootDir, 'performance-report.md');
-
-// 必要なディレクトリの作成
-if (!fs.existsSync(PERF_LOG_DIR)) {
-  fs.mkdirSync(PERF_LOG_DIR, { recursive: true });
-}
+/**
+ * ロギング設定
+ * @type {import('../src/utils/logger').LogContext}
+ */
+const LOG_CONTEXT = {
+  component: 'PerformanceReport',
+  action: 'generate_report',
+  timestamp: new Date().toISOString(),
+};
 
 /**
- * パフォーマンスログデータを読み込む
- * @returns {Array<PerformanceEntry>} パフォーマンスログエントリの配列
+ * パフォーマンスログファイルのパス設定
+ * 環境変数から設定を読み込み、存在しない場合はデフォルト値を使用
  */
-function loadPerformanceData() {
+const PERF_LOG_DIR = process.env.PERF_LOG_DIR || resolve(rootDir, 'logs');
+const PERF_LOG_FILE = process.env.PERF_LOG_FILE || resolve(PERF_LOG_DIR, 'performance.json');
+const REPORT_OUTPUT_DIR = process.env.REPORT_OUTPUT_DIR || resolve(rootDir, 'reports');
+
+// パフォーマンス閾値設定（ミリ秒）
+const PERF_THRESHOLDS = {
+  critical: process.env.PERF_THRESHOLD_CRITICAL || 1000,
+  warning: process.env.PERF_THRESHOLD_WARNING || 300,
+  info: process.env.PERF_THRESHOLD_INFO || 100,
+};
+
+/**
+ * コンソール出力用のESLint警告を回避するラッパー
+ */
+const consoleWrapper = {
+  // eslint-disable-next-line no-console
+  error: (msg, ...args) => console.error(msg, ...args),
+  // eslint-disable-next-line no-console
+  warn: (msg, ...args) => console.warn(msg, ...args),
+  // eslint-disable-next-line no-console
+  info: (msg, ...args) => console.info(msg, ...args),
+  // eslint-disable-next-line no-console
+  debug: (msg, ...args) => process.env.NODE_ENV !== 'production' && console.debug(msg, ...args),
+  // eslint-disable-next-line no-console
+  log: (msg, ...args) => console.log(msg, ...args),
+};
+
+/**
+ * ロガーをインポートする
+ * @returns {Promise<object>} ロガーインスタンス
+ */
+async function importLogger() {
   try {
-    // ファイルが存在しない場合は空の配列を返す
-    if (!fs.existsSync(PERF_LOG_FILE)) {
-      console.warn('🔍 パフォーマンスログファイルが見つかりません。先に計測を実行してください。');
-      return [];
-    }
+    const { logger } = await import('../src/utils/logger.js');
 
-    const data = fs.readFileSync(PERF_LOG_FILE, 'utf-8');
-    return JSON.parse(data);
+    // スクリプト用にロガー設定を調整
+    logger.configure({
+      minLevel: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
+      includeTimestamps: true,
+      componentLevels: {
+        PerformanceReport: LogLevel.DEBUG, // このコンポーネントのログは常に詳細に
+      },
+    });
+
+    return logger;
   } catch (error) {
-    console.error('❌ パフォーマンスログの読み込みに失敗しました:', error);
-    return [];
-  }
-}
+    // ロガーのインポートに失敗した場合のフォールバック
+    consoleWrapper.error(
+      'ロガーのインポートに失敗しました。シンプルなコンソール出力を使用します。',
+      error
+    );
 
-/**
- * パフォーマンスデータを集計・分析する
- * @param {Array<PerformanceEntry>} entries パフォーマンスログエントリの配列
- * @returns {PerformanceAnalysis} 分析結果
- */
-function analyzePerformanceData(entries) {
-  if (!entries || entries.length === 0) {
+    // シンプルなコンソールロガーを返す
     return {
-      totalEntries: 0,
-      operationSummary: /** @type {Record<string, OperationSummary>} */ ({}),
-      slowOperations: [],
-      componentPerformance: /** @type {Record<string, ComponentPerformance>} */ ({}),
-      timeDistribution: /** @type {Record<string, TimeDistribution>} */ ({}),
+      error: (msg, ctx) => consoleWrapper.error(`[ERROR] ${msg}`, ctx),
+      warn: (msg, ctx) => consoleWrapper.warn(`[WARN] ${msg}`, ctx),
+      info: (msg, ctx) => consoleWrapper.info(`[INFO] ${msg}`, ctx),
+      debug: (msg, ctx) =>
+        process.env.NODE_ENV !== 'production' && consoleWrapper.debug(`[DEBUG] ${msg}`, ctx),
+      measureTime: (name, fn) => {
+        const start = performance.now();
+        const result = fn();
+        const duration = performance.now() - start;
+        consoleWrapper.debug(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
+        return result;
+      },
+      measureTimeAsync: async (name, fn) => {
+        const start = performance.now();
+        try {
+          const result = await (typeof fn === 'function' ? fn() : fn);
+          const duration = performance.now() - start;
+          consoleWrapper.debug(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
+          return result;
+        } catch (error) {
+          const duration = performance.now() - start;
+          consoleWrapper.error(`[ERROR] ${name} failed after ${duration.toFixed(2)}ms:`, error);
+          throw error;
+        }
+      },
     };
   }
-
-  // 操作タイプごとの集計
-  /** @type {Record<string, OperationSummary>} */
-  const operationSummary = {};
-  /** @type {Record<string, ComponentPerformance>} */
-  const componentPerformance = {};
-
-  // すべてのエントリの処理
-  entries.forEach(entry => {
-    // 操作タイプごとの集計
-    const operation = entry.operation || 'unknown';
-    if (!operationSummary[operation]) {
-      operationSummary[operation] = {
-        count: 0,
-        totalDuration: 0,
-        minDuration: Infinity,
-        maxDuration: 0,
-        avgDuration: 0,
-      };
-    }
-
-    const summary = operationSummary[operation];
-    summary.count++;
-    summary.totalDuration += entry.durationMs;
-    summary.minDuration = Math.min(summary.minDuration, entry.durationMs);
-    summary.maxDuration = Math.max(summary.maxDuration, entry.durationMs);
-
-    // コンポーネントごとの集計
-    if (entry.context && entry.context.component) {
-      const component = entry.context.component;
-      if (!componentPerformance[component]) {
-        componentPerformance[component] = {
-          operations: {},
-          totalDuration: 0,
-          count: 0,
-        };
-      }
-
-      const compSummary = componentPerformance[component];
-      compSummary.totalDuration += entry.durationMs;
-      compSummary.count++;
-
-      if (!compSummary.operations[operation]) {
-        compSummary.operations[operation] = {
-          count: 0,
-          totalDuration: 0,
-        };
-      }
-      compSummary.operations[operation].count++;
-      compSummary.operations[operation].totalDuration += entry.durationMs;
-    }
-  });
-
-  // 平均値の計算
-  Object.values(operationSummary).forEach(summary => {
-    summary.avgDuration = summary.totalDuration / summary.count;
-  });
-
-  // 遅い操作の特定（平均時間の2倍以上かかったエントリ）
-  const slowOperations = entries
-    .filter(entry => {
-      const operation = entry.operation || 'unknown';
-      const average = operationSummary[operation].avgDuration;
-      return entry.durationMs > average * 2 && entry.durationMs > 100; // 100ms以上の遅延があるもののみ
-    })
-    .sort((a, b) => b.durationMs - a.durationMs);
-
-  // 時間帯ごとの分布分析
-  /** @type {Record<string, TimeDistribution>} */
-  const timeDistribution = {};
-  entries.forEach(entry => {
-    const timestamp = new Date(entry.timestamp || Date.now());
-    const hour = timestamp.getHours();
-    const hourKey = `${hour.toString().padStart(2, '0')}:00`;
-
-    if (!timeDistribution[hourKey]) {
-      timeDistribution[hourKey] = {
-        count: 0,
-        totalDuration: 0,
-        operations: {},
-      };
-    }
-
-    timeDistribution[hourKey].count++;
-    timeDistribution[hourKey].totalDuration += entry.durationMs;
-
-    const operation = entry.operation || 'unknown';
-    if (!timeDistribution[hourKey].operations[operation]) {
-      timeDistribution[hourKey].operations[operation] = {
-        count: 0,
-        totalDuration: 0,
-      };
-    }
-    timeDistribution[hourKey].operations[operation].count++;
-    timeDistribution[hourKey].operations[operation].totalDuration += entry.durationMs;
-  });
-
-  return {
-    totalEntries: entries.length,
-    operationSummary,
-    slowOperations: slowOperations.slice(0, 10), // 上位10件のみ
-    componentPerformance,
-    timeDistribution,
-  };
 }
 
 /**
- * マークダウンレポートを生成する
- * @param {PerformanceAnalysis} analysis パフォーマンス分析結果
- * @returns {string} マークダウン形式のレポート
+ * ディレクトリの存在確認と作成
+ * @param {string} dirPath 確認・作成するディレクトリのパス
+ * @param {object} logger ロガーインスタンス
  */
-function generateMarkdownReport(analysis) {
-  const { totalEntries, operationSummary, slowOperations, componentPerformance, timeDistribution } =
-    analysis;
-
-  if (totalEntries === 0) {
-    return `# パフォーマンスレポート
-
-## エラー
-パフォーマンスデータが見つかりません。アプリケーションを実行し、パフォーマンス計測を有効にしてください。
-
-\`\`\`bash
-npm run perf:analyze
-\`\`\`
-`;
-  }
-
-  let markdown = `# パフォーマンスレポート
-
-生成日時: ${new Date().toLocaleString('ja-JP')}
-
-## 概要
-
-- 計測エントリ総数: ${totalEntries}
-- 操作タイプ数: ${Object.keys(operationSummary).length}
-- 計測対象コンポーネント数: ${Object.keys(componentPerformance).length}
-
-## 操作タイプ別パフォーマンス
-
-| 操作 | 回数 | 平均時間(ms) | 最小(ms) | 最大(ms) | 合計時間(ms) |
-|------|------|------------|---------|---------|------------|
-`;
-
-  // 平均時間の降順でソート
-  const sortedOperations = Object.entries(operationSummary).sort(
-    ([, a], [, b]) => b.avgDuration - a.avgDuration
-  );
-
-  sortedOperations.forEach(([operation, stats]) => {
-    markdown += `| ${operation} | ${stats.count} | ${stats.avgDuration.toFixed(2)} | ${stats.minDuration.toFixed(2)} | ${stats.maxDuration.toFixed(2)} | ${stats.totalDuration.toFixed(2)} |\n`;
-  });
-
-  // パフォーマンスの遅い操作
-  markdown += `\n## 特に遅い操作 (上位10件)
-
-`;
-
-  if (slowOperations.length === 0) {
-    markdown += '遅い操作は検出されませんでした。\n';
-  } else {
-    markdown += '| 操作 | 時間(ms) | タイムスタンプ | コンポーネント | 詳細 |\n';
-    markdown += '|------|---------|--------------|-------------|-------|\n';
-
-    slowOperations.forEach(entry => {
-      const component = entry.context?.component || 'N/A';
-      // detailsプロパティが存在しない場合に対応
-      const details =
-        entry.context && 'details' in entry.context
-          ? JSON.stringify(entry.context.details).substring(0, 50)
-          : 'N/A';
-      const timestamp = new Date(entry.timestamp || Date.now()).toLocaleString('ja-JP');
-
-      markdown += `| ${entry.operation || 'unknown'} | ${entry.durationMs.toFixed(2)} | ${timestamp} | ${component} | ${details} |\n`;
+async function ensureDirectoryExists(dirPath, logger) {
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+    logger.debug(`ディレクトリを確認しました: ${dirPath}`, { ...LOG_CONTEXT });
+  } catch (error) {
+    logger.error(`ディレクトリの作成に失敗しました: ${dirPath}`, {
+      ...LOG_CONTEXT,
+      error: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
     });
+    throw error;
   }
-
-  // コンポーネント別パフォーマンス
-  markdown += `\n## コンポーネント別パフォーマンス
-
-`;
-
-  const sortedComponents = Object.entries(componentPerformance).sort(
-    ([, a], [, b]) => b.totalDuration - a.totalDuration
-  );
-
-  if (sortedComponents.length === 0) {
-    markdown += 'コンポーネント情報が記録されていません。\n';
-  } else {
-    markdown += '| コンポーネント | 操作回数 | 平均時間(ms) | 合計時間(ms) | 主な操作 |\n';
-    markdown += '|--------------|---------|------------|------------|--------|\n';
-
-    sortedComponents.forEach(([component, stats]) => {
-      const avgDuration = stats.totalDuration / stats.count;
-
-      // 最も時間がかかっている操作を取得
-      const mainOperation = Object.entries(stats.operations)
-        .sort(([, a], [, b]) => b.totalDuration - a.totalDuration)
-        .map(([op, opStats]) => `${op}(${opStats.totalDuration.toFixed(0)}ms)`)
-        .slice(0, 2)
-        .join(', ');
-
-      markdown += `| ${component} | ${stats.count} | ${avgDuration.toFixed(2)} | ${stats.totalDuration.toFixed(2)} | ${mainOperation} |\n`;
-    });
-  }
-
-  // 時間帯別の分布
-  markdown += `\n## 時間帯別パフォーマンス分布
-
-`;
-
-  const timeKeys = Object.keys(timeDistribution).sort();
-
-  if (timeKeys.length === 0) {
-    markdown += 'タイムスタンプ情報が記録されていません。\n';
-  } else {
-    markdown += '| 時間帯 | 操作回数 | 平均時間(ms) | 合計時間(ms) | 主な操作 |\n';
-    markdown += '|-------|---------|------------|------------|--------|\n';
-
-    timeKeys.forEach(timeKey => {
-      const timeStats = timeDistribution[timeKey];
-      const avgDuration = timeStats.totalDuration / timeStats.count;
-
-      // 最も頻度の高い操作を取得
-      const mainOperation = Object.entries(timeStats.operations)
-        .sort(([, a], [, b]) => b.count - a.count)
-        .map(([op, opStats]) => `${op}(${opStats.count}回)`)
-        .slice(0, 2)
-        .join(', ');
-
-      markdown += `| ${timeKey} | ${timeStats.count} | ${avgDuration.toFixed(2)} | ${timeStats.totalDuration.toFixed(2)} | ${mainOperation} |\n`;
-    });
-  }
-
-  // 最適化の提案
-  markdown += `\n## 最適化の提案
-
-`;
-
-  // 最も遅い操作タイプに基づいて提案
-  if (sortedOperations.length > 0) {
-    const [slowestOp, slowestStats] = sortedOperations[0];
-
-    markdown += `### 1. "${slowestOp}" 操作の最適化
-
-この操作は平均 ${slowestStats.avgDuration.toFixed(2)}ms かかっており、最大で ${slowestStats.maxDuration.toFixed(2)}ms に達しています。
-以下の最適化を検討してください：
-
-- メモ化（React.memo, useMemo, useCallback）の適用
-- 不要な再レンダリングの防止
-- データ取得ロジックの見直し
-- バッチ処理の導入
-
-`;
-  }
-
-  // 最もパフォーマンスの悪いコンポーネントに基づいて提案
-  if (sortedComponents.length > 0) {
-    const [slowestComp, slowestCompStats] = sortedComponents[0];
-
-    markdown += `### 2. "${slowestComp}" コンポーネントの最適化
-
-このコンポーネントは合計で ${slowestCompStats.totalDuration.toFixed(2)}ms の処理時間を消費しています。
-特に注目すべき操作：
-
-`;
-
-    // コンポーネントの最も遅い操作
-    const slowestCompOps = Object.entries(slowestCompStats.operations)
-      .sort(([, a], [, b]) => b.totalDuration - a.totalDuration)
-      .slice(0, 2);
-
-    slowestCompOps.forEach(([op, opStats], index) => {
-      markdown += `- ${op}: 合計${opStats.totalDuration.toFixed(2)}ms (${opStats.count}回実行, 平均${(opStats.totalDuration / opStats.count).toFixed(2)}ms)\n`;
-    });
-
-    markdown += `
-最適化の方向性：
-- コンポーネントの分割
-- useCallback/useMemoによるキャッシュ
-- 条件付きレンダリングの見直し
-- 状態管理の最適化
-`;
-  }
-
-  markdown += `
-## まとめ
-
-全体的なパフォーマンスを向上させるために、以下の一般的な改善策も検討してください：
-
-1. バンドルサイズの最適化
-   - コード分割（React.lazy）
-   - 不要なライブラリの削除
-
-2. レンダリングの最適化
-   - 不要なレンダリングを回避
-   - メモ化の適切な使用
-
-3. データ取得の最適化
-   - キャッシュの活用
-   - データ取得の並列化
-
-4. 状態管理の改善
-   - 状態更新の最小化
-   - セレクタの最適化
-`;
-
-  return markdown;
 }
 
-// メイン処理
-try {
-  console.log('🔍 パフォーマンスレポートの生成を開始します...');
+/**
+ * パフォーマンスログファイルの読み込み
+ * @param {string} filePath ログファイルのパス
+ * @param {object} logger ロガーインスタンス
+ * @returns {Promise<Array<Object>>} パフォーマンスログデータ
+ */
+async function readPerformanceLog(filePath, logger) {
+  return logger.measureTimeAsync(
+    'パフォーマンスログの読み込み',
+    async () => {
+      try {
+        // ファイルが存在するか確認
+        try {
+          await fs.access(filePath);
+        } catch (error) {
+          logger.warn(`パフォーマンスログファイルが見つかりません: ${filePath}`, {
+            ...LOG_CONTEXT,
+            action: 'file_access',
+          });
+          return [];
+        }
 
-  // データ読み込みと分析
-  const performanceData = loadPerformanceData();
-  console.log(`📊 ${performanceData.length} 件のパフォーマンスデータを読み込みました`);
+        // 大きなファイルを効率的に処理するためのストリーム読み込み
+        const logEntries = [];
+        const readInterface = createInterface({
+          input: createReadStream(filePath),
+          crlfDelay: Infinity,
+        });
 
-  const analysis = analyzePerformanceData(performanceData);
+        for await (const line of readInterface) {
+          if (line.trim()) {
+            try {
+              const entry = JSON.parse(line);
+              logEntries.push(entry);
+            } catch (parseError) {
+              logger.warn(`無効なJSONエントリをスキップしました`, {
+                ...LOG_CONTEXT,
+                line: line.substring(0, 100) + (line.length > 100 ? '...' : ''),
+                error: parseError instanceof Error ? parseError.message : String(parseError),
+              });
+            }
+          }
+        }
 
-  // レポート生成
-  const markdownReport = generateMarkdownReport(analysis);
+        logger.info(`${logEntries.length}件のパフォーマンスログエントリを読み込みました`, {
+          ...LOG_CONTEXT,
+          action: 'read_complete',
+          entryCount: logEntries.length,
+        });
 
-  // レポートの保存
-  fs.writeFileSync(REPORT_FILE, markdownReport);
-  console.log(`✅ パフォーマンスレポートを生成しました: ${REPORT_FILE}`);
+        return logEntries;
+      } catch (error) {
+        logger.error(`パフォーマンスログの読み込みに失敗しました`, {
+          ...LOG_CONTEXT,
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+        });
+        throw error;
+      }
+    },
+    LogLevel.INFO,
+    LOG_CONTEXT
+  );
+}
 
-  console.log('📋 レポート概要:');
-  console.log(`  - エントリ総数: ${analysis.totalEntries}`);
-  console.log(`  - 操作タイプ数: ${Object.keys(analysis.operationSummary).length}`);
-  console.log(`  - 特に遅い操作: ${analysis.slowOperations.length}`);
-} catch (error) {
-  console.error('❌ パフォーマンスレポート生成中にエラーが発生しました:', error);
+/**
+ * レコメンデーションの型定義
+ * @typedef {Object} Recommendation
+ * @property {string} type - レコメンデーションのタイプ ('critical', 'warning', 'info' など)
+ * @property {string} message - 推奨事項のメッセージ
+ * @property {string[]} [affectedComponents] - 影響を受けるコンポーネントのリスト（オプション）
+ * @property {string[]} [actions] - 推奨されるアクションのリスト（オプション）
+ */
+
+/**
+ * パフォーマンスデータの分析
+ * @param {Array<Object>} performanceData パフォーマンスログデータ
+ * @param {object} logger ロガーインスタンス
+ * @returns {Object} 分析結果
+ */
+function analyzePerformanceData(performanceData, logger) {
+  return logger.measureTime(
+    'パフォーマンスデータの分析',
+    () => {
+      // コンポーネント別のパフォーマンス統計を収集
+      const componentStats = new Map();
+      const actionStats = new Map();
+      const slowestOperations = [];
+
+      // 各エントリーを処理
+      performanceData.forEach(entry => {
+        if (!entry.durationMs || !entry.component) return;
+
+        // コンポーネント統計の更新
+        if (!componentStats.has(entry.component)) {
+          componentStats.set(entry.component, {
+            totalDuration: 0,
+            count: 0,
+            min: Infinity,
+            max: 0,
+            operations: [],
+          });
+        }
+        const compStat = componentStats.get(entry.component);
+        compStat.totalDuration += entry.durationMs;
+        compStat.count += 1;
+        compStat.min = Math.min(compStat.min, entry.durationMs);
+        compStat.max = Math.max(compStat.max, entry.durationMs);
+        compStat.operations.push({
+          name: entry.action || entry.message || 'unknown',
+          duration: entry.durationMs,
+          timestamp: entry.timestamp,
+        });
+
+        // アクション統計の更新
+        if (entry.action) {
+          const actionKey = entry.action;
+          if (!actionStats.has(actionKey)) {
+            actionStats.set(actionKey, {
+              totalDuration: 0,
+              count: 0,
+              min: Infinity,
+              max: 0,
+            });
+          }
+          const actStat = actionStats.get(actionKey);
+          actStat.totalDuration += entry.durationMs;
+          actStat.count += 1;
+          actStat.min = Math.min(actStat.min, entry.durationMs);
+          actStat.max = Math.max(actStat.max, entry.durationMs);
+        }
+
+        // 遅い操作をトラッキング
+        if (entry.durationMs >= PERF_THRESHOLDS.warning) {
+          slowestOperations.push({
+            component: entry.component,
+            action: entry.action || 'unknown',
+            duration: entry.durationMs,
+            timestamp: entry.timestamp,
+            message: entry.message,
+            context: { ...entry },
+          });
+        }
+      });
+
+      // コンポーネント統計に平均を追加
+      componentStats.forEach(stat => {
+        stat.avg = stat.count > 0 ? stat.totalDuration / stat.count : 0;
+        // 操作を期間の降順でソート
+        stat.operations.sort((a, b) => b.duration - a.duration);
+        // 上位5件の操作のみ保持
+        stat.operations = stat.operations.slice(0, 5);
+      });
+
+      // アクション統計に平均を追加
+      actionStats.forEach(stat => {
+        stat.avg = stat.count > 0 ? stat.totalDuration / stat.count : 0;
+      });
+
+      // 結果の集約
+      const result = {
+        summary: {
+          totalEntries: performanceData.length,
+          uniqueComponents: componentStats.size,
+          uniqueActions: actionStats.size,
+          slowOperationsCount: slowestOperations.length,
+        },
+        componentPerformance: Array.from(componentStats.entries()).map(([component, stats]) => ({
+          component,
+          ...stats,
+        })),
+        actionPerformance: Array.from(actionStats.entries()).map(([action, stats]) => ({
+          action,
+          ...stats,
+        })),
+        slowestOperations: slowestOperations.sort((a, b) => b.duration - a.duration).slice(0, 10),
+        /** @type {Recommendation[]} */
+        recommendations: [],
+      };
+
+      // パフォーマンス改善の推奨事項を生成
+      if (slowestOperations.length > 0) {
+        const componentFrequency = slowestOperations.reduce((acc, op) => {
+          acc[op.component] = (acc[op.component] || 0) + 1;
+          return acc;
+        }, {});
+
+        const problematicComponents = Object.entries(componentFrequency)
+          .sort((a, b) => b[1] - a[1])
+          .filter(([_, count]) => count >= 2)
+          .map(([component]) => component);
+
+        if (problematicComponents.length > 0) {
+          result.recommendations.push({
+            type: 'critical',
+            message: `次のコンポーネントでパフォーマンスの問題が複数検出されました: ${problematicComponents.join(', ')}`,
+            affectedComponents: problematicComponents,
+          });
+        }
+
+        // 特定の処理パターンを検出
+        const highFrequencyActions = Array.from(actionStats.entries())
+          .filter(([_, stats]) => stats.count > 10 && stats.avg > PERF_THRESHOLDS.info)
+          .map(([action]) => action);
+
+        if (highFrequencyActions.length > 0) {
+          result.recommendations.push({
+            type: 'warning',
+            message: `頻繁に実行される以下のアクションはキャッシュや最適化の検討が必要です: ${highFrequencyActions.join(', ')}`,
+            actions: highFrequencyActions,
+          });
+        }
+      }
+
+      logger.info(`パフォーマンス分析が完了しました`, {
+        ...LOG_CONTEXT,
+        action: 'analysis_complete',
+        entryCount: performanceData.length,
+        componentCount: componentStats.size,
+        slowOperationsCount: slowestOperations.length,
+      });
+
+      return result;
+    },
+    LogLevel.INFO,
+    LOG_CONTEXT
+  );
+}
+
+/**
+ * パフォーマンスレポートの生成と保存
+ * @param {Object} analysisResult 分析結果
+ * @param {object} logger ロガーインスタンス
+ * @returns {Promise<string>} 保存したファイルパス
+ */
+async function generateAndSaveReport(analysisResult, logger) {
+  return logger.measureTimeAsync(
+    'レポート生成と保存',
+    async () => {
+      // レポートの作成日時
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const reportFilePath = resolve(REPORT_OUTPUT_DIR, `performance-report-${timestamp}.json`);
+
+      // レポートデータの構築
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        version: process.env.npm_package_version || '1.0.0',
+        ...analysisResult,
+      };
+
+      // レポートディレクトリを確保
+      await ensureDirectoryExists(REPORT_OUTPUT_DIR, logger);
+
+      // レポートの書き込み
+      await fs.writeFile(reportFilePath, JSON.stringify(reportData, null, 2), { encoding: 'utf8' });
+
+      logger.info(`パフォーマンスレポートを保存しました: ${reportFilePath}`, {
+        ...LOG_CONTEXT,
+        action: 'report_saved',
+        reportPath: reportFilePath,
+      });
+
+      // Markdownサマリー出力パスの生成
+      const markdownPath = reportFilePath.replace(/\.json$/, '.md');
+
+      // Markdownレポートの生成
+      const markdown = [
+        '# パフォーマンス分析レポート',
+        '',
+        `**生成日時:** ${new Date().toLocaleString('ja-JP')}`,
+        `**環境:** ${process.env.NODE_ENV || 'development'}`,
+        `**バージョン:** ${process.env.npm_package_version || '1.0.0'}`,
+        '',
+        '## サマリー',
+        '',
+        `- 総エントリー数: ${analysisResult.summary.totalEntries}`,
+        `- 対象コンポーネント数: ${analysisResult.summary.uniqueComponents}`,
+        `- アクション数: ${analysisResult.summary.uniqueActions}`,
+        `- 低速操作数: ${analysisResult.summary.slowOperationsCount}`,
+        '',
+        '## パフォーマンス問題のあるコンポーネント',
+        '',
+      ];
+
+      // 平均処理時間でソートされたコンポーネント
+      const sortedComponents = [...analysisResult.componentPerformance]
+        .sort((a, b) => b.avg - a.avg)
+        .slice(0, 5);
+
+      if (sortedComponents.length > 0) {
+        markdown.push('| コンポーネント | 平均時間 (ms) | 最大時間 (ms) | 実行回数 |');
+        markdown.push('| ------------ | ------------- | ------------ | -------- |');
+        sortedComponents.forEach(comp => {
+          markdown.push(
+            `| ${comp.component} | ${comp.avg.toFixed(2)} | ${comp.max.toFixed(2)} | ${comp.count} |`
+          );
+        });
+      } else {
+        markdown.push('*パフォーマンスデータがありません*');
+      }
+
+      markdown.push('', '## 最も遅い操作', '');
+
+      if (analysisResult.slowestOperations.length > 0) {
+        markdown.push('| コンポーネント | アクション | 時間 (ms) |');
+        markdown.push('| ------------ | --------- | --------- |');
+        analysisResult.slowestOperations.forEach(op => {
+          markdown.push(`| ${op.component} | ${op.action} | ${op.duration.toFixed(2)} |`);
+        });
+      } else {
+        markdown.push('*低速操作がありません*');
+      }
+
+      markdown.push('', '## 推奨される改善点', '');
+
+      if (analysisResult.recommendations.length > 0) {
+        analysisResult.recommendations.forEach(rec => {
+          markdown.push(`- **${rec.type === 'critical' ? '重要' : '警告'}**: ${rec.message}`);
+        });
+      } else {
+        markdown.push('*特に改善が必要な点は見つかりませんでした*');
+      }
+
+      // Markdownレポートの保存
+      await fs.writeFile(markdownPath, markdown.join('\n'), { encoding: 'utf8' });
+
+      logger.info(`Markdownレポートを保存しました: ${markdownPath}`, {
+        ...LOG_CONTEXT,
+        action: 'markdown_saved',
+        markdownPath,
+      });
+
+      return reportFilePath;
+    },
+    LogLevel.INFO,
+    LOG_CONTEXT
+  );
+}
+
+/**
+ * メイン実行関数
+ */
+async function main() {
+  const logger = await importLogger();
+
+  try {
+    logger.info('パフォーマンスレポート生成を開始します', {
+      ...LOG_CONTEXT,
+      logFile: PERF_LOG_FILE,
+    });
+
+    // ログディレクトリの確認
+    await ensureDirectoryExists(PERF_LOG_DIR, logger);
+
+    // パフォーマンスデータの読み込み
+    const performanceData = await readPerformanceLog(PERF_LOG_FILE, logger);
+
+    if (performanceData.length === 0) {
+      logger.warn('分析可能なパフォーマンスデータがありません', LOG_CONTEXT);
+      return;
+    }
+
+    // データの分析
+    const analysisResult = analyzePerformanceData(performanceData, logger);
+
+    // レポートの生成と保存
+    const reportPath = await generateAndSaveReport(analysisResult, logger);
+
+    logger.info('パフォーマンスレポート生成が完了しました', {
+      ...LOG_CONTEXT,
+      reportPath,
+      componentAnalyzed: analysisResult.summary.uniqueComponents,
+      slowOperationsFound: analysisResult.summary.slowOperationsCount,
+    });
+
+    // コンソールに結果サマリーを表示
+    consoleWrapper.log('\n===== パフォーマンスレポート生成完了 =====');
+    consoleWrapper.log(`レポートパス: ${reportPath}`);
+    consoleWrapper.log(`分析されたコンポーネント: ${analysisResult.summary.uniqueComponents}`);
+    consoleWrapper.log(`検出された低速操作: ${analysisResult.summary.slowOperationsCount}`);
+
+    if (analysisResult.recommendations.length > 0) {
+      consoleWrapper.log('\n推奨される改善点:');
+      analysisResult.recommendations.forEach((rec, i) => {
+        consoleWrapper.log(
+          `${i + 1}. [${rec.type === 'critical' ? '重要' : '警告'}] ${rec.message}`
+        );
+      });
+    }
+    consoleWrapper.log('\nMarkdownレポートも生成されました。詳細はそちらをご確認ください。');
+  } catch (error) {
+    logger.error('パフォーマンスレポート生成中にエラーが発生しました', {
+      ...LOG_CONTEXT,
+      error: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
+    process.exit(1);
+  }
+}
+
+// スクリプト実行
+main().catch(error => {
+  consoleWrapper.error('予期せぬエラーが発生しました:', error);
   process.exit(1);
-}
-
-/**
- * @typedef {Object} PerformanceEntry
- * @property {string} operation - 実行された操作の名前
- * @property {number} durationMs - 操作にかかった時間（ミリ秒）
- * @property {Date|string} [timestamp] - 操作が実行された時刻
- * @property {Object} [context] - 操作のコンテキスト情報
- * @property {string} [context.component] - 操作が実行されたコンポーネント名
- * @property {any} [context.details] - 操作の詳細情報
- */
-
-/**
- * @typedef {Object} OperationSummary
- * @property {number} count - 操作の実行回数
- * @property {number} totalDuration - 合計実行時間（ミリ秒）
- * @property {number} minDuration - 最小実行時間（ミリ秒）
- * @property {number} maxDuration - 最大実行時間（ミリ秒）
- * @property {number} avgDuration - 平均実行時間（ミリ秒）
- */
-
-/**
- * @typedef {Object} ComponentPerformance
- * @property {Record<string, {count: number, totalDuration: number}>} operations - コンポーネントで実行された操作ごとの統計
- * @property {number} totalDuration - コンポーネントの合計実行時間
- * @property {number} count - コンポーネントでの操作実行回数
- */
-
-/**
- * @typedef {Object} TimeDistribution
- * @property {number} count - 時間帯ごとの操作回数
- * @property {number} totalDuration - 時間帯ごとの合計実行時間
- * @property {Record<string, {count: number, totalDuration: number}>} operations - 時間帯ごとの操作統計
- */
-
-/**
- * @typedef {Object} PerformanceAnalysis
- * @property {number} totalEntries - 分析対象のエントリ総数
- * @property {Record<string, OperationSummary>} operationSummary - 操作タイプごとの統計情報
- * @property {Array<PerformanceEntry>} slowOperations - 特に遅い操作のリスト
- * @property {Record<string, ComponentPerformance>} componentPerformance - コンポーネントごとのパフォーマンス
- * @property {Record<string, TimeDistribution>} timeDistribution - 時間帯ごとのパフォーマンス分布
- */
+});

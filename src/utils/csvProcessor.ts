@@ -1,6 +1,6 @@
 import { type POI, type POICategory, type POIType } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
 import ENV from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 /**
  * CSVデータを処理するユーティリティ
@@ -333,7 +333,7 @@ function parseWKT(wkt: string): google.maps.LatLngLiteral {
     }
 
     // POINT形式のWKTを解析
-    const match = wkt.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
+    const match = /POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i.exec(wkt);
     if (match && match.length >= 3 && match[1] && match[2]) {
       const lng = parseFloat(match[1]);
       const lat = parseFloat(match[2]);

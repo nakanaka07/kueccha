@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-import type { POI, PointOfInterest } from '@/types/poi';
+import type { POI } from '@/types/poi';
 import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
-import { getEnv, toBool } from '@/utils/env'; // ENVを削除しtoBoolを追加
+import { ENV } from '@/utils/env';
 import { fetchPOIsFromSheet } from '@/utils/googleSheets';
-import { logger, LogLevel } from '@/utils/logger'; // loggerをインポート
+import { logger, LogLevel } from '@/utils/logger';
 
 // コンポーネント名を定数として定義（ロギング用）
 const COMPONENT_NAME = 'usePOIData';
@@ -21,18 +21,20 @@ const CSV_FILES = {
   utilities: ['/data/まとめータベース - 駐車場.csv', '/data/まとめータベース - 公共トイレ.csv'],
 };
 
-// 環境変数キー定数（ガイドライン準拠）
-const ENV_KEYS = {
-  USE_GOOGLE_SHEETS: 'VITE_USE_GOOGLE_SHEETS', // VITEプレフィックス付き
-  ENABLE_OFFLINE_MODE: 'VITE_ENABLE_OFFLINE_MODE', // オフラインモード有効化フラグ
-  CACHE_TTL: 'VITE_DATA_CACHE_TTL', // キャッシュの有効期間（分）
-};
-
 // ストレージキー定数
 const STORAGE_KEYS = {
   POI_DATA: 'kueccha_poi_data_cache',
   POI_DATA_TIMESTAMP: 'kueccha_poi_data_timestamp',
-};
+} as const;
+
+// 型定義を改善
+type StorageKeys = typeof STORAGE_KEYS;
+type StorageKeyName = keyof StorageKeys;
+
+// ストレージキー値を取得する関数（型安全性向上）
+function getStorageKey(key: StorageKeyName): string {
+  return STORAGE_KEYS[key];
+}
 
 interface UsePOIDataOptions {
   enabled?: boolean;
@@ -50,501 +52,558 @@ interface UsePOIDataOptions {
 }
 
 /**
- * LocalStorageにデータをキャッシュする機能
+ * ログコンテキストの標準フィールド型定義
  */
-function cachePOIData(data: PointOfInterest[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.POI_DATA, JSON.stringify(data));
-    localStorage.setItem(STORAGE_KEYS.POI_DATA_TIMESTAMP, Date.now().toString());
-    logger.debug('POIデータをLocalStorageにキャッシュしました', {
-      component: COMPONENT_NAME,
-      count: data.length,
-    });
-  } catch (err) {
-    // ストレージクォータ超過などのエラーを処理
-    logger.warn('POIデータのキャッシュに失敗しました', {
-      component: COMPONENT_NAME,
-      error: err instanceof Error ? err.message : String(err),
-    });
-  }
+interface StandardLogContext {
+  component: string; // コンポーネント名
+  action: string; // 実行中の操作
+  timestamp: string; // タイムスタンプ
+  [key: string]: unknown; // その他の任意フィールド
 }
 
 /**
- * LocalStorageからキャッシュデータを取得する機能
- * @param ttlMinutes キャッシュの有効期間（分）
+ * 標準化されたロギングコンテキストを生成する関数
+ * @param additionalContext - 追加のコンテキスト情報
+ * @returns 統一されたログコンテキスト
  */
-function getFromCache(ttlMinutes: number): PointOfInterest[] | null {
-  try {
-    const timestampStr = localStorage.getItem(STORAGE_KEYS.POI_DATA_TIMESTAMP);
-    if (!timestampStr) return null;
-
-    const timestamp = parseInt(timestampStr, 10);
-    const now = Date.now();
-    const maxAge = ttlMinutes * 60 * 1000; // ミリ秒に変換
-
-    // キャッシュが古くなっている場合
-    if (now - timestamp > maxAge) {
-      logger.debug('POIデータのキャッシュが期限切れです', {
-        component: COMPONENT_NAME,
-        cacheAge: Math.floor((now - timestamp) / 60000), // 分に変換
-        ttlMinutes,
-      });
-      return null;
-    }
-
-    const cachedData = localStorage.getItem(STORAGE_KEYS.POI_DATA);
-    if (!cachedData) return null;
-
-    const parsedData = JSON.parse(cachedData) as PointOfInterest[];
-
-    logger.info('POIデータをキャッシュから読み込みました', {
-      component: COMPONENT_NAME,
-      count: parsedData.length,
-      cacheAge: Math.floor((now - timestamp) / 60000), // 分に変換
-    });
-
-    return parsedData;
-  } catch (err) {
-    logger.warn('キャッシュからのPOIデータ読み込みに失敗しました', {
-      component: COMPONENT_NAME,
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return null;
-  }
+function createLogContext(additionalContext: Partial<StandardLogContext> = {}): StandardLogContext {
+  return {
+    component: COMPONENT_NAME,
+    action: additionalContext.action ?? 'unknown',
+    timestamp: new Date().toISOString(),
+    ...additionalContext,
+  };
 }
 
 /**
- * Google Sheetsからデータを取得する関数
+ * 環境設定を一元管理して取得する関数
+ * @param options - 環境設定オプション
+ * @returns 環境設定オブジェクト
  */
-async function fetchDataFromGoogleSheets(logContext: Record<string, unknown>): Promise<POI[]> {
-  logger.info('Google Sheetsからデータを取得しています', logContext);
+function getEnvironmentConfig(options: { cacheTtlMinutes?: number | undefined } = {}): {
+  useGoogleSheets: boolean;
+  offlineMode: boolean;
+  cacheTTL: number;
+  debugMode: boolean;
+  logLevel: string;
+} {
+  const useGoogleSheets = ENV.features.googleSheets;
+  const offlineMode = ENV.features.offlineMode;
+  const debugMode = ENV.env.debug;
 
-  const [restaurants, parking, toilets] = await logger.measureTimeAsync(
-    'Google Sheetsからのデータ取得',
-    () =>
-      Promise.all([
-        fetchPOIsFromSheet('restaurant', 'レストラン!A1:Z1000'),
-        fetchPOIsFromSheet('parking', '駐車場!A1:Z1000'),
-        fetchPOIsFromSheet('toilet', 'トイレ!A1:Z1000'),
-      ]),
-    LogLevel.INFO,
-    logContext
-  );
-
-  // データの結合を計測
-  return logger.measureTime(
-    'POIデータの結合処理',
-    () => combinePOIArrays(restaurants, parking, toilets),
-    LogLevel.DEBUG,
-    {
-      ...logContext,
-      counts: {
-        restaurants: restaurants.length,
-        parking: parking.length,
-        toilets: toilets.length,
-      },
-    }
-  );
-}
-
-/**
- * CSVファイルからデータを取得する関数
- */
-async function fetchDataFromCSVFiles(
-  logContext: Record<string, unknown>,
-  restaurantCSVUrls: string[],
-  utilityCSVUrls: string[]
-): Promise<POI[]> {
-  logger.info('静的CSVファイルからデータを取得しています', logContext);
-
-  try {
-    // レストランデータの取得（複数ファイルから）
-    logger.info('レストランデータを複数ファイルから読み込んでいます', {
-      ...logContext,
-      files: restaurantCSVUrls,
-    });
-
-    // 各CSVファイルを取得して結合
-    const restaurantResponses = await logger.measureTimeAsync(
-      'レストランCSVファイルのフェッチ',
-      () => Promise.all(restaurantCSVUrls.map(url => fetch(url))),
-      LogLevel.INFO,
-      { ...logContext, urls: restaurantCSVUrls }
-    );
-
-    // レスポンスの確認
-    const failedRestaurantUrls = restaurantResponses
-      .map((res, idx) => (!res.ok ? restaurantCSVUrls[idx] : null))
-      .filter(Boolean);
-
-    if (failedRestaurantUrls.length > 0) {
-      logger.warn('一部のレストランCSVファイルの取得に失敗しました', {
-        ...logContext,
-        failedUrls: failedRestaurantUrls,
-      });
-    }
-
-    // テキストに変換
-    const restaurantCSVs = await logger.measureTimeAsync(
-      'レストランレスポンスのテキスト変換',
-      () => Promise.all(restaurantResponses.filter(res => res.ok).map(res => res.text())),
-      LogLevel.DEBUG,
-      logContext
-    );
-
-    // 駐車場とトイレのデータ取得
-    const [parkingResponse, toiletsResponse] = await logger.measureTimeAsync(
-      '駐車場・トイレCSVファイルのフェッチ',
-      () =>
-        Promise.all([
-          fetch(utilityCSVUrls[0] ?? ''), // 空の文字列をデフォルト値として提供
-          fetch(utilityCSVUrls[1] ?? ''), // 型エラーを解決
-        ]),
-      LogLevel.INFO,
-      { ...logContext, urls: utilityCSVUrls }
-    );
-
-    // レスポンスチェック
-    if (!parkingResponse.ok || !toiletsResponse.ok) {
-      const failedUrls = [
-        !parkingResponse.ok ? utilityCSVUrls[0] : null,
-        !toiletsResponse.ok ? utilityCSVUrls[1] : null,
-      ].filter(Boolean);
-
-      throw new Error(`CSVファイルの取得に失敗しました: ${failedUrls.join(', ')}`);
-    }
-
-    // テキストデータへの変換
-    const [parkingCSV, toiletsCSV] = await logger.measureTimeAsync(
-      '駐車場・トイレレスポンスのテキスト変換',
-      () => Promise.all([parkingResponse.text(), toiletsResponse.text()]),
-      LogLevel.DEBUG,
-      logContext
-    );
-
-    return processMultipleCSVData(restaurantCSVs, parkingCSV, toiletsCSV, logContext);
-  } catch (error) {
-    logger.error('CSVデータ取得中にエラーが発生しました', {
-      ...logContext,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
-}
-
-/**
- * 複数のCSVデータを処理してPOIオブジェクトに変換する関数
- */
-function processMultipleCSVData(
-  restaurantCSVs: string[],
-  parkingCSV: string,
-  toiletsCSV: string,
-  logContext: Record<string, unknown>
-): POI[] {
-  // レストランCSVを個別に解析し、結果を結合
-  const allRestaurants = restaurantCSVs.reduce<POI[]>((acc, csv, index) => {
-    const sourceInfo = { ...logContext, csvIndex: index };
-    const pois = logger.measureTime(
-      `レストランCSV解析 (ファイル ${index + 1}/${restaurantCSVs.length})`,
-      () => parseCSVtoPOIs(csv, 'restaurant'),
-      LogLevel.DEBUG,
-      sourceInfo
-    );
-    logger.info(`レストランデータ解析完了 (ファイル ${index + 1})`, {
-      ...sourceInfo,
-      count: pois.length,
-    });
-    return [...acc, ...pois];
-  }, []);
-
-  // 駐車場データの解析
-  const parking = logger.measureTime(
-    '駐車場CSV解析',
-    () => parseCSVtoPOIs(parkingCSV, 'parking'),
-    LogLevel.DEBUG,
-    logContext
-  );
-
-  // トイレデータの解析
-  const toilets = logger.measureTime(
-    'トイレCSV解析',
-    () => parseCSVtoPOIs(toiletsCSV, 'toilet'),
-    LogLevel.DEBUG,
-    logContext
-  );
-
-  // 全POIデータの結合（パフォーマンス計測）
-  return logger.measureTime(
-    'POIデータの結合処理',
-    () => combinePOIArrays(allRestaurants, parking, toilets),
-    LogLevel.DEBUG,
-    {
-      ...logContext,
-      counts: {
-        restaurants: allRestaurants.length,
-        parking: parking.length,
-        toilets: toilets.length,
-      },
-    }
-  );
-}
-
-/**
- * POI型からPointOfInterest型に変換する関数
- */
-function convertPOIsToPointsOfInterest(
-  pois: POI[],
-  logContext: Record<string, unknown>
-): PointOfInterest[] {
-  return logger.measureTime(
-    'POI型からPointOfInterest型への変換',
-    () =>
-      pois.map(
-        poi =>
-          ({
-            id: poi.id,
-            name: poi.name,
-            lat: poi.position.lat,
-            lng: poi.position.lng,
-            isClosed: poi.isClosed,
-            type: poi.type,
-            category: poi.category,
-            genre: poi.genre,
-            address: poi.address,
-            district: poi.district,
-            問い合わせ: poi.contact,
-            関連情報: poi.infoUrl,
-            'Google マップで見る': poi.googleMapsUrl,
-            営業時間: poi.businessHours,
-            searchText: poi.searchText,
-            // 定休日情報があれば変換
-            ...(poi.regularHolidays && {
-              月曜定休日: poi.regularHolidays.monday,
-              火曜定休日: poi.regularHolidays.tuesday,
-              水曜定休日: poi.regularHolidays.wednesday,
-              木曜定休日: poi.regularHolidays.thursday,
-              金曜定休日: poi.regularHolidays.friday,
-              土曜定休日: poi.regularHolidays.saturday,
-              日曜定休日: poi.regularHolidays.sunday,
-              祝祭定休日: poi.regularHolidays.holiday,
-            }),
-            定休日について: poi.holidayNotes,
-          }) as PointOfInterest
-      ),
-    LogLevel.DEBUG,
-    { ...logContext, count: pois.length }
-  );
-}
-
-/**
- * エラー処理を行う関数
- */
-function handleFetchError(
-  err: unknown,
-  logContext: Record<string, unknown>,
-  setError: (error: string | null) => void
-): void {
-  // 構造化されたエラーログ
-  logger.error(
-    'POIデータ取得中にエラーが発生しました',
-    err instanceof Error ? err : new Error(String(err))
-  );
-
-  // エラーログをユーザーフレンドリーなエラーメッセージに置き換え
-  setError('データの読み込みに失敗しました。ネットワーク接続を確認してください。');
-
-  // フォールバックデータがあれば使用できるようにログを残す
-  logger.warn('データ取得に失敗したため、フォールバックが必要かもしれません', {
-    ...logContext,
-    errorType: err instanceof Error ? err.name : 'UnknownError',
-  });
-}
-
-/**
- * POIのカテゴリ別件数を集計するヘルパー関数
- */
-function countCategories(pois: PointOfInterest[]): Record<string, number> {
-  return pois.reduce<Record<string, number>>((acc, poi) => {
-    const category = poi.category ?? 'unknown';
-    acc[category] = (acc[category] ?? 0) + 1;
-    return acc;
-  }, {});
-}
-
-/**
- * POI（Points of Interest）データを取得・管理するカスタムフック
- * データソースに応じて適切な方法でデータを取得し、加工して返します
- */
-export function usePOIData(options: UsePOIDataOptions = {}) {
-  const { enabled = true, useCache = true, cacheTtlMinutes } = options;
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pois, setPois] = useState<PointOfInterest[]>([]);
-  const [isOfflineData, setIsOfflineData] = useState(false);
-
-  // データ重複取得防止用のフラグ
-  const dataFetchedRef = useRef(false);
-
-  // オフラインモードフラグの取得（環境変数から）
-  const offlineModeEnabled = useMemo(
-    () => toBool(getEnv(ENV_KEYS.ENABLE_OFFLINE_MODE, { defaultValue: 'false' })),
-    []
-  );
-
-  // キャッシュTTLの取得（環境変数またはオプションから）
-  const cacheTTL = useMemo(() => {
-    const envTTL = getEnv(ENV_KEYS.CACHE_TTL, { defaultValue: '60' });
-    const ttlMinutes = parseInt(envTTL, 10);
-    return isNaN(ttlMinutes) ? cacheTtlMinutes || 60 : ttlMinutes;
-  }, [cacheTtlMinutes]);
-
-  // ファイルリストのメモ化
-  const restaurantCSVUrls = useMemo(() => CSV_FILES.restaurants, []);
-  const utilityCSVUrls = useMemo(() => CSV_FILES.utilities, []);
-
-  // データ取得ロジックをuseCallbackでメモ化
-  const fetchPOIData = useCallback(async () => {
-    // 既に取得済みの場合は処理をスキップ
-    if (dataFetchedRef.current) {
-      logger.debug('POIデータは既に取得済みのため、再取得をスキップします', {
-        component: COMPONENT_NAME,
-      });
-      return;
-    }
-
-    // コンポーネント名をコンテキストに含める
-    const logContext = { component: COMPONENT_NAME };
-
-    // キャッシュが有効な場合、キャッシュから読み込む
-    if (useCache) {
-      const cachedData = getFromCache(cacheTTL);
-      if (cachedData && cachedData.length > 0) {
-        setPois(cachedData);
-        setIsLoading(false);
-        setIsOfflineData(true);
-        dataFetchedRef.current = true;
-        return;
-      }
-    }
-
-    logger.info('POIデータの取得を開始', {
-      ...logContext,
-      useCache,
-      cacheTTL,
-      offlineModeEnabled,
-    });
-
-    try {
-      setIsLoading(true);
-
-      // 環境変数の確認
-      const useSheets = toBool(getEnv(ENV_KEYS.USE_GOOGLE_SHEETS, { defaultValue: 'false' }));
-
-      logger.debug('データソース設定', {
-        ...logContext,
-        useGoogleSheets: useSheets,
-      });
-
-      // データソースに応じて取得方法を切り替え
-      const allPOIs = useSheets
-        ? await fetchDataFromGoogleSheets(logContext)
-        : await fetchDataFromCSVFiles(logContext, restaurantCSVUrls, utilityCSVUrls);
-
-      // POIデータを変換
-      const pointsOfInterest = convertPOIsToPointsOfInterest(allPOIs, logContext);
-
-      logger.info('POIデータの取得と処理が完了しました', {
-        ...logContext,
-        totalCount: pointsOfInterest.length,
-        categories: countCategories(pointsOfInterest),
-      });
-
-      setPois(pointsOfInterest);
-      setError(null);
-      setIsOfflineData(false);
-
-      // キャッシュが有効な場合、データをキャッシュする
-      if (useCache) {
-        cachePOIData(pointsOfInterest);
-      }
-
-      // データ取得完了をマーク
-      dataFetchedRef.current = true;
-    } catch (err) {
-      // オフラインモードが有効な場合、キャッシュから読み込む（TTL無視）
-      if (offlineModeEnabled && useCache) {
-        try {
-          const cachedData = localStorage.getItem(STORAGE_KEYS.POI_DATA);
-          if (cachedData) {
-            const parsedData = JSON.parse(cachedData) as PointOfInterest[];
-            logger.info('オフラインモード: キャッシュからPOIデータを使用します', {
-              ...logContext,
-              count: parsedData.length,
-            });
-            setPois(parsedData);
-            setError(null);
-            setIsOfflineData(true);
-            dataFetchedRef.current = true;
-            setIsLoading(false);
-            return;
-          }
-        } catch (cacheErr) {
-          logger.warn('オフラインモード: キャッシュの読み込みに失敗しました', {
-            ...logContext,
-            error: cacheErr instanceof Error ? cacheErr.message : String(cacheErr),
-          });
-        }
-      }
-
-      // エラー処理
-      handleFetchError(err, logContext, setError);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [restaurantCSVUrls, utilityCSVUrls, useCache, cacheTTL, offlineModeEnabled]);
-
-  useEffect(() => {
-    if (!enabled) {
-      logger.debug('POIデータ取得は無効化されています', { component: COMPONENT_NAME, enabled });
-      return;
-    }
-
-    // 既にデータ取得済みの場合はスキップ
-    if (dataFetchedRef.current) {
-      logger.debug('POIデータは既に取得済みです', { component: COMPONENT_NAME });
-      return;
-    }
-
-    // 非同期関数を即時実行し、クリーンアップ時にはキャンセルできるようにする
-    void fetchPOIData();
-
-    // ネットワーク状態の変化を監視
-    const handleOnline = () => {
-      logger.info('ネットワーク接続が復元されました', { component: COMPONENT_NAME });
-      // オフラインデータを使用していた場合は再取得
-      if (isOfflineData && !dataFetchedRef.current) {
-        void fetchPOIData();
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-
-    // クリーンアップ関数
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      logger.debug('usePOIData のクリーンアップを実行', { component: COMPONENT_NAME });
-    };
-  }, [enabled, fetchPOIData, isOfflineData]);
+  // キャッシュTTLの決定ロジックを簡略化
+  const envTTL = ENV.env.isDev ? 5 : 60; // 開発環境では短い時間を使用
+  const cacheTTL = options.cacheTtlMinutes ?? envTTL;
 
   return {
-    pois,
-    isLoading,
-    error,
-    isOfflineData,
-    refresh: () => {
-      dataFetchedRef.current = false;
-      void fetchPOIData();
-    },
+    useGoogleSheets,
+    offlineMode,
+    cacheTTL,
+    debugMode,
+    logLevel: ENV.logging.level,
   };
+}
+
+/**
+ * 現在の設定に基づいてログレベルを取得する
+ * @param defaultLevel - デフォルトのログレベル
+ * @param envConfig - 環境設定
+ * @returns ログレベル
+ */
+function getAppropriateLogLevel(
+  defaultLevel: LogLevel,
+  envConfig: ReturnType<typeof getEnvironmentConfig>
+): LogLevel {
+  // デバッグモードの場合はより詳細なログレベル
+  if (envConfig.debugMode && defaultLevel > LogLevel.DEBUG) {
+    return LogLevel.DEBUG;
+  }
+
+  switch (envConfig.logLevel.toLowerCase()) {
+    case 'error':
+      return LogLevel.ERROR;
+    case 'warn':
+      return LogLevel.WARN;
+    case 'info':
+      return LogLevel.INFO;
+    case 'debug':
+      return LogLevel.DEBUG;
+    default:
+      return defaultLevel;
+  }
+}
+
+/**
+ * パフォーマンス測定とログ出力を行う関数
+ * @param operation - 測定する処理の説明
+ * @param fn - 測定する関数
+ * @param context - ログコンテキスト
+ * @param envConfig - 環境設定
+ * @returns 関数の戻り値
+ */
+async function measurePerformance<T>(
+  operation: string,
+  fn: () => Promise<T>,
+  context: Partial<StandardLogContext>,
+  envConfig: ReturnType<typeof getEnvironmentConfig>
+): Promise<T> {
+  const logLevel = getAppropriateLogLevel(LogLevel.INFO, envConfig);
+
+  return logger.measureTimeAsync(
+    operation,
+    fn,
+    logLevel,
+    createLogContext({
+      ...context,
+      performanceMeasurement: true,
+    })
+  );
+}
+
+/**
+ * キャッシュの有効性をチェックする関数
+ * @param timestamp - キャッシュのタイムスタンプ
+ * @param cacheTtl - キャッシュの有効期間（分）
+ * @returns キャッシュが有効かどうか
+ */
+function isCacheValid(timestamp: string | null, cacheTtl: number): boolean {
+  // nullの場合は無効として扱う
+  if (timestamp === null) return false;
+
+  const cachedTime = new Date(timestamp).getTime();
+  const currentTime = new Date().getTime();
+  const cacheTtlMs = cacheTtl * 60 * 1000; // 分からミリ秒に変換
+
+  return currentTime - cachedTime < cacheTtlMs;
+}
+
+/**
+ * POIデータのキャッシュを取得する関数
+ * @returns キャッシュされたPOIデータとキャッシュが有効かどうかのフラグ
+ */
+function getCachedPOIData(cacheTtl: number): {
+  cachedData: POI[] | null;
+  isValid: boolean;
+} {
+  try {
+    const cachedDataStr = localStorage.getItem(getStorageKey('POI_DATA'));
+    const timestamp = localStorage.getItem(getStorageKey('POI_DATA_TIMESTAMP'));
+    const isValid = isCacheValid(timestamp, cacheTtl);
+
+    // データが存在し、かつ有効期限内である場合
+    if (cachedDataStr !== null && isValid) {
+      const cachedData = JSON.parse(cachedDataStr) as POI[];
+      logger.debug(
+        'キャッシュからPOIデータを取得しました',
+        createLogContext({
+          action: 'get_cached_data',
+          count: cachedData.length,
+          cacheAge:
+            timestamp !== null
+              ? `${Math.round((Date.now() - new Date(timestamp).getTime()) / 60000)}分`
+              : 'unknown',
+        })
+      );
+      return { cachedData, isValid: true };
+    }
+
+    return { cachedData: null, isValid: false };
+  } catch (error) {
+    logger.error(
+      'キャッシュからのPOIデータ取得に失敗しました',
+      createLogContext({ action: 'get_cached_data', error })
+    );
+    return { cachedData: null, isValid: false };
+  }
+}
+
+/**
+ * POIデータをキャッシュに保存する関数
+ * @param data - 保存するPOIデータ
+ */
+function cachePOIData(data: POI[]): void {
+  try {
+    const timestamp = new Date().toISOString();
+    localStorage.setItem(getStorageKey('POI_DATA'), JSON.stringify(data));
+    localStorage.setItem(getStorageKey('POI_DATA_TIMESTAMP'), timestamp);
+
+    logger.debug(
+      'POIデータをキャッシュに保存しました',
+      createLogContext({
+        action: 'cache_data',
+        count: data.length,
+        timestamp,
+      })
+    );
+  } catch (error) {
+    logger.warn(
+      'POIデータのキャッシュ保存に失敗しました',
+      createLogContext({ action: 'cache_data', error })
+    );
+  }
+}
+
+/**
+ * CSVファイルからPOIデータを取得する関数
+ * @returns POIデータの配列
+ */
+async function fetchPOIFromCSVFiles(): Promise<POI[]> {
+  let allData: POI[] = [];
+
+  const allFiles = [...CSV_FILES.restaurants, ...CSV_FILES.utilities];
+  const startTime = performance.now();
+
+  try {
+    const results: POI[][] = await Promise.all(
+      allFiles.map(async path => {
+        try {
+          const response = await fetch(path);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+          }
+          const text = await response.text();
+
+          // パスからPOIのタイプを推測
+          const poiType = path.includes('駐車場')
+            ? 'parking'
+            : path.includes('公共トイレ')
+              ? 'toilet'
+              : 'restaurant';
+
+          return parseCSVtoPOIs(text, poiType);
+        } catch (error) {
+          logger.error(`${path}の読み込みに失敗しました`, createLogContext({ path, error }));
+          return [];
+        }
+      })
+    );
+
+    // combinePOIArraysは可変長引数を受け取るため修正
+    allData = combinePOIArrays(...results);
+
+    const duration = performance.now() - startTime;
+    logger.info(
+      'CSVファイルからPOIデータを取得しました',
+      createLogContext({
+        action: 'fetch_csv',
+        count: allData.length,
+        durationMs: Math.round(duration),
+        fileCount: allFiles.length,
+      })
+    );
+
+    return allData;
+  } catch (error) {
+    logger.error(
+      'CSVファイルからのPOIデータ取得に失敗しました',
+      createLogContext({ action: 'fetch_csv', error })
+    );
+    return [];
+  }
+}
+
+/**
+ * POIデータをソースから取得する関数（Google SheetsかCSVファイル）
+ * @param options - 取得オプション
+ * @returns 取得したPOIデータ
+ */
+async function fetchPOIDataFromSource(options: {
+  useGoogleSheets: boolean;
+  envConfig: ReturnType<typeof getEnvironmentConfig>;
+}): Promise<POI[]> {
+  const { useGoogleSheets, envConfig } = options;
+  const isOnline = navigator.onLine;
+
+  try {
+    // オフラインモードでネットワーク接続がない場合は早期に失敗
+    if (envConfig.offlineMode && !isOnline) {
+      logger.warn(
+        'オフラインモードが有効で、ネットワーク接続がありません',
+        createLogContext({
+          action: 'network_check',
+          offlineMode: envConfig.offlineMode,
+          isOnline,
+        })
+      );
+      throw new Error('オフラインモードが有効です');
+    }
+
+    let data: POI[] = [];
+
+    if (useGoogleSheets) {
+      logger.info(
+        'Google SheetsからPOIデータを取得します',
+        createLogContext({
+          action: 'fetch_data_source',
+          source: 'google_sheets',
+          isOnline,
+        })
+      );
+
+      data = await measurePerformance(
+        'Google Sheetsからのデータ取得',
+        () => fetchPOIsFromSheet('restaurant', 'レストラン!A1:Z1000'),
+        { action: 'fetch_google_sheets' },
+        envConfig
+      );
+    } else {
+      logger.info(
+        'CSVファイルからPOIデータを取得します',
+        createLogContext({
+          action: 'fetch_data_source',
+          source: 'csv_files',
+          isOnline,
+        })
+      );
+
+      data = await measurePerformance(
+        'CSVファイルからのデータ取得',
+        fetchPOIFromCSVFiles,
+        { action: 'fetch_csv_files' },
+        envConfig
+      );
+    }
+
+    if (!data.length) {
+      throw new Error(
+        `データソース(${useGoogleSheets ? 'Google Sheets' : 'CSV'})からデータを取得できませんでした`
+      );
+    }
+
+    return data;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(
+      'POIデータの取得に失敗しました',
+      createLogContext({
+        action: 'fetch_data_source',
+        source: useGoogleSheets ? 'google_sheets' : 'csv_files',
+        isOnline,
+        errorMessage,
+        error,
+      })
+    );
+    throw error; // 上位の呼び出し元でハンドリングするために再スロー
+  }
+}
+
+/**
+ * POIデータを取得する関数（キャッシュ処理を含む）
+ * @param options - オプション（キャッシュ設定など）
+ * @returns 取得したPOIデータ
+ */
+async function fetchPOIDataWithCache(options: {
+  useCache: boolean;
+  envConfig: ReturnType<typeof getEnvironmentConfig>;
+}): Promise<POI[]> {
+  const { useCache, envConfig } = options;
+  const { cacheTTL, useGoogleSheets, offlineMode } = envConfig;
+
+  // キャッシュを使用する場合はキャッシュから取得を試みる
+  if (useCache) {
+    const { cachedData, isValid } = getCachedPOIData(cacheTTL);
+
+    // 有効なキャッシュがある場合はそれを返す
+    if (cachedData && isValid) {
+      logger.info(
+        'キャッシュからPOIデータを使用します',
+        createLogContext({
+          action: 'use_cached_data',
+          count: cachedData.length,
+          cacheValid: true,
+          source: 'cache',
+        })
+      );
+      return cachedData;
+    }
+
+    // オフラインモードでキャッシュが期限切れの場合は、古いキャッシュでも使用
+    if (offlineMode && cachedData !== null) {
+      logger.warn(
+        'オフラインモード: 期限切れのキャッシュを使用します',
+        createLogContext({
+          action: 'use_expired_cache',
+          count: cachedData.length,
+          cacheValid: false,
+          offlineMode: true,
+          source: 'expired_cache',
+        })
+      );
+      return cachedData;
+    }
+  }
+
+  // キャッシュが無効またはオフラインモードでない場合は、データソースから取得
+  try {
+    const data = await fetchPOIDataFromSource({
+      useGoogleSheets,
+      envConfig,
+    });
+
+    // データが取得できた場合はキャッシュを更新
+    if (data.length > 0 && useCache) {
+      cachePOIData(data);
+    }
+
+    return data;
+  } catch (error) {
+    logger.warn(
+      'データ取得に失敗しました。フォールバック戦略を試行します',
+      createLogContext({
+        action: 'fallback_strategy_start',
+        error,
+      })
+    );
+
+    // エラー時に空のキャッシュがある場合は、それをフォールバックとして使用
+    if (useCache) {
+      const { cachedData } = getCachedPOIData(Infinity); // 期限を無視してキャッシュ取得
+
+      if (cachedData && cachedData.length > 0) {
+        logger.warn(
+          'データ取得失敗: 期限切れのキャッシュにフォールバックします',
+          createLogContext({
+            action: 'fallback_to_expired_cache',
+            count: cachedData.length,
+            source: 'fallback_cache',
+            error,
+          })
+        );
+        return cachedData;
+      }
+    }
+
+    // キャッシュもない場合は空配列を返す
+    logger.error(
+      'POIデータを取得できず、有効なキャッシュもありません',
+      createLogContext({
+        action: 'data_fetch_failure',
+        fallbackAttempted: true,
+        useCache,
+        offlineMode,
+        error,
+      })
+    );
+    return [];
+  }
+}
+
+/**
+ * POIデータを取得・管理するためのカスタムフック
+ * @param options - オプション設定（キャッシュ設定など）
+ * @returns ロード状態とPOIデータ
+ */
+export function usePOIData(options: UsePOIDataOptions = {}) {
+  // オプションのデフォルト値設定
+  const { enabled = true, useCache = true, cacheTtlMinutes } = options;
+
+  // 環境設定の取得（メモ化）
+  const envConfig = useMemo(() => getEnvironmentConfig({ cacheTtlMinutes }), [cacheTtlMinutes]);
+
+  // データの状態管理
+  const [data, setData] = useState<POI[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const isFirstLoad = useRef(true);
+
+  // エラーハンドリングを統一化（メモ化）
+  const handleError = useCallback((err: unknown, context: Partial<StandardLogContext> = {}) => {
+    const fetchError = err instanceof Error ? err : new Error('不明なエラーが発生しました');
+    setError(fetchError);
+    logger.error(
+      fetchError.message,
+      createLogContext({
+        ...context,
+        error: err,
+        errorName: fetchError.name,
+        errorMessage: fetchError.message,
+      })
+    );
+  }, []);
+
+  // POIデータ更新処理（メモ化）
+  const updatePOIData = useCallback(
+    (fetchedData: POI[]) => {
+      if (fetchedData.length > 0) {
+        setData(fetchedData);
+
+        // デバッグモードの場合は詳細情報をログ出力
+        if (envConfig.debugMode) {
+          logger.debug(
+            'POIデータ詳細',
+            createLogContext({
+              action: 'debug_poi_data',
+              count: fetchedData.length,
+              sampleData: fetchedData.slice(0, 3),
+              categories: [...new Set(fetchedData.map(poi => poi.category))],
+            })
+          );
+        }
+      } else {
+        setError(new Error('データが空です'));
+        logger.warn('POIデータが空です', createLogContext({ action: 'empty_data' }));
+      }
+    },
+    [envConfig.debugMode]
+  );
+
+  // POIデータを取得する関数（メモ化）
+  const fetchPOIData = useCallback(async () => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // データ取得処理の実行
+      const fetchedData = await fetchPOIDataWithCache({
+        useCache,
+        envConfig,
+      });
+
+      updatePOIData(fetchedData);
+    } catch (err) {
+      handleError(err, { action: 'fetch_poi_data' });
+    } finally {
+      setIsLoading(false);
+      isFirstLoad.current = false;
+    }
+  }, [enabled, useCache, envConfig, updatePOIData, handleError]);
+
+  // データ再取得用の公開関数
+  const refetch = useCallback(() => {
+    logger.info('POIデータを再取得します', createLogContext({ action: 'refetch' }));
+    void fetchPOIData();
+  }, [fetchPOIData]);
+
+  // 初回マウント時にデータを取得
+  useEffect(() => {
+    if (enabled) {
+      void fetchPOIData();
+    }
+
+    return () => {
+      logger.debug(
+        'POIデータフックがアンマウントされました',
+        createLogContext({ action: 'unmount' })
+      );
+    };
+  }, [enabled, fetchPOIData]);
+
+  // 結果をメモ化して返す
+  const result = useMemo(
+    () => ({
+      data,
+      isLoading,
+      error,
+      refetch,
+      isFirstLoad: isFirstLoad.current,
+    }),
+    [data, isLoading, error, refetch]
+  );
+
+  return result;
 }

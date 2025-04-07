@@ -12,6 +12,7 @@
  */
 
 import { LogLevel } from './logger';
+
 import type {
   BooleanEnvValue,
   EnvironmentConfig,
@@ -528,7 +529,7 @@ export function checkEnvironment(verbose: boolean = false): void {
     // Google Spreadsheet ID検証
     {
       name: 'VITE_GOOGLE_SPREADSHEET_ID',
-      validator: value => typeof value === 'string' && value.match(/^[a-zA-Z0-9_-]{20,}$/) !== null,
+      validator: value => typeof value === 'string' && (/^[a-zA-Z0-9_-]{20,}$/.exec(value)) !== null,
       required: true,
       message: 'Google SpreadsheetのIDが無効な形式です',
     },

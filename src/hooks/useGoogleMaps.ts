@@ -2,8 +2,12 @@ import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 import { getLoaderOptions } from '@/constants/maps';
-import { ENV, isDevEnvironment, getMapsApiVersion } from '@/utils/env';
+import { ENV, isDevEnvironment, getMapsApiVersion, getEnvVar } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
+
+// 定数の外部化
+const DEFAULT_INIT_TIMEOUT_MS = 15000; // 15秒
+const SADO_CENTER = { lat: 38.0413, lng: 138.3689 }; // 佐渡島の中心あたり
 
 /**
  * Google Maps APIの初期化に必要な環境変数を検証する
@@ -16,8 +20,9 @@ function validateMapsEnvironmentVars(): {
   errors: string[];
 } {
   const errors: string[] = [];
-  const apiKey = ENV.google.apiKey;
-  const mapId = ENV.google.mapId;
+  // 環境変数管理ガイドラインに従った取得方法に修正
+  const apiKey = getEnvVar({ key: 'VITE_GOOGLE_API_KEY', defaultValue: '' });
+  const mapId = getEnvVar({ key: 'VITE_GOOGLE_MAPS_MAP_ID', defaultValue: '' });
 
   // APIキーの検証 (必須)
   if (!apiKey) {
@@ -29,13 +34,15 @@ function validateMapsEnvironmentVars(): {
   }
 
   // マップIDの検証 (任意だが警告)
-  if (!mapId || mapId.length === 0) {
+  if (!mapId || mapId.trim() === '') {
+    const logContext = {
+      component: 'useGoogleMaps',
+      action: 'validate_environment',
+      missingEnv: 'VITE_GOOGLE_MAPS_MAP_ID',
+    };
     logger.warn(
       'Google Maps Map IDが設定されていません。Advanced Markerが正常に動作しない可能性があります。',
-      {
-        component: 'useGoogleMaps',
-        missingEnv: 'VITE_GOOGLE_MAPS_MAP_ID',
-      }
+      logContext
     );
   }
 
@@ -193,9 +200,12 @@ const createMapInstance = (
   // マップIDの取得
   const mapId = ENV.google.mapId;
 
-  if (!mapId || mapId.trim() === '') {
+  // マップIDの検証（型安全に処理）
+  const hasValidMapId = typeof mapId === 'string' && mapId.trim() !== '';
+  if (!hasValidMapId) {
     logger.warn('マップIDが設定されていないか無効です', {
       component: 'useGoogleMaps',
+      action: 'validate_map_config', // actionを追加して構造化
       missingEnv: 'VITE_GOOGLE_MAPS_MAP_ID',
     });
   }
@@ -205,7 +215,7 @@ const createMapInstance = (
     ...mapOptions,
     center,
     zoom,
-    ...(mapId ? { mapId } : {}),
+    ...(hasValidMapId ? { mapId } : {}),
   };
 
   logger.debug('マップインスタンスを作成中...', {
@@ -248,7 +258,9 @@ const prepareLoaderOptions = (mapId: string | undefined) => {
 
   const loaderOptions = getLoaderOptions();
 
-  if (mapId) {
+  // 型安全なチェック - mapIdが文字列かつ空でない場合のみ使用
+  const hasValidMapId = typeof mapId === 'string' && mapId.trim() !== '';
+  if (hasValidMapId) {
     loaderOptions.mapIds = [mapId];
   } else {
     logger.warn('マップIDが設定されていません。.env ファイルを確認してください。', {
@@ -257,7 +269,7 @@ const prepareLoaderOptions = (mapId: string | undefined) => {
     });
   }
 
-  const mapIds = loaderOptions.mapIds as string[] | undefined;
+  const mapIds = loaderOptions.mapIds;
   const libraries = loaderOptions.libraries as string[] | undefined;
 
   logger.debug('Google Maps APIをロード中...', {
@@ -268,8 +280,10 @@ const prepareLoaderOptions = (mapId: string | undefined) => {
     mapIds: mapIds,
   });
 
+  // mapIdsが有効な配列でない場合の処理
   if (!mapIds || !Array.isArray(mapIds) || mapIds.length === 0) {
-    loaderOptions.mapIds = mapId ? [mapId] : [];
+    // 型安全なチェック
+    loaderOptions.mapIds = hasValidMapId ? [mapId] : [];
   }
 
   return { loaderOptions, mapIds, libraries };
@@ -360,7 +374,7 @@ const validateAndLogInitialization = (
     requestedVersion: loaderOptions.version,
   };
 
-  if (google.maps.version) {
+  if (google.maps.version && google.maps.version !== '') {
     logger.info('Google Maps API初期化完了', {
       ...logContext,
       apiVersion: google.maps.version,
@@ -368,9 +382,9 @@ const validateAndLogInitialization = (
     });
   }
 
-  const hasMarkerLibrary = libraries && Array.isArray(libraries) && libraries.includes('marker');
-
-  if (hasMarkerLibrary) {
+  // 型安全なチェック - librariesが配列かつmarkerを含む場合
+  const isMarkerLibraryRequested = Array.isArray(libraries) && libraries.includes('marker');
+  if (isMarkerLibraryRequested) {
     validateMarkerLibraries(libraries, mapIds);
   }
 };
@@ -476,7 +490,6 @@ const loadAndInitializeMap = async (
 
     logger.debug('Google Maps初期化が完了しました', {
       ...logContext,
-      mapInstance: !!mapInstance,
       apiState: 'loaded',
     });
 
@@ -493,16 +506,20 @@ const loadAndInitializeMap = async (
  * @returns Advanced Markerをサポートしていればtrue
  */
 function hasAdvancedMarkerSupport(): boolean {
-  if (typeof google === 'undefined') return false;
-  if (typeof google.maps === 'undefined') return false;
-  if (typeof google.maps.marker === 'undefined') return false;
+  // グローバルオブジェクトの存在を型安全に順に確認
+  const hasGoogleNamespace = typeof window.google !== 'undefined';
+  if (!hasGoogleNamespace) return false;
 
-  // google.maps.markerをオブジェクトとして扱い、プロパティの存在をチェック
-  const markerNamespace = google.maps.marker as object;
+  const hasMapsNamespace = typeof google.maps !== 'undefined';
+  if (!hasMapsNamespace) return false;
+
+  const hasMarkerNamespace = typeof google.maps.marker !== 'undefined';
+  if (!hasMarkerNamespace) return false;
+
+  // markerNamespaceからAdvancedMarkerElementの存在と型をチェック
   return (
-    'AdvancedMarkerElement' in markerNamespace &&
-    // 念のため関数かどうかもチェック
-    typeof (markerNamespace as Record<string, unknown>).AdvancedMarkerElement === 'function'
+    'AdvancedMarkerElement' in google.maps.marker &&
+    typeof google.maps.marker.AdvancedMarkerElement === 'function'
   );
 }
 
@@ -631,7 +648,7 @@ const useMapInitializer = (
     const apiKey = validateInitRequirements();
 
     // 地図の読み込みと初期化
-    return await loadAndInitializeMap(apiKey, elementId, center, zoom);
+    return loadAndInitializeMap(apiKey, elementId, center, zoom);
   }, [center, zoom, elementId]);
 };
 
@@ -649,7 +666,9 @@ const useRetryHandler = (
       // 最大再試行回数
       const MAX_RETRIES = 3;
 
-      if (retryCount < MAX_RETRIES) {
+      // 有効な数値であり、最大試行回数未満であることを確認
+      // 0以上かつMAX_RETRIES未満である場合のみ再試行
+      if (retryCount >= 0 && retryCount < MAX_RETRIES) {
         const nextCount = retryCount + 1;
         logger.warn(`Google Maps初期化を再試行します (${nextCount}/${MAX_RETRIES})...`, {
           component: 'useGoogleMaps',
@@ -679,8 +698,10 @@ const useTimeoutHandler = () => {
 
   // タイムアウト処理を管理する
   const cleanupTimeout = useCallback(() => {
-    if (timeoutIdRef.current) {
-      clearTimeout(timeoutIdRef.current);
+    // 型安全なチェック - タイムアウトIDが存在する場合のみクリア
+    const timeoutId = timeoutIdRef.current;
+    if (typeof timeoutId === 'number' && timeoutId > 0) {
+      clearTimeout(timeoutId);
       timeoutIdRef.current = null;
       logger.debug('初期化タイムアウトをクリアしました', {
         component: 'useGoogleMaps',
@@ -790,16 +811,17 @@ const useSkipHandler = (
 export const useGoogleMaps = (options: UseGoogleMapsOptions): GoogleMapsState => {
   const {
     elementId,
-    center = { lat: 38.0413, lng: 138.3689 }, // 佐渡島の中心あたり
+    center,
     zoom = 10,
     onMapLoaded,
     skipInit = false,
-    initTimeout = 15000, // デフォルト15秒
+    initTimeout = DEFAULT_INIT_TIMEOUT_MS,
   } = options;
 
   // デフォルト値のメモ化
-  const defaultCenter = useMemo(() => ({ lat: 38.0413, lng: 138.3689 }), []);
-  const effectiveCenter = center || defaultCenter;
+  const defaultCenter = useMemo(() => SADO_CENTER, []);
+  // 型安全な条件演算子を使用
+  const effectiveCenter = useMemo(() => center ?? defaultCenter, [center, defaultCenter]);
 
   // 状態管理
   const [state, setState] = useState<GoogleMapsState>({

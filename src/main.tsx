@@ -51,6 +51,7 @@ function configureLoggerFromEnv(): void {
   logger.configure({
     minLevel: getLogLevelFromString(logLevelStr),
     enableConsole: toBool(getEnv('VITE_LOG_ENABLE_CONSOLE', { defaultValue: 'true' })),
+    includeTimestamps: true, // タイムスタンプを常に含める
 
     // 既存の設定を維持
     componentLevels: {
@@ -65,25 +66,41 @@ function configureLoggerFromEnv(): void {
       マーカー可視性更新: 5,
       'マーカー生成/更新': 2,
     },
+
+    // コンテキスト情報の拡張
+    contextFormatter: context => ({
+      ...context,
+      appName: ENV.app.name,
+      environment: ENV.env.mode,
+      version: import.meta.env.VITE_APP_VERSION ?? '1.0.0',
+    }),
   });
 
   logger.info('ロガー設定を環境変数から読み込みました', {
     level: logLevelStr,
     console: getEnv('VITE_LOG_ENABLE_CONSOLE', { defaultValue: 'true' }),
     env: ENV.env.mode,
+    component: 'main',
+    action: 'initialize_logger',
   });
 }
 
 // デバッグモードを有効にする関数
 function enableDebugMode(): void {
   logger.configure({ minLevel: LogLevel.DEBUG });
-  logger.info('デバッグモードが有効になりました');
+  logger.info('デバッグモードが有効になりました', {
+    component: 'main',
+    action: 'enable_debug',
+  });
 }
 
 // デバッグモードを無効にする関数
 function disableDebugMode(): void {
   logger.configure({ minLevel: ENV.env.isDev ? LogLevel.INFO : LogLevel.WARN });
-  logger.info('デバッグモードが無効になりました');
+  logger.info('デバッグモードが無効になりました', {
+    component: 'main',
+    action: 'disable_debug',
+  });
 }
 
 /**
@@ -96,7 +113,10 @@ function setupDebugFunctions(): void {
   window.disableDebugMode = disableDebugMode;
   window.getDebugLogs = () => logger.getRecentLogs();
 
-  logger.info('デバッグ機能: コンソールで enableDebugMode() を実行すると詳細ログが有効になります');
+  logger.info('デバッグ機能: コンソールで enableDebugMode() を実行すると詳細ログが有効になります', {
+    component: 'main',
+    action: 'setup_debug',
+  });
 }
 
 /**
@@ -160,7 +180,7 @@ function initializeApplication() {
   if (isTestEnvironment()) {
     logger.configure({
       minLevel: LogLevel.ERROR,
-      enableConsole: !Boolean(import.meta.env.CI),
+      enableConsole: !toBool(String(import.meta.env.CI)),
     });
   }
 
@@ -243,4 +263,9 @@ async function mountApplication(): Promise<void> {
 }
 
 // アプリケーションの起動
-mountApplication();
+mountApplication().catch(error => {
+  logger.error('アプリケーションの起動に失敗しました', {
+    error,
+    errorType: 'StartupError',
+  });
+});

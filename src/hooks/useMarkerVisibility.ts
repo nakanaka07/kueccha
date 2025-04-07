@@ -1,9 +1,9 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
+import { ENV, getEnv } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
 import { isInViewport } from '@/utils/markerUtils';
-import { ENV, getEnv } from '@/utils/env';
 
 /**
  * マーカー可視性管理のパラメータ
@@ -26,6 +26,22 @@ interface UseMarkerVisibilityParams {
 
   /** マーカー可視性変更時のコールバック（オプション） */
   onVisibilityChange?: (visibleMarkers: number) => void;
+}
+
+/**
+ * マーカー可視性管理に関する設定を初期化する
+ */
+function initMarkerVisibilityConfig(debounceMs?: number) {
+  return {
+    debounceMs:
+      debounceMs ??
+      getEnv('VITE_MARKER_VISIBILITY_DEBOUNCE_MS', {
+        defaultValue: 100,
+        transform: value => parseInt(value, 10),
+      }),
+    debug: Boolean(ENV.env.debug),
+    verboseLogging: Boolean(ENV.features.verboseLogging),
+  };
 }
 
 /**
@@ -176,6 +192,213 @@ function checkAndUpdateMarkerVisibility(
 }
 
 /**
+ * マーカー可視性チェック中のエラー処理を行う関数
+ *
+ * @param error 発生したエラー
+ * @param context エラー発生時のコンテキスト情報
+ */
+function handleMarkerVisibilityError(
+  error: unknown,
+  context: {
+    markers: google.maps.marker.AdvancedMarkerElement[];
+    pois: PointOfInterest[];
+    map: google.maps.Map | null;
+    visibilityMargin: number;
+  }
+): void {
+  // エラータイプ別メッセージと共通コンテキスト情報
+  const commonContext = {
+    component: 'useMarkerVisibility',
+  };
+
+  // エラータイプに基づいて詳細なエラー分類
+  if (error instanceof TypeError) {
+    // 型エラー - マーカーやマップの型に関する問題
+    logger.error('マーカー可視性更新で型エラーが発生しました', {
+      ...commonContext,
+      errorType: 'TypeError',
+      message: error.message,
+    });
+  } else if (error instanceof RangeError) {
+    // 範囲エラー - 不正なインデックスアクセスなど
+    logger.error('マーカー可視性更新で範囲エラーが発生しました', {
+      ...commonContext,
+      errorType: 'RangeError',
+      message: error.message,
+    });
+  } else if (error instanceof Error) {
+    // その他の標準エラー
+    logger.error('マーカー可視性更新エラー', {
+      ...commonContext,
+      errorType: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+  } else {
+    // 未知のエラー型
+    logger.error('マーカー可視性更新で不明なエラーが発生しました', {
+      ...commonContext,
+      error: String(error),
+    });
+  }
+
+  const { markers, pois, map, visibilityMargin } = context;
+
+  // エラー詳細のコンテキスト追加
+  logger.debug('マーカー可視性更新エラー詳細コンテキスト', {
+    ...commonContext,
+    markersCount: markers.length,
+    poisCount: pois.length,
+    mapLoaded: !!map,
+    hasBounds: map?.getBounds() ? true : false,
+    visibilityMargin,
+  });
+}
+
+/**
+ * マップイベントリスナーのセットアップと後片付け関数
+ *
+ * @param map Google Mapのインスタンス
+ * @param eventHandler 各イベントで実行するハンドラー
+ * @returns クリーンアップ関数
+ */
+function setupMapEventListeners(map: google.maps.Map, eventHandler: () => void): () => void {
+  // イベントリスナーの設定
+  const events = ['idle', 'zoom_changed', 'dragend'];
+  const listeners = events.map(eventName => map.addListener(eventName, eventHandler));
+
+  // クリーンアップ関数を返す
+  return () => {
+    listeners.forEach(listener => google.maps.event.removeListener(listener));
+  };
+}
+
+/**
+ * マーカー可視性の更新処理ハンドラを作成
+ */
+function useVisibilityUpdateHandler({
+  mapRef,
+  markers,
+  pois,
+  visibilityMargin,
+  visibleCountRef,
+  onVisibilityChange,
+  config,
+}: {
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
+  markers: google.maps.marker.AdvancedMarkerElement[];
+  pois: PointOfInterest[];
+  visibilityMargin: number;
+  visibleCountRef: React.MutableRefObject<number>;
+  onVisibilityChange?: ((visibleMarkers: number) => void) | undefined;
+  config: { debug: boolean; verboseLogging: boolean };
+}) {
+  return useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    try {
+      const measureLogging = config.debug || config.verboseLogging;
+
+      logger.measureTime(
+        'マーカー可視性更新',
+        () => {
+          checkAndUpdateMarkerVisibility(
+            map,
+            markers,
+            pois,
+            visibilityMargin,
+            visibleCountRef,
+            onVisibilityChange
+          );
+        },
+        // デバッグモードまたは詳細ログが有効な場合はDEBUG、それ以外ではログ出力を抑制
+        measureLogging ? LogLevel.DEBUG : LogLevel.INFO,
+        { component: 'useMarkerVisibility' },
+        // 50ms以上かかった場合のみログに記録
+        50
+      );
+    } catch (error: unknown) {
+      handleMarkerVisibilityError(error, {
+        markers,
+        pois,
+        map,
+        visibilityMargin,
+      });
+    }
+  }, [
+    mapRef,
+    markers,
+    pois,
+    visibilityMargin,
+    onVisibilityChange,
+    visibleCountRef,
+    config.debug,
+    config.verboseLogging,
+  ]);
+}
+
+/**
+ * マーカーの可視性を監視し、イベントリスナーを設定するカスタムフック
+ */
+function useMarkerVisibilityEvents({
+  mapRef,
+  updateMarkerVisibility,
+  debouncedUpdateVisibility,
+  markers,
+  config,
+  visibilityMargin,
+  visibleCountRef,
+}: {
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
+  updateMarkerVisibility: () => void;
+  debouncedUpdateVisibility: () => void;
+  markers: google.maps.marker.AdvancedMarkerElement[];
+  config: { debounceMs: number; debug: boolean };
+  visibilityMargin: number;
+  visibleCountRef: React.MutableRefObject<number>;
+}) {
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // イベントリスナーのセットアップ
+    const cleanupEventListeners = setupMapEventListeners(map, debouncedUpdateVisibility);
+
+    // 初回実行
+    updateMarkerVisibility();
+
+    // コンポーネント初期化ログ
+    logger.debug('マーカー可視性管理を初期化しました', {
+      component: 'useMarkerVisibility',
+      initialMarkers: markers.length,
+      debounceMs: config.debounceMs,
+      visibilityMargin,
+    });
+
+    // クリーンアップ時のために現在の値をキャプチャ
+    const captureVisibleCount = () => visibleCountRef.current;
+
+    // クリーンアップ関数
+    return () => {
+      cleanupEventListeners();
+      logger.debug('マーカー可視性管理を解放しました', {
+        component: 'useMarkerVisibility',
+        finalVisibleCount: captureVisibleCount(),
+      });
+    };
+  }, [
+    mapRef,
+    debouncedUpdateVisibility,
+    updateMarkerVisibility,
+    markers.length,
+    config.debounceMs,
+    visibilityMargin,
+    visibleCountRef,
+  ]);
+}
+
+/**
  * 地図の表示領域に基づいてマーカーの可視性を最適化するカスタムフック
  *
  * このフックは、現在の地図表示領域内に存在するマーカーのみを表示し、
@@ -199,16 +422,8 @@ export function useMarkerVisibility({
   visibilityMargin = 50,
   onVisibilityChange,
 }: UseMarkerVisibilityParams): void {
-  // 環境変数から設定を読み込み、未設定の場合はデフォルト値を使用
-  const configuredDebounceMs = useMemo(() => {
-    return (
-      debounceMs ??
-      getEnv('VITE_MARKER_VISIBILITY_DEBOUNCE_MS', {
-        defaultValue: 100,
-        transform: value => parseInt(value, 10),
-      })
-    );
-  }, [debounceMs]);
+  // 環境変数とデバッグ設定を一度にまとめて取得
+  const config = useMemo(() => initMarkerVisibilityConfig(debounceMs), [debounceMs]);
 
   // 前回の可視マーカー数を追跡
   const visibleCountRef = useRef<number>(0);
@@ -216,139 +431,52 @@ export function useMarkerVisibility({
   // デバウンスタイマーの参照
   const debounceTimerRef = useRef<number | null>(null);
 
-  // マーカー可視性の更新処理（メモ化）- 依存配列を最適化
-  const updateMarkerVisibility = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    try {
-      const measureLogging = ENV.env.debug || ENV.features.verboseLogging;
-
-      logger.measureTime(
-        'マーカー可視性更新',
-        () => {
-          checkAndUpdateMarkerVisibility(
-            map,
-            markers,
-            pois,
-            visibilityMargin,
-            visibleCountRef,
-            onVisibilityChange
-          );
-        },
-        // デバッグモードまたは詳細ログが有効な場合はDEBUG、それ以外ではログ出力を抑制
-        measureLogging ? LogLevel.DEBUG : LogLevel.INFO,
-        { component: 'useMarkerVisibility' },
-        // 50ms以上かかった場合のみログに記録
-        50
-      );
-    } catch (error: unknown) {
-      // エラータイプに基づいて詳細なエラー分類
-      if (error instanceof TypeError) {
-        // 型エラー - マーカーやマップの型に関する問題
-        logger.error('マーカー可視性更新で型エラーが発生しました', {
-          component: 'useMarkerVisibility',
-          errorType: 'TypeError',
-          message: error.message,
-        });
-      } else if (error instanceof RangeError) {
-        // 範囲エラー - 不正なインデックスアクセスなど
-        logger.error('マーカー可視性更新で範囲エラーが発生しました', {
-          component: 'useMarkerVisibility',
-          errorType: 'RangeError',
-          message: error.message,
-        });
-      } else if (error instanceof Error) {
-        // その他の標準エラー
-        logger.error('マーカー可視性更新エラー', {
-          component: 'useMarkerVisibility',
-          errorType: error.name,
-          message: error.message,
-          stack: error.stack,
-        });
-      } else {
-        // 未知のエラー型
-        logger.error('マーカー可視性更新で不明なエラーが発生しました', {
-          component: 'useMarkerVisibility',
-          error: String(error),
-        });
-      }
-
-      // エラー詳細のコンテキスト追加
-      logger.debug('マーカー可視性更新エラー詳細コンテキスト', {
-        component: 'useMarkerVisibility',
-        markersCount: markers.length,
-        poisCount: pois.length,
-        mapLoaded: !!map,
-        hasBounds: map.getBounds() ? true : false,
-        visibilityMargin,
-      });
-    }
-  }, [mapRef, markers, pois, visibilityMargin, onVisibilityChange]);
+  // マーカー可視性の更新処理
+  const updateMarkerVisibility = useVisibilityUpdateHandler({
+    mapRef,
+    markers,
+    pois,
+    visibilityMargin,
+    visibleCountRef,
+    onVisibilityChange,
+    config,
+  });
 
   // デバウンス処理を適用した可視性更新
   const debouncedUpdateVisibility = useCallback(() => {
-    // 既存のタイマーをクリア
     if (debounceTimerRef.current !== null) {
       window.clearTimeout(debounceTimerRef.current);
     }
 
-    // 新しいタイマーを設定
     debounceTimerRef.current = window.setTimeout(() => {
       updateMarkerVisibility();
       debounceTimerRef.current = null;
-    }, configuredDebounceMs); // 環境変数から設定された値を使用
-  }, [updateMarkerVisibility, configuredDebounceMs]);
+    }, config.debounceMs);
+  }, [updateMarkerVisibility, config.debounceMs]);
 
   // 地図イベント監視の設定・クリーンアップ
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    // イベントリスナーの設定
-    const events = ['idle', 'zoom_changed', 'dragend'];
-    const listeners = events.map(eventName =>
-      map.addListener(eventName, debouncedUpdateVisibility)
-    );
-
-    // 初回実行
-    updateMarkerVisibility();
-
-    // コンポーネント初期化ログ
-    logger.debug('マーカー可視性管理を初期化しました', {
-      component: 'useMarkerVisibility',
-      initialMarkers: markers.length,
-      debounceMs: configuredDebounceMs,
-      visibilityMargin,
-    });
-
-    // クリーンアップ関数
-    return () => {
-      // イベントリスナーを削除
-      listeners.forEach(listener => google.maps.event.removeListener(listener));
-
-      // 保留中のデバウンスタイマーをクリア
-      if (debounceTimerRef.current !== null) {
-        window.clearTimeout(debounceTimerRef.current);
-      }
-
-      // クリーンアップログ
-      logger.debug('マーカー可視性管理を解放しました', {
-        component: 'useMarkerVisibility',
-        finalVisibleCount: visibleCountRef.current,
-      });
-    };
-  }, [
+  useMarkerVisibilityEvents({
     mapRef,
-    debouncedUpdateVisibility,
     updateMarkerVisibility,
-    markers.length,
-    configuredDebounceMs,
+    debouncedUpdateVisibility,
+    markers,
+    config,
     visibilityMargin,
-  ]);
+    visibleCountRef,
+  });
 
   // マーカーまたはPOIリストが変更された時に可視性を更新
   useEffect(() => {
     updateMarkerVisibility();
   }, [markers, pois, updateMarkerVisibility]);
+
+  // デバウンスタイマーのクリーンアップ
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, []);
 }

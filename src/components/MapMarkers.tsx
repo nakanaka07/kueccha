@@ -62,6 +62,39 @@ interface MapMarkersProps {
 const COMPONENT_NAME = 'MapMarkers';
 
 /**
+ * 情報ウィンドウのレンダリングを行うヘルパー関数
+ */
+const renderInfoWindow = (
+  selectedPOI: PointOfInterest,
+  handleInfoWindowClose: () => void,
+  infoWindowContent: React.ReactNode
+) => {
+  try {
+    return (
+      <GoogleInfoWindow
+        position={{ lat: selectedPOI.lat, lng: selectedPOI.lng }}
+        onCloseClick={handleInfoWindowClose}
+        options={{
+          pixelOffset: new google.maps.Size(0, -40), // マーカーの高さを考慮
+          maxWidth: 320, // モバイル画面でも見やすい幅
+          disableAutoPan: false, // 情報ウィンドウが見えるように地図を自動調整
+        }}
+      >
+        <div className='info-window-container'>{infoWindowContent}</div>
+      </GoogleInfoWindow>
+    );
+  } catch (error) {
+    logger.error('情報ウィンドウのレンダリングでエラーが発生しました', {
+      component: COMPONENT_NAME,
+      action: 'render_info_window_error',
+      error,
+      poiId: selectedPOI.id,
+    });
+    return null;
+  }
+};
+
+/**
  * 地図上のマーカーを管理するコンポーネント
  * POIデータをもとにマーカーの表示と管理、クラスタリングを行います
  */
@@ -71,8 +104,12 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   filters = {},
   onSelectPOI,
   onViewDetails,
-  animateMarkers = ENV.features.markerAnimation ?? true,
-  enableClustering = ENV.features.markerClustering ?? true,
+  animateMarkers = typeof ENV.features.markerAnimation === 'boolean'
+    ? ENV.features.markerAnimation
+    : true,
+  enableClustering = typeof ENV.features.markerClustering === 'boolean'
+    ? ENV.features.markerClustering
+    : true,
 }) => {
   // コンポーネントのマウント/アンマウントを記録
   useEffect(() => {
@@ -96,31 +133,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   // フィルタリングされたPOIリストを取得（カスタムフックに移行）
   const filteredPOIs = useFilteredPOIs(pois, filters);
 
-  // フィルタリング結果を記録（デバッグとパフォーマンス監視）
-  useEffect(() => {
-    // パフォーマンス測定を追加
-    logger.measureTime(
-      'POIフィルタリング処理',
-      () => {
-        logger.debug('POIフィルタリング結果', {
-          component: COMPONENT_NAME,
-          action: 'filter_pois',
-          total: pois.length,
-          filtered: filteredPOIs.length,
-          filterRatio: pois.length ? Math.round((filteredPOIs.length / pois.length) * 100) : 0,
-          filters: {
-            categories: filters.categories?.length ?? 0,
-            isOpenFilter: filters.isOpen ?? false,
-            hasSearchText: !!filters.searchText,
-          },
-        });
-      },
-      // 処理時間が100ms超の場合はINFOレベルでログ出力
-      LogLevel.DEBUG,
-      { component: COMPONENT_NAME },
-      100
-    );
-  }, [filteredPOIs.length, pois.length, filters.categories, filters.isOpen, filters.searchText]);
+  // フィルタリング結果のログ記録
+  useLogFilteringResults(pois, filteredPOIs, filters);
 
   // マーカークリック時のハンドラ
   const handleMarkerClick = useCallback(
@@ -180,7 +194,82 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     [onViewDetails]
   );
 
-  // マーカーとクラスタリングの管理（カスタムフックに移行）
+  // マーカー管理とレンダリング
+  const { infoWindowContent } = useMarkerManagement({
+    mapRef,
+    filteredPOIs,
+    handleMarkerClick,
+    handleInfoWindowClose,
+    handleViewDetails,
+    selectedPOI,
+    animateMarkers,
+    enableClustering,
+  });
+
+  // 情報ウィンドウが表示されていない場合は何もレンダリングしない
+  if (!selectedPOI) return null;
+
+  // 情報ウィンドウのレンダリング
+  return renderInfoWindow(selectedPOI, handleInfoWindowClose, infoWindowContent);
+};
+
+/**
+ * フィルタリング結果のログを記録するカスタムフック
+ */
+function useLogFilteringResults(
+  pois: PointOfInterest[],
+  filteredPOIs: PointOfInterest[],
+  filters: MapMarkersProps['filters']
+) {
+  useEffect(() => {
+    // パフォーマンス測定を追加
+    logger.measureTime(
+      'POIフィルタリング処理',
+      () => {
+        logger.debug('POIフィルタリング結果', {
+          component: COMPONENT_NAME,
+          action: 'filter_pois',
+          total: pois.length,
+          filtered: filteredPOIs.length,
+          filterRatio: pois.length > 0 ? Math.round((filteredPOIs.length / pois.length) * 100) : 0,
+          filters: {
+            categories: filters?.categories?.length ?? 0,
+            isOpenFilter: filters?.isOpen ?? false,
+            hasSearchText: filters?.searchText !== undefined && filters.searchText !== '',
+          },
+        });
+      },
+      // 処理時間が100ms超の場合はINFOレベルでログ出力
+      LogLevel.DEBUG,
+      { component: COMPONENT_NAME },
+      100
+    );
+  }, [filteredPOIs.length, pois.length, filters?.categories, filters?.isOpen, filters?.searchText]);
+}
+
+/**
+ * マーカー管理とレンダリングのロジックを分離したカスタムフック
+ */
+function useMarkerManagement({
+  mapRef,
+  filteredPOIs,
+  handleMarkerClick,
+  handleInfoWindowClose,
+  handleViewDetails,
+  selectedPOI,
+  animateMarkers,
+  enableClustering,
+}: {
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
+  filteredPOIs: PointOfInterest[];
+  handleMarkerClick: (poi: PointOfInterest) => void;
+  handleInfoWindowClose: () => void;
+  handleViewDetails: (poi: PointOfInterest) => void;
+  selectedPOI: PointOfInterest | null;
+  animateMarkers: boolean;
+  enableClustering: boolean;
+}) {
+  // マーカーとクラスタリングの管理
   const { markers: mixedMarkers } = useMapMarkers({
     mapRef,
     pois: filteredPOIs,
@@ -194,28 +283,26 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     return mixedMarkers.filter(isAdvancedMarkerElement);
   }, [mixedMarkers]);
 
-  // マーカー可視性の最適化（カスタムフックに移行）
+  // マーカー可視性の最適化
   useMarkerVisibility({
     mapRef,
     markers,
     pois: filteredPOIs,
-    onVisibilityChange: useCallback(
-      visibleCount => {
-        logger.measureTime('マーカー可視性更新', () => {
-          logger.debug(`表示マーカー数: ${visibleCount}/${markers.length}`, {
-            component: COMPONENT_NAME,
-            action: 'update_visibility',
-            visibleCount,
-            totalMarkers: markers.length,
-            visiblePercent: markers.length ? Math.round((visibleCount / markers.length) * 100) : 0,
-          });
+    onVisibilityChange: (visibleCount: number) => {
+      logger.measureTime('マーカー可視性更新', () => {
+        logger.debug(`表示マーカー数: ${visibleCount}/${markers.length}`, {
+          component: COMPONENT_NAME,
+          action: 'update_visibility',
+          visibleCount,
+          totalMarkers: markers.length,
+          visiblePercent:
+            markers.length > 0 ? Math.round((visibleCount / markers.length) * 100) : 0,
         });
-      },
-      [markers.length]
-    ),
+      });
+    },
   });
 
-  // 情報ウィンドウのメモ化（パフォーマンス最適化）
+  // 情報ウィンドウのメモ化
   const infoWindowContent = useMemo(() => {
     if (!selectedPOI) return null;
 
@@ -228,34 +315,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     );
   }, [selectedPOI, handleInfoWindowClose, handleViewDetails]);
 
-  // 情報ウィンドウが表示されていない場合は何もレンダリングしない
-  if (!selectedPOI) return null;
-
-  // 情報ウィンドウのレンダリング
-  try {
-    return (
-      <GoogleInfoWindow
-        position={{ lat: selectedPOI.lat, lng: selectedPOI.lng }}
-        onCloseClick={handleInfoWindowClose}
-        options={{
-          pixelOffset: new google.maps.Size(0, -40), // マーカーの高さを考慮
-          maxWidth: 320, // モバイル画面でも見やすい幅
-          disableAutoPan: false, // 情報ウィンドウが見えるように地図を自動調整
-        }}
-      >
-        <div className='info-window-container'>{infoWindowContent}</div>
-      </GoogleInfoWindow>
-    );
-  } catch (error) {
-    logger.error('情報ウィンドウのレンダリングでエラーが発生しました', {
-      component: COMPONENT_NAME,
-      action: 'render_info_window_error',
-      error,
-      poiId: selectedPOI?.id,
-    });
-    return null;
-  }
-};
+  return { infoWindowContent };
+}
 
 // React.memoでコンポーネントをメモ化（不要な再レンダリングを防止）
 export default memo(MapMarkers);

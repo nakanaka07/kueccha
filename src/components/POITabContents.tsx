@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
+import { ENV } from '@/utils/env';
 import { logger } from '@/utils/logger';
 import { formatWeekdaySchedule } from '@/utils/markerUtils';
-import { ENV } from '@/utils/env';
 
 /**
  * 基本情報タブコンテンツ
@@ -22,7 +22,7 @@ export const InfoTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
 
   return (
     <div className='poi-tab-content'>
-      {poi.genre && (
+      {poi.genre !== undefined && poi.genre !== '' && (
         <div className='info-row'>
           <span className='info-label'>ジャンル:</span>
           <span className='info-value'>{poi.genre}</span>
@@ -36,14 +36,14 @@ export const InfoTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
         </div>
       )}
 
-      {poi.address && (
+      {poi.address !== '' && (
         <div className='info-row'>
           <span className='info-label'>住所:</span>
           <span className='info-value'>{poi.address}</span>
         </div>
       )}
 
-      {poi.問い合わせ && poi.問い合わせ !== '情報なし' && (
+      {poi.問い合わせ !== undefined && poi.問い合わせ !== '' && poi.問い合わせ !== '情報なし' && (
         <div className='info-row'>
           <span className='info-label'>連絡先:</span>
           <span className='info-value'>
@@ -63,7 +63,9 @@ export const InfoTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
  * POIの関連情報からリンクを抽出して表示するヘルパー関数
  */
 const renderRelatedInfo = (poi: PointOfInterest) => {
-  if (!poi.関連情報 || poi.関連情報 === '情報なし') return null;
+  if (poi.関連情報 === undefined || poi.関連情報 === '' || poi.関連情報 === '情報なし') {
+    return null;
+  }
 
   // リンク情報を分析してログに記録
   const links = poi.関連情報.split('\n').filter(link => link.startsWith('http'));
@@ -132,7 +134,13 @@ const useLinkLabel = (url: string): string => {
  * POIのGoogleマップ情報を表示するヘルパー関数
  */
 const renderGoogleMapsLink = (poi: PointOfInterest) => {
-  if (!poi['Google マップで見る'] || poi['Google マップで見る'] === '情報なし') return null;
+  if (
+    poi['Google マップで見る'] === undefined ||
+    poi['Google マップで見る'] === '' ||
+    poi['Google マップで見る'] === '情報なし'
+  ) {
+    return null;
+  }
 
   return (
     <div className='info-row'>
@@ -180,7 +188,7 @@ export const HoursTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => 
   }, [poi]);
 
   // 営業時間情報がない場合のメッセージ表示
-  if (!poi.営業時間 || poi.営業時間 === '情報なし') {
+  if (poi.営業時間 === undefined || poi.営業時間 === '' || poi.営業時間 === '情報なし') {
     logger.debug('営業時間情報なし', {
       component: 'HoursTabContent',
       action: 'checkHoursData',
@@ -203,22 +211,24 @@ export const HoursTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => 
             const isClosed = poi[closedKey] as boolean | undefined;
 
             return (
-              <div key={day} className={`weekday-row ${isClosed ? 'closed-day' : ''}`}>
+              <div key={day} className={`weekday-row ${isClosed === true ? 'closed-day' : ''}`}>
                 <span className='weekday-name'>{day}:</span>
                 <span className='weekday-hours'>
-                  {isClosed ? '定休日' : (formattedSchedule[day] ?? '情報なし')}
+                  {isClosed === true ? '定休日' : (formattedSchedule[day] ?? '情報なし')}
                 </span>
               </div>
             );
           })}
         </div>
 
-        {poi.定休日について && poi.定休日について !== '情報なし' && (
-          <div className='info-row holiday-note'>
-            <span className='info-label'>備考:</span>
-            <span className='info-value'>{poi.定休日について}</span>
-          </div>
-        )}
+        {poi.定休日について !== undefined &&
+          poi.定休日について !== '' &&
+          poi.定休日について !== '情報なし' && (
+            <div className='info-row holiday-note'>
+              <span className='info-label'>備考:</span>
+              <span className='info-value'>{poi.定休日について}</span>
+            </div>
+          )}
       </div>
     </div>
   );
@@ -272,20 +282,13 @@ export const MapTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => {
             allowFullScreen
             loading='lazy'
             referrerPolicy='no-referrer-when-downgrade'
-            onError={() => {
-              logger.error('地図の読み込みに失敗しました', {
-                component: 'MapTabContent',
-                action: 'loadMap',
-                poiId: poi.id,
-              });
-            }}
           ></iframe>
         </div>
       ) : (
         <div className='no-map-message'>地図情報が利用できません</div>
       )}
 
-      {poi.address && (
+      {poi.address !== '' && (
         <div className='address-container'>
           <span className='address-label'>住所:</span>
           <span className='address-value'>{poi.address}</span>

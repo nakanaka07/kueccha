@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 /**
  * マップ初期化設定の型定義
@@ -43,14 +43,14 @@ export const MapContainer = ({
   // 環境変数から設定を安全に取得して型付け
   const mapConfig = useMemo<MapInitConfig>(
     () => ({
-      delay: typeof ENV.ui?.map?.init?.delay === 'number' ? ENV.ui.map.init.delay : 0,
-      debug: Boolean(ENV.ui?.map?.init?.debug || ENV.debug?.ENABLE_MAP_DEBUG),
+      delay: typeof ENV.ui.map.init.delay === 'number' ? ENV.ui.map.init.delay : 0,
+      debug: Boolean(ENV.ui.map.init.debug || ENV.debug.ENABLE_MAP_DEBUG),
     }),
     []
   );
 
   // 開発環境判定も一度だけ評価
-  const isDev = useMemo(() => Boolean(ENV.env?.isDev), []);
+  const isDev = useMemo(() => Boolean(ENV.env.isDev), []);
 
   // コールバック処理を最適化：必要な依存関係のみを指定
   const handleMapElementReady = useCallback(() => {

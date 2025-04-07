@@ -1,10 +1,13 @@
+import { openDB } from 'idb';
+
 import type { POIType } from '@/types/poi';
 import { getEnv } from '@/utils/env';
 import { logger } from '@/utils/logger';
-import { openDB } from 'idb';
-import type { IDBPDatabase } from 'idb';
 
 import { parseCSVtoPOIs } from './csvProcessor';
+
+import type { IDBPDatabase } from 'idb';
+
 
 /**
  * シートデータの型定義
@@ -148,7 +151,7 @@ export async function fetchFromGoogleSheets(sheetRanges: string[]): Promise<Shee
         component: 'googleSheets',
         action: 'fetch_success',
         ranges: sheetRanges,
-        rowCounts: data.valueRanges.map(range => range.values?.length || 0),
+        rowCounts: data.valueRanges.map(range => range.values.length || 0),
       });
 
       // キャッシュへのデータ保存
@@ -292,7 +295,7 @@ export async function fetchPOIsFromSheet(poiType: POIType, sheetRange: string) {
     const sheetData = await fetchFromGoogleSheets([sheetRange]);
 
     // values が存在しない、または空の配列の場合にエラー
-    if (!sheetData[0]?.values?.length) {
+    if (!sheetData[0]?.values.length) {
       throw new Error(`シート「${sheetRange}」にデータがありません`);
     }
 

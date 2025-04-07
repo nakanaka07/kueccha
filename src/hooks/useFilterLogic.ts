@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
 import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 // コンポーネント名を定数として定義（ロガー用）
 const COMPONENT_NAME = 'useFilterLogic';
@@ -38,16 +38,29 @@ export interface FilterLogicResult extends FilterState {
 }
 
 /**
+ * 特定のプロパティが有効な文字列かどうかをチェックする型ガード
+ * @param obj 対象オブジェクト
+ * @param prop プロパティ名
+ * @returns プロパティが有効な文字列の場合true
+ */
+function hasValidStringProp<T, K extends keyof T>(
+  obj: T,
+  prop: K
+): obj is T & { [P in K]: string } {
+  return typeof obj[prop] === 'string' && obj[prop] !== '';
+}
+
+/**
  * テキスト検索条件に基づいてPOIをフィルタリングする関数
  * 頻繁に呼び出されるのでインライン化は避けて再利用
  */
 const matchesSearchText = (poi: PointOfInterest, searchLower: string): boolean => {
-  if (!searchLower) return true;
+  if (searchLower === '') return true;
 
   return (
     poi.name.toLowerCase().includes(searchLower) ||
     poi.address.toLowerCase().includes(searchLower) ||
-    !!poi.genre?.toLowerCase().includes(searchLower)
+    (hasValidStringProp(poi, 'genre') && poi.genre.toLowerCase().includes(searchLower))
   );
 };
 
@@ -85,7 +98,7 @@ const useFilterSelection = () => {
     (setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>) => {
       return (item: string, checked: boolean) => {
         // 高頻度発生操作のため、環境に応じたデバッグログ出力
-        if (ENV.env.debug || ENV.features.verboseLogging) {
+        if (ENV.features.verboseLogging || ENV.env.debug) {
           logger.debug('フィルター項目変更', {
             component: COMPONENT_NAME,
             action: 'change_item',
@@ -118,8 +131,8 @@ const extractUniqueValues = (pois: PointOfInterest[]) => {
   const districtsSet = new Set<string>();
 
   pois.forEach(poi => {
-    if (poi.category) categoriesSet.add(poi.category);
-    if (poi.district) districtsSet.add(poi.district);
+    if (hasValidStringProp(poi, 'category')) categoriesSet.add(poi.category);
+    if (hasValidStringProp(poi, 'district')) districtsSet.add(poi.district);
   });
 
   // 並び替えしたカテゴリと地区の配列を返す
@@ -143,7 +156,7 @@ const filterPOIs = (
   return logger.measureTime(
     'POIのフィルタリング処理',
     () => {
-      // サンプリングされた測定を行いたい場合に備えてコンテキストを準備
+      // ロギング最適化: コンテキスト生成を条件付きで実行
       const logContext = {
         component: COMPONENT_NAME,
         action: 'filter_pois',
@@ -155,10 +168,10 @@ const filterPOIs = (
       };
 
       // 最適化: フィルタリングが不要なケースを早期に検出
-      const noCategories = !Object.values(categoryFilters).some(Boolean);
-      const noDistricts = !Object.values(districtFilters).some(Boolean);
+      const noCategories = !Object.values(categoryFilters).some(v => v === true);
+      const noDistricts = !Object.values(districtFilters).some(v => v === true);
 
-      if (noCategories && noDistricts && statusFilter === 'all' && !searchText) {
+      if (noCategories && noDistricts && statusFilter === 'all' && searchText === '') {
         logger.debug('フィルタリング条件なし、全POI返却', logContext);
         return pois;
       }
@@ -166,13 +179,34 @@ const filterPOIs = (
       const searchLower = searchText.toLowerCase().trim();
 
       const filteredResults = pois.filter(poi => {
-        // カテゴリ・地区フィルタ
-        if (poi.category && !categoryFilters[poi.category]) return false;
-        if (poi.district && !districtFilters[poi.district]) return false;
+        // カテゴリフィルタ - 型ガードを使用して安全に処理
+        if (hasValidStringProp(poi, 'category')) {
+          // ESLint警告解消: 明示的にtrueとの比較を行う
+          if (categoryFilters[poi.category] !== true) {
+            return false;
+          }
+        }
 
-        // 営業状態フィルタ
-        if (statusFilter === 'open' && poi.isClosed) return false;
-        if (statusFilter === 'closed' && !poi.isClosed) return false;
+        // 地区フィルタ - 型ガードを使用して安全に処理
+        if (hasValidStringProp(poi, 'district')) {
+          // ESLint警告解消: 明示的にtrueとの比較を行う
+          if (districtFilters[poi.district] !== true) {
+            return false;
+          }
+        }
+
+        // 営業状態フィルタ - 厳密に型チェック
+        if (statusFilter === 'open') {
+          if (poi.isClosed === true) {
+            return false;
+          }
+        }
+
+        if (statusFilter === 'closed') {
+          if (poi.isClosed === false) {
+            return false;
+          }
+        }
 
         // テキスト検索フィルタ
         return matchesSearchText(poi, searchLower);
@@ -278,7 +312,7 @@ export function useFilterLogic(
       categoryFiltersCount: Object.values(categoryFilters).filter(Boolean).length,
       districtFiltersCount: Object.values(districtFilters).filter(Boolean).length,
       statusFilter,
-      hasSearchText: !!searchText,
+      hasSearchText: searchText !== '',
     });
 
     onFilterChange(filteredPois);
