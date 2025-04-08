@@ -11,6 +11,70 @@
 // 真偽値を表す環境変数の型定義
 type BooleanEnvValue = boolean | 'true' | 'false' | '1' | '0' | '';
 
+// ログレベルを表す型
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+/**
+ * 環境設定を保持するオブジェクトの型定義
+ */
+interface EnvironmentConfig {
+  app: {
+    name: string;
+    shortName: string;
+    description: string;
+    version: string;
+    buildDate: string;
+    basePath: string;
+  };
+  env: {
+    mode: string;
+    isDev: boolean;
+    isProd: boolean;
+    isTest: boolean;
+    debug: boolean;
+  };
+  google: {
+    apiKey: string;
+    mapsVersion: string;
+    mapsLibraries: string[];
+    mapId: string;
+    spreadsheetId: string;
+  };
+  emailjs: {
+    serviceId: string;
+    templateId: string;
+    publicKey: string;
+  };
+  features: {
+    googleSheets: boolean;
+    offlineMode: boolean;
+    analytics: boolean;
+    markerClustering: boolean;
+    verboseLogging: boolean;
+    [key: string]: boolean;
+  };
+  ui: {
+    map: {
+      initialZoom: number;
+      initialCenter: {
+        lat: number;
+        lng: number;
+      };
+      init: {
+        delay: number;
+        debug: boolean;
+      };
+    };
+  };
+  logging: {
+    level: LogLevel;
+  };
+  debug: {
+    ENABLE_MAP_DEBUG: boolean;
+    [key: string]: boolean;
+  };
+}
+
 interface ImportMetaEnv {
   // ==== Viteが自動的に提供する環境変数（編集不可） ====
   /** 開発モードフラグ (Viteが自動的に提供) */

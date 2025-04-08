@@ -8,16 +8,15 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // 最適化プラグインのインポート
 import tsconfigPaths from 'vite-tsconfig-paths';
 import checker from 'vite-plugin-checker';
-// ESMとCommonJSの互換性問題を解決するため、requireを使用
-// @ts-ignore - 型エラーを抑制するためのディレクティブ
-const viteCompression = require('vite-plugin-compression');
+// compression プラグインのインポートを修正
+import compression from 'vite-plugin-compression2';
 // @ts-ignore - 型エラーを抑制するためのディレクティブ
 const viteImagemin = require('vite-plugin-imagemin');
 import inspect from 'vite-plugin-inspect';
 
 /**
- * Vite設定専用のロガー（標準ロガーと連携）
- * @description バンドル設定フェーズで使用するロガー（循環依存を防止）
+ * Vite設定専用のロガー
+ * @description バンドル設定フェーズで使用するシンプルなロガー（循環依存を防止）
  */
 const configLogger = (() => {
   // 標準ロガーと型定義を合わせる
@@ -28,71 +27,7 @@ const configLogger = (() => {
     DEBUG = 'debug',
   }
 
-  // パフォーマンス測定のユーティリティ
-  const measureTime = <T>(
-    taskName: string,
-    task: () => T,
-    context?: Record<string, unknown>,
-    thresholdMs: number = 0
-  ): T => {
-    const startTime = performance.now();
-    const result = task();
-    const duration = Math.round(performance.now() - startTime);
-
-    if (duration > thresholdMs) {
-      debug(`${taskName} completed in ${duration}ms`, {
-        ...context,
-        durationMs: duration,
-        component: 'vite-config',
-        action: 'measure-time',
-      });
-    }
-
-    return result;
-  };
-
-  // 非同期パフォーマンス測定のユーティリティ
-  const measureTimeAsync = async <T>(
-    taskName: string,
-    task: Promise<T> | (() => Promise<T>),
-    context?: Record<string, unknown>,
-    thresholdMs: number = 0
-  ): Promise<T> => {
-    const startTime = performance.now();
-
-    try {
-      const result = typeof task === 'function' ? await task() : await task;
-      const duration = Math.round(performance.now() - startTime);
-
-      if (duration > thresholdMs) {
-        debug(`${taskName} completed in ${duration}ms`, {
-          ...context,
-          durationMs: duration,
-          component: 'vite-config',
-          action: 'measure-time-async',
-        });
-      }
-
-      return result;
-    } catch (error: unknown) {
-      const duration = Math.round(performance.now() - startTime);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      // errorは関数名なので、ここで直接呼び出す
-      configLogger.error(`${taskName} failed after ${duration}ms`, {
-        ...context,
-        durationMs: duration,
-        error: errorMessage, // 型安全な形式に変換
-        component: 'vite-config',
-        action: 'measure-time-async-error',
-      });
-      throw error;
-    }
-  };
-
-  /**
-   * 現在の環境がログレベルに該当するかチェック
-   */
+  // 現在の環境に基づくログレベル判定
   const shouldLog = (level: LogLevel): boolean => {
     if (process.env.NODE_ENV === 'production') {
       return [LogLevel.ERROR, LogLevel.WARN].includes(level);
@@ -100,67 +35,69 @@ const configLogger = (() => {
     return true;
   };
 
-  /**
-   * ログメッセージのフォーマット
-   */
+  // ログメッセージのフォーマット
   const formatLogMessage = (
     level: LogLevel,
     message: string,
     context?: Record<string, unknown>
   ): string => {
-    const appName = process.env.VITE_APP_SHORT_NAME || 'Kueccha';
-    const env = process.env.NODE_ENV || 'development';
     const timestamp = new Date().toISOString();
-    const prefix = `${timestamp} [${appName}:${env}] [${level.toUpperCase()}]`;
-
-    // コンテキスト情報を統一形式で提供
-    const enhancedContext = {
-      ...context,
-      component: context?.component || 'vite-config',
-    };
-
-    const contextStr = enhancedContext ? ` ${JSON.stringify(enhancedContext)}` : '';
-
+    const prefix = `${timestamp} [vite-config] [${level.toUpperCase()}]`;
+    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
     return `${prefix} ${message}${contextStr}`;
   };
 
-  // ロギング関数
-  const error = (message: string, context?: Record<string, unknown>): void => {
-    if (shouldLog(LogLevel.ERROR)) {
-      // eslint-disable-next-line no-console
-      console.error(formatLogMessage(LogLevel.ERROR, message, context));
+  // 基本ロギング関数
+  const log = (level: LogLevel, message: string, context?: Record<string, unknown>): void => {
+    if (!shouldLog(level)) return;
+
+    const formattedMessage = formatLogMessage(level, message, context);
+    switch (level) {
+      case LogLevel.ERROR:
+        console.error(formattedMessage);
+        break;
+      case LogLevel.WARN:
+        console.warn(formattedMessage);
+        break;
+      case LogLevel.INFO:
+        console.info(formattedMessage);
+        break;
+      case LogLevel.DEBUG:
+        console.debug(formattedMessage);
+        break;
     }
   };
 
-  const warn = (message: string, context?: Record<string, unknown>): void => {
-    if (shouldLog(LogLevel.WARN)) {
-      // eslint-disable-next-line no-console
-      console.warn(formatLogMessage(LogLevel.WARN, message, context));
-    }
-  };
+  // パフォーマンス測定のユーティリティ
+  const measureTime = <T>(
+    taskName: string,
+    task: () => T,
+    context?: Record<string, unknown>
+  ): T => {
+    const startTime = performance.now();
+    const result = task();
+    const duration = Math.round(performance.now() - startTime);
 
-  const info = (message: string, context?: Record<string, unknown>): void => {
-    if (shouldLog(LogLevel.INFO)) {
-      // eslint-disable-next-line no-console
-      console.info(formatLogMessage(LogLevel.INFO, message, context));
-    }
-  };
+    log(LogLevel.DEBUG, `${taskName} completed in ${duration}ms`, {
+      ...context,
+      durationMs: duration,
+      action: 'measure-time',
+    });
 
-  const debug = (message: string, context?: Record<string, unknown>): void => {
-    if (shouldLog(LogLevel.DEBUG)) {
-      // eslint-disable-next-line no-console
-      console.debug(formatLogMessage(LogLevel.DEBUG, message, context));
-    }
+    return result;
   };
 
   return {
-    error,
-    warn,
-    info,
-    debug,
-    LogLevel,
+    error: (message: string, context?: Record<string, unknown>) =>
+      log(LogLevel.ERROR, message, context),
+    warn: (message: string, context?: Record<string, unknown>) =>
+      log(LogLevel.WARN, message, context),
+    info: (message: string, context?: Record<string, unknown>) =>
+      log(LogLevel.INFO, message, context),
+    debug: (message: string, context?: Record<string, unknown>) =>
+      log(LogLevel.DEBUG, message, context),
     measureTime,
-    measureTimeAsync,
+    LogLevel,
   };
 })();
 
@@ -672,20 +609,38 @@ function createPlugins(mode: string, env: Record<string, string>): PluginOption[
 
   // 本番環境のみのプラグイン
   if (isProd) {
-    // プラグインが関数型であることを確認して呼び出す
-    // CommonJSとESM両方のインポート形式に対応
-    if (typeof viteCompression === 'function') {
+    // vite-plugin-compression2を使用してファイル圧縮
+    try {
       plugins.push(
-        viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
-        viteCompression({ algorithm: 'gzip', ext: '.gz' })
+        // Brotli圧縮
+        compression({
+          algorithm: 'brotliCompress',
+          filename: '[path][base].br',
+          deleteOriginalAssets: false, // 元のファイルを保持
+          threshold: 10240, // 10KB以上のファイルのみ圧縮
+          compressionOptions: {
+            params: {
+              [require('zlib').constants.BROTLI_PARAM_QUALITY]: 11,
+            },
+          },
+        }),
+        // Gzip圧縮
+        compression({
+          algorithm: 'gzip',
+          filename: '[path][base].gz',
+          deleteOriginalAssets: false, // 元のファイルを保持
+          threshold: 10240, // 10KB以上のファイルのみ圧縮
+        })
       );
-    } else if (viteCompression && typeof viteCompression.default === 'function') {
-      plugins.push(
-        viteCompression.default({ algorithm: 'brotliCompress', ext: '.br' }),
-        viteCompression.default({ algorithm: 'gzip', ext: '.gz' })
-      );
-    } else {
-      configLogger.warn('vite-plugin-compressionプラグインが正しくロードできませんでした');
+      configLogger.info('圧縮プラグインを設定しました（BrotliとGzip）', {
+        component: 'vite-config',
+        plugin: 'compression2',
+      });
+    } catch (error) {
+      configLogger.error('vite-plugin-compression2プラグインの設定中にエラーが発生しました', {
+        error: error instanceof Error ? error.message : String(error),
+        component: 'vite-config',
+      });
     }
 
     // 画像最適化プラグインの呼び出し
