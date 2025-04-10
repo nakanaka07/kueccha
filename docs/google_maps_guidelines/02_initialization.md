@@ -59,17 +59,35 @@ export const validateGoogleMapsEnv = (): { isValid: boolean; messages: string[] 
 - **最新APIのサポート**: Maps JavaScript API v3.54以降の機能を活用
 
 ```typescript
-// ライブラリ指定の例（v3.54以降対応）
-const REQUIRED_LIBRARIES = ['maps', 'marker', 'places'];
+// ライブラリ指定の例（2025年の最新API対応）
+const REQUIRED_LIBRARIES = ['maps', 'marker', 'places', 'webgl', 'localcontext'];
 
 export const getLoaderOptions = (): LoaderOptions => {
   return {
     apiKey: ENV.google.apiKey,
-    version: ENV.google.mapsVersion || 'weekly',
+    version: ENV.google.mapsVersion || 'weekly', // 最新機能を常に利用可能に
     libraries: REQUIRED_LIBRARIES,
-    mapIds: ENV.google.mapId ? [ENV.google.mapId] : [],
-    // 新しいMapタイプ機能をサポート
-    authReferrerPolicy: 'origin'
+    mapIds: (() => {
+      // 基本マップIDと目的別マップIDを統合
+      const mapIds = [];
+      if (ENV.google.mapId) mapIds.push(ENV.google.mapId);
+      if (ENV.google.accessibleMapId) mapIds.push(ENV.google.accessibleMapId); // アクセシビリティ用
+      if (ENV.google.darkModeMapId) mapIds.push(ENV.google.darkModeMapId); // ダークモード用
+      // 季節別のマップID
+      const seasonalMapIds = [
+        ENV.google.springMapId,
+        ENV.google.summerMapId,
+        ENV.google.autumnMapId,
+        ENV.google.winterMapId
+      ].filter(Boolean);
+      return [...mapIds, ...seasonalMapIds];
+    })(),
+    // 2025年の新しいセキュリティ対策と最適化
+    authReferrerPolicy: 'origin',
+    useStaticMap: true, // 初期表示を高速化
+    language: 'ja', // 日本語表示を最適化
+    region: 'JP', // 日本向けの地域設定
+    channel: 'sado-tourism-app' // 使用量トラッキング用
   };
 };
 ```

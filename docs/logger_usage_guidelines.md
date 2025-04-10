@@ -1,4 +1,49 @@
+```markdown
 # ロガー使用ガイドライン
+
+> **最終更新日**: 2025年4月10日  
+> **バージョン**: 1.2.0  
+> **作成者**: 佐渡で食えっちゃプロジェクトチーム
+
+## 目次
+
+- [1. ロギングの基本原則](#1-ロギングの基本原則)
+  - [ロガー導入の目的と利点](#ロガー導入の目的と利点)
+  - [logger.tsの機能概要](#loggerts機能概要)
+  - [型定義](#型定義)
+- [2. ログレベルと使用シナリオ](#2-ログレベルと使用シナリオ)
+  - [ログレベルの概要](#ログレベルの概要)
+  - [適切なログレベル選択の基準](#適切なログレベル選択の基準)
+- [3. 構造化ログとコンテキスト情報](#3-構造化ログとコンテキスト情報)
+  - [LogContext インターフェース](#logcontext-インターフェース)
+  - [構造化ロギングの長期的メリット](#構造化ロギングの長期的メリット)
+  - [効果的なコンテキスト追加方法](#効果的なコンテキスト追加方法)
+  - [推奨コンテキスト項目](#推奨コンテキスト項目)
+  - [プライバシーとセキュリティ考慮事項](#プライバシーとセキュリティ考慮事項)
+  - [ログのセキュリティ考慮事項](#ログのセキュリティ考慮事項owaspガイドラインより)
+- [4. パフォーマンス測定とロギング](#4-パフォーマンス測定とロギング)
+  - [処理時間の自動測定](#処理時間の自動測定)
+  - [パフォーマンスモニタリングのベストプラクティス](#パフォーマンスモニタリングのベストプラクティス)
+  - [非同期処理のエラーハンドリング](#非同期処理のエラーハンドリング)
+- [5. 条件付きロギングと最適化](#5-条件付きロギングと最適化)
+  - [条件付きログ出力](#条件付きログ出力)
+  - [ロギングのパフォーマンス最適化](#ロギングのパフォーマンス最適化)
+- [6. 環境別ロギング設定](#6-環境別ロギング設定)
+  - [開発環境での詳細ログ](#開発環境での詳細ログ)
+  - [本番環境でのセキュアなロギング](#本番環境でのセキュアなロギング)
+  - [環境変数によるログ設定の制御](#環境変数によるログ設定の制御)
+- [7. 高度なロギング機能](#7-高度なロギング機能)
+  - [テスト環境でのログバッファ活用](#テスト環境でのログバッファ活用)
+  - [Jestを使用したロガー関数のテスト手法](#jestを使用したロガー関数のテスト手法)
+  - [セキュリティとプライバシーの設計パターン](#セキュリティとプライバシーの設計パターン)
+  - [トレーシング識別子の活用](#トレーシング識別子の活用)
+- [8. まとめと推奨プラクティス](#8-まとめと推奨プラクティス)
+  - [ロギングのベストプラクティスチェックリスト](#ロギングのベストプラクティスチェックリスト)
+- [参考リンク](#参考リンク)
+
+> **関連ドキュメント**
+> - [環境変数管理ガイドライン](./env_usage_guidelines.md) - ロギング設定用の環境変数管理
+> - [コード最適化ガイドライン](./code_optimization_guidelines.md) - パフォーマンス計測とロギングの統合
 
 ## 1. ロギングの基本原則
 
@@ -99,6 +144,15 @@ export interface LogContext {
 }
 ```
 
+### 構造化ロギングの長期的メリット
+
+構造化ロギングを採用することで得られる具体的なメリットとして：
+
+- **検索性の向上**: JSONフォーマットなどで統一されたログ形式により、特定の条件でのフィルタリングが容易になる
+- **システム連携の効率化**: 監視システムやアラート機能と簡単に連携できる
+- **パターン認識の容易さ**: 構造化されたデータを分析ツールで処理することで、問題パターンの早期発見が可能
+- **コンテキスト伝達**: トレースIDなどの識別子を常に含めることで、複数サービス間の関連処理を追跡できる
+
 ### 効果的なコンテキスト追加方法
 
 ```typescript
@@ -169,6 +223,21 @@ logger.info('API認証', maskSensitiveData({
 }));
 // 出力: { endpoint: '/api/auth', email: 'us****', token: 'ab****' }
 ```
+
+### ログのセキュリティ考慮事項（OWASPガイドラインより）
+
+ログ自体を保護するための具体的な方法：
+
+- **ログのアクセス制御**: ログを閲覧・操作できる権限を適切に制限する
+- **ログの完全性保護**: ログの改ざんを検知できる仕組みを導入する
+- **ログの長期保存と検索性**: コンプライアンス要件に応じた適切な保存期間を設定する
+- **ログから除外すべき情報**:
+  - フルセッションID（切り詰められたIDのみ記録）
+  - 認証情報（パスワード、トークンなど）
+  - 個人識別情報（未マスクのメールアドレスなど）
+  - 機密性の高い商取引データ
+  - 医療情報
+  - 規制対象の個人情報
 
 ## 4. パフォーマンス測定とロギング
 
@@ -330,6 +399,60 @@ if (ENV.env.isProd) {
 }
 ```
 
+### 環境変数によるログ設定の制御
+
+```typescript
+// env_usage_guidelines.mdで説明されている環境変数を使用したロガー設定
+import { getEnvVar } from '@/utils/env';
+import { LogLevel } from '@/utils/logger';
+
+// 環境変数からログレベルを取得する関数
+function getLogLevelFromEnv(): LogLevel {
+  const logLevelStr = getEnvVar({
+    key: 'VITE_LOG_LEVEL',
+    defaultValue: 'info'
+  }).toLowerCase();
+  
+  // 文字列を LogLevel に変換
+  switch (logLevelStr) {
+    case 'debug': return LogLevel.DEBUG;
+    case 'info': return LogLevel.INFO;
+    case 'warn': return LogLevel.WARN;
+    case 'error': return LogLevel.ERROR;
+    default: return LogLevel.INFO;
+  }
+}
+
+// アプリケーション起動時にロガー設定を環境変数に基づいて初期化
+export function initializeLogger(): void {
+  const logLevel = getLogLevelFromEnv();
+  
+  logger.configure({
+    minLevel: logLevel,
+    enableConsole: true,
+    includeTimestamps: !ENV.env.isProd, // 本番環境ではタイムスタンプを省略して最適化
+    
+    // 環境変数で個別のコンポーネントのログレベルを上書き可能
+    componentLevels: {
+      MapContainer: getEnvVar({
+        key: 'VITE_LOG_LEVEL_MAP',
+        defaultValue: logLevel,
+        transform: str => str.toLowerCase() === 'debug' ? LogLevel.DEBUG :
+                           str.toLowerCase() === 'info' ? LogLevel.INFO :
+                           str.toLowerCase() === 'warn' ? LogLevel.WARN :
+                           LogLevel.ERROR
+      })
+    }
+  });
+  
+  logger.info('ロガーを初期化しました', {
+    component: 'LoggerSystem',
+    level: logLevel,
+    environment: ENV.env.isProd ? '本番' : ENV.env.isStaging ? 'ステージング' : '開発'
+  });
+}
+```
+
 ## 7. 高度なロギング機能
 
 ### テスト環境でのログバッファ活用
@@ -354,6 +477,46 @@ describe('POIフィルター機能テスト', () => {
       // Optional Chainingを使って安全にコンテキストのプロパティにアクセス
       expect(logs[0].context?.component).toBe('POIFilter');
     }
+  });
+});
+```
+
+### Jestを使用したロガー関数のテスト手法
+
+```typescript
+// ロガーのモックとテスト例
+import { logger } from '@/utils/logger';
+
+// ロガーのメソッドをスパイ
+jest.spyOn(logger, 'error');
+jest.spyOn(logger, 'info');
+
+describe('POIサービスのエラーハンドリング', () => {
+  beforeEach(() => {
+    // テスト前にモックをリセット
+    jest.clearAllMocks();
+  });
+
+  test('無効なデータでエラーログが記録されること', async () => {
+    // テスト対象の関数実行
+    await poiService.process(invalidData);
+    
+    // エラーログが呼ばれたか確認
+    expect(logger.error).toHaveBeenCalledWith(
+      '無効なPOIデータ',
+      expect.objectContaining({
+        component: 'POIService',
+        errorCode: 'INVALID_FORMAT'
+      })
+    );
+    
+    // 情報ログが呼ばれたか確認
+    expect(logger.info).toHaveBeenCalledWith(
+      'POI処理試行',
+      expect.objectContaining({
+        dataCount: expect.any(Number)
+      })
+    );
   });
 });
 ```
@@ -405,19 +568,52 @@ logger.info('ユーザーリクエスト完了', {
 
 ### ロギングのベストプラクティスチェックリスト
 
+#### ログ設計と実装
 - [x] **適切なログレベルの使用**: 重要度に応じた適切なログレベルを選択
 - [x] **構造化ログ形式**: JSON形式など解析可能な形式でログを出力
 - [x] **コンテキスト情報の追加**: 問題診断に役立つコンテキスト情報を含める
+
+#### パフォーマンスと監視
 - [x] **パフォーマンス測定**: 重要な操作の実行時間を計測
-- [x] **プライバシー保護**: 個人情報や機密情報をマスク処理
-- [x] **環境別設定**: 開発・テスト・本番環境に応じたログ設定
 - [x] **トレーシング対応**: 関連する処理間で識別子を共有
 
+#### セキュリティと環境対応
+- [x] **プライバシー保護**: 個人情報や機密情報をマスク処理
+- [x] **環境別設定**: 開発・テスト・本番環境に応じたログ設定
+
+> **重要**: ロギングは問題解決の重要なツールですが、過剰なログ出力はパフォーマンスに影響します。目的に応じて適切なログ設計を行ってください。
+
 > **関連ガイドライン**:
-> - [環境変数管理ガイドライン](./env_usage_guidelines.md) - ロギング設定のための環境変数活用
-> - [コード最適化ガイドライン](./code_optimization_guidelines.md) - パフォーマンス監視とデバッグテクニック
->
-> **参考リンク**：
-> - [MDN Console API](https://developer.mozilla.org/ja/docs/Web/API/Console)
-> - [構造化ロギングのベストプラクティス](https://betterstack.com/community/guides/logging/structured-logging/)
-> - [フロントエンドログ管理ガイド](https://sematext.com/blog/javascript-logging/)
+> - 環境変数管理ガイドライン - ロギング設定のための環境変数活用
+> - コード最適化ガイドライン - パフォーマンス監視とデバッグテクニック
+
+## 参考リンク
+
+### 基本概念
+- [MDN Console API](https://developer.mozilla.org/ja/docs/Web/API/Console) - JavaScriptのコンソールAPIリファレンス
+- [構造化ロギングの基礎と実践](https://betterstack.com/community/guides/logging/structured-logging/) - 構造化ロギングの重要性と実装方法
+- [効果的なロギング戦略](https://blog.appsignal.com/2021/09/01/best-practices-for-logging-in-nodejs.html) - アプリケーションログの設計と活用法
+
+### 実装テクニック
+- [Winston/Pino TypeScriptガイド](https://blog.logrocket.com/node-js-logging-best-practices/) - 人気のあるNode.jsロギングライブラリの活用法
+- [TypeScriptでの型安全なロガー実装](https://github.com/winstonjs/winston#using-custom-logging-levels) - Winston.jsを使った型安全なロガー構築例 
+- [Tslog - TypeScript向け構造化ロガー](https://github.com/fullstack-build/tslog) - 完全にTypeScriptで書かれた構造化ロガー
+- [Reactアプリケーションでのロギング実践](https://blog.sentry.io/tracking-errors-in-react-with-sentry/) - Reactプロジェクトにおけるエラーハンドリングとロギング
+
+### セキュリティとプライバシー
+- [ロギングにおけるセキュリティベストプラクティス](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) - OWASPによるセキュアなロギングのガイドライン
+- [プライバシー保護のためのロギング設計](https://auth0.com/blog/logging-best-practices-gdpr/) - GDPRなどを考慮したプライバシー保護ロギング手法
+
+### テストと監視
+- [JavaScriptアプリケーションのロギングベストプラクティス](https://blog.logrocket.com/javascript-logging-best-practices/) - フロントエンドでのロギング手法とツール
+- [Jest を使ったロガーのテスト手法](https://www.digitalocean.com/community/tutorials/testing-node-js-applications-with-jest) - ロガー関数のモックと検証
+- [Webアプリのパフォーマンスモニタリングとロギング](https://blog.bitsrc.io/performance-monitoring-and-logging-in-the-browser-78550e625e6) - フロントエンドパフォーマンス計測とロギング連携
+
+### クラウドと運用
+- [クラウドネイティブなロギングアーキテクチャ](https://aws.amazon.com/jp/blogs/devops/building-a-serverless-log-analytics-solution/) - クラウド環境に適したロギング設計
+- [分散システムにおけるトレーシング](https://opentelemetry.io/docs/concepts/signals/traces/) - OpenTelemetryによる分散トレーシングの基礎
+
+### 日本語リソース
+- [TypeScriptによるロギングシステムの構築](https://zenn.dev/mizchi/articles/typescript-logging-techniques) - 実践的なTypeScriptロガー構築ガイド
+- [フロントエンドのログ設計と実装](https://qiita.com/potato4d/items/5eea220a9a4cdfbd055a) - SPAにおけるログ実装パターン
+- [効果的なエラーハンドリングとロギング](https://engineering.linecorp.com/ja/blog/error-handling-and-logging/) - 大規模サービスでのロギング戦略

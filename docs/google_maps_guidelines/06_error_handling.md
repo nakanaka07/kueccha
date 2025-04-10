@@ -21,7 +21,44 @@ const handleApiLoadError = (error: unknown): void => {
   offerRetryButton(() => {
     reloadMapsApi();
   });
+  
+  // 2025年推奨：エラー分析と段階的回復
+  analyzeAndRecoverFromError(error);
 };
+
+// 2025年推奨：エラーの原因を分析して最適な回復を試みる
+function analyzeAndRecoverFromError(error: unknown): void {
+  // エラータイプの分析
+  const errorType = determineErrorType(error);
+  
+  switch (errorType) {
+    case 'NETWORK_ERROR':
+      // ネットワーク接続の問題
+      attemptOfflineMapFallback();
+      scheduledReconnectionAttempt();
+      break;
+    case 'API_KEY_ERROR':
+      // APIキーの問題（無効、制限など）
+      notifyAdminAboutKeyIssue();
+      useDegradedMapExperience();
+      break;
+    case 'SCRIPT_LOAD_ERROR':
+      // スクリプト読み込みの失敗
+      attemptAlternativeScriptLoad();
+      break;
+    case 'QUOTA_EXCEEDED':
+      // 使用量クォータ超過
+      useDegradedMapExperience();
+      logQuotaExceededEvent();
+      break;
+    default:
+      // その他の不明なエラー
+      useGenericMapFallback();
+  }
+  
+  // 段階的な機能復旧のスケジュール設定
+  scheduleFeatureRecoveryAttempt();
+}
 ```
 
 ## マーカーライブラリ未対応時の代替実装

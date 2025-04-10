@@ -1,5 +1,48 @@
 # コード最適化ガイドライン
 
+> **最終更新日**: 2025年4月10日  
+> **バージョン**: 1.4.0  
+> **作成者**: 佐渡で食えっちゃプロジェクトチーム
+
+## 目次
+
+- [1. 最適化の基本理念](#1-最適化の基本理念)
+  - [プロジェクトの最適化目標](#プロジェクトの最適化目標)
+  - [バランスの取れた改善アプローチ](#バランスの取れた改善アプローチ)
+  - [最適化の優先順位付け](#最適化の優先順位付け)
+- [2. コード構造と設計原則](#2-コード構造と設計原則)
+  - [保守性と拡張性の確保](#保守性と拡張性の確保)
+  - [コンポーネント設計の原則](#コンポーネント設計の原則)
+  - [データフローの最適化](#データフローの最適化)
+  - [Zustand状態管理のベストプラクティス](#zustand状態管理のベストプラクティス)
+  - [パスエイリアスの効果的活用](#パスエイリアスの効果的活用)
+- [3. パフォーマンス最適化技術](#3-パフォーマンス最適化技術)
+  - [React特有の最適化手法](#react特有の最適化手法)
+  - [Suspenseパターンの活用](#suspenseパターンの活用)
+  - [レンダリングプロセスの最適化](#レンダリングプロセスの最適化)
+- [4. API管理とデータフェッチング戦略](#4-api管理とデータフェッチング戦略)
+  - [モダンなデータフェッチング手法](#モダンなデータフェッチング手法)
+  - [オフラインサポートの実装](#オフラインサポートの実装)
+- [5. ユーザーインターフェース最適化](#5-ユーザーインターフェース最適化)
+  - [CSS戦略と視覚的一貫性](#css戦略と視覚的一貫性)
+  - [アニメーションの最適化](#アニメーションの最適化)
+- [6. ビルドと依存関係の最適化](#6-ビルドと依存関係の最適化)
+  - [効率的なビルド設定](#効率的なビルド設定)
+  - [パフォーマンス監視と最適化](#パフォーマンス監視と最適化)
+- [7. 実用的なリファレンス](#7-実用的なリファレンス)
+  - [パフォーマンス計測ユーティリティ](#パフォーマンス計測ユーティリティ)
+  - [高度なデバッグテクニック](#高度なデバッグテクニック)
+- [8. 推奨プラクティスチェックリスト](#8-推奨プラクティスチェックリスト)
+- [9. エラーハンドリングとロギング連携](#9-エラーハンドリングとロギング連携)
+  - [エラー境界とロガーの統合](#エラー境界とロガーの統合)
+  - [段階的なエラー回復戦略](#段階的なエラー回復戦略)
+- [参考リンク](#参考リンク)
+
+> **関連ドキュメント**
+> - [ロガー使用ガイドライン](./logger_usage_guidelines.md) - パフォーマンス計測とロギングの統合方法
+> - [環境変数管理ガイドライン](./env_usage_guidelines.md) - 環境別最適化設定の管理
+> - [Google Maps ガイドライン](./google_maps_guidelines/07_performance.md) - 地図コンポーネントのパフォーマンス最適化
+
 ## 1. 最適化の基本理念
 
 ### プロジェクトの最適化目標
@@ -31,6 +74,7 @@
 - コードの重複を避ける（DRY: Don't Repeat Yourself）
 - 明示的優先：動作が予測可能なコード作成
 - 段階的成長の原則：小さな改善を継続的に行う
+- コンポジション優先：継承よりもコンポジションを活用した柔軟な設計
 
 ### コンポーネント設計の原則
 
@@ -38,6 +82,7 @@
 - 適切なサイズのコンポーネント分割
 - props down, events up の単方向データフロー
 - 再利用可能なコンポーネント設計
+- 制御されたコンポーネントと非制御コンポーネントの適切な使い分け
 
 ### データフローの最適化
 
@@ -45,6 +90,7 @@
 - 不要な再レンダリングの防止：必要な場合のみ再レンダリングが発生する設計
 - データ取得と表示ロジックの分離：関心の分離による保守性向上
 - キャッシュ戦略の適用：同じデータの再取得を回避
+- イミュータブルデータ処理：予測可能な状態変更の実装
 
 ### Zustand状態管理のベストプラクティス
 
@@ -52,38 +98,43 @@
 - **セレクタの最適化**: 必要最小限のデータだけを購読し再レンダリングを制御
 - **永続化とミドルウェア**: 永続化とデバッグ用のミドルウェア統合
 - **TypeScript型安全性**: 完全な型支援によるエラー防止
+- **DevTools連携**: Redux DevToolsと連携したデバッグ体験の向上
 
 ```typescript
 // Zustand状態管理の簡略実装例
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 
 // ストア作成
 export const usePOIStore = create<POIState>()(
-  persist(
-    (set, get) => ({
-      pois: [],
-      selectedPOI: null,
-      isLoading: false,
-      
-      fetchPOIs: async (category) => {
-        set({ isLoading: true });
-        try {
-          const data = await fetchPOIData(category);
-          set({ pois: data, isLoading: false });
-        } catch (error) {
-          set({ error, isLoading: false });
-        }
-      },
+  devtools(
+    persist(
+      (set, get) => ({
+        pois: [],
+        selectedPOI: null,
+        isLoading: false,
+        
+        fetchPOIs: async (category) => {
+          set({ isLoading: true });
+          try {
+            const data = await fetchPOIData(category);
+            set({ pois: data, isLoading: false });
+          } catch (error) {
+            set({ error, isLoading: false });
+          }
+        },
 
-      selectPOI: (id) => set({ selectedPOI: get().pois.find(p => p.id === id) || null })
-    }),
-    { name: 'poi-storage' }
+        selectPOI: (id) => set({ selectedPOI: get().pois.find(p => p.id === id) || null })
+      }),
+      { name: 'poi-storage' }
+    )
   )
 );
 
 // 最適化されたセレクタ使用例
 const selectedPOI = usePOIStore(state => state.selectedPOI); // 必要な状態のみ購読
+const isLoading = usePOIStore(state => state.isLoading); // 別の状態を分離して購読
 ```
 
 ### パスエイリアスの効果的活用
@@ -98,6 +149,7 @@ const selectedPOI = usePOIStore(state => state.selectedPOI); // 必要な状態�
   - `@/utils/*` → `src/utils/*`
 - 新規ファイル作成時は常にエイリアスを使用
 - インポート群のアルファベット順配置
+- 相対パスの複雑な参照（`../../../`など）の排除
 
 ## 3. パフォーマンス最適化技術
 
@@ -108,28 +160,41 @@ const selectedPOI = usePOIStore(state => state.selectedPOI); // 必要な状態�
 - **コード分割**: React.lazyとSuspenseによる遅延ロード
 - **Web Vitals監視**: コアWeb指標（CLS、FID、LCP）の継続的な監視と最適化
 - **React 19の新機能活用**: Actions API、useTransition、サスペンスベースのローディングパターン
+- **適切なキー設計**: リスト要素の効率的な差分更新を可能にするユニークなキー
 
 ```typescript
 // React 19のActions APIの簡略例
-import { useFormAction } from 'react';
+import { useFormAction, useFormState } from 'react';
 
 // Action定義
-const saveAction = async (formData: FormData) => {
+const saveAction = async (prevState, formData: FormData) => {
   try {
     await savePoiToDatabase({ 
       name: formData.get('name') as string,
       category: formData.get('category') as string 
     });
-    return redirectWithAlert('/pois', '保存に成功しました');
+    return { success: true, message: '保存に成功しました' };
   } catch (error) {
-    return { message: 'データの保存に失敗しました' };
+    return { success: false, message: 'データの保存に失敗しました' };
   }
 };
 
 // コンポーネント内での使用
 function POIForm() {
-  const formAction = useFormAction(saveAction);
-  return <form action={formAction}>...</form>;
+  const [formState, formAction] = useFormState(saveAction, { success: false, message: null });
+  
+  return (
+    <form action={formAction}>
+      <input name="name" required />
+      <input name="category" required />
+      <button type="submit">保存</button>
+      {formState.message && (
+        <div className={formState.success ? 'success' : 'error'}>
+          {formState.message}
+        </div>
+      )}
+    </form>
+  );
 }
 ```
 
@@ -138,14 +203,24 @@ function POIForm() {
 - **宣言的なローディング状態**: コンポーネント境界でのローディングUI定義
 - **並列データフェッチング**: 複数のデータソースを並行して読み込み
 - **段階的なUI表示**: 重要なコンテンツから順次表示する戦略
+- **Data Fetchingとの統合**: React 19のuse hookによる洗練されたデータフェッチング
 
 ```typescript
 // Suspenseパターンの簡略例
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, use } from 'react';
 
 const POIDetails = lazy(() => import('@/components/POIDetails'));
 
-function POIMap() {
+// データの取得と変換
+function fetchPOIResource(category) {
+  const promise = fetch(`/api/pois/${category}`)
+    .then(res => res.json());
+  return { read: () => use(promise) };
+}
+
+function POIMap({ category }) {
+  const poiResource = fetchPOIResource(category);
+  
   return (
     <div className="poi-app">
       <MapBase />
@@ -160,6 +235,13 @@ function POIMap() {
 }
 ```
 
+### レンダリングプロセスの最適化
+
+- **不要な再レンダリングの特定**: React DevTools Profilerを用いたボトルネック検出
+- **レンダリングバッチの適正化**: 複数更新の一括処理
+- **レイアウトシフトの防止**: コンテンツの読み込み中のスペースリザベーション
+- **先行ロード戦略**: ユーザーが必要とする前にリソースを先読み
+
 ## 4. API管理とデータフェッチング戦略
 
 ### モダンなデータフェッチング手法
@@ -167,10 +249,12 @@ function POIMap() {
 - **自動キャッシュとリフェッチ**: 賢いキャッシュ戦略によるデータ鮮度の確保
 - **楽観的UI更新とエラー回復**: ユーザー体験を損なわないデータ更新
 - **リクエスト重複排除とバックグラウンド更新**: パフォーマンス向上と最新データの提供
+- **無限クエリとページネーション**: 大量データの効率的な表示
+- **リアクティブクエリインバリデーション**: 関連データの自動更新
 
 ```typescript
 // TanStack Queryの簡略例
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // データ取得用フック
 function usePOIData(category: string | undefined) {
@@ -178,7 +262,39 @@ function usePOIData(category: string | undefined) {
     queryKey: ['pois', { category }],
     queryFn: () => fetchPOIs(category),
     staleTime: 5 * 60 * 1000,  // 5分間はキャッシュを最新とみなす
-    retry: 2                    // 失敗時に2回リトライ
+    retry: 2,                   // 失敗時に2回リトライ
+    placeholderData: (previousData) => previousData // 以前のデータを再利用
+  });
+}
+
+// データ更新用フック（楽観的UI更新付き）
+function useUpdatePOI() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: updatePOI,
+    onMutate: async (newPOI) => {
+      // 楽観的更新のために現在のクエリを一時停止
+      await queryClient.cancelQueries({ queryKey: ['pois'] });
+      
+      // 以前の値をスナップショット
+      const previousPOIs = queryClient.getQueryData(['pois']);
+      
+      // 楽観的に値を更新
+      queryClient.setQueryData(['pois'], (old) => {
+        return old.map(poi => poi.id === newPOI.id ? newPOI : poi);
+      });
+      
+      return { previousPOIs };
+    },
+    onError: (err, newPOI, context) => {
+      // エラー時に元に戻す
+      queryClient.setQueryData(['pois'], context.previousPOIs);
+    },
+    onSettled: () => {
+      // 操作が完了したらクエリを更新
+      queryClient.invalidateQueries({ queryKey: ['pois'] });
+    },
   });
 }
 ```
@@ -188,6 +304,36 @@ function usePOIData(category: string | undefined) {
 - **ネットワーク状態に応じたフォールバック**: オンライン・オフラインの適切な切り替え
 - **バックグラウンド同期による遅延更新**: オフライン時の操作を後で同期
 - **キャッシュ優先戦略とストレージ容量管理**: 限られたリソースの効率的な活用
+- **IndexedDBを活用したデータ永続化**: 大容量データの効率的なオフライン保存
+- **Service Workerによるリソースキャッシング**: ネットワーク非依存の基本機能提供
+
+```typescript
+// オフライン対応のシンプルな実装例
+import { useNetworkState } from '@/hooks/useNetworkState';
+import { useIndexedDBStore } from '@/hooks/useIndexedDBStore';
+
+function POIListWithOfflineSupport({ category }) {
+  const { isOnline } = useNetworkState();
+  const { query, save, pendingChanges, syncPendingChanges } = useIndexedDBStore('pois');
+  
+  // オンラインに戻ったときに保留中の変更を同期
+  useEffect(() => {
+    if (isOnline && pendingChanges.length > 0) {
+      syncPendingChanges().then(() => {
+        toast.success('変更がサーバーに同期されました');
+      });
+    }
+  }, [isOnline, pendingChanges.length]);
+  
+  // UI内でオフライン状態を表示
+  return (
+    <div>
+      {!isOnline && <OfflineBanner pendingCount={pendingChanges.length} />}
+      <POIList data={query.data} isLoading={query.isLoading} />
+    </div>
+  );
+}
+```
 
 ## 5. ユーザーインターフェース最適化
 
@@ -196,24 +342,42 @@ function usePOIData(category: string | undefined) {
 - **CSS-in-JSとTailwind CSSの併用戦略**: コンポーネントスコープのスタイルとユーティリティの組み合わせ
 - **動的スタイリングとテーマ切り替え**: 一貫したデザインシステム
 - **パフォーマンスを考慮したスタイル適用**: CSS生成の最適化
+- **アトミックCSS設計**: 再利用可能な小さなスタイル単位の構築
+- **CSSセレクタの最適化**: 高速なレンダリングのためのシンプルなセレクタ
 
 ```typescript
 // スタイリング手法の簡略例
 import styled from '@emotion/styled';
-import tw from 'twin.macro';
+import tw, { theme } from 'twin.macro';
 
+// ベースコンポーネント
 const Card = styled.div`
   ${tw`bg-white rounded-lg shadow-md p-4 m-2`}
   
   &:hover {
     ${tw`shadow-lg`}
     transform: translateY(-2px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  // メディアクエリの適用
+  @media (max-width: ${theme`screens.md`}) {
+    ${tw`p-3 m-1`}
   }
 `;
 
 // 条件付きスタイリング
-const POICard = styled(Card)<{ isSelected: boolean }>`
+const POICard = styled(Card)<{ isSelected: boolean; importance: 'high' | 'medium' | 'low' }>`
   ${({ isSelected }) => isSelected && tw`ring-2 ring-blue-500`}
+  
+  // 重要度に基づくスタイリング
+  ${({ importance }) => 
+    importance === 'high' 
+      ? tw`border-l-4 border-red-500` 
+      : importance === 'medium'
+        ? tw`border-l-4 border-yellow-500`
+        : tw`border-l-4 border-gray-300`
+  }
 `;
 ```
 
@@ -222,6 +386,46 @@ const POICard = styled(Card)<{ isSelected: boolean }>`
 - **パフォーマンス重視のアニメーション**: transform/opacityの優先使用
 - **条件付きアニメーション**: デバイス性能に応じた調整
 - **インタラクション設計**: ユーザー操作に対する視覚的フィードバック
+- **プログレッシブエンハンスメント**: 基本機能の保証と高度な視覚効果の段階的な追加
+- **アクセシビリティ考慮**: reduced-motion対応
+
+```typescript
+// パフォーマンスとアクセシビリティを考慮したアニメーション
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+function FadeInSection({ children, delay = 0 }) {
+  const [isVisible, setVisible] = useState(false);
+  const domRef = useRef();
+  const prefersReducedMotion = useReducedMotion();
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    });
+    
+    observer.observe(domRef.current);
+    return () => observer.disconnect();
+  }, []);
+  
+  // アクセシビリティ設定に応じてアニメーションを調整
+  const animationStyle = prefersReducedMotion
+    ? {} // アニメーションなし
+    : {
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.4s ease-in-out, transform 0.4s ease-in-out ${delay}s`
+      };
+  
+  return (
+    <div ref={domRef} style={animationStyle}>
+      {children}
+    </div>
+  );
+}
+```
 
 ## 6. ビルドと依存関係の最適化
 
@@ -230,9 +434,16 @@ const POICard = styled(Card)<{ isSelected: boolean }>`
 - **コード分割と遅延ロード**: 必要なコードだけを必要なときにロード
 - **依存関係の最適化**: 使用しないコードの削除
 - **キャッシュ戦略**: 効率的なリソース再利用
+- **モジュールフェデレーション**: 複数アプリケーション間でのコード共有
+- **ビルド時最適化**: 事前レンダリングと静的サイト生成の活用
 
 ```typescript
 // Vite設定の簡略例
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { chunkSplitPlugin } from 'vite-plugin-chunk-split';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -242,16 +453,52 @@ export default defineConfig({
         'map-chunk': [/[\\/]components[\\/]map[\\/]/],
         'vendor-react': ['react', 'react-dom']
       }
+    }),
+    // バンドル分析レポートを生成
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true
     })
   ],
   
   build: {
+    target: 'esnext',  // 最新ブラウザをターゲット
+    minify: 'terser',   // 高度な圧縮
+    cssCodeSplit: true, // CSSの分割
+    sourcemap: false,   // 本番環境ではソースマップを無効化
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'zustand'],
-          map: ['leaflet', 'react-leaflet']
+          map: ['leaflet', 'react-leaflet'],
+          ui: ['@emotion/react', '@emotion/styled', 'twin.macro']
         }
+      }
+    },
+    // キャッシュ最適化
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
+    // 不要なコードの削除
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
+  },
+  
+  // 開発サーバー設定
+  server: {
+    hmr: {
+      overlay: true,
+    },
+    // 開発時のAPIリクエストのプロキシ設定
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
       }
     }
   }
@@ -263,6 +510,64 @@ export default defineConfig({
 - **Web Vitalsの測定**: コアWeb指標の継続的な監視
 - **バンドルサイズ分析**: rollup-plugin-visualizerなどによる可視化
 - **ランタイムパフォーマンス監視**: React Developer Toolsのプロファイラー活用
+- **リアルユーザーメトリクス(RUM)**: 実際のユーザー環境でのパフォーマンス測定
+- **継続的パフォーマンスモニタリング**: CIパイプラインへのパフォーマンステスト組み込み
+
+```typescript
+// Web Vitalsレポートの実装
+import { onCLS, onFID, onLCP, onFCP, onTTFB } from 'web-vitals';
+import { logger } from '@/utils/logger';
+
+function reportWebVitals() {
+  // Core Web Vitals
+  onCLS((metric) => {
+    logger.info('CLS測定', {
+      name: 'CLS',
+      value: metric.value,
+      rating: metric.rating, // good, needs-improvement, poor
+      metricType: 'web-vital'
+    });
+  });
+  
+  onFID((metric) => {
+    logger.info('FID測定', {
+      name: 'FID',
+      value: metric.value,
+      rating: metric.rating,
+      metricType: 'web-vital'
+    });
+  });
+  
+  onLCP((metric) => {
+    logger.info('LCP測定', {
+      name: 'LCP',
+      value: metric.value,
+      rating: metric.rating,
+      metricType: 'web-vital'
+    });
+  });
+  
+  // その他の重要な指標
+  onFCP((metric) => {
+    logger.info('FCP測定', {
+      name: 'FCP',
+      value: metric.value,
+      metricType: 'web-metric'
+    });
+  });
+  
+  onTTFB((metric) => {
+    logger.info('TTFB測定', {
+      name: 'TTFB',
+      value: metric.value,
+      metricType: 'web-metric'
+    });
+  });
+}
+
+// アプリケーション開始時に測定を開始
+reportWebVitals();
+```
 
 ## 7. 実用的なリファレンス
 
@@ -283,10 +588,42 @@ export const measurePerformance = async <T>(
   );
 };
 
+// 同期処理用のパフォーマンス計測
+export const measureSyncPerformance = <T>(
+  name: string,
+  fn: () => T
+): T => {
+  const startTime = performance.now();
+  try {
+    const result = fn();
+    const duration = performance.now() - startTime;
+    
+    logger.debug(`${name} 完了`, {
+      duration: `${duration.toFixed(2)}ms`,
+      component: 'PerformanceMonitor'
+    });
+    
+    return result;
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    logger.error(`${name} 失敗`, {
+      duration: `${duration.toFixed(2)}ms`,
+      error,
+      component: 'PerformanceMonitor'
+    });
+    throw error;
+  }
+};
+
 // 使用例
 const data = await measurePerformance(
   'POIデータのフェッチと変換',
   () => fetchAndTransformPOIs(category)
+);
+
+const processedData = measureSyncPerformance(
+  'POIデータの処理',
+  () => processPOIData(data)
 );
 ```
 
@@ -306,23 +643,227 @@ export function useRenderCounter(componentName: string): void {
     });
   });
 }
+
+// コンポーネントの再レンダリング理由を追跡
+export function useWhyDidYouUpdate(componentName: string, props: Record<string, any>): void {
+  const previousProps = useRef<Record<string, any>>({});
+  
+  useEffect(() => {
+    if (previousProps.current) {
+      const changedProps: Record<string, { from: any; to: any }> = {};
+      let hasChanges = false;
+      
+      Object.entries(props).forEach(([key, value]) => {
+        if (previousProps.current[key] !== value) {
+          changedProps[key] = {
+            from: previousProps.current[key],
+            to: value
+          };
+          hasChanges = true;
+        }
+      });
+      
+      if (hasChanges) {
+        logger.debug(`${componentName}の再レンダリング理由:`, {
+          component: componentName,
+          changedProps,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    
+    previousProps.current = props;
+  });
+}
+
+// 使用例
+function ExpensiveComponent(props) {
+  useRenderCounter('ExpensiveComponent');
+  useWhyDidYouUpdate('ExpensiveComponent', props);
+  
+  // コンポーネントのロジック...
+}
 ```
 
 ## 8. 推奨プラクティスチェックリスト
 
+### コンポーネントとデータ管理
 - [x] **コンポーネント設計**: 単一責任の原則に基づいた適切なサイズのコンポーネント
 - [x] **状態管理**: Zustandでの最適化されたストア設計とセレクタ使用
 - [x] **メモ化**: 適切なメモ化戦略による不要な再計算・再レンダリングの防止
+
+### 堅牢性と性能
 - [x] **エラー境界**: 堅牢なエラー処理とフォールバックUI
 - [x] **パフォーマンス計測**: ロガーと連携した処理時間計測
 - [x] **コード分割**: 効率的なバンドルサイズ管理
-- [x] **アクセシビリティ**: 基本的なWCAGガイドライン対応
+- [x] **Web Vitals最適化**: コアWeb指標の継続的な測定と改善
 
-> **関連ガイドライン**: 
-> - [環境変数管理ガイドライン](./env_usage_guidelines.md) - 環境に応じたパフォーマンス設定
-> - [ロガー使用ガイドライン](./logger_usage_guidelines.md) - パフォーマンス測定とログ記録
->
-> **参考リンク**：
-> - [Zustand公式ドキュメント](https://github.com/pmndrs/zustand)
-> - [React公式ドキュメント](https://react.dev/reference/react)
-> - [Vite最適化ガイド](https://vitejs.dev/guide/performance.html)
+### ユーザー体験と品質保証
+- [x] **アクセシビリティ**: スクリーンリーダー対応、キーボードナビゲーション、色コントラスト最適化
+- [x] **オフライン対応**: ServiceWorkerとIndexedDBを活用したオフライン機能実装
+- [x] **テスト自動化**: 単体テスト、統合テスト、E2Eテストによる品質保証
+
+> **重要**: これらのプラクティスは「佐渡で食えっちゃ」プロジェクト全体に適用し、継続的に改善していくこと。新機能開発時にも必ずこのチェックリストを参照してください。
+
+## 9. エラーハンドリングとロギング連携
+
+### エラー境界とロガーの統合
+
+エラー境界とロガーを連携させることで、ユーザー体験を損なわずにエラー情報を収集できます。
+
+```typescript
+// ErrorBoundaryコンポーネントとロガーの統合例
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '@/utils/logger';
+
+interface ErrorBoundaryProps {
+  fallback: ReactNode | ((error: Error) => ReactNode);
+  children: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    // logger_usage_guidelines.mdで説明されているエラーロギング方針を適用
+    logger.error('コンポーネントレンダリングエラー', {
+      error,
+      componentStack: errorInfo.componentStack,
+      component: 'ErrorBoundary'
+    });
+
+    // カスタムエラーハンドラーがあれば呼び出す
+    this.props.onError?.(error, errorInfo);
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      const { fallback } = this.props;
+      if (typeof fallback === 'function' && this.state.error) {
+        return fallback(this.state.error);
+      }
+      return fallback;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### 段階的なエラー回復戦略
+
+環境変数とロガーを活用した段階的なエラー回復戦略を実装することで、より柔軟なエラーハンドリングが可能になります。
+
+```typescript
+// 環境に応じたエラー処理とロギング戦略
+import { getEnvVar } from '@/utils/env';
+import { logger } from '@/utils/logger';
+
+// env_usage_guidelines.mdで説明されている環境変数アクセス関数を使用
+const ENABLE_DETAILED_ERRORS = getEnvVar({
+  key: 'VITE_ENABLE_DETAILED_ERRORS',
+  defaultValue: false,
+  transform: value => value.toLowerCase() === 'true'
+});
+
+// 段階的なエラー回復を行う関数
+export async function fetchPOIData(category: string) {
+  try {
+    // logger_usage_guidelines.mdで説明されている処理時間測定を活用
+    return await logger.measureTimeAsync(
+      'POIデータフェッチ',
+      async () => {
+        const response = await fetch(`/api/pois/${category}`);
+        if (!response.ok) {
+          throw new Error(`APIエラー: ${response.status}`);
+        }
+        return response.json();
+      },
+      LogLevel.INFO,
+      { category }
+    );
+  } catch (error) {
+    // エラーロギング
+    logger.error('POIデータ取得失敗', {
+      error,
+      category,
+      retryCount: 0
+    });
+
+    // 段階的な回復戦略
+    try {
+      // 1. 最初にキャッシュから取得を試みる
+      const cachedData = await getCachedPOIData(category);
+      if (cachedData) {
+        logger.warn('キャッシュからPOIデータを使用', { category });
+        return cachedData;
+      }
+
+      // 2. 一般カテゴリから取得を試みる
+      logger.warn('一般カテゴリからPOIデータを取得します', { category });
+      const fallbackData = await fetch('/api/pois/general').then(r => r.json());
+      return fallbackData;
+    } catch (fallbackError) {
+      // 3. 最終手段として空の結果を返す
+      logger.error('POIデータのフォールバック取得も失敗', {
+        originalError: error,
+        fallbackError
+      });
+      
+      // 開発環境では詳細なエラー情報を表示
+      if (ENABLE_DETAILED_ERRORS) {
+        throw new Error(`POIデータ取得中のエラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      
+      // 本番環境ではユーザーフレンドリーなエラーメッセージ
+      return { items: [], error: '現在データを読み込めません。後でもう一度お試しください。' };
+    }
+  }
+}
+```
+
+## 参考リンク
+
+### 基本概念
+- [Zustand公式ドキュメント](https://github.com/pmndrs/zustand) - 状態管理ライブラリの完全ガイド
+- [React公式ドキュメント](https://react.dev/reference/react) - React APIリファレンス
+- [Vite最適化ガイド](https://vitejs.dev/guide/performance.html) - Viteのパフォーマンス最適化
+
+### 実装テクニック
+- [ReactパフォーマンスTips](https://react.dev/learn/render-and-commit) - レンダリングプロセスの理解
+- [Reactパターン集](https://reactpatterns.com/) - モダンなReactパターンの解説
+- [TanStack Query](https://tanstack.com/query/latest) - データフェッチング最適化
+- [Emotion + Tailwindの統合](https://github.com/ben-rogerson/twin.macro) - CSS-in-JSとユーティリティの組み合わせ
+
+### 最新機能とAPIリファレンス
+- [React 19 Actions APIガイド](https://react.dev/reference/react/useActionState) - フォーム処理の新アプローチ
+- [Suspenseパターン解説](https://react.dev/reference/react/Suspense) - 宣言的なローディング状態の実装
+- [useTransitionの活用法](https://react.dev/reference/react/useTransition) - 応答性の高いUI作成
+
+### テストと監視
+- [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview) - Webアプリのパフォーマンス分析ツール
+- [Web Vitals](https://web.dev/explore/vitals) - コアWeb指標の測定と改善
+- [React Profiler API](https://react.dev/reference/react/Profiler) - Reactアプリのパフォーマンス計測
+
+### 実践的事例と応用
+- [Reactパフォーマンス最適化事例](https://javascript.plainenglish.io/improving-performance-in-react-applications-e9d22faeff0) - 実際のアプリケーション最適化例
+- [PWAベストプラクティス](https://web.dev/learn/pwa/) - オフライン対応とモバイル最適化
+- [大規模Reactアプリの設計パターン](https://blog.openreplay.com/react-architectural-patterns-for-large-applications/) - エンタープライズ規模のアーキテクチャ
+
+### 日本語リソース
+- [Reactパフォーマンス最適化入門](https://zenn.dev/takuyakikuchi/articles/9e1151ed8b9282) - 日本語でのReactパフォーマンス解説
+- [Vite実践ガイド](https://ja.vitejs.dev/guide/performance.html) - 日本語でのVite最適化ガイド
+- [TypeScript設計パターン](https://qiita.com/uhyo/items/e2fdef2d3236b9bfe74a) - TypeScriptによるコード設計の実践

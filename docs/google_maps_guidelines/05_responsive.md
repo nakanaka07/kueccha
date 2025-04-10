@@ -8,17 +8,84 @@ export const getResponsiveMapOptions = (): google.maps.MapOptions => {
   return logger.measureTime(
     'レスポンシブマップオプションの決定',
     () => {
-      const isMobile = isMobileDevice();
-      logger.debug('デバイスタイプに基づくマップオプションを選択', {
-        isMobileDevice: isMobile,
-        selectedOption: isMobile ? 'MOBILE_MAP_OPTIONS' : 'DEFAULT_MAP_OPTIONS',
+      // 2025年版：より詳細なデバイス情報の取得
+      const deviceInfo = getEnhancedDeviceInfo();
+      
+      logger.debug('デバイス情報に基づくマップオプションを選択', {
+        deviceType: deviceInfo.type,
+        orientation: deviceInfo.orientation,
+        screenSize: deviceInfo.screenSize,
+        performanceProfile: deviceInfo.performanceProfile,
+        selectedOption: getOptionNameForDevice(deviceInfo),
       });
 
-      return isMobile ? MOBILE_MAP_OPTIONS : DEFAULT_MAP_OPTIONS;
+      // デバイス情報に基づいて最適なオプションを選択
+      return getMapOptionsForDevice(deviceInfo);
     },
     LogLevel.DEBUG
   );
 };
+
+// 2025年版：詳細なデバイス情報の取得
+function getEnhancedDeviceInfo() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // デバイスタイプの判別
+  let type = 'desktop';
+  if (width <= 768) {
+    type = 'mobile';
+  } else if (width <= 1024) {
+    type = 'tablet';
+  }
+  
+  // 画面の向き
+  const orientation = width > height ? 'landscape' : 'portrait';
+  
+  // 画面サイズ分類（2025年の一般的な基準）
+  let screenSize = 'medium';
+  if (width <= 400) screenSize = 'small';
+  else if (width >= 1440) screenSize = 'large';
+  
+  // パフォーマンスプロファイルの推測
+  let performanceProfile = 'standard';
+  
+  // メモリ制約の可能性がある古いモバイルデバイス
+  if (type === 'mobile' && devicePixelRatio < 2) {
+    performanceProfile = 'low';
+  }
+  
+  // ハイエンドデバイスの可能性
+  if (devicePixelRatio >= 3 && navigator.hardwareConcurrency > 4) {
+    performanceProfile = 'high';
+  }
+  
+  return {
+    type,
+    width,
+    height,
+    devicePixelRatio,
+    orientation,
+    screenSize,
+    hasTouchSupport,
+    performanceProfile,
+    // 将来のユーザー設定を反映できるよう拡張可能
+    userPreferences: getUserMapPreferences()
+  };
+}
+
+// ユーザー設定の取得
+function getUserMapPreferences() {
+  // ローカルストレージから保存された設定を取得
+  try {
+    const savedPrefs = localStorage.getItem('mapUserPreferences');
+    return savedPrefs ? JSON.parse(savedPrefs) : {};
+  } catch (e) {
+    return {};
+  }
+}
 
 // モバイルデバイス検出
 function isMobileDevice(): boolean {

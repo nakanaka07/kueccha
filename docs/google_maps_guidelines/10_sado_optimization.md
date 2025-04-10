@@ -132,3 +132,137 @@ const SADO_SPRING_STYLES = [
   }
 ];
 ```
+
+## 地域特化機能の活用
+
+```typescript
+// 佐渡島の主要な観光スポットと施設を強調表示
+function enhanceSadoPointsOfInterest(map: google.maps.Map) {
+  // 主要な観光スポットのカテゴリーを強調表示
+  const pointsOfInterestStyles = [
+    {
+      // 佐渡の歴史的建造物（寺社仏閣、史跡など）を強調
+      featureType: 'poi.attraction',
+      elementType: 'labels',
+      stylers: [{ visibility: 'on' }, { weight: 2 }]
+    },
+    {
+      // 島内の主要道路の標識を見やすく
+      featureType: 'road.arterial',
+      elementType: 'labels',
+      stylers: [{ visibility: 'on' }, { weight: 1.5 }]
+    },
+    {
+      // 佐渡の自然公園を強調
+      featureType: 'poi.park',
+      elementType: 'geometry.fill',
+      stylers: [{ visibility: 'on' }, { saturation: 40 }]
+    }
+  ];
+  
+  map.setOptions({
+    styles: [...map.get('styles') || [], ...pointsOfInterestStyles]
+  });
+}
+
+// 佐渡島特有のランドマークをマップに追加
+function addSadoLandmarks(map: google.maps.Map) {
+  // 主要ランドマークの座標とラベル
+  const landmarks = [
+    { position: { lat: 38.2147, lng: 138.3242 }, name: '尖閣湾' },
+    { position: { lat: 38.0342, lng: 138.2328 }, name: '佐渡金山' },
+    { position: { lat: 37.8157, lng: 138.2681 }, name: '小木港' }
+    // 必要に応じて追加
+  ];
+  
+  // 2025年版の拡張機能を使ったランドマーク表示
+  landmarks.forEach(landmark => {
+    if (typeof google.maps.marker !== 'undefined' && 
+        'AdvancedMarkerElement' in google.maps.marker) {
+      // Advanced Markerを使用
+      const advancedMarker = new google.maps.marker.AdvancedMarkerElement({
+        position: landmark.position,
+        title: landmark.name,
+        map: map,
+        // ランドマークを他のマーカーより上に表示
+        zIndex: 1000,
+        content: (() => {
+          // カスタムランドマークピン
+          const pinOptions = {
+            background: '#4285F4',
+            borderColor: '#FFF',
+            glyphColor: '#FFF',
+            glyph: '★',
+            scale: 1.2,
+            borderRadius: '50%' // 2025年の新機能を活用
+          };
+          return new google.maps.marker.PinElement(pinOptions).element;
+        })()
+      });
+    } else {
+      // 従来のマーカーにフォールバック
+      new google.maps.Marker({
+        position: landmark.position,
+        map: map,
+        title: landmark.name,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#FFF',
+          strokeWeight: 2,
+          scale: 8
+        }
+      });
+    }
+  });
+}
+
+// 佐渡島のルートと経路を最適化
+function optimizeSadoRoutes(map: google.maps.Map) {
+  // 主要な観光ルートを地図上に表示
+  const touristRoutes = [
+    [
+      { lat: 38.0342, lng: 138.2328 }, // 佐渡金山
+      { lat: 38.0413, lng: 138.3689 }, // 中心部
+      { lat: 38.2147, lng: 138.3242 }  // 尖閣湾
+    ],
+    [
+      { lat: 37.8157, lng: 138.2681 }, // 小木港
+      { lat: 37.9136, lng: 138.2747 }, // 宿根木
+      { lat: 38.0342, lng: 138.2328 }  // 佐渡金山
+    ]
+  ];
+  
+  // ルートの描画
+  touristRoutes.forEach((path, index) => {
+    const route = new google.maps.Polyline({
+      path: path,
+      geodesic: true,
+      strokeColor: index === 0 ? '#FF0000' : '#0000FF',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map: map
+    });
+    
+    // ルートの説明ラベルを追加（2025年のAPI機能を活用）
+    if (path.length > 0) {
+      const midpoint = path[Math.floor(path.length / 2)];
+      const label = new google.maps.marker.AdvancedMarkerElement({
+        position: midpoint,
+        map: map,
+        content: (() => {
+          const div = document.createElement('div');
+          div.className = 'route-label';
+          div.textContent = `観光ルート ${index + 1}`;
+          div.style.backgroundColor = 'white';
+          div.style.padding = '3px 6px';
+          div.style.border = '1px solid #ccc';
+          div.style.borderRadius = '4px';
+          return div;
+        })()
+      });
+    }
+  });
+}
+```

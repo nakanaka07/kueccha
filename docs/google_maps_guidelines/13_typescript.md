@@ -17,6 +17,9 @@ declare global {
           map: google.maps.Map | null;
           zIndex: number | null;
           collisionBehavior: string | null;
+          gmpClickable: boolean | null;
+          gmpDraggable: boolean | null; // 2025年最新のドラッグ可能属性
+          gmpVisible: boolean | null;   // 2025年最新の可視性制御
         }
         
         interface AdvancedMarkerElementOptions {
@@ -26,6 +29,9 @@ declare global {
           map?: google.maps.Map;
           zIndex?: number;
           collisionBehavior?: string;
+          gmpClickable?: boolean;
+          gmpDraggable?: boolean;
+          gmpVisible?: boolean;
         }
         
         // Pin要素の型定義
@@ -45,6 +51,7 @@ declare global {
           glyphColor?: string;
           glyph?: string;
           scale?: number;
+          borderRadius?: string; // 2025年追加: 角の丸みを設定
         }
       }
       
@@ -52,10 +59,33 @@ declare global {
       interface MapCapabilities {
         isAdvancedMarkersAvailable: boolean;
         isWebGLOverlayViewAvailable: boolean;
+        isLocalContextLibraryAvailable?: boolean; // 2025年追加: ローカルコンテキストライブラリの利用可否
+        isVectorMapAvailable?: boolean; // 2025年追加: ベクターマップ対応
       }
       
       interface Map {
         getMapCapabilities(): MapCapabilities;
+      }
+      
+      // 2025年追加: WebGLオーバーレイビューの拡張型定義
+      namespace webgl {
+        class WebGLOverlayView extends google.maps.MVCObject {
+          constructor();
+          onAdd?: (map: google.maps.Map) => void;
+          onDraw?: (options: WebGLDrawOptions) => void;
+          onRemove?: () => void;
+          onContextLost?: () => void;
+          onContextRestored?: (options: WebGLDrawOptions) => void;
+          setMap(map: google.maps.Map | null): void;
+          requestRedraw(): void;
+          getMap(): google.maps.Map | null;
+        }
+        
+        interface WebGLDrawOptions {
+          gl: WebGLRenderingContext;
+          transformer: any;
+          matrix: Float32Array;
+        }
       }
     }
   }
