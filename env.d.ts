@@ -98,23 +98,23 @@ interface ImportMetaEnv {
 
   // ==== Google Maps関連設定 ====
   /** Google Maps JavaScript API Key */
-  readonly VITE_GOOGLE_MAPS_API_KEY?: string;
+  readonly VITE_GOOGLE_API_KEY: string;
   /** Google Maps MapID (Cloud Consoleで設計したスタイル用) */
-  readonly VITE_GOOGLE_MAPS_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_MAP_ID: string;
   /** Google Maps API バージョン (weekly, quarterly, latest等) */
   readonly VITE_GOOGLE_MAPS_VERSION?: string;
   /** Google Maps APIキーに設定された制限の有無 */
   readonly VITE_GOOGLE_API_KEY_RESTRICTIONS?: BooleanEnvValue;
   /** 季節に応じたMapID（春） */
-  readonly VITE_GOOGLE_SPRING_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_SPRING_MAP_ID?: string;
   /** 季節に応じたMapID（夏） */
-  readonly VITE_GOOGLE_SUMMER_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_SUMMER_MAP_ID?: string;
   /** 季節に応じたMapID（秋） */
-  readonly VITE_GOOGLE_AUTUMN_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_AUTUMN_MAP_ID?: string;
   /** 季節に応じたMapID（冬） */
-  readonly VITE_GOOGLE_WINTER_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_WINTER_MAP_ID?: string;
   /** アクセシブル版MapID */
-  readonly VITE_GOOGLE_ACCESSIBLE_MAP_ID?: string;
+  readonly VITE_GOOGLE_MAPS_ACCESSIBLE_MAP_ID?: string;
 
   // ==== データソース設定 ====
   /** POIデータのソースURL */

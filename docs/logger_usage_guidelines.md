@@ -20,6 +20,29 @@ import { logger } from '@/utils/logger';
 logger.info('アプリケーション初期化完了', { version: '1.0.0' });
 ```
 
+### 型定義
+
+```typescript
+// ログレベルの型定義
+export enum LogLevel {
+  ERROR = 'error',
+  WARN = 'warn',
+  INFO = 'info',
+  DEBUG = 'debug'
+}
+
+// LogLevel型を文字列リテラル型として使用することも可能
+export type LogLevelString = 'error' | 'warn' | 'info' | 'debug';
+
+// LogContext インターフェース
+export interface LogContext {
+  [key: string]: unknown; // 任意のプロパティを許容
+  component?: string; // コンポーネント名
+  userId?: string; // ユーザーID
+  requestId?: string; // リクエスト識別子
+}
+```
+
 ## 2. ログレベルと使用シナリオ
 
 ### ログレベルの概要
@@ -87,11 +110,18 @@ logger.info('マップデータを読み込みました', {
   loadTimeMs: 342,
 });
 
-// エラーオブジェクトを直接渡す
+// エラーオブジェクトを直接渡す - 型安全なエラーハンドリング
 try {
   await fetchData();
-} catch (error) {
-  logger.error('データ取得失敗', error); // Error オブジェクトはスタックトレースも自動的に含まれます
+} catch (error: unknown) {
+  // TypeScript 4.0以降では、catch節のerrorはunknown型になるため
+  // 型チェックを行ってから使用するのが安全
+  if (error instanceof Error) {
+    logger.error('データ取得失敗', error); // Error オブジェクトはスタックトレースも自動的に含まれます
+  } else {
+    // errorが非標準のエラーオブジェクトの場合
+    logger.error('データ取得失敗', { message: String(error) });
+  }
 }
 ```
 
@@ -113,15 +143,19 @@ try {
 
 ```typescript
 // センシティブ情報のマスキング例
-const maskSensitiveData = (data: Record<string, any>) => {
+// any型を避け、ジェネリック型パラメータを使用して型安全性を向上
+const maskSensitiveData = <T extends Record<string, unknown>>(data: T): T => {
   const result = { ...data };
-  const SENSITIVE_FIELDS = ['password', 'token', 'apiKey', 'email'];
+  const SENSITIVE_FIELDS = ['password', 'token', 'apiKey', 'email'] as const;
   
   SENSITIVE_FIELDS.forEach(field => {
     if (field in result) {
-      result[field] = typeof result[field] === 'string' 
-        ? result[field].substring(0, 2) + '****' 
-        : '[masked]';
+      // 型ガードを使用して型安全なマスキング
+      if (typeof result[field] === 'string') {
+        result[field] = (result[field] as string).substring(0, 2) + '****';
+      } else {
+        result[field] = '[masked]';
+      }
     }
   });
   
@@ -141,7 +175,32 @@ logger.info('API認証', maskSensitiveData({
 ### 処理時間の自動測定
 
 ```typescript
-// 同期処理の実行時間を測定
+/**
+ * 同期処理の実行時間を測定し、結果を返す型安全な関数
+ * @template T 関数の戻り値の型
+ */
+function measureTime<T>(
+  label: string,
+  fn: () => T,
+  level: LogLevel = LogLevel.INFO,
+  context?: LogContext,
+  thresholdMs?: number
+): T;
+
+/**
+ * 非同期処理の実行時間を測定し、結果を返す型安全な関数
+ * @template T 非同期関数の解決値の型
+ */
+function measureTimeAsync<T>(
+  label: string,
+  fn: () => Promise<T>,
+  level: LogLevel = LogLevel.INFO,
+  context?: LogContext,
+  thresholdMs?: number
+): Promise<T>;
+
+// 使用例
+// 同期処理の実行時間を測定（戻り値の型が推論される）
 const result = logger.measureTime(
   'POIデータのフィルタリング',
   () => filterPOIData(rawData),
@@ -149,7 +208,7 @@ const result = logger.measureTime(
   { dataSize: rawData.length }
 );
 
-// 非同期処理の実行時間を測定
+// 非同期処理の実行時間を測定（戻り値の型が推論される）
 const data = await logger.measureTimeAsync(
   'APIからのデータ取得',
   () => fetchPOIData(),
@@ -202,8 +261,9 @@ logger.logIf(user.isAdmin, LogLevel.INFO, '管理者がダッシュボードに�
   userId: user.id,
 });
 
-// デバッグモードでのみ詳細ログを出力
-if (ENV.env.isDev) {
+// デバッグモードでのみ詳細ログを出力 - 型安全なアクセス
+// 環境変数が存在するか、またboolean型かを確認
+if (typeof ENV.env.isDev === 'boolean' && ENV.env.isDev) {
   logger.debug('詳細なPOIデータ', poiData);
 }
 ```
@@ -280,7 +340,6 @@ describe('POIフィルター機能テスト', () => {
     // テスト前にログをクリア
     logger.getRecentLogs();
   });
-
   test('無効なデータを適切に処理できること', () => {
     // テスト実行
     filterPOIs(invalidData);
@@ -288,7 +347,13 @@ describe('POIフィルター機能テスト', () => {
     // エラーログが記録されたか確認
     const logs = logger.getRecentLogs(LogLevel.ERROR);
     expect(logs.some(log => log.message.includes('無効なPOIデータ'))).toBe(true);
-    expect(logs[0].context?.component).toBe('POIFilter');
+    
+    // logs配列が空でないことを確認してから要素にアクセス
+    expect(logs.length).toBeGreaterThan(0);
+    if (logs.length > 0) {
+      // Optional Chainingを使って安全にコンテキストのプロパティにアクセス
+      expect(logs[0].context?.component).toBe('POIFilter');
+    }
   });
 });
 ```

@@ -5,7 +5,7 @@
  * 柔軟なロギングシステムを提供します。
  */
 
-import { ENV, toLogLevel, initializeEnvLogger, getEnv } from '@/utils/env';
+import { ENV, toLogLevel, initializeEnvLogger, getEnvVar } from '@/utils/env';
 
 /**
  * ログレベルの定義
@@ -66,7 +66,7 @@ interface LoggerOptions {
   minLevel?: LogLevel;
 
   /** コンソール出力を有効にするか */
-  enableConsole?: boolean;
+  enableConsole?: boolean; // nullを含まないように修正
 
   /** 追加のログ転送先 */
   transports?: LogTransport[];
@@ -92,7 +92,10 @@ interface LoggerOptions {
 
 // デフォルト設定を定数として分離（不変オブジェクト）
 const DEFAULT_OPTIONS: Readonly<LoggerOptions> = Object.freeze({
-  minLevel: toLogLevel(ENV.logging.level || (ENV.env.isDev ? 'info' : 'warn')),
+  minLevel:
+    typeof ENV.logging.level === 'string' && ENV.logging.level.length > 0
+      ? toLogLevel(ENV.logging.level)
+      : toLogLevel(ENV.env.isDev === true ? 'info' : 'warn'),
   enableConsole: true,
   transports: [],
   deduplicateErrors: ENV.env.isProd,
@@ -142,11 +145,11 @@ class Logger {
    */
   private setupCleanupInterval(): void {
     // 既存のインターバルがあれば削除（メモリリーク防止）
-    if (this.cleanupInterval) {
+    if (this.cleanupInterval !== null) {
       clearInterval(this.cleanupInterval);
     }
 
-    if (this.options.deduplicateErrors) {
+    if (this.options.deduplicateErrors === true) {
       const interval = Math.min(this.options.deduplicationInterval ?? 10000, 60000);
       this.cleanupInterval = setInterval(() => {
         const now = Date.now();
@@ -190,13 +193,13 @@ class Logger {
    */
   private shouldLogAtLevel(level: LogLevel, context?: LogContext): boolean {
     // コンポーネント固有のロジックをシンプル化
-    if (context?.component) {
+    if (context?.component !== undefined && context.component !== '') {
       const componentLevel = this.options.componentLevels?.[context.component];
-      if (componentLevel && LEVEL_PRIORITY[level] > LEVEL_PRIORITY[componentLevel]) {
+      if (componentLevel !== undefined && LEVEL_PRIORITY[level] > LEVEL_PRIORITY[componentLevel]) {
         return false;
       }
       // コンポーネントレベルが未設定か、条件を満たす場合はtrueを返す
-      return componentLevel ? true : this.checkGlobalLevel(level);
+      return componentLevel !== undefined ? true : this.checkGlobalLevel(level);
     }
 
     return this.checkGlobalLevel(level);
@@ -214,13 +217,13 @@ class Logger {
    * サンプリングレートによるフィルタリング（最適化版）
    */
   private shouldLogBySamplingRate(message: string): boolean {
-    if (!this.options.samplingRates) return true;
+    if (this.options.samplingRates === undefined) return true;
 
     const sampleKey = message.split(' ')[0];
-    if (!sampleKey) return true;
+    if (sampleKey === undefined || sampleKey === '') return true;
 
     const rate = this.options.samplingRates[sampleKey];
-    if (!rate || typeof rate !== 'number' || isNaN(rate) || rate <= 0) {
+    if (rate === undefined || typeof rate !== 'number' || isNaN(rate) || rate <= 0) {
       return true;
     }
 
@@ -233,7 +236,7 @@ class Logger {
    * 重複エラーチェック（最適化版）
    */
   private shouldLogDuplicateError(level: LogLevel, message: string, context?: LogContext): boolean {
-    if (level !== LogLevel.ERROR || !this.options.deduplicateErrors) {
+    if (level !== LogLevel.ERROR || this.options.deduplicateErrors !== true) {
       return true;
     }
 
@@ -250,9 +253,10 @@ class Logger {
    * コンソールへのログ出力（最適化版）
    */
   private outputToConsole(level: LogLevel, formattedMessage: string): void {
-    if (!this.options.enableConsole) return;
+    if (this.options.enableConsole !== true) {
+      return;
+    }
 
-    // 直接マッピングによるスイッチ文の置き換え
     consoleWrapper[level](formattedMessage);
   }
 
@@ -261,7 +265,8 @@ class Logger {
    */
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const levelStr = level.toUpperCase().padEnd(5, ' ');
-    const timestamp = this.options.includeTimestamps ? `[${new Date().toISOString()}] ` : '';
+    const timestamp =
+      this.options.includeTimestamps === true ? `[${new Date().toISOString()}] ` : '';
     let formattedMessage = `${timestamp}[${levelStr}] ${message}`;
 
     // コンテキスト処理を最適化
@@ -468,7 +473,8 @@ export function validateLogLevel(value: string): LogLevel {
 export function validateLoggerEnvironment(): boolean {
   try {
     // ログレベルの検証
-    const logLevel = getEnv('VITE_LOG_LEVEL', {
+    const logLevel = getEnvVar({
+      key: 'VITE_LOG_LEVEL',
       defaultValue: ENV.env.isDev ? 'info' : 'warn',
       transform: validateLogLevel,
     });
