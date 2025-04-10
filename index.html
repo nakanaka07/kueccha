@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- セキュリティ強化: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com;" />
+
+    <!-- クロスブラウザPWA対応 -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+    <meta name="msapplication-navbutton-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="keywords"
+      content="佐渡,佐渡島,飲食店,レストラン,カフェ,観光,グルメ,駐車場,公共トイレ,地図情報,佐渡で食えっちゃ"
+    />
+    <meta name="author" content="佐渡で食えっちゃ運営チーム" />
+    <meta name="robots" content="index, follow" />
+    <meta
+      name="description"
+      content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。"
+    />
+
+    <!-- OGP設定 - 環境変数ガイドラインに従った安全な参照 -->
+    <meta property="og:title" content="佐渡で食えっちゃ - 佐渡島グルメ・施設マップ" />
+    <meta
+      property="og:description"
+      content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nakanaka07.github.io/sadodekueccha/" />
+    <meta property="og:image" content="<%= import.meta.env.VITE_BASE_URL || '' %>apple-touch-icon.png" />
+    <meta property="og:site_name" content="佐渡で食えっちゃ" />
+    <meta property="og:locale" content="ja_JP" />
+
+    <!-- Twitter Card - 既存の画像を利用 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="佐渡で食えっちゃ - 佐渡島グルメ・施設マップ" />
+    <meta
+      name="twitter:description"
+      content="佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。"
+    />
+    <meta name="twitter:image" content="<%= import.meta.env.VITE_BASE_URL || '' %>apple-touch-icon.png" />
+
+    <!-- プリコネクトとプリロード設定 - Google Maps統合ガイドラインに従い最適化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://maps.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://maps.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://maps.gstatic.com" />
+
+    <!-- Google Fontsの明示的な読み込み - 実際に使用するフォントを指定 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- PWA設定 - 既存ファイルのみ参照するように修正 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="佐渡で食えっちゃ" />
+
+    <title>佐渡で食えっちゃ - 佐渡島グルメ・施設マップ</title>
+
+    <!-- スタイル初期化（フラッシュを防止） - パフォーマンス最適化ガイドラインに準拠 -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .noscript-message {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+        font-size: 1.2rem;
+        padding: 20px;
+        color: #333;
+        background: #f8f8f8;
+      }
+      /* アクセシビリティ対応 - フォーカス表示の改善 */
+      :focus {
+        outline: 2px solid #4285f4;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <div class="noscript-message">
+        <p>このアプリケーションを利用するには、JavaScriptを有効にしてください。<br>
+        佐渡島内の飲食店、駐車場、公共トイレの位置情報サービスをご利用いただけます。</p>
+      </div>
+    </noscript>
+  </body>
+</html>

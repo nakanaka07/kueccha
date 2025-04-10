@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    // NodeJSスクリプト実行用設定
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "target": "ESNext",
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client", "vitest/globals"],
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    // 型チェック強化設定 - コード最適化ガイドラインに基づく
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "noUncheckedIndexedAccess": true,
+    
+    // パスエイリアス設定 - メインのtsconfig.jsonと揃える
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./src/assets/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/constants/*": ["./src/constants/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"]
+    }
+  },
+  
+  // Node.js環境で処理するファイル
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "scripts/**/*.ts",
+    "env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
