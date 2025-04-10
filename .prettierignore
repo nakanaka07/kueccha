@@ -1,0 +1,29 @@
+# 一時ファイルと生成ファイル - ビルドプロセスで生成される一時ファイルやキャッシュ
+.cache
+.temp
+.temp-optimized
+.local
+
+# パッケージマネージャーファイル - 自動生成ファイルは整形対象外
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# バージョン管理とツール設定 - システムファイルやツール設定
+.git
+.husky
+.github
+.hintrc
+
+# 環境変数ファイル - セキュリティ保護のため整形対象外
+.env
+.env.development
+.env.production
+.env.test
+.env.*.local
+# .env.example は整形対象（ドキュメントの一部として扱う）
+
+# ログとシステムファイル - デバッグ情報とシステム生成ファイル
+*.log
+debug.log*
+.DS_Store
