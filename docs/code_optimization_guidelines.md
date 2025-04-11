@@ -39,6 +39,7 @@
 - [参考リンク](#参考リンク)
 
 > **関連ドキュメント**
+>
 > - [ロガー使用ガイドライン](./logger_usage_guidelines.md) - パフォーマンス計測とロギングの統合方法
 > - [環境変数管理ガイドライン](./env_usage_guidelines.md) - 環境別最適化設定の管理
 > - [Google Maps ガイドライン](./google_maps_guidelines/07_performance.md) - 地図コンポーネントのパフォーマンス最適化
@@ -114,8 +115,8 @@ export const usePOIStore = create<POIState>()(
         pois: [],
         selectedPOI: null,
         isLoading: false,
-        
-        fetchPOIs: async (category) => {
+
+        fetchPOIs: async category => {
           set({ isLoading: true });
           try {
             const data = await fetchPOIData(category);
@@ -125,7 +126,8 @@ export const usePOIStore = create<POIState>()(
           }
         },
 
-        selectPOI: (id) => set({ selectedPOI: get().pois.find(p => p.id === id) || null })
+        selectPOI: id =>
+          set({ selectedPOI: get().pois.find(p => p.id === id) || null }),
       }),
       { name: 'poi-storage' }
     )
@@ -142,7 +144,7 @@ const isLoading = usePOIStore(state => state.isLoading); // 別の状態を分�
 - プロジェクトで定義されているパスエイリアス：
   - `@/*` → `src/*`
   - `@/assets/*` → `src/assets/*`
-  - `@/components/*` → `src/components/*` 
+  - `@/components/*` → `src/components/*`
   - `@/constants/*` → `src/constants/*`
   - `@/hooks/*` → `src/hooks/*`
   - `@/types/*` → `src/types/*`
@@ -169,9 +171,9 @@ import { useFormAction, useFormState } from 'react';
 // Action定義
 const saveAction = async (prevState, formData: FormData) => {
   try {
-    await savePoiToDatabase({ 
+    await savePoiToDatabase({
       name: formData.get('name') as string,
-      category: formData.get('category') as string 
+      category: formData.get('category') as string
     });
     return { success: true, message: '保存に成功しました' };
   } catch (error) {
@@ -182,7 +184,7 @@ const saveAction = async (prevState, formData: FormData) => {
 // コンポーネント内での使用
 function POIForm() {
   const [formState, formAction] = useFormState(saveAction, { success: false, message: null });
-  
+
   return (
     <form action={formAction}>
       <input name="name" required />
@@ -220,7 +222,7 @@ function fetchPOIResource(category) {
 
 function POIMap({ category }) {
   const poiResource = fetchPOIResource(category);
-  
+
   return (
     <div className="poi-app">
       <MapBase />
@@ -261,30 +263,30 @@ function usePOIData(category: string | undefined) {
   return useQuery({
     queryKey: ['pois', { category }],
     queryFn: () => fetchPOIs(category),
-    staleTime: 5 * 60 * 1000,  // 5分間はキャッシュを最新とみなす
-    retry: 2,                   // 失敗時に2回リトライ
-    placeholderData: (previousData) => previousData // 以前のデータを再利用
+    staleTime: 5 * 60 * 1000, // 5分間はキャッシュを最新とみなす
+    retry: 2, // 失敗時に2回リトライ
+    placeholderData: previousData => previousData, // 以前のデータを再利用
   });
 }
 
 // データ更新用フック（楽観的UI更新付き）
 function useUpdatePOI() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: updatePOI,
-    onMutate: async (newPOI) => {
+    onMutate: async newPOI => {
       // 楽観的更新のために現在のクエリを一時停止
       await queryClient.cancelQueries({ queryKey: ['pois'] });
-      
+
       // 以前の値をスナップショット
       const previousPOIs = queryClient.getQueryData(['pois']);
-      
+
       // 楽観的に値を更新
-      queryClient.setQueryData(['pois'], (old) => {
-        return old.map(poi => poi.id === newPOI.id ? newPOI : poi);
+      queryClient.setQueryData(['pois'], old => {
+        return old.map(poi => (poi.id === newPOI.id ? newPOI : poi));
       });
-      
+
       return { previousPOIs };
     },
     onError: (err, newPOI, context) => {
@@ -315,7 +317,7 @@ import { useIndexedDBStore } from '@/hooks/useIndexedDBStore';
 function POIListWithOfflineSupport({ category }) {
   const { isOnline } = useNetworkState();
   const { query, save, pendingChanges, syncPendingChanges } = useIndexedDBStore('pois');
-  
+
   // オンラインに戻ったときに保留中の変更を同期
   useEffect(() => {
     if (isOnline && pendingChanges.length > 0) {
@@ -324,7 +326,7 @@ function POIListWithOfflineSupport({ category }) {
       });
     }
   }, [isOnline, pendingChanges.length]);
-  
+
   // UI内でオフライン状態を表示
   return (
     <div>
@@ -353,13 +355,15 @@ import tw, { theme } from 'twin.macro';
 // ベースコンポーネント
 const Card = styled.div`
   ${tw`bg-white rounded-lg shadow-md p-4 m-2`}
-  
+
   &:hover {
     ${tw`shadow-lg`}
     transform: translateY(-2px);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
   }
-  
+
   // メディアクエリの適用
   @media (max-width: ${theme`screens.md`}) {
     ${tw`p-3 m-1`}
@@ -367,17 +371,19 @@ const Card = styled.div`
 `;
 
 // 条件付きスタイリング
-const POICard = styled(Card)<{ isSelected: boolean; importance: 'high' | 'medium' | 'low' }>`
+const POICard = styled(Card)<{
+  isSelected: boolean;
+  importance: 'high' | 'medium' | 'low';
+}>`
   ${({ isSelected }) => isSelected && tw`ring-2 ring-blue-500`}
-  
+
   // 重要度に基づくスタイリング
-  ${({ importance }) => 
-    importance === 'high' 
-      ? tw`border-l-4 border-red-500` 
+  ${({ importance }) =>
+    importance === 'high'
+      ? tw`border-l-4 border-red-500`
       : importance === 'medium'
         ? tw`border-l-4 border-yellow-500`
-        : tw`border-l-4 border-gray-300`
-  }
+        : tw`border-l-4 border-gray-300`}
 `;
 ```
 
@@ -397,7 +403,7 @@ function FadeInSection({ children, delay = 0 }) {
   const [isVisible, setVisible] = useState(false);
   const domRef = useRef();
   const prefersReducedMotion = useReducedMotion();
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
@@ -405,11 +411,11 @@ function FadeInSection({ children, delay = 0 }) {
         observer.disconnect();
       }
     });
-    
+
     observer.observe(domRef.current);
     return () => observer.disconnect();
   }, []);
-  
+
   // アクセシビリティ設定に応じてアニメーションを調整
   const animationStyle = prefersReducedMotion
     ? {} // アニメーションなし
@@ -418,7 +424,7 @@ function FadeInSection({ children, delay = 0 }) {
         transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
         transition: `opacity 0.4s ease-in-out, transform 0.4s ease-in-out ${delay}s`
       };
-  
+
   return (
     <div ref={domRef} style={animationStyle}>
       {children}
@@ -451,30 +457,30 @@ export default defineConfig({
       strategy: 'default',
       customSplitting: {
         'map-chunk': [/[\\/]components[\\/]map[\\/]/],
-        'vendor-react': ['react', 'react-dom']
-      }
+        'vendor-react': ['react', 'react-dom'],
+      },
     }),
     // バンドル分析レポートを生成
     visualizer({
       filename: 'dist/stats.html',
       open: false,
-      gzipSize: true
-    })
+      gzipSize: true,
+    }),
   ],
-  
+
   build: {
-    target: 'esnext',  // 最新ブラウザをターゲット
-    minify: 'terser',   // 高度な圧縮
+    target: 'esnext', // 最新ブラウザをターゲット
+    minify: 'terser', // 高度な圧縮
     cssCodeSplit: true, // CSSの分割
-    sourcemap: false,   // 本番環境ではソースマップを無効化
+    sourcemap: false, // 本番環境ではソースマップを無効化
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'zustand'],
           map: ['leaflet', 'react-leaflet'],
-          ui: ['@emotion/react', '@emotion/styled', 'twin.macro']
-        }
-      }
+          ui: ['@emotion/react', '@emotion/styled', 'twin.macro'],
+        },
+      },
     },
     // キャッシュ最適化
     commonjsOptions: {
@@ -484,11 +490,11 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
-      }
-    }
+        drop_debugger: true,
+      },
+    },
   },
-  
+
   // 開発サーバー設定
   server: {
     hmr: {
@@ -499,9 +505,9 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-      }
-    }
-  }
+      },
+    },
+  },
 });
 ```
 
@@ -520,47 +526,47 @@ import { logger } from '@/utils/logger';
 
 function reportWebVitals() {
   // Core Web Vitals
-  onCLS((metric) => {
+  onCLS(metric => {
     logger.info('CLS測定', {
       name: 'CLS',
       value: metric.value,
       rating: metric.rating, // good, needs-improvement, poor
-      metricType: 'web-vital'
+      metricType: 'web-vital',
     });
   });
-  
-  onFID((metric) => {
+
+  onFID(metric => {
     logger.info('FID測定', {
       name: 'FID',
       value: metric.value,
       rating: metric.rating,
-      metricType: 'web-vital'
+      metricType: 'web-vital',
     });
   });
-  
-  onLCP((metric) => {
+
+  onLCP(metric => {
     logger.info('LCP測定', {
       name: 'LCP',
       value: metric.value,
       rating: metric.rating,
-      metricType: 'web-vital'
+      metricType: 'web-vital',
     });
   });
-  
+
   // その他の重要な指標
-  onFCP((metric) => {
+  onFCP(metric => {
     logger.info('FCP測定', {
       name: 'FCP',
       value: metric.value,
-      metricType: 'web-metric'
+      metricType: 'web-metric',
     });
   });
-  
-  onTTFB((metric) => {
+
+  onTTFB(metric => {
     logger.info('TTFB測定', {
       name: 'TTFB',
       value: metric.value,
-      metricType: 'web-metric'
+      metricType: 'web-metric',
     });
   });
 }
@@ -580,50 +586,42 @@ export const measurePerformance = async <T>(
   fn: () => Promise<T>
 ): Promise<T> => {
   // ロガーを活用したパフォーマンス計測
-  return logger.measureTimeAsync(
-    name,
-    fn,
-    LogLevel.DEBUG,
-    { component: 'PerformanceMonitor' }
-  );
+  return logger.measureTimeAsync(name, fn, LogLevel.DEBUG, {
+    component: 'PerformanceMonitor',
+  });
 };
 
 // 同期処理用のパフォーマンス計測
-export const measureSyncPerformance = <T>(
-  name: string,
-  fn: () => T
-): T => {
+export const measureSyncPerformance = <T>(name: string, fn: () => T): T => {
   const startTime = performance.now();
   try {
     const result = fn();
     const duration = performance.now() - startTime;
-    
+
     logger.debug(`${name} 完了`, {
       duration: `${duration.toFixed(2)}ms`,
-      component: 'PerformanceMonitor'
+      component: 'PerformanceMonitor',
     });
-    
+
     return result;
   } catch (error) {
     const duration = performance.now() - startTime;
     logger.error(`${name} 失敗`, {
       duration: `${duration.toFixed(2)}ms`,
       error,
-      component: 'PerformanceMonitor'
+      component: 'PerformanceMonitor',
     });
     throw error;
   }
 };
 
 // 使用例
-const data = await measurePerformance(
-  'POIデータのフェッチと変換',
-  () => fetchAndTransformPOIs(category)
+const data = await measurePerformance('POIデータのフェッチと変換', () =>
+  fetchAndTransformPOIs(category)
 );
 
-const processedData = measureSyncPerformance(
-  'POIデータの処理',
-  () => processPOIData(data)
+const processedData = measureSyncPerformance('POIデータの処理', () =>
+  processPOIData(data)
 );
 ```
 
@@ -633,45 +631,48 @@ const processedData = measureSyncPerformance(
 // コンポーネントのレンダリング回数を追跡
 export function useRenderCounter(componentName: string): void {
   const renderCount = useRef(0);
-  
+
   useEffect(() => {
     const count = ++renderCount.current;
     logger.debug(`${componentName}がレンダリングされました`, {
       component: componentName,
       renderCount: count,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 }
 
 // コンポーネントの再レンダリング理由を追跡
-export function useWhyDidYouUpdate(componentName: string, props: Record<string, any>): void {
+export function useWhyDidYouUpdate(
+  componentName: string,
+  props: Record<string, any>
+): void {
   const previousProps = useRef<Record<string, any>>({});
-  
+
   useEffect(() => {
     if (previousProps.current) {
       const changedProps: Record<string, { from: any; to: any }> = {};
       let hasChanges = false;
-      
+
       Object.entries(props).forEach(([key, value]) => {
         if (previousProps.current[key] !== value) {
           changedProps[key] = {
             from: previousProps.current[key],
-            to: value
+            to: value,
           };
           hasChanges = true;
         }
       });
-      
+
       if (hasChanges) {
         logger.debug(`${componentName}の再レンダリング理由:`, {
           component: componentName,
           changedProps,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     }
-    
+
     previousProps.current = props;
   });
 }
@@ -680,7 +681,7 @@ export function useWhyDidYouUpdate(componentName: string, props: Record<string, 
 function ExpensiveComponent(props) {
   useRenderCounter('ExpensiveComponent');
   useWhyDidYouUpdate('ExpensiveComponent', props);
-  
+
   // コンポーネントのロジック...
 }
 ```
@@ -688,17 +689,20 @@ function ExpensiveComponent(props) {
 ## 8. 推奨プラクティスチェックリスト
 
 ### コンポーネントとデータ管理
+
 - [x] **コンポーネント設計**: 単一責任の原則に基づいた適切なサイズのコンポーネント
 - [x] **状態管理**: Zustandでの最適化されたストア設計とセレクタ使用
 - [x] **メモ化**: 適切なメモ化戦略による不要な再計算・再レンダリングの防止
 
 ### 堅牢性と性能
+
 - [x] **エラー境界**: 堅牢なエラー処理とフォールバックUI
 - [x] **パフォーマンス計測**: ロガーと連携した処理時間計測
 - [x] **コード分割**: 効率的なバンドルサイズ管理
 - [x] **Web Vitals最適化**: コアWeb指標の継続的な測定と改善
 
 ### ユーザー体験と品質保証
+
 - [x] **アクセシビリティ**: スクリーンリーダー対応、キーボードナビゲーション、色コントラスト最適化
 - [x] **オフライン対応**: ServiceWorkerとIndexedDBを活用したオフライン機能実装
 - [x] **テスト自動化**: 単体テスト、統合テスト、E2Eテストによる品質保証
@@ -727,7 +731,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -742,7 +749,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     logger.error('コンポーネントレンダリングエラー', {
       error,
       componentStack: errorInfo.componentStack,
-      component: 'ErrorBoundary'
+      component: 'ErrorBoundary',
     });
 
     // カスタムエラーハンドラーがあれば呼び出す
@@ -776,7 +783,7 @@ import { logger } from '@/utils/logger';
 const ENABLE_DETAILED_ERRORS = getEnvVar({
   key: 'VITE_ENABLE_DETAILED_ERRORS',
   defaultValue: false,
-  transform: value => value.toLowerCase() === 'true'
+  transform: value => value.toLowerCase() === 'true',
 });
 
 // 段階的なエラー回復を行う関数
@@ -800,7 +807,7 @@ export async function fetchPOIData(category: string) {
     logger.error('POIデータ取得失敗', {
       error,
       category,
-      retryCount: 0
+      retryCount: 0,
     });
 
     // 段階的な回復戦略
@@ -820,16 +827,21 @@ export async function fetchPOIData(category: string) {
       // 3. 最終手段として空の結果を返す
       logger.error('POIデータのフォールバック取得も失敗', {
         originalError: error,
-        fallbackError
+        fallbackError,
       });
-      
+
       // 開発環境では詳細なエラー情報を表示
       if (ENABLE_DETAILED_ERRORS) {
-        throw new Error(`POIデータ取得中のエラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(
+          `POIデータ取得中のエラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
-      
+
       // 本番環境ではユーザーフレンドリーなエラーメッセージ
-      return { items: [], error: '現在データを読み込めません。後でもう一度お試しください。' };
+      return {
+        items: [],
+        error: '現在データを読み込めません。後でもう一度お試しください。',
+      };
     }
   }
 }
@@ -838,32 +850,38 @@ export async function fetchPOIData(category: string) {
 ## 参考リンク
 
 ### 基本概念
+
 - [Zustand公式ドキュメント](https://github.com/pmndrs/zustand) - 状態管理ライブラリの完全ガイド
 - [React公式ドキュメント](https://react.dev/reference/react) - React APIリファレンス
 - [Vite最適化ガイド](https://vitejs.dev/guide/performance.html) - Viteのパフォーマンス最適化
 
 ### 実装テクニック
+
 - [ReactパフォーマンスTips](https://react.dev/learn/render-and-commit) - レンダリングプロセスの理解
 - [Reactパターン集](https://reactpatterns.com/) - モダンなReactパターンの解説
 - [TanStack Query](https://tanstack.com/query/latest) - データフェッチング最適化
 - [Emotion + Tailwindの統合](https://github.com/ben-rogerson/twin.macro) - CSS-in-JSとユーティリティの組み合わせ
 
 ### 最新機能とAPIリファレンス
+
 - [React 19 Actions APIガイド](https://react.dev/reference/react/useActionState) - フォーム処理の新アプローチ
 - [Suspenseパターン解説](https://react.dev/reference/react/Suspense) - 宣言的なローディング状態の実装
 - [useTransitionの活用法](https://react.dev/reference/react/useTransition) - 応答性の高いUI作成
 
 ### テストと監視
+
 - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview) - Webアプリのパフォーマンス分析ツール
 - [Web Vitals](https://web.dev/explore/vitals) - コアWeb指標の測定と改善
 - [React Profiler API](https://react.dev/reference/react/Profiler) - Reactアプリのパフォーマンス計測
 
 ### 実践的事例と応用
+
 - [Reactパフォーマンス最適化事例](https://javascript.plainenglish.io/improving-performance-in-react-applications-e9d22faeff0) - 実際のアプリケーション最適化例
 - [PWAベストプラクティス](https://web.dev/learn/pwa/) - オフライン対応とモバイル最適化
 - [大規模Reactアプリの設計パターン](https://blog.openreplay.com/react-architectural-patterns-for-large-applications/) - エンタープライズ規模のアーキテクチャ
 
 ### 日本語リソース
+
 - [Reactパフォーマンス最適化入門](https://zenn.dev/takuyakikuchi/articles/9e1151ed8b9282) - 日本語でのReactパフォーマンス解説
 - [Vite実践ガイド](https://ja.vitejs.dev/guide/performance.html) - 日本語でのVite最適化ガイド
 - [TypeScript設計パターン](https://qiita.com/uhyo/items/e2fdef2d3236b9bfe74a) - TypeScriptによるコード設計の実践

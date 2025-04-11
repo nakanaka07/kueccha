@@ -1,8 +1,9 @@
+import type { LoaderOptions } from '@googlemaps/js-api-loader';
+
 import { ENV, getMapsApiVersion, getMapsLibraries, isDevEnvironment } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
 
 // Libraries型を正しく定義
-import type { LoaderOptions } from '@googlemaps/js-api-loader';
 
 /**
  * Google Maps APIで使用される有効なライブラリの型定義

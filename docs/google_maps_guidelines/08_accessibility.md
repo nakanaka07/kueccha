@@ -4,7 +4,9 @@
 
 ```typescript
 // アクセシブルなマーカーの作成
-function createAccessibleMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement {
+function createAccessibleMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement {
   const marker = new google.maps.marker.AdvancedMarkerElement({
     position: { lat: poi.lat, lng: poi.lng },
     title: poi.name, // スクリーンリーダーで読み上げられるタイトル
@@ -15,23 +17,26 @@ function createAccessibleMarker(poi: PointOfInterest): google.maps.marker.Advanc
       element.style.backgroundImage = `url(${getIconUrl(poi.category)})`;
       element.style.width = '32px';
       element.style.height = '32px';
-      
+
       // アクセシビリティ属性の追加
       element.setAttribute('role', 'button');
-      element.setAttribute('aria-label', `${poi.name}、${getCategoryName(poi.category)}、緯度経度 ${poi.lat}、${poi.lng}`);
+      element.setAttribute(
+        'aria-label',
+        `${poi.name}、${getCategoryName(poi.category)}、緯度経度 ${poi.lat}、${poi.lng}`
+      );
       element.setAttribute('tabindex', '0');
-      
+
       // キーボード操作のサポート
-      element.addEventListener('keydown', (event) => {
+      element.addEventListener('keydown', event => {
         if (event.key === 'Enter' || event.key === ' ') {
           onMarkerClick(poi);
         }
       });
-      
+
       return element;
     })(),
   });
-  
+
   return marker;
 }
 ```
@@ -45,9 +50,9 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
   const mapContainer = document.getElementById('map');
   if (mapContainer) {
     mapContainer.setAttribute('tabindex', '-1');
-    
+
     // Escキーでマップからフォーカスを外せるようにする
-    mapContainer.addEventListener('keydown', (event) => {
+    mapContainer.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         const exitMapButton = document.getElementById('exit-map-button');
         if (exitMapButton) {
@@ -56,7 +61,7 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
       }
     });
   }
-  
+
   // マップコントロールのアクセシビリティ強化
   const setupA11yForControl = (controlId: string, label: string) => {
     const control = document.getElementById(controlId);
@@ -66,7 +71,7 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
       control.setAttribute('tabindex', '0');
     }
   };
-  
+
   // 各コントロールの設定
   setupA11yForControl('zoom-in-button', 'ズームイン');
   setupA11yForControl('zoom-out-button', 'ズームアウト');
@@ -84,26 +89,26 @@ function applyAccessibleMapStyles(map: google.maps.Map) {
     {
       featureType: 'all',
       elementType: 'geometry',
-      stylers: [{ visibility: 'simplified' }]
+      stylers: [{ visibility: 'simplified' }],
     },
     {
       featureType: 'road',
       elementType: 'labels',
-      stylers: [{ visibility: 'on' }]
+      stylers: [{ visibility: 'on' }],
     },
     {
       featureType: 'road',
       elementType: 'geometry',
-      stylers: [{ weight: 2 }]
+      stylers: [{ weight: 2 }],
     },
     {
       featureType: 'poi',
-      stylers: [{ visibility: 'on' }]
-    }
+      stylers: [{ visibility: 'on' }],
+    },
   ];
-  
+
   map.setOptions({
-    styles: highContrastStyle
+    styles: highContrastStyle,
   });
 }
 ```
@@ -112,41 +117,57 @@ function applyAccessibleMapStyles(map: google.maps.Map) {
 
 ```typescript
 // 色覚多様性に対応したマーカー作成
-function createColorAccessibleMarkers(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement {
+function createColorAccessibleMarkers(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement {
   // 色覚多様性に配慮した色パレット
   const COLOR_BLIND_FRIENDLY_PALETTE = {
-    red: '#E57373',     // 赤系でも識別しやすい色調
-    green: '#81C784',   // 緑系でも識別しやすい色調
-    blue: '#64B5F6',    // 青系
-    yellow: '#FFF176',  // 黄色系
-    purple: '#BA68C8',  // 紫系
-    orange: '#FFB74D',  // オレンジ系
-    teal: '#4DB6AC'     // ティール系
+    red: '#E57373', // 赤系でも識別しやすい色調
+    green: '#81C784', // 緑系でも識別しやすい色調
+    blue: '#64B5F6', // 青系
+    yellow: '#FFF176', // 黄色系
+    purple: '#BA68C8', // 紫系
+    orange: '#FFB74D', // オレンジ系
+    teal: '#4DB6AC', // ティール系
   };
 
   // カテゴリに基づいて色覚多様性に配慮した色を選択
   const getAccessibleColor = (category: string): string => {
     switch (category) {
-      case 'restaurant': return COLOR_BLIND_FRIENDLY_PALETTE.red;
-      case 'cafe': return COLOR_BLIND_FRIENDLY_PALETTE.orange;
-      case 'attraction': return COLOR_BLIND_FRIENDLY_PALETTE.blue;
-      case 'accommodation': return COLOR_BLIND_FRIENDLY_PALETTE.green;
-      case 'shop': return COLOR_BLIND_FRIENDLY_PALETTE.purple;
-      case 'transport': return COLOR_BLIND_FRIENDLY_PALETTE.teal;
-      default: return COLOR_BLIND_FRIENDLY_PALETTE.blue;
+      case 'restaurant':
+        return COLOR_BLIND_FRIENDLY_PALETTE.red;
+      case 'cafe':
+        return COLOR_BLIND_FRIENDLY_PALETTE.orange;
+      case 'attraction':
+        return COLOR_BLIND_FRIENDLY_PALETTE.blue;
+      case 'accommodation':
+        return COLOR_BLIND_FRIENDLY_PALETTE.green;
+      case 'shop':
+        return COLOR_BLIND_FRIENDLY_PALETTE.purple;
+      case 'transport':
+        return COLOR_BLIND_FRIENDLY_PALETTE.teal;
+      default:
+        return COLOR_BLIND_FRIENDLY_PALETTE.blue;
     }
   };
 
   // 色だけでなく形状も使って区別する
   const getCategoryGlyph = (category: string): string => {
     switch (category) {
-      case 'restaurant': return '🍽️';
-      case 'cafe': return '☕';
-      case 'attraction': return '🏛️';
-      case 'accommodation': return '🏠';
-      case 'shop': return '🛒';
-      case 'transport': return '🚌';
-      default: return '📍';
+      case 'restaurant':
+        return '🍽️';
+      case 'cafe':
+        return '☕';
+      case 'attraction':
+        return '🏛️';
+      case 'accommodation':
+        return '🏠';
+      case 'shop':
+        return '🛒';
+      case 'transport':
+        return '🚌';
+      default:
+        return '📍';
     }
   };
 
@@ -161,7 +182,7 @@ function createColorAccessibleMarkers(poi: PointOfInterest): google.maps.marker.
           glyph: getCategoryGlyph(poi.category),
           glyphColor: '#FFFFFF',
           borderColor: '#000000',
-          scale: 1.2
+          scale: 1.2,
         }).element;
       } else {
         // フォールバックとしてDIV作成
@@ -177,7 +198,7 @@ function createColorAccessibleMarkers(poi: PointOfInterest): google.maps.marker.
         div.style.border = '1px solid #000000';
         return div;
       }
-    })()
+    })(),
   });
 }
 ```
@@ -186,23 +207,26 @@ function createColorAccessibleMarkers(poi: PointOfInterest): google.maps.marker.
 
 ```typescript
 // WCAG 2.2準拠のマップコントロールセットアップ
-function setupWCAG22CompliantControls(mapContainer: HTMLElement, map: google.maps.Map) {
+function setupWCAG22CompliantControls(
+  mapContainer: HTMLElement,
+  map: google.maps.Map
+) {
   // フォーカス可視性の強化
-  mapContainer.addEventListener('keydown', (event) => {
+  mapContainer.addEventListener('keydown', event => {
     if (event.key === 'Tab') {
       document.body.classList.add('keyboard-navigation');
     }
   });
-  
+
   // マウス使用時はフォーカス表示を通常に戻す
   mapContainer.addEventListener('mousedown', () => {
     document.body.classList.remove('keyboard-navigation');
   });
-  
+
   // 必要なARIAロールの追加
   mapContainer.setAttribute('role', 'application');
   mapContainer.setAttribute('aria-label', '佐渡島の観光マップ');
-  
+
   // マップコントロールのアクセシビリティ強化
   const controls = mapContainer.querySelectorAll('.gm-control-active');
   controls.forEach(control => {
@@ -210,22 +234,24 @@ function setupWCAG22CompliantControls(mapContainer: HTMLElement, map: google.map
       // コントラストを強化
       control.style.backgroundColor = '#FFFFFF';
       control.style.color = '#000000';
-      
+
       // フォーカス時の視覚的インジケータ
       control.addEventListener('focus', () => {
         control.style.outline = '3px solid #4285F4';
       });
-      
+
       control.addEventListener('blur', () => {
         control.style.outline = '';
       });
     }
   });
-  
+
   // モバイル用の追加アクセシビリティ設定
   if (window.innerWidth <= 768) {
     // タッチターゲットサイズの拡大（WCAG 2.2 2.5.8 Target Size (minimum)）
-    const touchControls = mapContainer.querySelectorAll('.gm-control-active, .gm-fullscreen-control');
+    const touchControls = mapContainer.querySelectorAll(
+      '.gm-control-active, .gm-fullscreen-control'
+    );
     touchControls.forEach(control => {
       if (control instanceof HTMLElement) {
         control.style.minWidth = '44px';
@@ -262,45 +288,48 @@ function applyHighContrastStyles() {
 }
 
 // マップインタラクションの代替手段提供
-function provideAlternativeInteractions(map: google.maps.Map, pois: PointOfInterest[]) {
+function provideAlternativeInteractions(
+  map: google.maps.Map,
+  pois: PointOfInterest[]
+) {
   // 場所リストを提供（マップを見るのが難しいユーザー向け）
   const listContainer = document.createElement('div');
   listContainer.className = 'poi-accessible-list';
   listContainer.setAttribute('role', 'list');
   listContainer.setAttribute('aria-label', '佐渡島の観光スポット一覧');
-  
+
   pois.forEach(poi => {
     const listItem = document.createElement('div');
     listItem.className = 'poi-list-item';
     listItem.setAttribute('role', 'listitem');
     listItem.setAttribute('tabindex', '0');
-    
+
     // 場所情報を表示
     listItem.innerHTML = `
       <h3>${poi.name}</h3>
       <p>${getCategoryName(poi.category)}</p>
       ${poi.description ? `<p>${poi.description}</p>` : ''}
     `;
-    
+
     // キーボード操作で場所を選択できるように
-    listItem.addEventListener('keydown', (event) => {
+    listItem.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
         map.panTo({ lat: poi.lat, lng: poi.lng });
         map.setZoom(16);
         onPoiSelect(poi);
       }
     });
-    
+
     // クリックでも同様の操作ができるように
     listItem.addEventListener('click', () => {
       map.panTo({ lat: poi.lat, lng: poi.lng });
       map.setZoom(16);
       onPoiSelect(poi);
     });
-    
+
     listContainer.appendChild(listItem);
   });
-  
+
   // マップの隣に場所リストを表示
   const mapContainer = document.getElementById('map-container');
   if (mapContainer) {

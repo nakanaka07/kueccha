@@ -1,17 +1,6 @@
-import { useRef, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useEffect } from 'react';
 
-import { ENV } from '@/utils/env';
-import { logger, LogLevel } from '@/utils/logger';
-
-/**
- * マップ初期化設定の型定義
- */
-interface MapInitConfig {
-  /** 初期化までの遅延時間（ミリ秒） */
-  delay: number;
-  /** デバッグモードの有効/無効 */
-  debug: boolean;
-}
+import { logger } from '@/utils/logger';
 
 /**
  * Google Mapsを表示するためのコンテナコンポーネントのプロパティ定義
@@ -21,111 +10,63 @@ interface MapContainerProps {
   onMapElementReady: () => void;
   /** コンテナに適用するCSSクラス名 */
   className?: string;
+  /** マップ要素のID */
+  mapId?: string;
+  /** 初期化までの遅延時間（ミリ秒） */
+  initDelay?: number;
+  /** マップ読み込み失敗時のリトライ回数 */
+  maxRetries?: number;
 }
 
 /**
  * Google Mapsを表示するためのコンテナコンポーネント
- *
- * マップ要素がDOM上に追加された後にコールバック関数を呼び出します。
- * ロガーを使用して開発環境では詳細なログを出力し、パフォーマンス計測も行います。
- *
- * @param props - コンポーネントのプロパティ
- * @returns React コンポーネント
+ * KISS原則に基づいてシンプル化されています
  */
 export const MapContainer = ({
   onMapElementReady,
   className = 'map-container',
+  mapId = 'google-map',
+  initDelay = 0,
 }: MapContainerProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const callbackFiredRef = useRef(false);
-  const timerRef = useRef<number | null>(null);
 
-  // 環境変数から設定を安全に取得して型付け
-  const mapConfig = useMemo<MapInitConfig>(
-    () => ({
-      delay: typeof ENV.ui.map.init.delay === 'number' ? ENV.ui.map.init.delay : 0,
-      debug: Boolean(ENV.ui.map.init.debug || ENV.debug.ENABLE_MAP_DEBUG),
-    }),
-    []
-  );
-
-  // 開発環境判定も一度だけ評価
-  const isDev = useMemo(() => Boolean(ENV.env.isDev), []);
-
-  // コールバック処理を最適化：必要な依存関係のみを指定
-  const handleMapElementReady = useCallback(() => {
-    try {
-      // ロガー使用ガイドラインに沿ったコンテキスト情報の設計
-      const logContext = {
-        component: 'MapContainer',
-        action: 'init_map',
-        entityId: 'map',
-      };
-
-      logger.info('マップ要素の準備完了コールバックを呼び出します', logContext);
-
-      // パフォーマンス計測を行いながらコールバックを実行
-      const logLevel = isDev ? LogLevel.INFO : LogLevel.DEBUG;
-      const perfLogContext = {
-        ...logContext,
-        action: 'map_ready',
-        performance: true,
-      };
-
-      logger.measureTime('マップ要素準備完了処理', onMapElementReady, logLevel, perfLogContext);
-
-      // 条件付きログ出力の活用
-      logger.logIf(mapConfig.debug, LogLevel.DEBUG, 'マップ初期化設定', {
-        ...logContext,
-        action: 'map_debug_info',
-        initDelay: mapConfig.delay,
-        debugMode: mapConfig.debug,
-      });
-    } catch (error) {
-      // エラーオブジェクトを直接渡す（ロガーはスタックトレースも自動的に取得）
-      if (error instanceof Error) {
-        logger.error('マップ要素準備処理でエラーが発生しました', error);
-      } else {
-        logger.error('マップ要素準備処理でエラーが発生しました', {
-          component: 'MapContainer',
-          action: 'map_ready_error',
-          error: String(error),
-        });
-      }
-    }
-  }, [onMapElementReady, mapConfig.debug, mapConfig.delay, isDev]);
-
+  // マップ要素の初期化
   useEffect(() => {
-    // 要素が存在し、まだコールバックが発火していない場合のみ実行
-    if (mapRef.current && !callbackFiredRef.current) {
-      const logContext = {
+    if (callbackFiredRef.current) return;
+
+    const initMap = () => {
+      if (!mapRef.current) {
+        logger.warn('マップ要素が見つかりません', { component: 'MapContainer' });
+        return;
+      }
+
+      logger.debug('マップ要素の初期化を開始します', {
         component: 'MapContainer',
-        action: 'dom_ready',
-        entityId: 'map',
-      };
+        elementId: mapId,
+        elementExists: Boolean(mapRef.current),
+      });
 
-      logger.logIf(
-        isDev || mapConfig.debug,
-        LogLevel.DEBUG,
-        'マップ要素がDOMに追加されました',
-        logContext
-      );
-
-      // コールバックの発火を記録
+      // コールバック呼び出しフラグを設定
       callbackFiredRef.current = true;
 
-      // DOM更新後にコールバックを実行するための遅延（環境変数から取得）
-      timerRef.current = window.setTimeout(handleMapElementReady, mapConfig.delay);
-    }
-
-    // クリーンアップ関数でタイマーをクリア
-    return () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      // コールバック実行
+      onMapElementReady();
     };
-  }, [handleMapElementReady, mapConfig.delay, isDev, mapConfig.debug]);
 
-  return <div id='map' ref={mapRef} className={className}></div>;
+    // 遅延が指定されている場合はタイマーを設定
+    if (initDelay > 0) {
+      const timerId = window.setTimeout(initMap, initDelay);
+
+      // クリーンアップ関数
+      return () => {
+        window.clearTimeout(timerId);
+      };
+    } else {
+      // 遅延なしで即時実行
+      initMap();
+    }
+  }, [onMapElementReady, mapId, initDelay]);
+
+  return <div id={mapId} ref={mapRef} className={className} data-testid='map-container' />;
 };

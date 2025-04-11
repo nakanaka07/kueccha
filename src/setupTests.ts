@@ -9,7 +9,7 @@ import { logger } from '@/utils/logger';
 
 // テスト環境でのconsole.errorとwarningの処理
 // ESLintの警告が出ないよう変数定義を修正
-/* eslint-disable no-console */
+
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
@@ -25,7 +25,6 @@ console.error = (...args: Parameters<typeof console.error>) => {
 console.warn = (...args: Parameters<typeof console.warn>) => {
   originalConsoleWarn(...args);
 };
-/* eslint-enable no-console */
 
 // Testing Libraryの設定
 configure({
@@ -345,11 +344,9 @@ afterEach(() => {
 
 // 全テスト完了後のクリーンアップ
 afterAll(() => {
-  /* eslint-disable no-console */
   // コンソールのオリジナル関数を復元
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
-  /* eslint-enable no-console */
 
   // ロガーの破棄
   logger.dispose();

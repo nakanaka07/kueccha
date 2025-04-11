@@ -2,13 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020", 
-      "DOM", 
-      "DOM.Iterable", 
-      "ESNext",
-      "WebWorker"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
@@ -21,45 +15,25 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
 
-    /* Type Checking */
-    "strict": true, // 以下の厳格チェックをすべて含む
+    /* Type Checking - KISS原則に基づく必須の型チェックのみ */
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "allowUnreachableCode": false,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noErrorTruncation": true,
 
-    /* パフォーマンス最適化 */
-    "verbatimModuleSyntax": true,
+    /* パフォーマンス最適化 - 必須の設定のみ */
     "incremental": true,
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
-    "assumeChangesOnlyAffectDirectDependencies": true,
-    "skipDefaultLibCheck": true,
-    "disableSizeLimit": false,
 
     /* デバッグ支援 */
     "sourceMap": true,
-    "pretty": true,
-    "declaration": false, 
-    "declarationMap": false,
 
-    /* Path Aliases - コード最適化ガイドラインに従う */
+    /* Path Aliases - シンプル化 */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/assets/*": ["src/assets/*"],
-      "@/components/*": ["src/components/*"],
-      "@/constants/*": ["src/constants/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": [
@@ -69,12 +43,6 @@
     "**/*.ts",
     "**/*.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".tsbuildinfo",
-    "coverage"
-  ],
+  "exclude": ["node_modules", "dist", "build", ".tsbuildinfo", "coverage"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -7,7 +7,9 @@
 
 ```typescript
 // マーカー種類を適切に選択する例
-function createMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
+function createMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
   // Advanced Marker APIが利用可能かどうかをチェック
   const useAdvancedMarker =
     typeof google.maps.marker !== 'undefined' &&
@@ -24,7 +26,9 @@ function createMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerEl
 
 ```typescript
 // 2025年最新のAdvanced Markerの機能を活用した例
-function createEnhancedAdvancedMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement {
+function createEnhancedAdvancedMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement {
   // 新しい機能を持つAdvanced Markerを作成
   const marker = new google.maps.marker.AdvancedMarkerElement({
     position: { lat: poi.lat, lng: poi.lng },
@@ -46,47 +50,47 @@ function createEnhancedAdvancedMarker(poi: PointOfInterest): google.maps.marker.
           glyphColor: getGlyphColorForPOI(poi),
           borderColor: poi.isRecommended ? '#FFD700' : undefined,
           // 2025年の新機能：角の丸みをカスタマイズ
-          borderRadius: poi.isSpecial ? '0%' : '50%'
+          borderRadius: poi.isSpecial ? '0%' : '50%',
         };
         return new google.maps.marker.PinElement(pinOptions).element;
-      } 
-      
+      }
+
       // フォールバックとしてカスタムDIV要素を使用
       return createCustomMarkerElement(poi);
     })(),
     // 2025年の新機能：マーカー衝突時の振る舞い
-    collisionBehavior: poi.isPriority 
-      ? 'REQUIRED' // 常に表示 
-      : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY' // 必要に応じて非表示
+    collisionBehavior: poi.isPriority
+      ? 'REQUIRED' // 常に表示
+      : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY', // 必要に応じて非表示
   });
-  
+
   return marker;
 }
 
 // マーカーのサイズを状況に応じて最適化する2025年推奨パターン
 function getOptimalMarkerSize(
-  devicePixelRatio: number, 
-  isMobileDevice: boolean, 
+  devicePixelRatio: number,
+  isMobileDevice: boolean,
   isImportant: boolean
 ): number {
   // 基本サイズ設定
   let baseSize = 32;
-  
+
   // 高解像度画面の場合はサイズ調整
   if (devicePixelRatio > 1) {
     baseSize = Math.floor(baseSize / devicePixelRatio) * devicePixelRatio;
   }
-  
+
   // モバイルデバイスの場合は少し大きく
   if (isMobileDevice) {
     baseSize += 4;
   }
-  
+
   // 重要度に応じてサイズ変更
   if (isImportant) {
     baseSize += 8;
   }
-  
+
   return baseSize;
 }
 ```
@@ -99,9 +103,9 @@ function getOptimalMarkerSize(
 
 ```typescript
 // マーカーキャッシュの例
-const markerCacheRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>>(
-  new Map()
-);
+const markerCacheRef = useRef<
+  Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>
+>(new Map());
 
 // POIのIDを一貫して取得するヘルパー関数
 const getPoiId = useCallback((poi: PointOfInterest): string => {
@@ -109,15 +113,17 @@ const getPoiId = useCallback((poi: PointOfInterest): string => {
 }, []);
 
 // マーカーの取得または作成
-function getOrCreateMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
+function getOrCreateMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
   const id = getPoiId(poi);
   const existingMarker = markerCacheRef.current.get(id);
-  
+
   if (existingMarker) {
     updateMarker(existingMarker, poi);
     return existingMarker;
   }
-  
+
   const newMarker = createMarker(poi);
   markerCacheRef.current.set(id, newMarker);
   return newMarker;
@@ -128,7 +134,9 @@ function getOrCreateMarker(poi: PointOfInterest): google.maps.marker.AdvancedMar
 
 ```typescript
 // Advanced Markerのカスタマイズ例
-function createCustomAdvancedMarker(poi: PointOfInterest): google.maps.marker.AdvancedMarkerElement {
+function createCustomAdvancedMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement {
   return new google.maps.marker.AdvancedMarkerElement({
     position: { lat: poi.lat, lng: poi.lng },
     title: poi.name,
@@ -140,11 +148,11 @@ function createCustomAdvancedMarker(poi: PointOfInterest): google.maps.marker.Ad
           scale: poi.isHighlighted ? 1.2 : 1,
           glyph: poi.isClosed ? '×' : '',
           glyphColor: poi.isClosed ? '#ff0000' : '',
-          borderColor: poi.isRecommended ? '#FFD700' : ''
+          borderColor: poi.isRecommended ? '#FFD700' : '',
         });
         return pin.element;
-      } 
-      
+      }
+
       // フォールバックとしてカスタムDIV要素を使用
       const div = document.createElement('div');
       div.style.backgroundImage = `url(${getIconUrl(poi.category)})`;
@@ -152,7 +160,7 @@ function createCustomAdvancedMarker(poi: PointOfInterest): google.maps.marker.Ad
       div.style.height = '32px';
       div.style.backgroundSize = 'cover';
       return div;
-    })()
+    })(),
   });
 }
 ```
@@ -161,17 +169,20 @@ function createCustomAdvancedMarker(poi: PointOfInterest): google.maps.marker.Ad
 
 ```typescript
 // マーカーイベントの適切な管理
-function setupMarkerEvents(marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker, poi: PointOfInterest) {
+function setupMarkerEvents(
+  marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker,
+  poi: PointOfInterest
+) {
   // クリックイベントのセットアップ
   const clickListener = marker.addListener('click', () => {
     onMarkerClick(poi);
   });
-  
+
   // クリーンアップ用のフィルターを保存
   listenerRefs.current.push({
     marker,
     listener: clickListener,
-    poiId: poi.id
+    poiId: poi.id,
   });
 }
 
@@ -196,10 +207,12 @@ function updateMarkerState(
   prevState?: POIState
 ): void {
   // 変更がない場合は更新をスキップ
-  if (prevState &&
-      prevState.isHighlighted === newState.isHighlighted &&
-      prevState.isSelected === newState.isSelected &&
-      prevState.isHovered === newState.isHovered) {
+  if (
+    prevState &&
+    prevState.isHighlighted === newState.isHighlighted &&
+    prevState.isSelected === newState.isSelected &&
+    prevState.isHovered === newState.isHovered
+  ) {
     return;
   }
 
@@ -215,7 +228,7 @@ function updateMarkerState(
 
 // 最新のAdvanced Markerを最適化して更新
 function updateAdvancedMarkerState(
-  marker: google.maps.marker.AdvancedMarkerElement, 
+  marker: google.maps.marker.AdvancedMarkerElement,
   state: Partial<POIState>
 ): void {
   // 2025年の推奨：マーカーのDOMコンテンツ直接更新よりプロパティ更新が効率的
@@ -229,18 +242,18 @@ function updateAdvancedMarkerState(
     // 既存のクラスを維持しながら状態クラスのみ更新
     const classesToRemove = ['highlighted', 'selected', 'hovered'];
     const classesToAdd = [];
-    
+
     if (state.isHighlighted) classesToAdd.push('highlighted');
     if (state.isSelected) classesToAdd.push('selected');
     if (state.isHovered) classesToAdd.push('hovered');
-    
+
     // 不要なクラスを削除
     content.classList.remove(...classesToRemove);
     // 必要なクラスを追加
     if (classesToAdd.length > 0) {
       content.classList.add(...classesToAdd);
     }
-    
+
     // アニメーション効果を最適化（パフォーマンスに影響しない範囲で）
     if (state.isHighlighted || state.isSelected) {
       content.style.transform = 'scale(1.2)';

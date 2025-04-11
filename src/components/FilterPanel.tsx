@@ -4,17 +4,17 @@ import '@/global.css';
 import { useCallback, useState, useMemo } from 'react';
 
 // プロジェクト固有のインポート
-import { useFilterLogic } from '@/hooks/useFilterLogic';
-import type { PointOfInterest } from '@/types/poi';
-import { ENV } from '@/utils/env';
-import { logger, LogLevel } from '@/utils/logger';
-
 import {
   CheckboxGroup,
   FilterPanelHeader,
   SearchInput,
   StatusFilterInput,
 } from './FilterComponents';
+
+import { useFilterLogic } from '@/hooks/useFilterLogic';
+import type { PointOfInterest } from '@/types/poi';
+import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
 
 // コンポーネント名を定数化して再利用（ロガーガイドライン準拠）
 const COMPONENT_NAME = 'FilterPanel';

@@ -21,13 +21,9 @@ vi.mock('@/utils/logger', () => ({
 vi.mock('@react-google-maps/api', () => {
   // 実際のモック実装はテスト内で動的に変更できるようにオブジェクトを用意
   const mock = {
-    GoogleMap: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid='google-map'>{children}</div>
-    ),
+    GoogleMap: ({ children }: { children: React.ReactNode }) => <div data-testid='google-map'>{children}</div>,
     Marker: () => <div data-testid='map-marker' />,
-    InfoWindow: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid='info-window'>{children}</div>
-    ),
+    InfoWindow: ({ children }: { children: React.ReactNode }) => <div data-testid='info-window'>{children}</div>,
     useLoadScript: () => ({
       isLoaded: true,
       loadError: undefined,
@@ -75,9 +71,7 @@ describe('App', () => {
     expect(container).toBeDefined();
     // アンバウンドメソッド参照を避けるため、アロー関数を使用する
     expect(
-      vi
-        .mocked(logger)
-        .info.mock.calls.some(call => typeof call[0] === 'string' && call[0].includes('テスト'))
+      vi.mocked(logger).info.mock.calls.some(call => typeof call[0] === 'string' && call[0].includes('テスト'))
     ).toBe(true);
   });
 

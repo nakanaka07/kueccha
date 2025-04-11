@@ -1,6 +1,8 @@
+import MapIcon from '@mui/icons-material/Map';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { Button, Typography, Box, Link } from '@mui/material';
 import React, { useEffect } from 'react';
 
-import { getEnvVar } from '@/utils/env';
 import { logger } from '@/utils/logger';
 
 /**
@@ -13,6 +15,8 @@ interface MapLoadingErrorProps {
   onRetry?: () => void;
   /** 代替手段の表示を制御 */
   showAlternatives?: boolean;
+  /** 外部地図へのフォールバックURL */
+  fallbackUrl?: string;
 }
 
 /**
@@ -25,88 +29,76 @@ const getErrorMessage = (error: string | Error): string => {
 
 /**
  * Google Maps API読み込み失敗時のフォールバックコンポーネント
- * ユーザーに適切なエラー情報と代替手段を提供
+ * KISS原則に基づいてシンプル化されています
  */
-const MapLoadingError: React.FC<MapLoadingErrorProps> = ({
+export const MapLoadingError: React.FC<MapLoadingErrorProps> = ({
   error,
   onRetry,
   showAlternatives = true,
+  fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=佐渡島',
 }) => {
   const errorMessage = getErrorMessage(error);
-  const googleMapsUrl = getEnvVar({
-    key: 'VITE_GOOGLE_MAPS_FALLBACK_URL',
-    defaultValue: 'https://www.google.com/maps/search/?api=1&query=佐渡島',
-  });
 
+  // エラー発生時にログを記録
   useEffect(() => {
-    // エラー発生時にログを記録
     logger.error('地図読み込みエラー', {
       component: 'MapLoadingError',
-      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
       errorMessage,
-      timestamp: new Date().toISOString(),
     });
-  }, [error, errorMessage]);
+  }, [errorMessage]);
 
   return (
-    <div className='map-loading-error'>
-      <h2>地図の読み込みに失敗しました</h2>
-      <p className='error-message'>{errorMessage}</p>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 3,
+        height: '100%',
+        textAlign: 'center',
+        backgroundColor: '#f5f5f5',
+      }}
+    >
+      <Typography variant='h5' component='h2' gutterBottom>
+        地図の読み込みに失敗しました
+      </Typography>
+
+      <Typography variant='body1' color='error' sx={{ mb: 3 }}>
+        {errorMessage}
+      </Typography>
 
       {onRetry && (
-        <button
-          onClick={() => {
-            logger.info('地図再読み込み試行', { component: 'MapLoadingError' });
-            onRetry();
-          }}
-          className='retry-button'
+        <Button
+          variant='contained'
+          color='primary'
+          startIcon={<RefreshIcon />}
+          onClick={onRetry}
+          sx={{ mb: 2 }}
         >
-          再試行
-        </button>
+          再読み込み
+        </Button>
       )}
 
       {showAlternatives && (
-        <>
-          <div className='error-alternatives'>
-            <p>代替手段:</p>
-            <ul>
-              <li>
-                <a
-                  href={googleMapsUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  onClick={() =>
-                    logger.info('外部地図リンククリック', { component: 'MapLoadingError' })
-                  }
-                >
-                  Google Mapsで佐渡島を表示
-                </a>
-              </li>
-              <li>
-                <a
-                  href='#poi-list'
-                  onClick={() =>
-                    logger.info('POIリストリンククリック', { component: 'MapLoadingError' })
-                  }
-                >
-                  POI一覧を表示
-                </a>
-              </li>
-            </ul>
-          </div>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant='body2' sx={{ mb: 1 }}>
+            別の方法で地図を表示:
+          </Typography>
 
-          <div className='error-help'>
-            <p>問題が解決しない場合:</p>
-            <ul>
-              <li>インターネット接続を確認してください</li>
-              <li>ブラウザのキャッシュをクリアしてみてください</li>
-              <li>別のブラウザで試してみてください</li>
-            </ul>
-          </div>
-        </>
+          <Button
+            variant='outlined'
+            size='small'
+            startIcon={<MapIcon />}
+            component={Link}
+            href={fallbackUrl}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            Google Mapsで佐渡島を表示
+          </Button>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
-
-export default MapLoadingError;

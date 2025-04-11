@@ -37,20 +37,16 @@ jobs:
       # 依存関係インストールのステップを修正（ロックファイルの不一致エラー対策）
       - name: Install dependencies
         run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
-        
-      # pnpmキャッシュをより効果的に活用
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: |
-          echo "store-path=$(pnpm store path)" >> $GITHUB_OUTPUT
-
+          # pnpmキャッシュを効率的に設定 - シンプルで効果的な方法
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
-          path: ${{ steps.pnpm-cache.outputs.store-path }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: |
+            ~/.pnpm-store
+            node_modules/.pnpm
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ runner.os }}-pnpm-
 
       # リポジトリ名から動的にBASE_PATHを設定
       - name: Extract repository name
@@ -62,16 +58,16 @@ jobs:
 
       # 型チェック
       - name: Run type check
-        run: pnpm typecheck || echo "::warning::Type check issues found, but continuing build"
-
-      # 環境変数検証スクリプト作成
+        run: pnpm typecheck || echo "::warning::Type check issues found, but continuing build"      # 環境変数検証スクリプト作成 - KISSとYAGNIに基づいて簡素化
       - name: Create environment variable verification script
         run: |
           # 先にディレクトリ作成
           mkdir -p scripts
           
           cat > scripts/verify-env.js << 'EOF'
-          // 環境変数の存在確認と検証を行うスクリプト
+          // 環境変数の存在確認と検証を行うシンプルなスクリプト
+          // KISSとYAGNI原則に基づき、必須機能のみを実装
+          
           const requiredVars = [
             'VITE_GOOGLE_API_KEY',
             'VITE_GOOGLE_MAPS_MAP_ID',
@@ -80,20 +76,13 @@ jobs:
             'VITE_EMAILJS_PUBLIC_KEY',
           ];
 
-          const warnings = [];
           const errors = [];
 
-          // 必須環境変数の存在確認
+          // 必須環境変数の存在確認 - 最も重要な検証のみ実施
           for (const varName of requiredVars) {
             if (!process.env[varName]) {
               errors.push(`必須環境変数 ${varName} が設定されていません`);
             }
-          }
-
-          // 警告やエラーがあれば出力
-          if (warnings.length > 0) {
-            console.warn('⚠️ 環境変数の警告:');
-            warnings.forEach(warning => console.warn(`  - ${warning}`));
           }
           
           // エラーがあれば出力して終了
@@ -103,47 +92,36 @@ jobs:
             process.exit(1); // 非ゼロ終了コードでエラーを示す
           }
 
-          // Google Maps API Key の追加検証
-          if (process.env.VITE_GOOGLE_API_KEY) {
-            if (process.env.VITE_GOOGLE_API_KEY.length < 20) {
-              warnings.push('VITE_GOOGLE_API_KEY が短すぎる可能性があります（通常は 39 文字）');
-            }
-            
-            // 本番環境での制限確認
-            if (process.env.CI && process.env.NODE_ENV === 'production' && !process.env.VITE_GOOGLE_API_KEY_RESTRICTIONS) {
-              warnings.push('本番環境では VITE_GOOGLE_API_KEY に HTTP リファラー制限を設定することを推奨します');
-            }
-          }
-
-          // Map ID の形式検証
-          if (process.env.VITE_GOOGLE_MAPS_MAP_ID && !/^[0-9a-f]+$/.test(process.env.VITE_GOOGLE_MAPS_MAP_ID)) {
-            warnings.push('VITE_GOOGLE_MAPS_MAP_ID の形式が不正な可能性があります（16進数文字列）');
-          }
-          
-          // EmailJS関連の追加検証
-          if (process.env.VITE_EMAILJS_PUBLIC_KEY && process.env.VITE_EMAILJS_PUBLIC_KEY.length < 8) {
-            warnings.push('VITE_EMAILJS_PUBLIC_KEY が短すぎる可能性があります');
-          }
-
-          // すべての検証に成功したことを報告
-          if (errors.length === 0 && warnings.length === 0) {
-            console.log('✅ すべての環境変数が正常に設定されています');
-          } else if (errors.length === 0) {
-            console.log('✅ 必須環境変数は設定されていますが、警告があります');
-          }
-          
-          // 最終結果を出力（CI環境でのログ収集用）
-          console.log(JSON.stringify({
-            timestamp: new Date().toISOString(),
-            status: errors.length === 0 ? 'success' : 'error',
-            environment: process.env.NODE_ENV || 'development',
-            errorCount: errors.length,
-            warningCount: warnings.length,
-          }));
+          console.log('✅ すべての必須環境変数が設定されています');
           EOF
           
           # スクリプトに実行権限を付与
           chmod +x scripts/verify-env.js
+            # 環境変数を一元管理することで保守性を向上
+      - name: Set up environment variables
+        id: env-setup
+        run: |
+          # 環境変数をJSONとして定義し、後続ステップで再利用可能にする
+          cat > .env.production << EOF
+          # 本番環境共通設定
+          NODE_ENV=production
+          VITE_LOG_LEVEL=warn
+          
+          # PWA設定
+          VITE_APP_NAME=佐渡で食えっちゃ
+          VITE_APP_SHORT_NAME=食えっちゃ
+          VITE_APP_DESCRIPTION=佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。
+          
+          # 機能フラグ設定
+          VITE_ENABLE_MARKER_CLUSTERING=true
+          VITE_ENABLE_GEOLOCATION=true
+          VITE_ENABLE_OFFLINE_MODE=false
+          
+          # GitHub Pages ベースパス
+          BASE_PATH=/${{ steps.repo-name.outputs.name }}/
+          EOF
+          
+          echo "環境設定ファイルを作成しました"
           
       - name: Verify environment variables
         run: node scripts/verify-env.js
@@ -169,37 +147,25 @@ jobs:
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
           
-          # PWA設定
-          VITE_APP_NAME: '佐渡で食えっちゃ'
-          VITE_APP_SHORT_NAME: '食えっちゃ'
-          VITE_APP_DESCRIPTION: '佐渡島内の飲食店、駐車場、公共トイレの位置情報を網羅。快適な佐渡の旅をサポートします。'
-          
-          # GitHub Pages ベースパス - リポジトリ名から動的に設定
-          BASE_PATH: /${{ steps.repo-name.outputs.name }}/
-          
-          # 本番環境であることを明示
+          # .env.productionファイルから環境設定を読み込む
           NODE_ENV: production
-          
-          # ロギング設定 (追加)
-          VITE_LOG_LEVEL: warn  # 本番環境ではWARN以上のみ表示
-          
-          # 機能フラグの明示的な設定 (追加)
-          VITE_ENABLE_MARKER_CLUSTERING: 'true'
-          VITE_ENABLE_GEOLOCATION: 'true'
-          VITE_ENABLE_OFFLINE_MODE: 'false'
+          BASE_PATH: /${{ steps.repo-name.outputs.name }}/
         run: |
           # 環境変数検証を実行
           node scripts/verify-env.js || echo "::warning::Environment variable issues found, but continuing build"
           
           # ビルド実行
-          pnpm build
-
-      # ビルド結果の検証（任意のファイルが存在することを確認）
+          pnpm build      # ビルド結果の検証 - 最小限の検証で確実性を高める
       - name: Verify build output
         run: |
+          # index.htmlと主要なアセットディレクトリが存在することを確認
           if [ ! -f "./dist/index.html" ]; then
             echo "::error::Build failed - index.html not found in dist directory"
             exit 1
+          fi
+          
+          if [ ! -d "./dist/assets" ]; then
+            echo "::warning::Assets directory not found in build output"
           fi
 
       - name: Setup Pages

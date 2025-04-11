@@ -15,16 +15,16 @@ const SADO_ISLAND_MAP_OPTIONS = {
       north: 38.4,
       south: 37.6,
       east: 138.8,
-      west: 137.9
+      west: 137.9,
     },
-    strictBounds: false
+    strictBounds: false,
   },
   // 佐渡島の地形を強調表示
   mapTypeId: google.maps.MapTypeId.TERRAIN,
   // 地形の高さを強調
   tilt: 0,
   // カスタムマップスタイル
-  styles: SADO_ISLAND_CUSTOM_STYLES
+  styles: SADO_ISLAND_CUSTOM_STYLES,
 };
 
 // 佐渡島の地域に合わせたカスタムスタイル
@@ -33,28 +33,20 @@ const SADO_ISLAND_CUSTOM_STYLES = [
     // 佐渡島の海岸線を強調
     featureType: 'water',
     elementType: 'geometry.fill',
-    stylers: [
-      { color: '#a3ccff' }
-    ]
+    stylers: [{ color: '#a3ccff' }],
   },
   {
     // 佐渡の山地を視覚的に識別しやすく
     featureType: 'landscape.natural.landcover',
     elementType: 'geometry.fill',
-    stylers: [
-      { color: '#c5dea6' },
-      { saturation: 30 }
-    ]
+    stylers: [{ color: '#c5dea6' }, { saturation: 30 }],
   },
   {
     // 主要道路を強調
     featureType: 'road.highway',
     elementType: 'geometry.fill',
-    stylers: [
-      { color: '#ffaa00' },
-      { weight: 3 }
-    ]
-  }
+    stylers: [{ color: '#ffaa00' }, { weight: 3 }],
+  },
 ];
 ```
 
@@ -68,25 +60,25 @@ function optimizeJapaneseMapDisplay(map: google.maps.Map) {
     {
       featureType: 'all',
       elementType: 'labels.text.fill',
-      stylers: [{ color: '#212121' }]
+      stylers: [{ color: '#212121' }],
     },
     {
       featureType: 'all',
       elementType: 'labels.text.stroke',
-      stylers: [{ color: '#ffffff' }, { weight: 2 }]
+      stylers: [{ color: '#ffffff' }, { weight: 2 }],
     },
     {
       // 地名の表示を最適化
       featureType: 'administrative.locality',
       elementType: 'labels.text',
-      stylers: [{ visibility: 'on' }, { weight: 1 }]
-    }
+      stylers: [{ visibility: 'on' }, { weight: 1 }],
+    },
   ];
-  
+
   // 地図の言語を日本語に設定
   map.setOptions({
     styles: japaneseOptimizedStyles,
-    language: 'ja'
+    language: 'ja',
   });
 }
 ```
@@ -98,9 +90,9 @@ function optimizeJapaneseMapDisplay(map: google.maps.Map) {
 function applySadoSeasonalTheme(map: google.maps.Map) {
   const now = new Date();
   const month = now.getMonth() + 1;
-  
+
   let seasonalStyle = [];
-  
+
   // 季節に応じたスタイル変更
   if (month >= 3 && month <= 5) {
     // 春（3-5月）- 佐渡の桜
@@ -115,11 +107,11 @@ function applySadoSeasonalTheme(map: google.maps.Map) {
     // 冬（12-2月）- 雪景色
     seasonalStyle = SADO_WINTER_STYLES;
   }
-  
+
   // 現在のスタイルと季節スタイルをマージ
   const currentStyles = map.get('styles') || [];
   map.setOptions({
-    styles: [...currentStyles, ...seasonalStyle]
+    styles: [...currentStyles, ...seasonalStyle],
   });
 }
 
@@ -128,8 +120,8 @@ const SADO_SPRING_STYLES = [
   {
     featureType: 'poi.park',
     elementType: 'geometry.fill',
-    stylers: [{ color: '#ffeeff' }, { saturation: 20 }]
-  }
+    stylers: [{ color: '#ffeeff' }, { saturation: 20 }],
+  },
 ];
 ```
 
@@ -144,24 +136,24 @@ function enhanceSadoPointsOfInterest(map: google.maps.Map) {
       // 佐渡の歴史的建造物（寺社仏閣、史跡など）を強調
       featureType: 'poi.attraction',
       elementType: 'labels',
-      stylers: [{ visibility: 'on' }, { weight: 2 }]
+      stylers: [{ visibility: 'on' }, { weight: 2 }],
     },
     {
       // 島内の主要道路の標識を見やすく
       featureType: 'road.arterial',
       elementType: 'labels',
-      stylers: [{ visibility: 'on' }, { weight: 1.5 }]
+      stylers: [{ visibility: 'on' }, { weight: 1.5 }],
     },
     {
       // 佐渡の自然公園を強調
       featureType: 'poi.park',
       elementType: 'geometry.fill',
-      stylers: [{ visibility: 'on' }, { saturation: 40 }]
-    }
+      stylers: [{ visibility: 'on' }, { saturation: 40 }],
+    },
   ];
-  
+
   map.setOptions({
-    styles: [...map.get('styles') || [], ...pointsOfInterestStyles]
+    styles: [...(map.get('styles') || []), ...pointsOfInterestStyles],
   });
 }
 
@@ -171,14 +163,16 @@ function addSadoLandmarks(map: google.maps.Map) {
   const landmarks = [
     { position: { lat: 38.2147, lng: 138.3242 }, name: '尖閣湾' },
     { position: { lat: 38.0342, lng: 138.2328 }, name: '佐渡金山' },
-    { position: { lat: 37.8157, lng: 138.2681 }, name: '小木港' }
+    { position: { lat: 37.8157, lng: 138.2681 }, name: '小木港' },
     // 必要に応じて追加
   ];
-  
+
   // 2025年版の拡張機能を使ったランドマーク表示
   landmarks.forEach(landmark => {
-    if (typeof google.maps.marker !== 'undefined' && 
-        'AdvancedMarkerElement' in google.maps.marker) {
+    if (
+      typeof google.maps.marker !== 'undefined' &&
+      'AdvancedMarkerElement' in google.maps.marker
+    ) {
       // Advanced Markerを使用
       const advancedMarker = new google.maps.marker.AdvancedMarkerElement({
         position: landmark.position,
@@ -194,10 +188,10 @@ function addSadoLandmarks(map: google.maps.Map) {
             glyphColor: '#FFF',
             glyph: '★',
             scale: 1.2,
-            borderRadius: '50%' // 2025年の新機能を活用
+            borderRadius: '50%', // 2025年の新機能を活用
           };
           return new google.maps.marker.PinElement(pinOptions).element;
-        })()
+        })(),
       });
     } else {
       // 従来のマーカーにフォールバック
@@ -211,8 +205,8 @@ function addSadoLandmarks(map: google.maps.Map) {
           fillOpacity: 1,
           strokeColor: '#FFF',
           strokeWeight: 2,
-          scale: 8
-        }
+          scale: 8,
+        },
       });
     }
   });
@@ -225,15 +219,15 @@ function optimizeSadoRoutes(map: google.maps.Map) {
     [
       { lat: 38.0342, lng: 138.2328 }, // 佐渡金山
       { lat: 38.0413, lng: 138.3689 }, // 中心部
-      { lat: 38.2147, lng: 138.3242 }  // 尖閣湾
+      { lat: 38.2147, lng: 138.3242 }, // 尖閣湾
     ],
     [
       { lat: 37.8157, lng: 138.2681 }, // 小木港
       { lat: 37.9136, lng: 138.2747 }, // 宿根木
-      { lat: 38.0342, lng: 138.2328 }  // 佐渡金山
-    ]
+      { lat: 38.0342, lng: 138.2328 }, // 佐渡金山
+    ],
   ];
-  
+
   // ルートの描画
   touristRoutes.forEach((path, index) => {
     const route = new google.maps.Polyline({
@@ -242,9 +236,9 @@ function optimizeSadoRoutes(map: google.maps.Map) {
       strokeColor: index === 0 ? '#FF0000' : '#0000FF',
       strokeOpacity: 0.8,
       strokeWeight: 3,
-      map: map
+      map: map,
     });
-    
+
     // ルートの説明ラベルを追加（2025年のAPI機能を活用）
     if (path.length > 0) {
       const midpoint = path[Math.floor(path.length / 2)];
@@ -260,7 +254,7 @@ function optimizeSadoRoutes(map: google.maps.Map) {
           div.style.border = '1px solid #ccc';
           div.style.borderRadius = '4px';
           return div;
-        })()
+        })(),
       });
     }
   });

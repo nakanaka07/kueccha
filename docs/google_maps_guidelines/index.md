@@ -7,23 +7,27 @@
 以下のリソースは、当ガイドラインの作成・改善に役立つ公式情報源です：
 
 ### Google Maps Platform 基本情報
+
 - [Maps JavaScript API 公式ドキュメント](https://developers.google.com/maps/documentation/javascript) - API仕様、新機能、ベストプラクティス
 - [JavaScript サンプルコード集](https://github.com/googlemaps/js-samples) - 実装パターンとデモ
 - [セキュリティガイダンス](https://developers.google.com/maps/api-security-best-practices) - APIキー保護と制限設定のベストプラクティス
 - [マーカーのガイド](https://developers.google.com/maps/documentation/javascript/advanced-markers/overview) - Advanced Markersの実装方法
 
 ### ライブラリと機能拡張
+
 - [ライブラリの概要](https://developers.google.com/maps/documentation/javascript/libraries) - オプションライブラリの活用方法
 - [WebGL オーバーレイ表示](https://developers.google.com/maps/documentation/javascript/webgl/webgl-overlay-view) - パフォーマンス向上のためのWebGL活用
 - [ローカル コンテキスト ライブラリ](https://developers.google.com/maps/documentation/javascript/local-context) - 地域情報の強化
 
 ### 最適化とアクセシビリティ
+
 - [地図のローカライズ](https://developers.google.com/maps/documentation/javascript/localization) - 日本語表示と地域最適化
 - [UI コントロール](https://developers.google.com/maps/documentation/javascript/controls) - 使いやすい操作性の実現
 - [Web.dev - Maps](https://web.dev/explore/maps) - パフォーマンス最適化手法
 - [WCAG 準拠ガイド](https://www.w3.org/WAI/standards-guidelines/wcag/) - アクセシビリティ対応
 
 ### コミュニティとサポート
+
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/google-maps-api-3) - 開発者コミュニティでの質問と回答
 - [Issue Tracker](https://issuetracker.google.com/savedsearches/558438) - バグ報告と機能リクエスト
 - [プラットフォーム ステータス](https://status.cloud.google.com/maps-platform/) - サービス状態の確認

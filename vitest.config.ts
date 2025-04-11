@@ -1,9 +1,12 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import os from 'os';
-import { getEnvVar } from './src/utils/env';
-import { logger, LogLevel } from './src/utils/logger';
+
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
+
+// config/logger.tsからconfigLoggerをインポート
+import { configLogger as logger } from './config/logger';
+// 環境変数ユーティリティをインポート
+import { getEnvBool } from './src/utils/env';
 
 /**
  * プロジェクトのルートディレクトリからの相対パス解決を簡略化する関数
@@ -13,123 +16,68 @@ import { logger, LogLevel } from './src/utils/logger';
 const resolvePath = (path: string) => resolve(__dirname, path);
 
 /**
- * 環境変数の安全な取得
+ * 環境変数の安全な取得（シンプル化）
  * 環境変数管理ガイドラインに準拠
  */
 const getTestEnvironment = () => {
-  return logger.measureTime(
-    'テスト環境設定の取得',
-    () => {
-      // 環境変数ガイドラインに従った型安全な取得方法
-      const isCI = getEnvVar<boolean>('CI', {
-        defaultValue: false,
-        transform: (value: string) => value === 'true' || value === '1',
-      });
+  // 環境変数をシンプルにブール値として取得 - KISS原則に基づくシンプル化
+  const isCI = getEnvBool('CI', false);
+  const isDebugMode = getEnvBool('DEBUG', false);
 
-      const isDebugMode = getEnvVar<boolean>('DEBUG', {
-        defaultValue: false,
-        transform: (value: string) => value === 'true' || value === '1',
-      });
-
-      // 環境設定をログに出力
-      logger.info('テスト環境設定を読み込みました', {
-        component: 'VitestConfig',
-        action: 'load_env',
-        CI: isCI,
-        debugMode: isDebugMode,
-        nodeEnv: process.env.NODE_ENV,
-      });
-
-      return {
-        isCI,
-        isDebugMode,
-      };
-    },
-    LogLevel.DEBUG,
-    { component: 'VitestConfig' }
-  );
+  return {
+    isCI,
+    isDebugMode,
+  };
 };
 
 /**
- * スレッド設定を環境に応じて最適化
+ * スレッド設定を環境に応じて最適化（シンプル化）
  * @param env 現在の環境設定
  * @returns 最適化されたスレッド設定
  */
 const getThreadOptions = (env: { isCI: boolean; isDebugMode: boolean }) => {
-  return logger.measureTime(
-    'スレッド設定の最適化',
-    () => {
-      // CI環境ではリソース節約、通常環境では最大活用
-      const { isCI, isDebugMode } = env;
+  const { isCI, isDebugMode } = env;
 
-      if (isDebugMode) {
-        logger.debug('デバッグモードが有効なため、単一スレッドで実行します', {
-          component: 'VitestConfig',
-          action: 'configure_threads',
-        });
-        return { singleThread: true };
-      }
+  // デバッグモード時は単一スレッド、それ以外はシンプルな設定
+  if (isDebugMode) {
+    return { singleThread: true };
+  }
 
-      const cpuCount = os.cpus().length;
-      const maxThreads = isCI ? 2 : Math.max(1, Math.floor(cpuCount * 0.75));
-      const minThreads = isCI ? 1 : Math.max(1, Math.floor(cpuCount * 0.5));
-
-      logger.debug('スレッド設定を構成しました', {
-        component: 'VitestConfig',
-        action: 'configure_threads',
-        cpuCount,
-        maxThreads,
-        minThreads,
-        isCI,
-      });
-
-      return {
-        maxThreads,
-        minThreads,
-        singleThread: false,
-      };
-    },
-    LogLevel.DEBUG,
-    { component: 'VitestConfig' }
-  );
+  // CI環境は制限付き、通常環境は適度なスレッド数
+  return {
+    maxThreads: isCI ? 2 : 4,
+    minThreads: isCI ? 1 : 2,
+    singleThread: false,
+  };
 };
 
 /**
- * テストカバレッジ設定を環境に応じて取得
+ * テストカバレッジ設定を環境に応じて取得（シンプル化）
  * 型エラーを避けるため、providerを明示的にリテラル型として指定
  */
 const getCoverageConfig = () => {
-  return logger.measureTime(
-    'カバレッジ設定の構成',
-    () => {
-      const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production';
 
-      return {
-        provider: 'v8' as const, // リテラル型として指定
-        reporter: ['text', 'json', 'html', 'lcov'],
-        exclude: [
-          'node_modules/**',
-          'dist/**',
-          '**/*.d.ts',
-          '**/*.test.{ts,tsx}',
-          'src/setupTests.ts',
-          'vite.config.ts',
-          'vitest.config.ts',
-        ],
-        thresholds: {
-          statements: isProd ? 75 : 70,
-          branches: isProd ? 75 : 70,
-          functions: isProd ? 75 : 70,
-          lines: isProd ? 75 : 70,
-        },
-        reportsDirectory: './coverage',
-        all: true,
-        clean: true,
-      };
+  return {
+    provider: 'v8' as const,
+    reporter: ['text', 'html'],
+    exclude: [
+      'node_modules/**',
+      'dist/**',
+      '**/*.d.ts',
+      '**/*.test.{ts,tsx}',
+      'src/setupTests.ts',
+      '*.config.ts',
+    ],
+    thresholds: {
+      statements: isProd ? 75 : 70,
+      branches: isProd ? 75 : 70,
+      functions: isProd ? 75 : 70,
+      lines: isProd ? 75 : 70,
     },
-    LogLevel.DEBUG,
-    { component: 'VitestConfig' }
-  );
+    reportsDirectory: './coverage',
+    all: true,
+  };
 };
 
 export default defineConfig(() => {

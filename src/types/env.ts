@@ -4,8 +4,12 @@
  * このファイルでは、アプリケーション全体で使用される環境設定の型を定義します。
  * 環境変数管理ガイドラインとロガー使用ガイドラインに準拠しています。
  *
+ * KISS（Keep It Simple, Stupid）およびYAGNI（You Aren't Gonna Need It）原則に
+ * 基づいて最適化されています。
+ *
  * @see ../docs/env_usage_guidelines.md
  * @see ../docs/logger_usage_guidelines.md
+ * @see ../docs/code_optimization_guidelines.md
  */
 
 /**
@@ -16,7 +20,7 @@ export type LogLevelType = 'error' | 'warn' | 'info' | 'debug';
 
 /**
  * アプリケーション環境設定を表すインターフェース
- * 環境変数から構築される完全な型安全な設定オブジェクト
+ * 環境変数から構築される型安全な設定オブジェクト
  */
 export interface EnvironmentConfig {
   // アプリケーション基本情報
@@ -29,34 +33,22 @@ export interface EnvironmentConfig {
     description: string;
     /** アプリケーションのバージョン */
     version: string;
-    /** ビルド日時 */
-    buildDate: string;
     /** ベースパス（デプロイ先のパス） */
     basePath: string;
   };
 
-  // Google API関連（Google Maps統合ガイドラインに準拠）
+  // Google Maps API関連（Google Maps統合ガイドラインに準拠）
   google: {
     /** Google Maps API Key */
     apiKey: string;
-    /** Google Maps APIのバージョン (weekly, quarterly等) */
+    /** Google Maps APIのバージョン */
     mapsVersion: string;
     /** 使用するGoogle Maps APIライブラリ */
     mapsLibraries: string[];
-    /** Google Maps MapID (Cloud Consoleで設計したスタイル用) */
+    /** Google Maps MapID */
     mapId: string;
-    /** Google Spreadsheet ID */
-    spreadsheetId: string;
-  };
-
-  // EmailJS関連
-  emailjs: {
-    /** EmailJSサービスID */
-    serviceId: string;
-    /** EmailJSテンプレートID */
-    templateId: string;
-    /** EmailJS公開キー */
-    publicKey: string;
+    /** Google Spreadsheet ID（必要な場合のみ） */
+    spreadsheetId?: string;
   };
 
   // 環境設定
@@ -67,10 +59,6 @@ export interface EnvironmentConfig {
     isDev: boolean;
     /** 本番環境かどうか */
     isProd: boolean;
-    /** テスト環境かどうか */
-    isTest: boolean;
-    /** デバッグモードが有効かどうか */
-    debug: boolean;
   };
 
   // 機能フラグ設定
@@ -79,12 +67,8 @@ export interface EnvironmentConfig {
     googleSheets: boolean;
     /** オフラインモードを有効にするか */
     offlineMode: boolean;
-    /** アナリティクスを有効にするか */
-    analytics: boolean;
     /** マーカークラスタリングを有効にするか */
     markerClustering: boolean;
-    /** 詳細なログ記録を有効にするか */
-    verboseLogging: boolean;
     /** 追加の機能フラグを動的に定義可能 */
     [key: string]: boolean;
   };
@@ -99,12 +83,6 @@ export interface EnvironmentConfig {
         lat: number;
         lng: number;
       };
-      init: {
-        /** マップ初期化遅延時間（ms） */
-        delay: number;
-        /** マップ初期化デバッグモード */
-        debug: boolean;
-      };
     };
   };
 
@@ -112,19 +90,21 @@ export interface EnvironmentConfig {
   logging: {
     /** ログレベル設定 */
     level: LogLevelType;
-    /** ログ設定の追加プロパティを動的に定義可能 */
-    [key: string]: unknown;
-  };
-
-  // デバッグ設定
-  debug: {
-    /** マップデバッグモードを有効にするか */
-    ENABLE_MAP_DEBUG: boolean;
-    /** 追加のデバッグフラグを動的に定義可能 */
-    [key: string]: boolean;
   };
 }
 
-// エクスポート方法の最適化
-// TypeScriptの`verbatimModuleSyntax`が有効な場合は
-// 型とインターフェースを明示的にエクスポートする
+/**
+ * EmailJSの設定（必要時に拡張可能な分離型）
+ * YAGNI原則に基づき、使用時のみ追加
+ */
+export interface EmailJSConfig {
+  /** EmailJSサービスID */
+  serviceId: string;
+  /** EmailJSテンプレートID */
+  templateId: string;
+  /** EmailJS公開キー */
+  publicKey: string;
+}
+
+// 注: 型やインターフェースは上記ですでにexportされているため、再エクスポート不要
+// 特にverbatimModuleSyntax有効時はエラーになるので注意

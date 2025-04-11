@@ -5,17 +5,17 @@
  * @description
  * この型定義はViteが提供するImportMetaEnvを拡張し、
  * アプリケーション固有の環境変数に型安全性を提供します。
- * 環境変数管理ガイドライン、Google Maps統合ガイドライン、ロガー使用ガイドラインに準拠しています。
  */
 
-// 真偽値を表す環境変数の型定義
-type BooleanEnvValue = boolean | 'true' | 'false' | '1' | '0' | '';
+// 真偽値を表す環境変数の型定義（実際に使用される値のみに簡素化）
+type BooleanEnvValue = 'true' | 'false' | '1' | '0' | '';
 
 // ログレベルを表す型
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 /**
  * 環境設定を保持するオブジェクトの型定義
+ * KISSの原則に従い、必要最小限の設定のみ維持
  */
 interface EnvironmentConfig {
   app: {
@@ -23,34 +23,17 @@ interface EnvironmentConfig {
     shortName: string;
     description: string;
     version: string;
-    buildDate: string;
-    basePath: string;
   };
   env: {
     mode: string;
     isDev: boolean;
     isProd: boolean;
-    isTest: boolean;
-    debug: boolean;
   };
   google: {
     apiKey: string;
-    mapsVersion: string;
-    mapsLibraries: string[];
     mapId: string;
-    spreadsheetId: string;
-  };
-  emailjs: {
-    serviceId: string;
-    templateId: string;
-    publicKey: string;
   };
   features: {
-    googleSheets: boolean;
-    offlineMode: boolean;
-    analytics: boolean;
-    markerClustering: boolean;
-    verboseLogging: boolean;
     [key: string]: boolean;
   };
   ui: {
@@ -60,18 +43,10 @@ interface EnvironmentConfig {
         lat: number;
         lng: number;
       };
-      init: {
-        delay: number;
-        debug: boolean;
-      };
     };
   };
   logging: {
     level: LogLevel;
-  };
-  debug: {
-    ENABLE_MAP_DEBUG: boolean;
-    [key: string]: boolean;
   };
 }
 
@@ -96,43 +71,23 @@ interface ImportMetaEnv {
   /** アプリケーションの説明文 */
   readonly VITE_APP_DESCRIPTION: string;
 
-  // ==== Google Maps関連設定 ====
+  // ==== Google Maps関連設定（コア機能のみ） ====
   /** Google Maps JavaScript API Key */
   readonly VITE_GOOGLE_API_KEY: string;
   /** Google Maps MapID (Cloud Consoleで設計したスタイル用) */
   readonly VITE_GOOGLE_MAPS_MAP_ID: string;
   /** Google Maps API バージョン (weekly, quarterly, latest等) */
   readonly VITE_GOOGLE_MAPS_VERSION?: string;
-  /** Google Maps APIキーに設定された制限の有無 */
-  readonly VITE_GOOGLE_API_KEY_RESTRICTIONS?: BooleanEnvValue;
-  /** 季節に応じたMapID（春） */
-  readonly VITE_GOOGLE_MAPS_SPRING_MAP_ID?: string;
-  /** 季節に応じたMapID（夏） */
-  readonly VITE_GOOGLE_MAPS_SUMMER_MAP_ID?: string;
-  /** 季節に応じたMapID（秋） */
-  readonly VITE_GOOGLE_MAPS_AUTUMN_MAP_ID?: string;
-  /** 季節に応じたMapID（冬） */
-  readonly VITE_GOOGLE_MAPS_WINTER_MAP_ID?: string;
-  /** アクセシブル版MapID */
-  readonly VITE_GOOGLE_MAPS_ACCESSIBLE_MAP_ID?: string;
 
-  // ==== データソース設定 ====
+  // ==== データソース設定（必須項目のみ） ====
   /** POIデータのソースURL */
   readonly VITE_DATA_SOURCE_URL?: string;
   /** CSVデータファイルの保存場所 */
   readonly VITE_DATA_CSV_PATH?: string;
-  /** データ更新間隔（分単位） */
-  readonly VITE_DATA_REFRESH_INTERVAL?: string;
 
   // ==== ロギング設定 ====
   /** ログレベル (debug, info, warn, error) */
-  readonly VITE_LOG_LEVEL?: 'debug' | 'info' | 'warn' | 'error';
-  /** リモートログ送信先URL */
-  readonly VITE_LOG_ENDPOINT?: string;
-  /** 高頻度ログのサンプリングレート */
-  readonly VITE_LOG_SAMPLING_RATE?: string;
-  /** パフォーマンス計測ログの閾値（ms） */
-  readonly VITE_LOG_PERFORMANCE_THRESHOLD?: string;
+  readonly VITE_LOG_LEVEL?: LogLevel;
 
   // ==== 機能フラグ（VITE_ENABLE_*） ====
   /** 指定された機能を有効化するフラグ */

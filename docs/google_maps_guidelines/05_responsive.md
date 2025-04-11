@@ -10,7 +10,7 @@ export const getResponsiveMapOptions = (): google.maps.MapOptions => {
     () => {
       // 2025年版：より詳細なデバイス情報の取得
       const deviceInfo = getEnhancedDeviceInfo();
-      
+
       logger.debug('デバイス情報に基づくマップオプションを選択', {
         deviceType: deviceInfo.type,
         orientation: deviceInfo.orientation,
@@ -31,8 +31,9 @@ function getEnhancedDeviceInfo() {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const devicePixelRatio = window.devicePixelRatio || 1;
-  const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  
+  const hasTouchSupport =
+    'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   // デバイスタイプの判別
   let type = 'desktop';
   if (width <= 768) {
@@ -40,28 +41,28 @@ function getEnhancedDeviceInfo() {
   } else if (width <= 1024) {
     type = 'tablet';
   }
-  
+
   // 画面の向き
   const orientation = width > height ? 'landscape' : 'portrait';
-  
+
   // 画面サイズ分類（2025年の一般的な基準）
   let screenSize = 'medium';
   if (width <= 400) screenSize = 'small';
   else if (width >= 1440) screenSize = 'large';
-  
+
   // パフォーマンスプロファイルの推測
   let performanceProfile = 'standard';
-  
+
   // メモリ制約の可能性がある古いモバイルデバイス
   if (type === 'mobile' && devicePixelRatio < 2) {
     performanceProfile = 'low';
   }
-  
+
   // ハイエンドデバイスの可能性
   if (devicePixelRatio >= 3 && navigator.hardwareConcurrency > 4) {
     performanceProfile = 'high';
   }
-  
+
   return {
     type,
     width,
@@ -72,7 +73,7 @@ function getEnhancedDeviceInfo() {
     hasTouchSupport,
     performanceProfile,
     // 将来のユーザー設定を反映できるよう拡張可能
-    userPreferences: getUserMapPreferences()
+    userPreferences: getUserMapPreferences(),
   };
 }
 
@@ -91,8 +92,9 @@ function getUserMapPreferences() {
 function isMobileDevice(): boolean {
   const windowWidth = window.innerWidth;
   const DEVICE_BREAKPOINT = 768; // タブレット/モバイルの境界
-  const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  
+  const hasTouchSupport =
+    'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   return windowWidth <= DEVICE_BREAKPOINT || hasTouchSupport;
 }
 ```
@@ -123,10 +125,13 @@ export const MOBILE_MAP_OPTIONS = {
 
 ```typescript
 // 表示領域内のマーカーのみを描画する例
-function updateVisibleMarkers(map: google.maps.Map, allMarkers: Array<google.maps.marker.AdvancedMarkerElement>) {
+function updateVisibleMarkers(
+  map: google.maps.Map,
+  allMarkers: Array<google.maps.marker.AdvancedMarkerElement>
+) {
   const bounds = map.getBounds();
   if (!bounds) return;
-  
+
   allMarkers.forEach(marker => {
     const position = marker.position;
     if (position && bounds.contains(position)) {

@@ -10,7 +10,9 @@ declare global {
       namespace marker {
         // Advanced Markers APIの型定義
         class AdvancedMarkerElement extends google.maps.MVCObject {
-          constructor(options?: google.maps.marker.AdvancedMarkerElementOptions);
+          constructor(
+            options?: google.maps.marker.AdvancedMarkerElementOptions
+          );
           position: google.maps.LatLng | google.maps.LatLngLiteral | null;
           title: string | null;
           content: Node | null;
@@ -19,9 +21,9 @@ declare global {
           collisionBehavior: string | null;
           gmpClickable: boolean | null;
           gmpDraggable: boolean | null; // 2025年最新のドラッグ可能属性
-          gmpVisible: boolean | null;   // 2025年最新の可視性制御
+          gmpVisible: boolean | null; // 2025年最新の可視性制御
         }
-        
+
         interface AdvancedMarkerElementOptions {
           position?: google.maps.LatLng | google.maps.LatLngLiteral;
           title?: string;
@@ -33,7 +35,7 @@ declare global {
           gmpDraggable?: boolean;
           gmpVisible?: boolean;
         }
-        
+
         // Pin要素の型定義
         class PinElement {
           constructor(options?: PinElementOptions);
@@ -44,7 +46,7 @@ declare global {
           scale: number;
           element: HTMLElement;
         }
-        
+
         interface PinElementOptions {
           background?: string;
           borderColor?: string;
@@ -54,7 +56,7 @@ declare global {
           borderRadius?: string; // 2025年追加: 角の丸みを設定
         }
       }
-      
+
       // マップの機能をチェックするための型定義
       interface MapCapabilities {
         isAdvancedMarkersAvailable: boolean;
@@ -62,11 +64,11 @@ declare global {
         isLocalContextLibraryAvailable?: boolean; // 2025年追加: ローカルコンテキストライブラリの利用可否
         isVectorMapAvailable?: boolean; // 2025年追加: ベクターマップ対応
       }
-      
+
       interface Map {
         getMapCapabilities(): MapCapabilities;
       }
-      
+
       // 2025年追加: WebGLオーバーレイビューの拡張型定義
       namespace webgl {
         class WebGLOverlayView extends google.maps.MVCObject {
@@ -80,7 +82,7 @@ declare global {
           requestRedraw(): void;
           getMap(): google.maps.Map | null;
         }
-        
+
         interface WebGLDrawOptions {
           gl: WebGLRenderingContext;
           transformer: any;
@@ -111,11 +113,14 @@ export default tseslint.config(
       ...typescriptRules,
       // Google Maps API使用時の特殊ルール
       'no-undef': 'off', // グローバルのgoogleオブジェクトへのアクセスで警告が出ないように
-      '@typescript-eslint/no-explicit-any': ['error', {
-        // google.maps名前空間の特定のオブジェクトはanyを許可
-        ignoreRestArgs: true,
-        allowExplicitAny: false,
-      }],
+      '@typescript-eslint/no-explicit-any': [
+        'error',
+        {
+          // google.maps名前空間の特定のオブジェクトはanyを許可
+          ignoreRestArgs: true,
+          allowExplicitAny: false,
+        },
+      ],
       // APIのバージョンチェックを強制するカスタムルール
       'custom-rules/check-maps-version': 'warn',
     },
@@ -133,32 +138,32 @@ function createTypeSafeMarker(
   poi: PointOfInterest,
   useAdvancedMarker = true
 ): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
-  
   // Advanced Marker APIの存在確認
-  if (useAdvancedMarker &&
-      typeof google.maps.marker !== 'undefined' &&
-      'AdvancedMarkerElement' in google.maps.marker &&
-      typeof google.maps.marker.AdvancedMarkerElement === 'function') {
-    
+  if (
+    useAdvancedMarker &&
+    typeof google.maps.marker !== 'undefined' &&
+    'AdvancedMarkerElement' in google.maps.marker &&
+    typeof google.maps.marker.AdvancedMarkerElement === 'function'
+  ) {
     // 型安全なオプション構築
     const options: google.maps.marker.AdvancedMarkerElementOptions = {
       position: { lat: poi.lat, lng: poi.lng },
-      title: poi.name
+      title: poi.name,
     };
-    
+
     // マーカーコンテンツの条件分岐も型安全に
     if ('PinElement' in google.maps.marker) {
       const pinOptions: google.maps.marker.PinElementOptions = {
         background: getCategoryColor(poi.category),
         scale: poi.isHighlighted ? 1.2 : 1,
       };
-      
+
       // POIのプロパティに応じて追加の設定
       if (poi.isClosed) {
         pinOptions.glyph = '×';
         pinOptions.glyphColor = '#ff0000';
       }
-      
+
       options.content = new google.maps.marker.PinElement(pinOptions).element;
     } else {
       // PinElementがない場合のフォールバック
@@ -167,7 +172,7 @@ function createTypeSafeMarker(
       div.textContent = poi.name.substring(0, 1);
       options.content = div;
     }
-    
+
     return new google.maps.marker.AdvancedMarkerElement(options);
   } else {
     // 従来のマーカーへのフォールバック（型を明示）
@@ -176,11 +181,11 @@ function createTypeSafeMarker(
       title: poi.name,
       icon: {
         url: getMarkerIcon(poi.category),
-        scaledSize: new google.maps.Size(32, 32)
+        scaledSize: new google.maps.Size(32, 32),
       },
-      map: null  // 初期状態ではマップに表示しない
+      map: null, // 初期状態ではマップに表示しない
     };
-    
+
     return new google.maps.Marker(options);
   }
 }
@@ -195,7 +200,7 @@ function isApiVersionSupported(requiredVersion: string): boolean {
   if (typeof google === 'undefined' || !google.maps) {
     return false;
   }
-  
+
   // バージョン文字列の取得（APIから取得できる場合）
   let apiVersion = '';
   try {
@@ -206,7 +211,7 @@ function isApiVersionSupported(requiredVersion: string): boolean {
     console.warn('Maps APIバージョンの取得に失敗しました', error);
     return false;
   }
-  
+
   // バージョン比較ロジック
   return compareVersions(apiVersion, requiredVersion) >= 0;
 }
@@ -266,30 +271,36 @@ export const typescriptRules = {
     {
       // 非推奨APIの使用を警告
       deprecatedApis: [
-        'google.maps.visualization',  // GeoJSON APIを使用すべき
-        'google.maps.MapTypeControlStyle.DEFAULT'  // 明示的なスタイルを使用すべき
+        'google.maps.visualization', // GeoJSON APIを使用すべき
+        'google.maps.MapTypeControlStyle.DEFAULT', // 明示的なスタイルを使用すべき
       ],
       // 必須のエラーハンドリング
       requireErrorHandling: [
         'google.maps.Map',
-        'google.maps.places.PlacesService'
-      ]
-    }
+        'google.maps.places.PlacesService',
+      ],
+    },
   ],
-  
+
   // 型安全性の強化
-  '@typescript-eslint/consistent-type-assertions': ['error', {
-    assertionStyle: 'as',
-    objectLiteralTypeAssertions: 'allow-as-parameter'
-  }],
-  
+  '@typescript-eslint/consistent-type-assertions': [
+    'error',
+    {
+      assertionStyle: 'as',
+      objectLiteralTypeAssertions: 'allow-as-parameter',
+    },
+  ],
+
   // nullチェックの強制
   '@typescript-eslint/no-non-null-assertion': 'error',
-  
+
   // 未使用変数の警告
-  '@typescript-eslint/no-unused-vars': ['warn', {
-    varsIgnorePattern: '^_',
-    argsIgnorePattern: '^_'
-  }]
+  '@typescript-eslint/no-unused-vars': [
+    'warn',
+    {
+      varsIgnorePattern: '^_',
+      argsIgnorePattern: '^_',
+    },
+  ],
 };
 ```

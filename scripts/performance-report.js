@@ -8,16 +8,43 @@
  * - ボトルネックの特定と最適化ポイントの提案
  * - パフォーマンスの時系列変化の追跡
  *
+ * 最適化ガイドライン:
+ * - シンプルさ優先の原則（KISS）に基づいた明確なコードフロー
+ * - 必要な機能のみを実装（YAGNI原則）
+ * - コード最適化ガイドラインに基づくロガー活用
+ *
  * 実行方法:
- * - npm run perf:report
+ * - npm run perf:report [--output=path] [--log=path]
+ *
+ * オプション:
+ * --output=path  レポート出力先ディレクトリを指定
+ * --log=path     パフォーマンスログファイルのパスを指定
  */
 
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import * as fs from 'fs/promises';
 import { createReadStream } from 'fs';
+import * as fs from 'fs/promises';
+import { dirname, resolve } from 'path';
+import { performance } from 'perf_hooks';
 import { createInterface } from 'readline';
-import { LogLevel } from '../src/utils/logger.js';
+import { fileURLToPath } from 'url';
+
+/* eslint-env node */
+/* eslint-disable no-console */
+/* global process, console */
+
+// コマンドライン引数の解析
+const args = process.argv.slice(2);
+const options = args.reduce(
+  (acc, arg) => {
+    if (arg.startsWith('--output=')) {
+      acc.outputDir = arg.replace('--output=', '');
+    } else if (arg.startsWith('--log=')) {
+      acc.logFile = arg.replace('--log=', '');
+    }
+    return acc;
+  },
+  { outputDir: '', logFile: '' }
+);
 
 // ESM環境でのファイルパス取得
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +53,6 @@ const rootDir = resolve(__dirname, '..');
 
 /**
  * ロギング設定
- * @type {import('../src/utils/logger').LogContext}
  */
 const LOG_CONTEXT = {
   component: 'PerformanceReport',
@@ -36,97 +62,93 @@ const LOG_CONTEXT = {
 
 /**
  * パフォーマンスログファイルのパス設定
- * 環境変数から設定を読み込み、存在しない場合はデフォルト値を使用
+ * コマンドラインオプション > 環境変数 > デフォルト値 の優先順位
  */
 const PERF_LOG_DIR = process.env.PERF_LOG_DIR || resolve(rootDir, 'logs');
-const PERF_LOG_FILE = process.env.PERF_LOG_FILE || resolve(PERF_LOG_DIR, 'performance.json');
-const REPORT_OUTPUT_DIR = process.env.REPORT_OUTPUT_DIR || resolve(rootDir, 'reports');
+const PERF_LOG_FILE =
+  options.logFile || process.env.PERF_LOG_FILE || resolve(PERF_LOG_DIR, 'performance.json');
+const REPORT_OUTPUT_DIR =
+  options.outputDir || process.env.REPORT_OUTPUT_DIR || resolve(rootDir, 'reports');
 
-// パフォーマンス閾値設定（ミリ秒）
+// パフォーマンス閾値設定（ミリ秒）- シンプルな固定値を使用しつつ環境変数での上書きを許可
 const PERF_THRESHOLDS = {
-  critical: process.env.PERF_THRESHOLD_CRITICAL || 1000,
-  warning: process.env.PERF_THRESHOLD_WARNING || 300,
-  info: process.env.PERF_THRESHOLD_INFO || 100,
+  critical: Number(process.env.PERF_THRESHOLD_CRITICAL) || 1000, // 重大な遅延
+  warning: Number(process.env.PERF_THRESHOLD_WARNING) || 300, // 警告レベルの遅延
+  info: Number(process.env.PERF_THRESHOLD_INFO) || 100, // 注目すべき遅延
 };
 
 /**
- * コンソール出力用のESLint警告を回避するラッパー
+ * シンプルなロガーの実装
+ * ロガー使用ガイドラインに準拠しつつ、依存関係を減らす
  */
-const consoleWrapper = {
-  // eslint-disable-next-line no-console
-  error: (msg, ...args) => console.error(msg, ...args),
-  // eslint-disable-next-line no-console
-  warn: (msg, ...args) => console.warn(msg, ...args),
-  // eslint-disable-next-line no-console
-  info: (msg, ...args) => console.info(msg, ...args),
-  // eslint-disable-next-line no-console
-  debug: (msg, ...args) => process.env.NODE_ENV !== 'production' && console.debug(msg, ...args),
-  // eslint-disable-next-line no-console
-  log: (msg, ...args) => console.log(msg, ...args),
+const logger = {
+  error: (msg, ctx) => console.error(`\x1b[31m[ERROR]\x1b[0m ${msg}${formatContext(ctx)}`),
+  warn: (msg, ctx) => console.warn(`\x1b[33m[WARN]\x1b[0m ${msg}${formatContext(ctx)}`),
+  info: (msg, ctx) => console.info(`\x1b[34m[INFO]\x1b[0m ${msg}${formatContext(ctx)}`),
+  debug: (msg, ctx) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`\x1b[36m[DEBUG]\x1b[0m ${msg}${formatContext(ctx)}`);
+    }
+  },
+  log: (msg, ctx) => console.log(`\x1b[32m[OK]\x1b[0m ${msg}${formatContext(ctx)}`),
+  // パフォーマンス計測関数
+  measureTime: (name, fn, ctx = {}) => {
+    const start = performance.now();
+    try {
+      const result = fn();
+      const duration = performance.now() - start;
+      logger.debug(`${name} (${duration.toFixed(2)}ms)`, { ...ctx, duration });
+      return result;
+    } catch (err) {
+      const duration = performance.now() - start;
+      logger.error(`${name} 失敗 (${duration.toFixed(2)}ms)`, {
+        ...ctx,
+        duration,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  },
+  // 非同期パフォーマンス計測関数
+  measureTimeAsync: async (name, fn, ctx = {}) => {
+    const start = performance.now();
+    try {
+      const result = await fn();
+      const duration = performance.now() - start;
+      logger.debug(`${name} (${duration.toFixed(2)}ms)`, { ...ctx, duration });
+      return result;
+    } catch (err) {
+      const duration = performance.now() - start;
+      logger.error(`${name} 失敗 (${duration.toFixed(2)}ms)`, {
+        ...ctx,
+        duration,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  },
 };
 
 /**
- * ロガーをインポートする
- * @returns {Promise<object>} ロガーインスタンス
+ * コンテキスト情報を文字列にフォーマット
+ * @param {Object|undefined} ctx コンテキスト情報
+ * @returns {string} フォーマットされたコンテキスト文字列
  */
-async function importLogger() {
+function formatContext(ctx) {
+  if (!ctx || Object.keys(ctx).length === 0) return '';
   try {
-    const { logger } = await import('../src/utils/logger.js');
-
-    // スクリプト用にロガー設定を調整
-    logger.configure({
-      minLevel: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
-      includeTimestamps: true,
-      componentLevels: {
-        PerformanceReport: LogLevel.DEBUG, // このコンポーネントのログは常に詳細に
-      },
-    });
-
-    return logger;
-  } catch (error) {
-    // ロガーのインポートに失敗した場合のフォールバック
-    consoleWrapper.error(
-      'ロガーのインポートに失敗しました。シンプルなコンソール出力を使用します。',
-      error
-    );
-
-    // シンプルなコンソールロガーを返す
-    return {
-      error: (msg, ctx) => consoleWrapper.error(`[ERROR] ${msg}`, ctx),
-      warn: (msg, ctx) => consoleWrapper.warn(`[WARN] ${msg}`, ctx),
-      info: (msg, ctx) => consoleWrapper.info(`[INFO] ${msg}`, ctx),
-      debug: (msg, ctx) =>
-        process.env.NODE_ENV !== 'production' && consoleWrapper.debug(`[DEBUG] ${msg}`, ctx),
-      measureTime: (name, fn) => {
-        const start = performance.now();
-        const result = fn();
-        const duration = performance.now() - start;
-        consoleWrapper.debug(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
-        return result;
-      },
-      measureTimeAsync: async (name, fn) => {
-        const start = performance.now();
-        try {
-          const result = await (typeof fn === 'function' ? fn() : fn);
-          const duration = performance.now() - start;
-          consoleWrapper.debug(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
-          return result;
-        } catch (error) {
-          const duration = performance.now() - start;
-          consoleWrapper.error(`[ERROR] ${name} failed after ${duration.toFixed(2)}ms:`, error);
-          throw error;
-        }
-      },
-    };
+    return ` - ${JSON.stringify(ctx)}`;
+  } catch {
+    return ' - [コンテキスト変換エラー]';
   }
 }
 
 /**
  * ディレクトリの存在確認と作成
  * @param {string} dirPath 確認・作成するディレクトリのパス
- * @param {object} logger ロガーインスタンス
+ * @returns {Promise<void>}
  */
-async function ensureDirectoryExists(dirPath, logger) {
+async function ensureDirectoryExists(dirPath) {
   try {
     await fs.mkdir(dirPath, { recursive: true });
     logger.debug(`ディレクトリを確認しました: ${dirPath}`, { ...LOG_CONTEXT });
@@ -134,7 +156,6 @@ async function ensureDirectoryExists(dirPath, logger) {
     logger.error(`ディレクトリの作成に失敗しました: ${dirPath}`, {
       ...LOG_CONTEXT,
       error: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
     });
     throw error;
   }
@@ -143,10 +164,9 @@ async function ensureDirectoryExists(dirPath, logger) {
 /**
  * パフォーマンスログファイルの読み込み
  * @param {string} filePath ログファイルのパス
- * @param {object} logger ロガーインスタンス
  * @returns {Promise<Array<Object>>} パフォーマンスログデータ
  */
-async function readPerformanceLog(filePath, logger) {
+async function readPerformanceLog(filePath) {
   return logger.measureTimeAsync(
     'パフォーマンスログの読み込み',
     async () => {
@@ -154,7 +174,7 @@ async function readPerformanceLog(filePath, logger) {
         // ファイルが存在するか確認
         try {
           await fs.access(filePath);
-        } catch (error) {
+        } catch {
           logger.warn(`パフォーマンスログファイルが見つかりません: ${filePath}`, {
             ...LOG_CONTEXT,
             action: 'file_access',
@@ -191,37 +211,25 @@ async function readPerformanceLog(filePath, logger) {
         });
 
         return logEntries;
-      } catch (error) {
+      } catch (err) {
         logger.error(`パフォーマンスログの読み込みに失敗しました`, {
           ...LOG_CONTEXT,
           filePath,
-          error: error instanceof Error ? error.message : String(error),
-          errorStack: error instanceof Error ? error.stack : undefined,
+          error: err instanceof Error ? err.message : String(err),
         });
-        throw error;
+        throw err;
       }
     },
-    LogLevel.INFO,
     LOG_CONTEXT
   );
 }
 
 /**
- * レコメンデーションの型定義
- * @typedef {Object} Recommendation
- * @property {string} type - レコメンデーションのタイプ ('critical', 'warning', 'info' など)
- * @property {string} message - 推奨事項のメッセージ
- * @property {string[]} [affectedComponents] - 影響を受けるコンポーネントのリスト（オプション）
- * @property {string[]} [actions] - 推奨されるアクションのリスト（オプション）
- */
-
-/**
  * パフォーマンスデータの分析
  * @param {Array<Object>} performanceData パフォーマンスログデータ
- * @param {object} logger ロガーインスタンス
  * @returns {Object} 分析結果
  */
-function analyzePerformanceData(performanceData, logger) {
+function analyzePerformanceData(performanceData) {
   return logger.measureTime(
     'パフォーマンスデータの分析',
     () => {
@@ -291,16 +299,14 @@ function analyzePerformanceData(performanceData, logger) {
         stat.avg = stat.count > 0 ? stat.totalDuration / stat.count : 0;
         // 操作を期間の降順でソート
         stat.operations.sort((a, b) => b.duration - a.duration);
-        // 上位5件の操作のみ保持
+        // 上位5件の操作のみ保持 (YAGNI原則に基づき、必要なデータのみを保持)
         stat.operations = stat.operations.slice(0, 5);
       });
 
       // アクション統計に平均を追加
       actionStats.forEach(stat => {
         stat.avg = stat.count > 0 ? stat.totalDuration / stat.count : 0;
-      });
-
-      // 結果の集約
+      }); // 結果の集約
       const result = {
         summary: {
           totalEntries: performanceData.length,
@@ -316,9 +322,9 @@ function analyzePerformanceData(performanceData, logger) {
           action,
           ...stats,
         })),
-        slowestOperations: slowestOperations.sort((a, b) => b.duration - a.duration).slice(0, 10),
-        /** @type {Recommendation[]} */
-        recommendations: [],
+        slowestOperations: slowestOperations.sort((a, b) => b.duration - a.duration).slice(0, 10), // 明確な型を持った recommendations 配列
+        recommendations:
+          /** @type {Array<{type: string, message: string, affectedComponents?: string[], actions?: any[]}>} */ ([]),
       };
 
       // パフォーマンス改善の推奨事項を生成
@@ -365,7 +371,6 @@ function analyzePerformanceData(performanceData, logger) {
 
       return result;
     },
-    LogLevel.INFO,
     LOG_CONTEXT
   );
 }
@@ -373,10 +378,9 @@ function analyzePerformanceData(performanceData, logger) {
 /**
  * パフォーマンスレポートの生成と保存
  * @param {Object} analysisResult 分析結果
- * @param {object} logger ロガーインスタンス
  * @returns {Promise<string>} 保存したファイルパス
  */
-async function generateAndSaveReport(analysisResult, logger) {
+async function generateAndSaveReport(analysisResult) {
   return logger.measureTimeAsync(
     'レポート生成と保存',
     async () => {
@@ -393,7 +397,7 @@ async function generateAndSaveReport(analysisResult, logger) {
       };
 
       // レポートディレクトリを確保
-      await ensureDirectoryExists(REPORT_OUTPUT_DIR, logger);
+      await ensureDirectoryExists(REPORT_OUTPUT_DIR);
 
       // レポートの書き込み
       await fs.writeFile(reportFilePath, JSON.stringify(reportData, null, 2), { encoding: 'utf8' });
@@ -476,7 +480,6 @@ async function generateAndSaveReport(analysisResult, logger) {
 
       return reportFilePath;
     },
-    LogLevel.INFO,
     LOG_CONTEXT
   );
 }
@@ -485,19 +488,18 @@ async function generateAndSaveReport(analysisResult, logger) {
  * メイン実行関数
  */
 async function main() {
-  const logger = await importLogger();
-
   try {
     logger.info('パフォーマンスレポート生成を開始します', {
       ...LOG_CONTEXT,
       logFile: PERF_LOG_FILE,
+      environment: process.env.NODE_ENV || 'development',
     });
 
     // ログディレクトリの確認
-    await ensureDirectoryExists(PERF_LOG_DIR, logger);
+    await ensureDirectoryExists(PERF_LOG_DIR);
 
     // パフォーマンスデータの読み込み
-    const performanceData = await readPerformanceLog(PERF_LOG_FILE, logger);
+    const performanceData = await readPerformanceLog(PERF_LOG_FILE);
 
     if (performanceData.length === 0) {
       logger.warn('分析可能なパフォーマンスデータがありません', LOG_CONTEXT);
@@ -505,10 +507,10 @@ async function main() {
     }
 
     // データの分析
-    const analysisResult = analyzePerformanceData(performanceData, logger);
+    const analysisResult = analyzePerformanceData(performanceData);
 
     // レポートの生成と保存
-    const reportPath = await generateAndSaveReport(analysisResult, logger);
+    const reportPath = await generateAndSaveReport(analysisResult);
 
     logger.info('パフォーマンスレポート生成が完了しました', {
       ...LOG_CONTEXT,
@@ -518,32 +520,30 @@ async function main() {
     });
 
     // コンソールに結果サマリーを表示
-    consoleWrapper.log('\n===== パフォーマンスレポート生成完了 =====');
-    consoleWrapper.log(`レポートパス: ${reportPath}`);
-    consoleWrapper.log(`分析されたコンポーネント: ${analysisResult.summary.uniqueComponents}`);
-    consoleWrapper.log(`検出された低速操作: ${analysisResult.summary.slowOperationsCount}`);
+    console.log('\n===== パフォーマンスレポート生成完了 =====');
+    console.log(`レポートパス: ${reportPath}`);
+    console.log(`分析されたコンポーネント: ${analysisResult.summary.uniqueComponents}`);
+    console.log(`検出された低速操作: ${analysisResult.summary.slowOperationsCount}`);
 
     if (analysisResult.recommendations.length > 0) {
-      consoleWrapper.log('\n推奨される改善点:');
+      console.log('\n推奨される改善点:');
       analysisResult.recommendations.forEach((rec, i) => {
-        consoleWrapper.log(
-          `${i + 1}. [${rec.type === 'critical' ? '重要' : '警告'}] ${rec.message}`
-        );
+        console.log(`${i + 1}. [${rec.type === 'critical' ? '重要' : '警告'}] ${rec.message}`);
       });
     }
-    consoleWrapper.log('\nMarkdownレポートも生成されました。詳細はそちらをご確認ください。');
-  } catch (error) {
+    console.log('\nMarkdownレポートも生成されました。詳細はそちらをご確認ください。');
+  } catch (err) {
     logger.error('パフォーマンスレポート生成中にエラーが発生しました', {
       ...LOG_CONTEXT,
-      error: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
+      error: err instanceof Error ? err.message : String(err),
+      errorStack: err instanceof Error ? err.stack : undefined,
     });
     process.exit(1);
   }
 }
 
 // スクリプト実行
-main().catch(error => {
-  consoleWrapper.error('予期せぬエラーが発生しました:', error);
+main().catch(err => {
+  console.error('予期せぬエラーが発生しました:', err);
   process.exit(1);
 });

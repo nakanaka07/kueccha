@@ -44,6 +44,7 @@
 - [11. プロジェクト依存ライブラリのバージョン情報](#11-プロジェクト依存ライブラリのバージョン情報)
 
 > **関連ドキュメント**
+>
 > - [ロガー使用ガイドライン](./logger_usage_guidelines.md) - ログレベル設定用の環境変数の活用方法
 > - [コード最適化ガイドライン](./code_optimization_guidelines.md) - 環境に応じた最適化設定
 > - [Google Maps ガイドライン](./google_maps_guidelines/index.md) - Google Maps API キー管理
@@ -92,25 +93,28 @@ const isFeatureEnabled = import.meta.env.VITE_FEATURE_FLAG === 'true';
 ### 主要な環境変数カテゴリ
 
 1. **APIキーと認証情報**
+
    ```typescript
-   VITE_GOOGLE_API_KEY=your-api-key
-   VITE_GOOGLE_MAPS_MAP_ID=your-map-id
+   VITE_GOOGLE_API_KEY = your - api - key;
+   VITE_GOOGLE_MAPS_MAP_ID = your - map - id;
    ```
 
 2. **機能フラグとアプリケーション設定**
+
    ```typescript
-   VITE_ENABLE_MARKER_CLUSTERING=true
-   VITE_MAX_MARKERS=1000
+   VITE_ENABLE_MARKER_CLUSTERING = true;
+   VITE_MAX_MARKERS = 1000;
    ```
 
 3. **エンドポイントとURL**
+
    ```typescript
    VITE_API_BASE_URL=https://api.example.com/v1
    ```
 
 4. **ロギングとデバッグ設定**
    ```typescript
-   VITE_LOG_LEVEL=info
+   VITE_LOG_LEVEL = info;
    ```
 
 ### 命名規則とベストプラクティス
@@ -211,26 +215,26 @@ export function getEnvVar<T>(config: EnvVarConfig<T>): T {
 
 // 共通の環境変数アクセサ
 export const env = {
-  googleMapsApiKey: () => 
+  googleMapsApiKey: () =>
     getEnvVar({ key: 'VITE_GOOGLE_MAPS_API_KEY', required: true }),
-  
-  apiBaseUrl: () => 
-    getEnvVar({ 
+
+  apiBaseUrl: () =>
+    getEnvVar({
       key: 'VITE_API_BASE_URL',
       defaultValue: 'https://api.default-url.com',
     }),
-  
-  logLevel: () => 
-    getEnvVar({ 
-      key: 'VITE_LOG_LEVEL', 
+
+  logLevel: () =>
+    getEnvVar({
+      key: 'VITE_LOG_LEVEL',
       defaultValue: 'info',
     }),
-  
-  maxMarkers: () => 
-    getEnvVar({ 
+
+  maxMarkers: () =>
+    getEnvVar({
       key: 'VITE_MAX_MARKERS',
       defaultValue: 1000,
-      transform: (value) => parseInt(value, 10),
+      transform: value => parseInt(value, 10),
     }),
 
   isFeatureEnabled: (featureName: string) =>
@@ -239,7 +243,7 @@ export const env = {
       defaultValue: false,
       transform: value => value.toLowerCase() === 'true',
     }),
-  
+
   isDev: () => import.meta.env.DEV,
   isProd: () => import.meta.env.PROD,
 };
@@ -254,21 +258,18 @@ export const env = {
 export function validateEnvironment(): void {
   try {
     // 必須環境変数を検証
-    const requiredVars = [
-      'VITE_GOOGLE_MAPS_API_KEY',
-      'VITE_API_BASE_URL',
-    ];
+    const requiredVars = ['VITE_GOOGLE_MAPS_API_KEY', 'VITE_API_BASE_URL'];
 
     for (const varName of requiredVars) {
       getEnvVar({ key: varName, required: true });
     }
-    
+
     // 追加の検証（値の形式など）
     const apiUrl = env.apiBaseUrl();
     if (!apiUrl.startsWith('https://') && env.isProd()) {
       throw new Error('本番環境ではAPIエンドポイントにhttpsが必要です');
     }
-    
+
     logger.info('環境変数の検証に成功しました');
   } catch (error) {
     logger.error('環境変数の検証に失敗しました:', error);
@@ -445,16 +446,19 @@ HTML内で環境変数を直接参照するには、特殊な構文を使用し�
 ### よくある問題と解決法
 
 #### 問題：環境変数が読み込まれない
+
 - .envファイルの位置を確認（プロジェクトルート）
 - `VITE_`プレフィックスの確認
 - サーバー再起動の実行（変更は起動時にのみ読み込まれる）
 - CIパイプラインでの環境変数設定確認
 
 #### 問題：TypeScriptでの型エラー
+
 - env.d.tsファイルで型定義が正しく行われているか確認
 - ImportMetaEnvインターフェースに必要な変数が含まれているか確認
 
 #### 問題：本番ビルドで環境変数が含まれない
+
 - `VITE_`プレフィックスの有無を確認
 - ビルド時に適切な環境ファイルが読み込まれているか確認
 - CIシステムでの環境変数設定を確認
@@ -465,16 +469,18 @@ HTML内で環境変数を直接参照するには、特殊な構文を使用し�
 // 開発環境での環境変数確認
 function debugEnvVariables(): void {
   if (!import.meta.env.DEV) return;
-  
+
   logger.debug('現在の環境変数:', {
     // 機密情報はマスク処理
-    GOOGLE_MAPS_API_KEY: maskKey(getEnvVar({ 
-      key: 'VITE_GOOGLE_MAPS_API_KEY', 
-      defaultValue: '' 
-    })),
-    LOG_LEVEL: getEnvVar({ 
-      key: 'VITE_LOG_LEVEL', 
-      defaultValue: 'info' 
+    GOOGLE_MAPS_API_KEY: maskKey(
+      getEnvVar({
+        key: 'VITE_GOOGLE_MAPS_API_KEY',
+        defaultValue: '',
+      })
+    ),
+    LOG_LEVEL: getEnvVar({
+      key: 'VITE_LOG_LEVEL',
+      defaultValue: 'info',
     }),
     MODE: import.meta.env.MODE,
     BASE_URL: import.meta.env.BASE_URL,
@@ -494,16 +500,19 @@ function maskKey(key: string): string {
 ## 10. 推奨プラクティスチェックリスト
 
 ### 環境設定の基本
+
 - [x] **環境ファイルの分離**: .env, `.env.development`, `.env.production`, `.env.test`
 - [x] **サンプル設定**: 新規開発者向けに`.env.example`を提供
 - [x] **環境別の最適化**: 開発/テスト/本番環境に適した設定
 
 ### セキュリティ対策
+
 - [x] **機密情報の保護**: .gitignoreに.envファイルを追加
 - [x] **API制限設定**: Google Maps APIキーなどに適切な制限
 - [x] **秘匿値の保護**: ログ出力時の機密情報マスク処理
 
 ### 実装品質
+
 - [x] **型安全なアクセス**: `getEnvVar`関数による型安全なアクセス
 - [x] **バリデーション**: アプリ起動時に必須環境変数を検証
 - [x] **明確な命名規則**: 一貫した命名規則の使用
@@ -517,34 +526,34 @@ function maskKey(key: string): string {
 
 ### フレームワークとビルドツール
 
-| ライブラリ/ツール | バージョン | 使用目的 |
-|--------------|---------|---------|
-| React        | 19.0.0  | UIライブラリ |
-| TypeScript   | 5.4.0   | 静的型付け言語 |
-| Vite         | 5.0.0   | ビルドツール |
-| Vitest       | 1.1.0   | テストライブラリ |
+| ライブラリ/ツール | バージョン | 使用目的         |
+| ----------------- | ---------- | ---------------- |
+| React             | 19.0.0     | UIライブラリ     |
+| TypeScript        | 5.4.0      | 静的型付け言語   |
+| Vite              | 5.0.0      | ビルドツール     |
+| Vitest            | 1.1.0      | テストライブラリ |
 
 ### 状態管理とデータフェッチング
 
-| ライブラリ | バージョン | 使用目的 |
-|----------|---------|---------|
-| Zustand  | 4.4.0   | 状態管理ライブラリ |
-| TanStack Query | 5.8.4 | データフェッチング |
+| ライブラリ     | バージョン | 使用目的           |
+| -------------- | ---------- | ------------------ |
+| Zustand        | 4.4.0      | 状態管理ライブラリ |
+| TanStack Query | 5.8.4      | データフェッチング |
 
 ### マップ関連ライブラリ
 
-| ライブラリ | バージョン | 使用目的 |
-|----------|---------|---------|
-| Google Maps JavaScript API | v3.54 | 地図表示基盤 |
-| @googlemaps/markerclusterer | 2.5.1 | マーカークラスタリング |
+| ライブラリ                  | バージョン | 使用目的               |
+| --------------------------- | ---------- | ---------------------- |
+| Google Maps JavaScript API  | v3.54      | 地図表示基盤           |
+| @googlemaps/markerclusterer | 2.5.1      | マーカークラスタリング |
 
 ### ユーティリティとスタイリング
 
-| ライブラリ | バージョン | 使用目的 |
-|----------|---------|---------|
-| Tailwind CSS | 3.4.0 | ユーティリティファーストCSS |
-| EmotionJS | 11.11.0 | CSSインJS |
-| twin.macro | 3.4.0 | TailwindとEmotionの連携 |
+| ライブラリ   | バージョン | 使用目的                    |
+| ------------ | ---------- | --------------------------- |
+| Tailwind CSS | 3.4.0      | ユーティリティファーストCSS |
+| EmotionJS    | 11.11.0    | CSSインJS                   |
+| twin.macro   | 3.4.0      | TailwindとEmotionの連携     |
 
 > **注意**: ライブラリのバージョンはプロジェクト進行に伴い更新される可能性があります。package.jsonで最新のバージョンを確認してください。
 
@@ -557,11 +566,13 @@ function maskKey(key: string): string {
 3. **ロギングへの影響**: ロギングメカニズムに影響がある場合は、logger_usage_guidelines.mdを更新する
 4. **最適化戦略への影響**: パフォーマンスや最適化に影響がある場合は、code_optimization_guidelines.mdを更新する
 
-> **関連ガイドライン**: 
+> **関連ガイドライン**:
+>
 > - コード最適化ガイドライン - 効率的なビルド設定や依存関係の最適化
 > - ロガー使用ガイドライン - 環境変数を活用したログレベル設定
 >
 > **参考リンク**：
+>
 > - [Vite環境変数公式ドキュメント](https://ja.vitejs.dev/guide/env-and-mode.html) - Viteでの環境変数の基本的な使い方
 > - [TypeScriptでの環境変数型定義](https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-modifying-module-d-ts.html) - 型安全な環境変数の実装方法
 > - [Google Mapsプラットフォーム認証ガイド](https://developers.google.com/maps/documentation/javascript/get-api-key) - APIキーの取得と設定方法

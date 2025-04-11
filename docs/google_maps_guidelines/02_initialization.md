@@ -17,7 +17,10 @@ const { isLoaded, error, map } = useGoogleMaps({
 
 ```typescript
 // 環境変数検証の標準パターン
-export const validateGoogleMapsEnv = (): { isValid: boolean; messages: string[] } => {
+export const validateGoogleMapsEnv = (): {
+  isValid: boolean;
+  messages: string[];
+} => {
   const messages: string[] = [];
   let isValid = true;
 
@@ -60,7 +63,13 @@ export const validateGoogleMapsEnv = (): { isValid: boolean; messages: string[] 
 
 ```typescript
 // ライブラリ指定の例（2025年の最新API対応）
-const REQUIRED_LIBRARIES = ['maps', 'marker', 'places', 'webgl', 'localcontext'];
+const REQUIRED_LIBRARIES = [
+  'maps',
+  'marker',
+  'places',
+  'webgl',
+  'localcontext',
+];
 
 export const getLoaderOptions = (): LoaderOptions => {
   return {
@@ -78,7 +87,7 @@ export const getLoaderOptions = (): LoaderOptions => {
         ENV.google.springMapId,
         ENV.google.summerMapId,
         ENV.google.autumnMapId,
-        ENV.google.winterMapId
+        ENV.google.winterMapId,
       ].filter(Boolean);
       return [...mapIds, ...seasonalMapIds];
     })(),
@@ -87,7 +96,7 @@ export const getLoaderOptions = (): LoaderOptions => {
     useStaticMap: true, // 初期表示を高速化
     language: 'ja', // 日本語表示を最適化
     region: 'JP', // 日本向けの地域設定
-    channel: 'sado-tourism-app' // 使用量トラッキング用
+    channel: 'sado-tourism-app', // 使用量トラッキング用
   };
 };
 ```
@@ -103,9 +112,9 @@ try {
     component: 'useGoogleMaps',
     action: 'api_load_error',
     version: loaderOptions.version,
-    errorMessage: error instanceof Error ? error.message : String(error)
+    errorMessage: error instanceof Error ? error.message : String(error),
   });
-  
+
   // フォールバック機能の提供
   showMapLoadingError();
   attemptToLoadStaticMap();

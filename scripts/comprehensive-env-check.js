@@ -16,11 +16,13 @@
  * - Google Maps統合ガイドラインに基づくAPIキー検証
  */
 
-// ESMモジュールインポート
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import * as dotenv from 'dotenv';
+// ESMモジュールインポート - シンプルにする
 import * as fs from 'fs';
+import process from 'node:process';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+import * as dotenv from 'dotenv';
 
 // ESM環境でのファイルパス取得
 const __filename = fileURLToPath(import.meta.url);
@@ -130,11 +132,11 @@ function formatContext(context) {
   if (context instanceof Error) {
     return ` - ${context.message}`;
   }
-
   // オブジェクトの場合はJSON形式に変換
   try {
     return ` - ${JSON.stringify(context)}`;
-  } catch (e) {
+  } catch {
+    // エラーの詳細は不要なので変数を省略
     return ` - [コンテキスト変換エラー]`;
   }
 }
@@ -173,7 +175,16 @@ function isWhitespaceOnly(str) {
  */
 function getEnvVar(config) {
   const { key, defaultValue, required = false, transform } = config;
-  const value = process.env[key];
+  // キーの安全性チェック - 基本的なバリデーション
+  if (typeof key !== 'string' || !key) {
+    throw new Error('環境変数キーは文字列かつ空でない必要があります');
+  }
+
+  // 安全なアクセス方法に変更
+  // Object.prototype.hasOwnPropertyで存在確認後、Object.getプロパティを使用して安全にアクセス
+  const value = Object.prototype.hasOwnProperty.call(process.env, key)
+    ? Object.getOwnPropertyDescriptor(process.env, key)?.value
+    : undefined;
 
   // 未設定で必須の場合
   if (value === undefined) {
@@ -385,8 +396,12 @@ function getAppInfoEnvConfigs() {
  */
 function validateEnvVar(config) {
   try {
-    const { key, required = false, defaultValue, validator, validationMessage } = config;
-    const value = process.env[key];
+    const { key, required = false, validator, validationMessage } = config;
+
+    // 安全にアクセス
+    const value = Object.prototype.hasOwnProperty.call(process.env, key)
+      ? process.env[Object.prototype.hasOwnProperty.call(process.env, key) ? key : '']
+      : undefined;
 
     // 値が存在しない場合の処理
     if (value === undefined) {
@@ -571,13 +586,16 @@ function checkEnvironmentConsistency() {
         test: {
           VITE_LOG_LEVEL: 'error',
         },
-      };
-
-      // 現在の環境に対する推奨設定をチェック
-      const recommendations = envRecommendations[nodeEnv] || {};
-
+      }; // 現在の環境に対する推奨設定をチェック
+      const recommendations = Object.prototype.hasOwnProperty.call(envRecommendations, nodeEnv)
+        ? Object.getOwnPropertyDescriptor(envRecommendations, nodeEnv)?.value
+        : {};
       Object.entries(recommendations).forEach(([key, recommendedValue]) => {
-        const actualValue = process.env[key];
+        // Object.getOwnPropertyDescriptor を使用して安全にアクセス
+        const hasKey = Object.prototype.hasOwnProperty.call(process.env, key);
+        const actualValue = hasKey
+          ? Object.getOwnPropertyDescriptor(process.env, key)?.value
+          : undefined;
         if (actualValue && actualValue !== recommendedValue) {
           warnings.push(
             `${key}の値が${nodeEnv}環境での推奨値（${recommendedValue}）と異なります。現在の値: ${actualValue}`
@@ -671,12 +689,13 @@ async function validateEnvironment() {
             continue;
           }
 
-          // 情報（有効な設定）
-          const value = process.env[config.key];
-          if (value !== undefined) {
-            // 値の一部をマスク処理（APIキーなど）
-            const displayValue = maskSensitiveValue(config.key, value);
-            infos.push(`${config.key}: ${displayValue} (${config.description || ''})`);
+          // 情報（有効な設定）          // 安全にアクセス
+          if (Object.prototype.hasOwnProperty.call(process.env, config.key)) {
+            const value = process.env[config.key];
+            if (value !== undefined) {
+              // 値が存在する場合は有効な設定としてinfosに追加
+              infos.push(`${config.key}: 有効な設定があります`);
+            }
           }
         }
 
@@ -696,19 +715,8 @@ async function validateEnvironment() {
   );
 }
 
-/**
- * 機密情報のマスク処理
- * @param {string} key - 環境変数キー
- * @param {string} value - 環境変数の値
- * @returns {string} マスクされた値
- */
-function maskSensitiveValue(key, value) {
-  if (key.includes('KEY') || key.includes('SECRET')) {
-    if (value.length <= 8) return '********';
-    return `${value.substring(0, 4)}****${value.substring(value.length - 4)}`;
-  }
-  return value;
-}
+// YAGNI原則に基づき、現在使用されていない機能は削除
+// 機密情報のマスク処理が必要になった時点で再実装する
 
 /**
  * 検証結果の表示
@@ -775,6 +783,8 @@ function displayResults(errors, warnings, infos) {
     );
   }
 }
+
+// 未使用の関数を削除 (YAGNI原則に従い、必要になるまで実装しない)
 
 /**
  * メイン実行関数
