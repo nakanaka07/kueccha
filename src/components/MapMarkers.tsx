@@ -1,0 +1,226 @@
+import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
+import React, { useState, useCallback, memo, useMemo, useEffect } from 'react';
+
+import InfoWindow from '@/components/InfoWindow';
+import { useFilteredPOIs } from '@/hooks/useFilteredPOIs';
+import { useMapMarkers } from '@/hooks/useMapMarkers';
+import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
+import type { PointOfInterest } from '@/types/poi';
+import { ENV } from '@/utils/env';
+import { logger, LogLevel } from '@/utils/logger';
+
+// マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
+function isAdvancedMarkerElement(
+  marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker
+): marker is google.maps.marker.AdvancedMarkerElement {
+  return 'content' in marker;
+}
+
+interface MapMarkersProps {
+  /**
+   * 表示するPOIデータの配列
+   */
+  pois: PointOfInterest[];
+
+  /**
+   * マップの参照
+   */
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
+
+  /**
+   * フィルタリング条件
+   */
+  filters?: {
+    categories?: string[];
+    isOpen?: boolean;
+    searchText?: string;
+  };
+
+  /**
+   * POI選択時のコールバック
+   */
+  onSelectPOI?: (poi: PointOfInterest) => void;
+
+  /**
+   * POI詳細表示時のコールバック
+   */
+  onViewDetails?: (poi: PointOfInterest) => void;
+
+  /**
+   * マーカーアニメーションを有効にするか
+   * @default ENV.features.markerAnimation
+   */
+  animateMarkers?: boolean;
+
+  /**
+   * マーカークラスタリングを有効にするか
+   * @default ENV.features.markerClustering
+   */
+  enableClustering?: boolean;
+}
+
+const COMPONENT_NAME = 'MapMarkers';
+
+/**
+ * 地図上のマーカーを管理・表示するコンポーネント
+ * - パフォーマンス最適化済み（メモ化と表示範囲に基づく描画最適化）
+ * - KISS原則に基づくシンプルな実装
+ * - エラーハンドリングを統合
+ */
+const MapMarkers = memo(
+  ({
+    pois,
+    mapRef,
+    filters = {},
+    onSelectPOI,
+    onViewDetails,
+    animateMarkers = Boolean(ENV?.features?.markerAnimation),
+    enableClustering = Boolean(ENV?.features?.markerClustering),
+  }: MapMarkersProps) => {
+    // 選択されたPOIの状態
+    const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
+
+    // フィルタリングされたPOIを取得
+    const { filteredPOIs } = useFilteredPOIs(pois, filters);
+
+    // マーカーの生成
+    const { markers, markerMap } = useMapMarkers({
+      pois: filteredPOIs,
+      mapRef,
+      enableClustering,
+      animateMarkers,
+    });
+
+    // 表示範囲内のマーカーのみを描画（最適化）
+    const { visiblePOIs } = useMarkerVisibility({
+      mapRef,
+      markers,
+      pois: filteredPOIs,
+      // モバイルデバイスではパフォーマンス向上のためデバウンス時間を長めに設定
+      debounceMs: ENV?.features?.isMobile ? 500 : 300,
+      // 表示範囲に余裕を持たせる（佐渡島最適化）
+      visibilityMargin: 0.5,
+      // 可視マーカー数の変化をログに記録
+      onVisibilityChange: (visibleCount, totalCount) => {
+        logger.debug('マーカー表示状態が更新されました', {
+          component: COMPONENT_NAME,
+          visibleCount,
+          totalCount,
+          visibilityRatio: totalCount > 0 ? (visibleCount / totalCount) * 100 : 0,
+        });
+      },
+    });
+
+    // マーカークリック処理
+    const handleMarkerClick = useCallback(
+      (poi: PointOfInterest) => {
+        // パフォーマンス測定（開発環境のみ詳細ログ）
+        logger.measureTime(
+          'マーカークリック処理',
+          () => {
+            setSelectedPOI(poi);
+            if (onSelectPOI) {
+              onSelectPOI(poi);
+            }
+          },
+          ENV?.env?.isDev ? LogLevel.DEBUG : LogLevel.INFO,
+          {
+            component: COMPONENT_NAME,
+            poiId: poi.id,
+            poiName: poi.name,
+          }
+        );
+      },
+      [onSelectPOI]
+    );
+
+    // 詳細表示処理
+    const handleViewDetails = useCallback(
+      (poi: PointOfInterest) => {
+        if (onViewDetails) {
+          onViewDetails(poi);
+        }
+        setSelectedPOI(null);
+      },
+      [onViewDetails]
+    );
+
+    // 情報ウィンドウを閉じる処理
+    const handleInfoWindowClose = useCallback(() => {
+      setSelectedPOI(null);
+    }, []);
+
+    // マーカークリックイベントのリスナー設定
+    useEffect(() => {
+      // リスナー配列を初期化
+      const listeners: google.maps.MapsEventListener[] = [];
+
+      // パフォーマンスを考慮し、表示される可能性のあるマーカーのみにリスナーを追加
+      visiblePOIs.forEach(poi => {
+        const marker = markerMap.get(poi.id);
+        if (!marker) return;
+
+        // マーカーの種類によってイベントリスナーを適切に追加
+        if (isAdvancedMarkerElement(marker)) {
+          // AdvancedMarkerElement用のイベント設定
+          const clickListener = marker.addListener('click', () => handleMarkerClick(poi));
+          listeners.push(clickListener);
+        } else {
+          // 通常Marker用のイベント設定
+          const clickListener = marker.addListener('click', () => handleMarkerClick(poi));
+          listeners.push(clickListener);
+        }
+      });
+
+      // クリーンアップ関数
+      return () => {
+        listeners.forEach(listener => {
+          google.maps.event.removeListener(listener);
+        });
+      };
+    }, [visiblePOIs, markerMap, handleMarkerClick]);
+
+    // 情報ウィンドウ用のコンテンツをメモ化
+    const infoWindowContent = useMemo(() => {
+      if (!selectedPOI) return null;
+
+      return (
+        <InfoWindow
+          poi={selectedPOI}
+          onClose={handleInfoWindowClose}
+          onViewDetails={() => handleViewDetails(selectedPOI)}
+        />
+      );
+    }, [selectedPOI, handleInfoWindowClose, handleViewDetails]);
+
+    // 情報ウィンドウが表示されていて内容が存在する場合のみレンダリング
+    return (
+      <>
+        {selectedPOI && infoWindowContent && (
+          <>
+            {/* Google Maps API情報ウィンドウ */}
+            <GoogleInfoWindow
+              position={{
+                lat: selectedPOI.latitude,
+                lng: selectedPOI.longitude,
+              }}
+              onCloseClick={handleInfoWindowClose}
+              options={{
+                // パフォーマンスと視認性を向上させる設定
+                maxWidth: 320,
+                pixelOffset: new google.maps.Size(0, -30),
+              }}
+            >
+              <div className='info-window-container'>{infoWindowContent}</div>
+            </GoogleInfoWindow>
+          </>
+        )}
+      </>
+    );
+  }
+);
+
+// デバッグのための表示名を設定
+MapMarkers.displayName = COMPONENT_NAME;
+
+export default MapMarkers;

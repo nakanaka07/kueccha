@@ -1,0 +1,44 @@
+# --------------------------------------------------
+# .prettierignore - プロジェクト整形対象外ファイル定義
+# KISS原則：シンプルかつ目的が明確な除外設定
+# YAGNI原則：現在必要な設定のみを含める
+# --------------------------------------------------
+
+# 一時ファイルと生成ファイル - ビルドプロセスで生成される一時ファイルやキャッシュ
+.cache
+.temp
+.temp-optimized
+.local
+dist
+build
+coverage
+
+# パッケージマネージャーファイル - 自動生成ファイルは整形対象外
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+node_modules
+
+# バージョン管理とツール設定 - システムファイルやツール設定
+.git
+.husky
+.github
+.hintrc
+.vscode
+
+# 環境変数ファイル - セキュリティ保護のため整形対象外
+.env
+.env.development
+.env.production
+.env.test
+.env.*.local
+# .env.example は整形対象（ドキュメントの一部として扱う）
+
+# ログとシステムファイル - デバッグ情報とシステム生成ファイル
+*.log
+debug.log*
+.DS_Store
+Thumbs.db
+
+# データファイル - CSVなどの大型データファイル
+public/data/*.csv
