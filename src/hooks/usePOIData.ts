@@ -183,7 +183,7 @@ const POIDataFetcher = {
         return await logger.measureTimeAsync(
           'Google Sheetsデータ取得',
           () => fetchPOIsFromSheet('restaurant', 'レストラン!A1:Z1000'),
-          LogLevel.INFO,
+          LogLevel.INFO
         );
       } else {
         logger.info(

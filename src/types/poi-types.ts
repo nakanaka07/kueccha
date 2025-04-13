@@ -55,6 +55,8 @@ export interface PointOfInterest {
   name: string;
   lat: number; // 緯度（直接アクセス用）
   lng: number; // 経度（直接アクセス用）
+  latitude: number; // lat のエイリアス
+  longitude: number; // lng のエイリアス
   isClosed: boolean;
   type: POIType;
   category?: string | undefined; // 主要カテゴリー（表示用）

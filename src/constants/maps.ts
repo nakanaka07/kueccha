@@ -211,9 +211,8 @@ export const getLoaderOptions = (): LoaderOptions => {
     ];
     // 型エラーを修正
     const libraries = requestedLibraries.filter(
-      (
-        lib: string
-      ): lib is Libraries[number] => validLibraryValues.includes(lib as Libraries[number]) // lib に string 型を明示 // any キャストではなく型アサーションを使用
+      (lib: string): lib is Libraries[number] =>
+        validLibraryValues.includes(lib as Libraries[number]) // lib に string 型を明示 // any キャストではなく型アサーションを使用
     );
 
     // マップIDが有効か確認

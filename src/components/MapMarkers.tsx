@@ -81,14 +81,16 @@ const MapMarkers = memo(
     const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
 
     // フィルタリングされたPOIを取得
-    const { filteredPOIs } = useFilteredPOIs(pois, filters);
-
-    // マーカーの生成
+    const { filteredPOIs } = useFilteredPOIs(pois, filters); // マーカーの生成
     const { markers, markerMap } = useMapMarkers({
       pois: filteredPOIs,
       mapRef,
       enableClustering,
       animateMarkers,
+      onMarkerClick: poi => {
+        setSelectedPOI(poi);
+        onPoiSelect?.(poi);
+      },
     });
 
     // 表示範囲内のマーカーのみを描画（最適化）

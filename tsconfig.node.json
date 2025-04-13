@@ -9,6 +9,7 @@
     "target": "ESNext",
     "resolveJsonModule": true,
     "declaration": true, // 複合プロジェクトでは宣言ファイルの生成が必要
+    "outDir": "./dist-node", // 宣言ファイルの出力先を明示的に指定
     "types": ["node", "vite/client", "vitest/globals"],
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
@@ -24,15 +25,16 @@
     "paths": {
       "@/*": ["./src/*"]
     }
-  }, // Node.js環境で処理するファイル
+  }, // Node.js環境で処理するファイル - 環境変数関連とその依存ファイルを明示的に含める
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
     "scripts/**/*.ts",
     "env.d.ts",
     "config/**/*.ts",
-    "src/utils/env/**/*.ts"
-    // srcディレクトリ全体は含めない - メインのtsconfig.jsonで処理
+    "src/utils/env/**/*.ts",
+    "src/utils/logger.ts",
+    "src/types/env-types.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

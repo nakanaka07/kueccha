@@ -5,7 +5,7 @@
  * 柔軟なロギングシステムを提供します。
  */
 
-import { LogLevelType } from '../types/env';
+import { LogLevelType } from '../types/env-types';
 
 // ログレベルの列挙型定義
 export enum LogLevel {
