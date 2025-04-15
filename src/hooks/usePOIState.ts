@@ -49,7 +49,6 @@ export function usePOIState(convertedPOIs: PointOfInterest[]) {
     (filtered: PointOfInterest[]) => {
       const poisLength = convertedPOIs.length || 1; // 0除算防止
       const reductionPercentage = Math.round((1 - filtered.length / poisLength) * 100);
-
       logger.measureTime(
         'フィルター適用',
         () => {
@@ -60,13 +59,12 @@ export function usePOIState(convertedPOIs: PointOfInterest[]) {
             after: filtered.length,
             reduction: `${reductionPercentage}%`,
             remainingCategories: Array.from(new Set(filtered.map(poi => poi.category))),
+            threshold: 50, // 50ms以上かかった場合のみログ出力
           });
 
           setFilteredPOIs(filtered);
         },
-        LogLevel.DEBUG,
-        { component: 'usePOIState' },
-        50 // 50ms以上かかった場合のみログ出力
+        LogLevel.DEBUG // 第3引数はLogLevelのみ
       );
     },
     [filteredPOIs.length, convertedPOIs.length]

@@ -6,8 +6,7 @@ import { useFilteredPOIs } from '@/hooks/useFilteredPOIs';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import type { PointOfInterest } from '@/types/poi';
-import { getEnvVar } from '@/utils/env/core';
-import { logger, LogLevel } from '@/utils/logger';
+import { logger } from '@/utils/logger';
 
 // マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
 function isAdvancedMarkerElement(
@@ -74,7 +73,6 @@ const MapMarkers = memo(
     filters = {},
     onSelectPOI,
     onViewDetails,
-    animateMarkers = false,
     enableClustering = false,
   }: MapMarkersProps) => {
     // 選択されたPOIの状態
@@ -82,7 +80,7 @@ const MapMarkers = memo(
 
     // フィルタリングされたPOIを取得
     const filteredPOIs = useFilteredPOIs(pois, filters);
-    
+
     // マーカーを生成
     const { markers } = useMapMarkers({
       pois: filteredPOIs,
@@ -94,15 +92,23 @@ const MapMarkers = memo(
           onSelectPOI(poi);
         }
       },
-    });
-
-    // マーカー ID 参照マップを作成
+    }); // マーカー ID 参照マップを作成
     const markerMap = useMemo(() => {
       const map = new Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>();
       markers.forEach((marker, index) => {
-        const poi = filteredPOIs[index];
-        if (poi) {
-          map.set(poi.id, marker);
+        // インデックスが範囲内かつ有効なPOIデータが存在する場合のみ処理
+        if (index >= 0 && index < filteredPOIs.length) {
+          // 配列インデックスの安全性を確保するために、Array.prototype.atを使用
+          const poi = Array.isArray(filteredPOIs) ? filteredPOIs.at(index) : undefined;
+          if (poi && poi.id) {
+            map.set(poi.id, marker);
+          }
+        } else {
+          logger.warn('無効なマーカーインデックスへのアクセスを防止しました', {
+            component: COMPONENT_NAME,
+            index,
+            arrayLength: filteredPOIs.length,
+          });
         }
       });
       return map;
@@ -131,22 +137,20 @@ const MapMarkers = memo(
     // マーカークリック処理
     const handleMarkerClick = useCallback(
       (poi: PointOfInterest) => {
-        // パフォーマンス測定（開発環境のみ詳細ログ）
-        logger.measureTime(
-          'マーカークリック処理',
-          () => {
-            setSelectedPOI(poi);
-            if (onSelectPOI) {
-              onSelectPOI(poi);
-            }
-          },
-          // 第3引数としてコンテキストオブジェクトを渡す（LogLevel ではなく）
-          {
-            component: COMPONENT_NAME,
-            poiId: poi.id,
-            poiName: poi.name,
+        // パフォーマンス測定
+        logger.measureTime('マーカークリック処理', () => {
+          setSelectedPOI(poi);
+          if (onSelectPOI) {
+            onSelectPOI(poi);
           }
-        );
+        });
+
+        // コンテキスト情報を個別にログ出力
+        logger.debug('マーカークリック詳細情報', {
+          component: COMPONENT_NAME,
+          poiId: poi.id,
+          poiName: poi.name,
+        });
       },
       [onSelectPOI]
     );

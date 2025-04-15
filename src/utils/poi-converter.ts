@@ -90,14 +90,14 @@ export function convertRawDataToPointOfInterest(rawData: RawPOIData): PointOfInt
         address: rawData.所在地,
         wkt: rawData.WKT,
       }),
-    });
-
-    // エラー時でも最低限の情報を持つオブジェクトを返す
+    }); // エラー時でも最低限の情報を持つオブジェクトを返す
     return {
       id: `error-${Date.now()}`,
       name: rawData.名称,
       lat: DEFAULT_LAT,
       lng: DEFAULT_LNG,
+      latitude: DEFAULT_LAT,
+      longitude: DEFAULT_LNG,
       isClosed: true,
       type: 'other',
       address: rawData.所在地 ?? '',
@@ -142,18 +142,18 @@ function createPointOfInterest(
 ): PointOfInterest {
   // 値がTRUEの場合にtrueを返す関数
   const isTrueValue = (value: string | undefined): boolean => value === 'TRUE';
-
   // 営業時間の型安全な取得
   const businessHours =
     rawData.営業時間 && rawData.営業時間 !== ''
       ? rawData.営業時間 // 既存の営業時間フィールドがある場合
       : formatBusinessHours(rawData); // なければフォーマット関数で生成
-
   return {
     id,
     name: rawData.名称, // 名称はRawPOIDataで必須フィールド
-    lat,
-    lng,
+    lat: lat,
+    lng: lng,
+    latitude: lat, // latのエイリアスとして追加
+    longitude: lng, // lngのエイリアスとして追加
     isClosed: isTrueValue(rawData.閉店情報),
     type: poiType,
     category: categories.length > 0 ? categories[0] : undefined,

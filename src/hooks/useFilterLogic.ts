@@ -150,6 +150,15 @@ const filterPOIs = (
       const hasActiveCategoryFilter = Array.from(categoryFilters.values()).some(v => v);
       const hasActiveDistrictFilter = Array.from(districtFilters.values()).some(v => v);
 
+      // フィルタリング実行前にログ記録
+      logger.debug('POIフィルタリング開始', {
+        component: COMPONENT_NAME,
+        action: 'filter_pois',
+        poiCount: pois.length,
+        statusFilter,
+        searchTextLength: searchText.length,
+      });
+
       return pois.filter(poi => {
         // カテゴリフィルター (アクティブなフィルターがあり、選択されていない場合は除外)
         if (hasActiveCategoryFilter && poi.category && !categoryFilters.get(poi.category)) {
@@ -176,15 +185,7 @@ const filterPOIs = (
         return true;
       });
     },
-    {
-      // オプションオブジェクトに level を含める
-      level: LogLevel.DEBUG, // パフォーマンス測定ログはデバッグレベルに
-      component: COMPONENT_NAME,
-      action: 'filter_pois',
-      poiCount: pois.length,
-      statusFilter,
-      searchTextLength: searchText.length,
-    }
+    LogLevel.DEBUG // 単純にLogLevelの値のみを渡す
   );
 };
 

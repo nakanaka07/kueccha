@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { resolve } from 'path';
 
 import { defineConfig, loadEnv, type UserConfig } from 'vite';
@@ -37,11 +38,17 @@ export default defineConfig(({ mode }): UserConfig => {
 
   return {
     base: basePath,
-    plugins,
-
-    // 開発サーバー設定
+    plugins, // 開発サーバー設定
     server: {
       port: 5173,
+      ...(mode === 'development'
+        ? {
+            https: {
+              key: fs.readFileSync(resolve(__dirname, '.local/localhost.key')),
+              cert: fs.readFileSync(resolve(__dirname, '.local/localhost.crt')),
+            },
+          }
+        : {}),
       hmr: {
         overlay: true,
         clientPort: 5173,

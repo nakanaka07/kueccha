@@ -1,4 +1,4 @@
-import { MarkerClusterer } from '@googlemaps/markerclusterer';
+import { MarkerClusterer, GridAlgorithm } from '@googlemaps/markerclusterer';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
@@ -136,21 +136,25 @@ export function useMapMarkers({
     // 新しいマーカーを作成
     const newMarkers = pois
       .filter(poi => poi.latitude && poi.longitude)
-      .map(poi => createMarker(poi, map));
+      .map(poi => createMarker(poi, map)); // マーカー配列を更新
+    setMarkers(newMarkers);
 
-    // マーカー配列を更新
-    setMarkers(newMarkers); // クラスタリングが有効な場合、クラスタリングを設定
+    // クラスタリングが有効な場合、クラスタリングを設定
     if (enableClustering && newMarkers.length > 0) {
       const { gridSize = DEFAULT_GRID_SIZE, minimumClusterSize = DEFAULT_MIN_CLUSTER_SIZE } =
         clusterOptions;
-
       try {
         // クラスタリングインスタンスを作成（シンプル化）
+        const algorithm = new GridAlgorithm({
+          gridSize,
+        });
+
+        // minimumClusterSize は直接サポートされていないため、
+        // MarkerClustererのオプションとしても追加しない
         clustererRef.current = new MarkerClusterer({
           map,
           markers: newMarkers,
-          gridSize,
-          minimumClusterSize,
+          algorithm,
           renderer: {
             render: ({ count, position }) => {
               // クラスターマーカーの外観をカスタマイズ

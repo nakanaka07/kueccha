@@ -1,7 +1,9 @@
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 
-import { validateEnv } from '../config/env-validator'; // Import validateEnv first
+// クライアント側では validateClientEnv を使用
+import { validateClientEnv } from './utils/env/client-validator';
+// サーバー側の validateEnv は直接呼び出さない（設定ファイルでのみ使用）
 
 import '@/global.css';
 import App from '@/App';
@@ -179,16 +181,15 @@ async function initializeApplication(): Promise<void> {
     });
 
     // ロガー設定の初期化
-    configureLoggerFromEnv();
-
-    // 環境変数の検証 (validateEnv を使用)
+    configureLoggerFromEnv(); // 環境変数の検証 (クライアント側用のvalidateClientEnvを使用)
     await logger.measureTimeAsync(
       '環境変数の検証',
       async () => {
-        // validateEnv に import.meta.env を渡す
-        // Production ではエラー時に throw するので try...catch で捕捉される
-        // Development ではエラーをログ出力する
-        validateEnv(import.meta.env as Record<string, string>);
+        // クライアント側の環境変数検証
+        const isValid = validateClientEnv();
+        if (!isValid) {
+          throw new Error('環境変数の検証に失敗しました');
+        }
         await Promise.resolve(); // 非同期コンテキスト用 (measureTimeAsync のため)
       },
       getEnvBool('VITE_ENV_IS_DEV', false) ? LogLevel.INFO : LogLevel.DEBUG

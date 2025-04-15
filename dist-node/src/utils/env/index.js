@@ -22,7 +22,15 @@ export * from './google-maps';
  * @returns アプリケーションの環境設定
  */
 import { getEnvVar, getEnvBool } from './core';
-import { getGoogleApiKey, getGoogleMapsLibraries, getGoogleMapsVersion, getGoogleMapId, getInitialMapCenter, getInitialMapZoom, isMarkerClusteringEnabled, } from './google-maps';
+import {
+  getGoogleApiKey,
+  getGoogleMapsLibraries,
+  getGoogleMapsVersion,
+  getGoogleMapId,
+  getInitialMapCenter,
+  getInitialMapZoom,
+  isMarkerClusteringEnabled,
+} from './google-maps';
 /**
  * グローバルに利用可能なENV設定オブジェクト
  * アプリケーション全体で一貫した環境設定へのアクセスを提供します
@@ -33,50 +41,50 @@ export const ENV = getEnvironmentConfig();
  * @returns EnvironmentConfig オブジェクト
  */
 export function getEnvironmentConfig() {
-    const isDev = getEnvBool('VITE_DEV_MODE', true);
-    const isProd = !isDev;
-    return {
-        app: {
-            name: getEnvVar({ key: 'VITE_APP_NAME', defaultValue: 'くえっちゃ', required: true }),
-            shortName: getEnvVar({ key: 'VITE_APP_SHORT_NAME', defaultValue: 'くえっちゃ' }),
-            description: getEnvVar({
-                key: 'VITE_APP_DESCRIPTION',
-                defaultValue: '佐渡島観光支援アプリケーション',
-            }),
-            version: getEnvVar({ key: 'VITE_APP_VERSION', defaultValue: '1.0.0' }),
-            basePath: getEnvVar({ key: 'VITE_BASE_PATH', defaultValue: '/' }),
-        },
-        google: {
-            apiKey: getGoogleApiKey(),
-            mapsVersion: getGoogleMapsVersion(),
-            mapsLibraries: getGoogleMapsLibraries(),
-            mapId: getGoogleMapId(),
-        },
-        env: {
-            mode: isProd
-                ? 'production'
-                : getEnvVar({ key: 'NODE_ENV' }) === 'test'
-                    ? 'test'
-                    : 'development',
-            isDev,
-            isProd,
-        },
-        features: {
-            googleSheets: getEnvBool('VITE_FEATURE_GOOGLE_SHEETS', false),
-            offlineMode: getEnvBool('VITE_FEATURE_OFFLINE_MODE', true),
-            markerClustering: isMarkerClusteringEnabled(),
-        },
-        ui: {
-            map: {
-                initialZoom: getInitialMapZoom(),
-                initialCenter: getInitialMapCenter(),
-            },
-        },
-        logging: {
-            level: getEnvVar({
-                key: 'VITE_LOG_LEVEL',
-                defaultValue: 'info',
-            }),
-        },
-    };
+  const isDev = getEnvBool('VITE_DEV_MODE', true);
+  const isProd = !isDev;
+  return {
+    app: {
+      name: getEnvVar({ key: 'VITE_APP_NAME', defaultValue: 'くえっちゃ', required: true }),
+      shortName: getEnvVar({ key: 'VITE_APP_SHORT_NAME', defaultValue: 'くえっちゃ' }),
+      description: getEnvVar({
+        key: 'VITE_APP_DESCRIPTION',
+        defaultValue: '佐渡島観光支援アプリケーション',
+      }),
+      version: getEnvVar({ key: 'VITE_APP_VERSION', defaultValue: '1.0.0' }),
+      basePath: getEnvVar({ key: 'VITE_BASE_PATH', defaultValue: '/' }),
+    },
+    google: {
+      apiKey: getGoogleApiKey(),
+      mapsVersion: getGoogleMapsVersion(),
+      mapsLibraries: getGoogleMapsLibraries(),
+      mapId: getGoogleMapId(),
+    },
+    env: {
+      mode: isProd
+        ? 'production'
+        : getEnvVar({ key: 'NODE_ENV' }) === 'test'
+          ? 'test'
+          : 'development',
+      isDev,
+      isProd,
+    },
+    features: {
+      googleSheets: getEnvBool('VITE_FEATURE_GOOGLE_SHEETS', false),
+      offlineMode: getEnvBool('VITE_FEATURE_OFFLINE_MODE', true),
+      markerClustering: isMarkerClusteringEnabled(),
+    },
+    ui: {
+      map: {
+        initialZoom: getInitialMapZoom(),
+        initialCenter: getInitialMapCenter(),
+      },
+    },
+    logging: {
+      level: getEnvVar({
+        key: 'VITE_LOG_LEVEL',
+        defaultValue: 'info',
+      }),
+    },
+  };
 }
