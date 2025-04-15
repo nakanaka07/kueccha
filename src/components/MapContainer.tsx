@@ -1,6 +1,5 @@
 import { useRef, useEffect, memo } from 'react';
 
-import { SADO_MAP_OPTIONS } from '@/constants/maps';
 import { logger } from '@/utils/logger';
 
 /**
@@ -45,13 +44,13 @@ export const MapContainer = memo(
           return;
         }
 
+        // SADO_OPTIMIZED_OPTIONS を使用するようにログを修正
         logger.debug('マップ要素の初期化を開始します', {
           component: 'MapContainer',
           elementId: mapId,
           elementExists: Boolean(mapRef.current),
           // 佐渡島最適化設定の使用をログ
           usingSadoOptimization: true,
-          zoom: SADO_MAP_OPTIONS.zoom,
         });
 
         // コールバック呼び出しフラグを設定

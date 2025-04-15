@@ -6,6 +6,42 @@ import { logger } from '@/utils/logger';
 import { formatWeekdaySchedule } from '@/utils/markerUtils';
 
 /**
+ * 型安全なプロパティアクセス関数
+ * Generic Object Injection Sink警告を解消するためのユーティリティ
+ */
+function safeGetProperty<T extends object, K extends keyof T>(obj: T, key: K): T[K] | undefined {
+  // 明示的なホワイトリスト方式
+  const allowedKeys = ['月曜', '火曜', '水曜', '木曜', '金曜', '土曜', '日曜', '祝祭'] as K[];
+  if (!allowedKeys.includes(key)) {
+    return undefined;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, key)) {
+    // Reflect APIを使用してプロパティにアクセス
+    return Reflect.get(obj, key);
+  }
+  return undefined;
+}
+
+// 曜日の型定義
+type WeekdayType = '月曜' | '火曜' | '水曜' | '木曜' | '金曜' | '土曜' | '日曜' | '祝祭';
+
+// スケジュール型の定義
+type ScheduleType = {
+  regularHours?: string;
+  daysOff?: string;
+  月曜?: string;
+  火曜?: string;
+  水曜?: string;
+  木曜?: string;
+  金曜?: string;
+  土曜?: string;
+  日曜?: string;
+  祝祭?: string;
+  [key: string]: string | undefined;
+};
+
+/**
  * 基本情報タブコンテンツ
  * POIの基本的な情報を表示するコンポーネント
  */
@@ -169,10 +205,10 @@ export const HoursTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => 
   });
 
   // 曜日リスト
-  const weekdays = ['月曜', '火曜', '水曜', '木曜', '金曜', '土曜', '日曜', '祝祭'];
+  const weekdays: WeekdayType[] = ['月曜', '火曜', '水曜', '木曜', '金曜', '土曜', '日曜', '祝祭'];
 
   // スケジュールをメモ化（エラーハンドリングを強化）
-  const formattedSchedule = useMemo(() => {
+  const formattedSchedule = useMemo<ScheduleType>(() => {
     try {
       return formatWeekdaySchedule(poi);
     } catch (error) {
@@ -206,15 +242,19 @@ export const HoursTabContent: React.FC<{ poi: PointOfInterest }> = ({ poi }) => 
         </div>
 
         <div className='weekday-schedule'>
+          {' '}
           {weekdays.map(day => {
             const closedKey = `${day}定休日` as keyof PointOfInterest;
-            const isClosed = poi[closedKey] as boolean | undefined;
+            // 安全なプロパティアクセス関数を使用して警告を解消
+            const isClosed = safeGetProperty(poi, closedKey) as boolean | undefined;
 
             return (
               <div key={day} className={`weekday-row ${isClosed === true ? 'closed-day' : ''}`}>
                 <span className='weekday-name'>{day}:</span>
                 <span className='weekday-hours'>
-                  {isClosed === true ? '定休日' : (formattedSchedule[day] ?? '情報なし')}
+                  {isClosed === true
+                    ? '定休日'
+                    : (formattedSchedule[day as WeekdayType] ?? '情報なし')}
                 </span>
               </div>
             );

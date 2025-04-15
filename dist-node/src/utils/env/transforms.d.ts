@@ -4,10 +4,10 @@
  * 文字列形式の環境変数を様々な型に変換する関数群
  */
 export declare enum LogLevel {
-    ERROR = 0,
-    WARN = 1,
-    INFO = 2,
-    DEBUG = 3
+  ERROR = 0,
+  WARN = 1,
+  INFO = 2,
+  DEBUG = 3,
 }
 /**
  * 文字列をブール値に変換する

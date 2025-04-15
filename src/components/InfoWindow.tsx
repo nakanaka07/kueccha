@@ -10,7 +10,7 @@ import {
 } from '@/components/InfoWindowSections';
 import StatusBadge from '@/components/InfoWindowStatus';
 import type { PointOfInterest } from '@/types/poi';
-import { ENV } from '@/utils/env';
+import { ENV } from '@/utils/env/index';
 import { logger } from '@/utils/logger';
 import '@/global.css';
 

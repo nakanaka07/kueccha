@@ -24,6 +24,11 @@ export * from './google-maps';
 import { getEnvVar, getEnvBool } from './core';
 import { getGoogleApiKey, getGoogleMapsLibraries, getGoogleMapsVersion, getGoogleMapId, getInitialMapCenter, getInitialMapZoom, isMarkerClusteringEnabled, } from './google-maps';
 /**
+ * グローバルに利用可能なENV設定オブジェクト
+ * アプリケーション全体で一貫した環境設定へのアクセスを提供します
+ */
+export const ENV = getEnvironmentConfig();
+/**
  * 環境設定を取得
  * @returns EnvironmentConfig オブジェクト
  */

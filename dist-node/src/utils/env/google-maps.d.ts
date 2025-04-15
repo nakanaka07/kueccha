@@ -39,8 +39,8 @@ export declare function getInitialMapZoom(): number;
  * @returns 地図の初期中心座標（緯度・経度）
  */
 export declare function getInitialMapCenter(): {
-    lat: number;
-    lng: number;
+  lat: number;
+  lng: number;
 };
 /**
  * Google Maps 関連の環境変数が正しく設定されているか検証

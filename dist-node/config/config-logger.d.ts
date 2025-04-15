@@ -6,16 +6,16 @@
  */
 export type LogLevelString = 'error' | 'warn' | 'info' | 'debug';
 export interface LogContext {
-    [key: string]: unknown;
-    component?: string;
-    userId?: string;
-    requestId?: string;
+  [key: string]: unknown;
+  component?: string;
+  userId?: string;
+  requestId?: string;
 }
 type LogFunction = (message: string, context?: LogContext) => void;
 export declare const configLogger: {
-    error: LogFunction;
-    warn: LogFunction;
-    info: LogFunction;
-    debug: LogFunction;
+  error: LogFunction;
+  warn: LogFunction;
+  info: LogFunction;
+  debug: LogFunction;
 };
 export {};

@@ -11,6 +11,11 @@ export * from './validators';
 export * from './google-maps';
 import type { EnvironmentConfig } from '@/types/env-types';
 /**
+ * グローバルに利用可能なENV設定オブジェクト
+ * アプリケーション全体で一貫した環境設定へのアクセスを提供します
+ */
+export declare const ENV: EnvironmentConfig;
+/**
  * 環境設定を取得
  * @returns EnvironmentConfig オブジェクト
  */

@@ -7,6 +7,7 @@ import { logger } from '@/utils/logger';
 // 定数の外部化
 const DEFAULT_DEBOUNCE_MS = 300;
 const DEFAULT_VISIBILITY_MARGIN = 0.5; // 表示領域を50%拡張
+const COMPONENT_NAME = 'useMarkerVisibility';
 
 /**
  * マーカー可視性管理のパラメータ
@@ -60,14 +61,6 @@ function calculateExtendedBounds(
 }
 
 /**
- * マーカーとPOIデータを組み合わせたオブジェクト
- */
-interface MarkerWithPOI {
-  marker: google.maps.marker.AdvancedMarkerElement;
-  poi: PointOfInterest;
-}
-
-/**
  * マップの表示領域内のマーカーだけを効率的に表示するためのフック
  * パフォーマンス最適化ガイドラインに沿った実装
  */
@@ -87,65 +80,86 @@ export function useMarkerVisibility({
     return pois.filter(poi => visiblePOIIds.has(poi.id));
   }, [pois, visiblePOIIds]);
 
-  // 可視マーカーを更新する関数（YAGNI原則に基づき、シンプル化）
-  const updateVisibleMarkers = useCallback(
-    debounce(() => {
-      const map = mapRef.current;
-      if (!map) return;
+  // 可視マーカーを更新する関数
+  const updateVisibleMarkers = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
 
-      const bounds = map.getBounds();
-      if (!bounds) return;
+    const bounds = map.getBounds();
+    if (!bounds) return;
 
-      // 表示範囲のバッファリングを計算
-      const extendedBounds = calculateExtendedBounds(bounds, visibilityMargin);
+    // 表示範囲のバッファリングを計算
+    const extendedBounds = calculateExtendedBounds(bounds, visibilityMargin);
 
-      // 表示中のPOI ID集合を効率的に構築
-      const newVisibleIds = new Set<string>();
-      let visibleCount = 0;
+    // 表示中のPOI ID集合を効率的に構築
+    const newVisibleIds = new Set<string>();
+    let visibleCount = 0;
 
-      // マーカーとPOIを対応付けて表示状態を更新
-      markers.forEach((marker, index) => {
-        if (index >= pois.length) return;
-
-        const poi = pois[index];
-        const position = marker.position as google.maps.LatLng;
-
-        // 位置情報があり、表示範囲内の場合のみ表示
-        if (position && extendedBounds.contains(position)) {
-          newVisibleIds.add(poi.id);
-          visibleCount++;
-
-          // マーカーが非表示だった場合のみ表示操作を行う
-          if (marker.map !== map) {
-            marker.map = map;
-          }
-        } else {
-          // 範囲外のマーカーは地図から外す（描画コストを削減）
-          if (marker.map) {
-            marker.map = null;
-          }
-        }
-      });
-
-      // 状態を更新（前回と変化がある場合のみ）
-      if (!setsAreEqual(visiblePOIIds, newVisibleIds)) {
-        setVisiblePOIIds(newVisibleIds);
-
-        // コールバックが提供されている場合は実行
-        if (onVisibilityChange) {
-          onVisibilityChange(visibleCount, markers.length);
-        }
-
-        // 最適化の統計情報をログ
-        logger.debug('マーカー可視性を更新しました', {
-          component: 'useMarkerVisibility',
-          visibleCount,
-          totalCount: markers.length,
-          visibilityRatio: markers.length > 0 ? visibleCount / markers.length : 0,
+    // マーカーとPOIを対応付けて表示状態を更新
+    markers.forEach((marker, index) => {
+      // pois 配列の範囲外アクセスを防ぐ
+      if (index >= pois.length) {
+        logger.warn('Marker index out of bounds for POIs array', {
+          component: COMPONENT_NAME,
+          index,
+          poisLength: pois.length,
         });
+        return;
       }
-    }, debounceMs),
-    [mapRef, markers, pois, visibilityMargin, onVisibilityChange, visiblePOIIds, debounceMs]
+
+      // eslint-disable-next-line security/detect-object-injection
+      const poi = pois[index];
+      // poi が undefined の場合のフォールバックを追加
+      if (!poi) {
+        logger.warn('POI data is missing for marker at index', {
+          component: COMPONENT_NAME,
+          index,
+        });
+        return;
+      }
+      const position = marker.position as google.maps.LatLng;
+
+      // 位置情報があり、表示範囲内の場合のみ表示
+      if (position && extendedBounds.contains(position)) {
+        newVisibleIds.add(poi.id);
+        visibleCount++;
+
+        // マーカーが非表示だった場合のみ表示操作を行う
+        if (marker.map !== map) {
+          marker.map = map;
+        }
+      } else {
+        // 範囲外のマーカーは地図から外す（描画コストを削減）
+        if (marker.map) {
+          marker.map = null;
+        }
+      }
+    });
+
+    // 状態を更新（前回と変化がある場合のみ）
+    if (!setsAreEqual(visiblePOIIds, newVisibleIds)) {
+      setVisiblePOIIds(newVisibleIds);
+
+      // コールバックが提供されている場合は実行
+      if (onVisibilityChange) {
+        onVisibilityChange(visibleCount, markers.length);
+      }
+
+      // 最適化の統計情報をログ
+      logger.debug('マーカー可視性を更新しました', {
+        component: COMPONENT_NAME,
+        visibleCount,
+        totalCount: markers.length,
+        visibilityRatio: markers.length > 0 ? visibleCount / markers.length : 0,
+      });
+    }
+    // useCallback の依存配列を修正
+  }, [mapRef, markers, pois, visibilityMargin, onVisibilityChange, visiblePOIIds]);
+
+  // デバウンスされた更新関数
+  const debouncedUpdateVisibleMarkers = useMemo(
+    () => debounce(updateVisibleMarkers, debounceMs),
+    [updateVisibleMarkers, debounceMs]
   );
 
   // マップイベントのリスナーを設定
@@ -155,19 +169,20 @@ export function useMarkerVisibility({
 
     // 必要最小限のイベントだけをリッスン
     const listeners = [
-      map.addListener('idle', updateVisibleMarkers),
-      map.addListener('zoom_changed', updateVisibleMarkers),
+      map.addListener('idle', debouncedUpdateVisibleMarkers),
+      map.addListener('zoom_changed', debouncedUpdateVisibleMarkers),
     ];
 
     // 初期実行
-    updateVisibleMarkers();
+    debouncedUpdateVisibleMarkers();
 
     // クリーンアップ関数
     return () => {
       listeners.forEach(listener => google.maps.event.removeListener(listener));
-      updateVisibleMarkers.cancel(); // デバウンス中の処理をキャンセル
+      debouncedUpdateVisibleMarkers.cancel(); // デバウンス中の処理をキャンセル
     };
-  }, [mapRef, updateVisibleMarkers]);
+    // useEffect の依存配列を修正
+  }, [mapRef, debouncedUpdateVisibleMarkers]);
 
   return { visiblePOIs };
 }

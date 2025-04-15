@@ -14,5 +14,10 @@ export declare const intValidator: (min?: number, max?: number) => ValidatorFn<n
 /**
  * 型付き環境変数を取得
  */
-export declare function getTypedEnv<T>(key: string, validator: ValidatorFn<T>, defaultValue?: string, required?: boolean): T;
+export declare function getTypedEnv<T>(
+  key: string,
+  validator: ValidatorFn<T>,
+  defaultValue?: string,
+  required?: boolean
+): T;
 export {};

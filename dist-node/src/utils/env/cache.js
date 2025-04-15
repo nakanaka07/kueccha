@@ -14,10 +14,10 @@ const envCache = new Map();
  * @returns キャッシュされた環境変数値
  */
 export function getCachedEnvVar(key, defaultValue = '') {
-    if (!envCache.has(key)) {
-        envCache.set(key, getEnvVar({ key, defaultValue }));
-    }
-    return envCache.get(key);
+  if (!envCache.has(key)) {
+    envCache.set(key, getEnvVar({ key, defaultValue }));
+  }
+  return envCache.get(key);
 }
 /**
  * ブール値の環境変数を取得しキャッシュする
@@ -26,11 +26,11 @@ export function getCachedEnvVar(key, defaultValue = '') {
  * @returns キャッシュされたブール値
  */
 export function getCachedEnvBool(key, defaultValue = false) {
-    const cacheKey = `bool_${key}`;
-    if (!envCache.has(cacheKey)) {
-        envCache.set(cacheKey, getEnvBool(key, defaultValue));
-    }
-    return envCache.get(cacheKey);
+  const cacheKey = `bool_${key}`;
+  if (!envCache.has(cacheKey)) {
+    envCache.set(cacheKey, getEnvBool(key, defaultValue));
+  }
+  return envCache.get(cacheKey);
 }
 /**
  * 数値の環境変数を取得しキャッシュする
@@ -39,34 +39,33 @@ export function getCachedEnvBool(key, defaultValue = false) {
  * @returns キャッシュされた数値
  */
 export function getCachedEnvNumber(key, defaultValue = 0) {
-    const cacheKey = `num_${key}`;
-    if (!envCache.has(cacheKey)) {
-        // coreから直接インポートできないため、内部で変換実装
-        const value = getEnvVar({ key, defaultValue: defaultValue.toString() });
-        const parsedValue = Number(value);
-        // 数値変換のエラーを検出し、デフォルト値を使用
-        if (isNaN(parsedValue)) {
-            logger.warn(`環境変数の数値変換に失敗しました。デフォルト値を使用します`, {
-                key,
-                value,
-                defaultValue,
-                component: 'EnvCache',
-            });
-            envCache.set(cacheKey, defaultValue);
-        }
-        else {
-            envCache.set(cacheKey, parsedValue);
-        }
+  const cacheKey = `num_${key}`;
+  if (!envCache.has(cacheKey)) {
+    // coreから直接インポートできないため、内部で変換実装
+    const value = getEnvVar({ key, defaultValue: defaultValue.toString() });
+    const parsedValue = Number(value);
+    // 数値変換のエラーを検出し、デフォルト値を使用
+    if (isNaN(parsedValue)) {
+      logger.warn(`環境変数の数値変換に失敗しました。デフォルト値を使用します`, {
+        key,
+        value,
+        defaultValue,
+        component: 'EnvCache',
+      });
+      envCache.set(cacheKey, defaultValue);
+    } else {
+      envCache.set(cacheKey, parsedValue);
     }
-    return envCache.get(cacheKey);
+  }
+  return envCache.get(cacheKey);
 }
 /**
  * キャッシュをクリアする（主にテスト用）
  */
 export function clearEnvCache() {
-    envCache.clear();
-    logger.debug('環境変数キャッシュをクリアしました', {
-        component: 'EnvCache',
-        action: 'clearCache',
-    });
+  envCache.clear();
+  logger.debug('環境変数キャッシュをクリアしました', {
+    component: 'EnvCache',
+    action: 'clearCache',
+  });
 }

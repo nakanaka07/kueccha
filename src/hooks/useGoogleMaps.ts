@@ -51,7 +51,7 @@ function getLoaderOptions() {
  * KISS原則に基づいてシンプル化されています
  */
 export function useGoogleMaps(
-  selector: string,
+  selector: string | null, // 型を string | null に変更
   options: UseGoogleMapsHookOptions = {}
 ): GoogleMapsState {
   const { initOptions = {}, timeout = 10000, onLoad, onError } = options;
@@ -69,6 +69,20 @@ export function useGoogleMaps(
 
   // 初期化処理 - パフォーマンス向上のための最適化
   const initializeMap = useCallback(async () => {
+    // selector が null の場合は初期化しない
+    if (!selector) {
+      logger.debug('Selector is null, skipping map initialization.', {
+        component: 'useGoogleMaps',
+      });
+      // 初期化しない場合の状態を設定することも検討できますが、
+      // App.tsx 側で shouldLoadMap が false の場合は useGoogleMaps の結果 (特に error) を
+      // 意図的に無視するロジックになっているため、ここでは何もしないか、
+      // isLoaded: false, error: null の状態を維持します。
+      // 必要であれば、初期化されないことを示す状態を追加しても良いでしょう。
+      setState(prev => ({ ...prev, isLoaded: false, error: null, map: null }));
+      return;
+    }
+
     try {
       // 環境変数の検証
       const { isValid, errors } = validateMapsEnvironmentVars();
@@ -162,13 +176,15 @@ export function useGoogleMaps(
 
       onError?.(errorMsg);
     }
-  }, [selector, initOptions, timeout, onLoad, onError]);
+  }, [selector, initOptions, timeout, onLoad, onError]); // 依存配列に selector を追加
 
-  // マップの初期化は一度だけ実行
+  // マップの初期化は selector が有効な場合にのみ実行
   useEffect(() => {
-    if (!state.isLoaded && !state.error) {
-      initializeMap();
+    // selector が null の場合、または既にロード済み/エラー発生済みの場合は何もしない
+    if (!selector || state.isLoaded || state.error) {
+      return;
     }
+    initializeMap();
 
     // クリーンアップ処理
     return () => {
@@ -181,7 +197,7 @@ export function useGoogleMaps(
         });
       }
     };
-  }, [state.isLoaded, state.error, initializeMap]);
+  }, [selector, state.isLoaded, state.error, initializeMap]); // 依存配列に selector を追加
 
   // mapRef は内部管理用とし、state のみを返す (KISS)
   return state;

@@ -3,13 +3,7 @@
  */
 import { normalizeSearchQuery, limitObjectSize } from './poi-utils'; // poi-utils からインポート
 
-import {
-  PointOfInterest,
-  POIFilterOptions,
-  POIType,
-  POICategory,
-  District,
-} from '@/types/poi-types';
+import { PointOfInterest, POIFilterOptions, POICategory, District } from '@/types/poi-types';
 import { getEnvVar } from '@/utils/env/core';
 import { toBool } from '@/utils/env/transforms';
 import { logger } from '@/utils/logger';

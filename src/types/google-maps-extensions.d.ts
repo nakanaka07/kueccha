@@ -9,14 +9,28 @@ declare namespace google {
         constructor(options?: { maxDistance?: number; gridSize?: number });
       }
 
+      interface Cluster {
+        markers: google.maps.Marker[];
+        position: google.maps.LatLng;
+        bounds: google.maps.LatLngBounds;
+        getSize(): number;
+        getMarkers(): google.maps.Marker[];
+      }
+
+      interface ClusterRenderer {
+        render(clusters: Cluster[], stats: { clusters: number; markers: number }): void;
+        onAdd(): void;
+        onRemove(): void;
+      }
+
       class MarkerClusterer {
         constructor(
           map: google.maps.Map,
           markers: google.maps.Marker[],
           options?: {
             algorithm?: GridAlgorithm;
-            renderer?: any;
-            onClusterClick?: (cluster: any) => void;
+            renderer?: ClusterRenderer;
+            onClusterClick?: (cluster: Cluster) => void;
           }
         );
 

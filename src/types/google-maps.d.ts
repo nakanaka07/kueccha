@@ -11,8 +11,6 @@
  * @see ../../env.d.ts - 環境変数型定義（特にVITE_GOOGLE_MAPS_*系）
  */
 
-import { LogContext } from '@/utils/logger';
-
 // google.maps.marker 名前空間に関する型定義の拡張
 declare namespace google.maps {
   /**

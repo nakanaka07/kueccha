@@ -6,7 +6,7 @@ import { useFilteredPOIs } from '@/hooks/useFilteredPOIs';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import type { PointOfInterest } from '@/types/poi';
-import { ENV } from '@/utils/env';
+import { getEnvVar } from '@/utils/env/core';
 import { logger, LogLevel } from '@/utils/logger';
 
 // マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
@@ -48,13 +48,13 @@ interface MapMarkersProps {
 
   /**
    * マーカーアニメーションを有効にするか
-   * @default ENV.features.markerAnimation
+   * @default false
    */
   animateMarkers?: boolean;
 
   /**
    * マーカークラスタリングを有効にするか
-   * @default ENV.features.markerClustering
+   * @default false
    */
   enableClustering?: boolean;
 }
@@ -74,24 +74,39 @@ const MapMarkers = memo(
     filters = {},
     onSelectPOI,
     onViewDetails,
-    animateMarkers = Boolean(ENV?.features?.markerAnimation),
-    enableClustering = Boolean(ENV?.features?.markerClustering),
+    animateMarkers = false,
+    enableClustering = false,
   }: MapMarkersProps) => {
     // 選択されたPOIの状態
     const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
 
     // フィルタリングされたPOIを取得
-    const { filteredPOIs } = useFilteredPOIs(pois, filters); // マーカーの生成
-    const { markers, markerMap } = useMapMarkers({
+    const filteredPOIs = useFilteredPOIs(pois, filters);
+    
+    // マーカーを生成
+    const { markers } = useMapMarkers({
       pois: filteredPOIs,
       mapRef,
       enableClustering,
-      animateMarkers,
       onMarkerClick: poi => {
         setSelectedPOI(poi);
-        onPoiSelect?.(poi);
+        if (onSelectPOI) {
+          onSelectPOI(poi);
+        }
       },
     });
+
+    // マーカー ID 参照マップを作成
+    const markerMap = useMemo(() => {
+      const map = new Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>();
+      markers.forEach((marker, index) => {
+        const poi = filteredPOIs[index];
+        if (poi) {
+          map.set(poi.id, marker);
+        }
+      });
+      return map;
+    }, [markers, filteredPOIs]);
 
     // 表示範囲内のマーカーのみを描画（最適化）
     const { visiblePOIs } = useMarkerVisibility({
@@ -99,7 +114,7 @@ const MapMarkers = memo(
       markers,
       pois: filteredPOIs,
       // モバイルデバイスではパフォーマンス向上のためデバウンス時間を長めに設定
-      debounceMs: ENV?.features?.isMobile ? 500 : 300,
+      debounceMs: 300,
       // 表示範囲に余裕を持たせる（佐渡島最適化）
       visibilityMargin: 0.5,
       // 可視マーカー数の変化をログに記録
@@ -125,7 +140,7 @@ const MapMarkers = memo(
               onSelectPOI(poi);
             }
           },
-          ENV?.env?.isDev ? LogLevel.DEBUG : LogLevel.INFO,
+          // 第3引数としてコンテキストオブジェクトを渡す（LogLevel ではなく）
           {
             component: COMPONENT_NAME,
             poiId: poi.id,
