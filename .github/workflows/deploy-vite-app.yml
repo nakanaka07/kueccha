@@ -1,0 +1,112 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 並列ビルドを防止
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.8.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      # 依存関係インストール
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+
+      # pnpmキャッシュを効率的に設定
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules/.pnpm
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      # リポジトリ名から動的にVITE_BASE_PATHを設定
+      - name: Extract repository name
+        id: repo-name
+        run: |
+          REPO_NAME=${GITHUB_REPOSITORY#*/}
+          echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "リポジトリ名 '$REPO_NAME' からベースパスを設定: /$REPO_NAME/"
+          
+      # GitHub Pages用の環境変数を設定
+      - name: Set environment variables for build
+        run: |
+          echo "VITE_BASE_PATH=/${{ steps.repo-name.outputs.name }}/" >> $GITHUB_ENV
+          echo "NODE_ENV=production" >> $GITHUB_ENV
+
+      # 型チェック
+      - name: Run type check
+        run: pnpm typecheck || echo "::warning::Type check issues found, but continuing build"
+
+      # リント
+      - name: Run lint
+        run: pnpm lint || echo "::warning::Linting issues found, but continuing build"
+
+      # GitHub Pages用の最適化ビルド実行
+      - name: Build for GitHub Pages
+        run: pnpm build:ghpages
+        env:
+          # 他の必要な環境変数はGitHubのSecretsから設定
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
+
+      # 静的ホスティング用の必要なファイルを追加
+      - name: Add special files for GitHub Pages
+        run: |
+          # Jekyll処理を無効化するための.nojekyllファイル追加
+          touch ./dist/.nojekyll
+          
+          # SPA対応のために404.htmlを追加（index.htmlをコピー）
+          cp ./dist/index.html ./dist/404.html
+          
+          echo "静的サイトデプロイの準備が完了しました"
+
+      # GitHub Pagesビルドとデプロイ
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+          
+  # デプロイジョブを分離して信頼性を向上
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

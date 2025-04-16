@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "target": "ESNext",
+    "resolveJsonModule": true,
+    "declaration": true, // 複合プロジェクトでは宣言ファイルの生成が必要
+    "outDir": "./dist-node", // 宣言ファイルの出力先を明示的に指定
+    "types": ["node", "vite/client", "vitest/globals"],
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    // KISS原則に基づくシンプルな型チェック
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // シンプル化したパスエイリアス - tsconfig.jsonと一致
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }, // Node.js環境で処理するファイル - 環境変数関連とその依存ファイルを明示的に含める
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "scripts/**/*.ts",
+    "env.d.ts",
+    "config/**/*.ts",
+    "src/utils/env/**/*.ts",
+    "src/utils/logger.ts",
+    "src/types/env-types.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

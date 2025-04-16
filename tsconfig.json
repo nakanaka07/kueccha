@@ -1,0 +1,63 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* 宣言ファイル生成を無効化 */
+    "declaration": false,
+
+    /* Type Checking - KISS原則に基づく必須の型チェックのみ */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* パフォーマンス最適化 - 必須の設定のみ */
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+
+    /* デバッグ支援 */
+    "sourceMap": true,
+
+    /* Path Aliases - シンプル化 */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "env.d.ts", // 環境変数型定義
+    "react-extensions.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-node",
+    "build",
+    ".tsbuildinfo",
+    "coverage",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "config/**/*.ts",
+    "src/utils/env/**/*.ts",
+    "src/types/env-types.ts",
+    "src/utils/logger.ts"
+  ],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
