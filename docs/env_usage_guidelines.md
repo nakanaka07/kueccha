@@ -1,7 +1,7 @@
 # 環境変数管理ガイドライン
 
-> **最終更新日**: 2025年4月10日  
-> **バージョン**: 1.3.0  
+> **最終更新日**: 2025年4月17日  
+> **バージョン**: 1.4.0  
 > **作成者**: 佐渡で食えっちゃプロジェクトチーム
 
 ## 目次
@@ -135,44 +135,90 @@ VITE_MAX_MARKERS=1000  # 地図上に表示する最大マーカー数
 
 ## 4. 環境ごとの管理戦略
 
-### 単一の.envファイルでの環境管理
+### 環境変数ファイル構造
 
-現在のプロジェクトでは、複数の.envファイル（.env.development, .env.production, .env.testなど）は使用せず、単一の.envファイルのみを使用しています。
+佐渡で食えっちゃプロジェクトでは、複数の環境変数ファイルを使用して各環境に最適な設定を提供します。現在の構造は次の通りです：
 
-```typescript
-# .env
-VITE_GOOGLE_API_KEY=your-api-key
-VITE_LOG_LEVEL=info
-VITE_ENABLE_MOCK_DATA=false
-# 必要に応じて他の設定も追加
+```
+.env                # 共通の基本設定（すべての環境で使用）
+.env.development    # 開発環境固有の設定
+.env.test           # テスト環境固有の設定
+.env.production     # 本番環境固有の設定
+.env.local          # ローカル環境のみの設定（Gitで共有されない）
+.env.*.local        # 特定環境のローカル設定（Gitで共有されない）
+.env.example        # 環境変数カタログ（すべての変数の説明と例）
 ```
 
-各種環境での設定の切り替えは、必要に応じて手動で.envファイルの値を更新するか、NODE_ENV環境変数に基づいてアプリケーション内部でロジックを分岐させることで対応します。
+### 環境別の最適化設定
 
-### 環境別の設定管理
+各環境ごとに最適化された設定を提供することで、開発・テスト・本番それぞれで最適なパフォーマンスと機能を実現します。
 
-```typescript
-# .env.production
-VITE_LOG_LEVEL=warn
-# APIキーなどの機密情報はCI/CDシステムから注入
+#### 開発環境（`.env.development`）
+
+```bash
+# 開発環境の特徴
+VITE_LOG_LEVEL=debug
+VITE_DEBUG_MODE=true
+VITE_MEASURE_MAP_PERFORMANCE=true
+VITE_GOOGLE_API_KEY_RESTRICTIONS=false
 ```
 
-本番環境では機密情報は`.env`ファイルに直接書かずに、CI/CDシステムのシークレット機能から注入するのが安全です。
+開発環境では、詳細なログ出力やデバッグ機能を有効にし、開発者の作業効率を最大化します。
+
+#### テスト環境（`.env.test`）
+
+```bash
+# テスト環境の特徴
+VITE_LOG_LEVEL=error
+VITE_DEBUG_MODE=false
+VITE_PRELOAD_POI_DATA=true
+```
+
+テスト環境では、テスト結果の安定性と一貫性を重視し、不要なログ出力を抑制します。
+
+#### 本番環境（`.env.production`）
+
+```bash
+# 本番環境の特徴
+VITE_LOG_LEVEL=error
+VITE_DEBUG_MODE=false
+VITE_DROP_CONSOLE=true
+VITE_OPTIMIZE_MAPS=true
+VITE_MAP_LAZY_LOAD=true
+VITE_ENABLE_COMPRESSION=true
+VITE_ENABLE_OFFLINE=true
+VITE_ENABLE_PWA=true
+VITE_GOOGLE_API_KEY_RESTRICTIONS=true
+```
+
+本番環境では、パフォーマンスとセキュリティを最優先し、すべての最適化設定を有効にします。
 
 ### サンプル設定ファイルの提供
 
-新しく開発に参加する開発者のために、`.env.example`ファイルを用意しておくことで、必要な環境変数を一目で理解できるようにします。
+新しく開発に参加する開発者のために、包括的な`.env.example`ファイルを用意しています。このファイルは環境変数カタログとして機能し、すべての利用可能な変数、その役割、型情報、使用可能な値を一目で理解できるようにしています。
 
-```typescript
-# .env.example
-# 必須設定
-VITE_GOOGLE_API_KEY=your-api-key
-VITE_API_BASE_URL=https://api.example.com/v1
+```bash
+# =============================================================================
+# 佐渡で食えっちゃ - 環境変数設定カタログ
+# =============================================================================
 
-# オプション設定
-VITE_LOG_LEVEL=info  # debug, info, warn, error
-VITE_ENABLE_MOCK_DATA=false
+# ===== Google Maps API設定 =====
+VITE_GOOGLE_API_KEY=your_google_api_key_here           # Google Maps APIキー (string)
+VITE_GOOGLE_MAPS_MAP_ID=your_map_id_here               # カスタムマップスタイル用のID (string)
+VITE_GOOGLE_MAPS_VERSION=weekly                        # API読み込みバージョン (string: 'weekly'|'quarterly'|'beta')
+VITE_GOOGLE_MAPS_LIBRARIES=places,marker               # 読み込むライブラリ (string: カンマ区切り)
+VITE_GOOGLE_API_KEY_RESTRICTIONS=false                 # APIキー制限の有効化 (boolean as string)
+
+# ===== ロギング設定 =====
+VITE_LOG_LEVEL=info                                    # ログレベル (string: 'debug'|'info'|'warn'|'error')
+VITE_DEBUG_MODE=false                                  # デバッグモード (boolean as string)
+
+# ===== 機能フラグ設定 =====
+VITE_ENABLE_MARKER_CLUSTERING=true                     # マーカークラスタリング (boolean as string)
+VITE_OPTIMIZE_MAPS=false                               # 地図最適化モード (boolean as string)
 ```
+
+このカタログには、各変数の詳細な説明とデータ型情報が含まれており、新しい開発者が迅速に環境設定を理解し、適切な値を設定できるようになっています。
 
 ## 5. 実装のベストプラクティス
 
@@ -297,13 +343,34 @@ interface ImportMeta {
 
 ### 機密情報の保護手法
 
-機密情報を含む環境変数ファイルはバージョン管理システムに決して含めないようにします。
+機密情報を含む環境変数ファイルはバージョン管理システムに決して含めないようにします。特に、APIキーやサービス認証情報は常に保護する必要があります。
 
-```typescript
+```bash
 # .gitignore
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+```
+
+当プロジェクトでは、機密情報の取り扱いに関する明確なルールを設けています：
+
+1. **共有リポジトリ用ファイル**：`.env`, `.env.development`, `.env.test`, `.env.production`, `.env.example` には機密情報を含めません
+2. **ローカル開発用ファイル**：APIキーなどの機密情報は `.env.local` または `.env.*.local` ファイルに保存します
+3. **値の分離**：
+   - `.env` - 共通の非機密設定（バージョン情報、フラグなど）
+   - `.env.local` - 開発者固有の機密情報（APIキーなど）
+
+特に重要なのは、GoogleマップAPIキーやEmailJSの認証情報など、悪用される可能性のある情報の管理です：
+
+```bash
+# .env.local の例（Gitで共有されない）
+VITE_GOOGLE_API_KEY=AIza...  # 実際のAPIキー
+VITE_EMAILJS_SERVICE_ID=service_xxx  # EmailJSサービスID
+VITE_EMAILJS_TEMPLATE_ID=template_xxx  # EmailJSテンプレートID
+VITE_EMAILJS_PUBLIC_KEY=xxx  # EmailJS公開キー
 ```
 
 ### 環境変数値のサニタイズ
@@ -330,21 +397,45 @@ Google MapsなどのAPIキーを使用する場合は、以下の制限設定を
 
 ### CI/CDでのシークレット管理
 
-GitHub ActionsやCircle CIなどのCI/CDシステムでは、シークレット機能を使用して機密性の高い環境変数を安全に管理します。
+GitHub Pages へのデプロイ時は、GitHub Actions のシークレット機能を使用して機密性の高い環境変数を安全に管理します。佐渡で食えっちゃプロジェクトでは、本番環境向けの環境変数を以下のように管理しています。
 
 ```yaml
-# GitHub Actionsの例 (.github/workflows/deploy.yml)
+# GitHub Actionsの例 (.github/workflows/deploy-to-gh-pages.yml)
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build with secrets
         env:
           VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          VITE_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.GOOGLE_MAPS_MAP_ID }}
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
         run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
 ```
+
+このように設定することで：
+
+1. 機密情報をGitHubリポジトリ内のコードに含めない
+2. デプロイプロセス中のみ安全に環境変数を注入
+3. 本番ビルドに必要なすべての環境変数を統一的に管理
+
+なお、GitHub Secretsは組織またはリポジトリの設定画面から管理できます。
 
 ## 7. 佐渡で食えっちゃプロジェクト固有の実装
 
@@ -492,13 +583,44 @@ function maskKey(key: string): string {
 
 ### 環境設定の基本
 
-- [x] **環境ファイルの分離**: .env, `.env.development`, `.env.production`, `.env.test`
-- [x] **サンプル設定**: 新規開発者向けに`.env.example`を提供
-- [x] **環境別の最適化**: 開発/テスト/本番環境に適した設定
+- [x] **環境変数ファイル構造の整備**:
+  - `.env` - 共通の基本設定（すべての環境で使用）
+  - `.env.development` - 開発環境固有の設定
+  - `.env.test` - テスト環境固有の設定
+  - `.env.production` - 本番環境固有の設定
+  - `.env.local` - ローカル環境のみの機密設定（Gitで共有されない）
+  - `.env.example` - 包括的な環境変数カタログ（例と説明）
+- [x] **型情報の付与**: すべての環境変数に型情報をコメントで付与
+- [x] **セクション分け**: 関連する変数をカテゴリごとに明確に分類
+
+### 環境別の最適化
+
+- [x] **開発環境**: デバッグ機能を有効化、詳細ログ、開発者体験の向上
+  ```bash
+  VITE_LOG_LEVEL=debug
+  VITE_DEBUG_MODE=true
+  VITE_MEASURE_MAP_PERFORMANCE=true
+  ```
+- [x] **テスト環境**: 安定性と一貫性を重視、不要なログの抑制
+  ```bash
+  VITE_LOG_LEVEL=error
+  VITE_PRELOAD_POI_DATA=true
+  ```
+- [x] **本番環境**: パフォーマンスとセキュリティを最大化
+  ```bash
+  VITE_OPTIMIZE_MAPS=true
+  VITE_ENABLE_COMPRESSION=true
+  VITE_DROP_CONSOLE=true
+  ```
 
 ### セキュリティ対策
 
-- [x] **機密情報の保護**: .gitignoreに.envファイルを追加
+- [x] **機密情報の分離**:
+  - APIキーなどの機密情報は `.env.local` または `.env.*.local` に保存
+  - GitHubリポジトリには機密情報を含まない
+- [x] **CI/CD統合**:
+  - GitHub Actions で Secrets を使用して本番デプロイ時に環境変数を注入
+  - API制限の有効化（本番環境のみ）: `VITE_GOOGLE_API_KEY_RESTRICTIONS=true`
 - [x] **API制限設定**: Google Maps APIキーなどに適切な制限
 - [x] **秘匿値の保護**: ログ出力時の機密情報マスク処理
 

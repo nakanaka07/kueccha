@@ -1,39 +1,42 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022", // モダンブラウザに最適化
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable", "ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // 最新の標準ライブラリを活用
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
     "esModuleInterop": true,
 
-    /* Bundler mode */
+    /* Bundler mode - 静的サイト前提の設定 */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
+    "noEmit": true, // 静的サイト向けにコンパイラ出力を無効化
+    "jsx": "react-jsx", // React JSXの最適化
 
-    /* 宣言ファイル生成を無効化 */
+    /* 宣言ファイル生成を無効化 - 静的サイトでは不要 */
     "declaration": false,
 
-    /* Type Checking - KISS原則に基づく必須の型チェックのみ */
+    /* Type Checking - 開発効率と安全性のバランス */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true, // 厳密なオプショナルプロパティの型チェック
+    "noImplicitOverride": true, // 明示的なオーバーライド宣言を要求
 
-    /* パフォーマンス最適化 - 必須の設定のみ */
+    /* パフォーマンス最適化 - ビルド速度と型チェック精度の向上 */
     "incremental": true,
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./.tsbuildinfo", // キャッシュファイルの場所を最適化
+    "importsNotUsedAsValues": "remove", // 使用されない型インポートを削除
 
-    /* デバッグ支援 */
-    "sourceMap": true,
+    /* デバッグ支援 - 開発環境と本番環境の区別 */
+    "sourceMap": true, // 開発中にデバッグしやすくするために有効化
 
-    /* Path Aliases - シンプル化 */
+    /* Path Aliases - コンポーネントとフィーチャーへのアクセスを最適化 */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

@@ -1,3 +1,7 @@
+# kueccha プロジェクト .gitignore
+# 最終更新日: 2025年4月17日
+# 静的サイト運用（GitHub Pages）を前提とした設定
+
 # ==============================================================================
 # 依存関係と生成物
 # ==============================================================================
@@ -5,6 +9,10 @@
 node_modules/
 .npm/
 .pnpm-store/
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.pnpm-debug.log*
 
 # ビルド出力
 dist/
@@ -12,9 +20,14 @@ dist-ssr/
 build/
 .vite/
 stats.html
+*.vitest-temp.*
+*.vite-ssg-temp.*
 
 # TypeScript生成ファイル
 *.tsbuildinfo
+tsconfig.tsbuildinfo
+*.js.map
+*.d.ts.map
 
 # PWA関連ファイル
 dev-dist/
@@ -23,28 +36,32 @@ dev-dist/
 **/workbox-*.js.map
 **/service-worker.js
 **/pwa-cache/
+*.webmanifest.tmp
 
 # ==============================================================================
 # ローカル開発ファイル
 # ==============================================================================
 *.local
-# ローカル環境ディレクトリ
 .local/
+# 開発用証明書は保持する
 !.local/ssl/
 !.local/ssl/*.key
 !.local/ssl/*.crt
+!.local/localhost.key
+!.local/localhost.crt
 
 # ==============================================================================
-# ログファイル
+# ログとパフォーマンス測定
 # ==============================================================================
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-
-# パフォーマンス測定
 .performance-reports/
+performance-*.json
+trace-*.json
+flamegraph-*.html
 
 # ==============================================================================
 # テスト関連
@@ -55,16 +72,18 @@ playwright-report/
 /playwright/.cache/
 /vitest-coverage/
 __snapshots__/
+*.spec.js.snap
+*.snap.js
+.nyc_output/
 
 # ==============================================================================
 # 環境変数
 # ==============================================================================
 # 環境変数ファイル（セキュリティのため）
 .env*
-
 # サンプルファイルは除外対象から除外
 !.env.example
-
+!.env.template
 # GitHub Actions用シークレット
 .github/secrets/
 
@@ -76,6 +95,7 @@ __snapshots__/
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/tasks.json
+!.vscode/launch.json
 
 # その他のエディタ
 .idea/
@@ -88,6 +108,8 @@ __snapshots__/
 *.iml
 *.ipr
 *.iws
+.history/
+*.code-workspace
 
 # ==============================================================================
 # OS生成ファイル
@@ -99,6 +121,8 @@ Desktop.ini
 $RECYCLE.BIN/
 ehthumbs.db
 ehthumbs_vista.db
+[Dd]esktop.ini
+Icon?
 
 # ==============================================================================
 # キャッシュと一時ファイル
@@ -118,35 +142,35 @@ tmp/
 *.bak
 *.tmp
 *~
+*.swp
+*.swo
 
 # ==============================================================================
 # セキュリティ関連ファイル
 # ==============================================================================
-# セキュリティファイル（開発用証明書を除く）
+# セキュリティファイル（開発用証明書は上部で例外指定済み）
 *.pem
 *.key
 *.crt
 *secrets*
-
-# 開発用証明書は保持する
-!.local/localhost.key
-!.local/localhost.crt
-!.local/ssl/*.key
-!.local/ssl/*.crt
 
 # 認証情報を含む可能性のあるファイル
 *auth*config*
 *credentials*
 *.p12
 *.pfx
+.npmrc
+.yarnrc
 
 # ==============================================================================
-# GitHub Pages関連
+# GitHub Pages関連（静的サイト運用）
 # ==============================================================================
 _site/
 .jekyll-cache/
 .jekyll-metadata
 .jekyll-nowdocs/
+gh-pages/
+.gh-pages-tmp/
 
 # ==============================================================================
 # モバイル・ハイブリッドアプリ関連
@@ -167,3 +191,6 @@ bundle-stats.json
 .lighthouse/
 .local/lighthouse/
 .local/*benchmark*
+# リソースマップと分析ファイル
+source-map-explorer.html
+webpack-bundle-analyzer.html

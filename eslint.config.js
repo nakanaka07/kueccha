@@ -1,4 +1,14 @@
 // eslint.config.js
+/**
+ * ESLint設定 - GitHub Pages向け静的サイト運用最適化
+ *
+ * KISS原則: 必要最小限のルールセットでコード品質を保証
+ * YAGNI原則: 現在必要なルールのみを含め、過度な設定は避ける
+ *
+ * 環境区分：
+ * - 開発環境: より厳格な警告で早期問題検出
+ * - 本番環境: クリティカルなエラーのみをブロック
+ */
 import eslint from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
@@ -85,8 +95,7 @@ export default tseslint.config(
       'security/detect-non-literal-regexp': 'warn',
       'security/detect-unsafe-regex': 'warn',
     },
-  },
-  // 環境変数のキー名とGoogle Mapsの最適化関連
+  }, // 環境変数のキー名とGoogle Mapsの最適化関連
   {
     files: ['**/*.{js,ts,jsx,tsx}'],
     rules: {
@@ -102,6 +111,36 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'prefer-const': 'warn',
       'no-var': 'error',
+    },
+  },
+
+  // 環境別設定: 本番環境（GitHub Pages）向け
+  {
+    files: ['**/*.{js,ts,jsx,tsx}'],
+    rules: {
+      // 本番環境では厳格化
+      'no-debugger': 'error',
+      'no-alert': 'error',
+      // GitHub Pagesの静的サイト環境を考慮したルール
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.object.name='document'][callee.property.name='write']",
+          message: 'document.write()は静的サイトのパフォーマンス低下を招くため使用禁止',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='history'][callee.property.name='pushState']",
+          message: '静的サイトではhistory APIの使用には注意が必要です',
+        },
+      ],
+    },
+    // NODE_ENV=productionの場合にのみ適用
+    linterOptions: {
+      reportingDescriptor: {
+        description: '本番環境向け静的サイト最適化ルール',
+        url: 'https://github.com/kueccha/docs/google_maps_guidelines/07_performance.md',
+      },
     },
   },
   // Prettierとの競合を避ける

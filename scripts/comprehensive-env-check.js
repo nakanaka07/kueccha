@@ -16,12 +16,15 @@
  * - Google Maps統合ガイドラインに基づくAPIキー検証
  */
 
-// ESMモジュールインポート - シンプルにする
-import * as fs from 'fs';
+// 標準モジュールのインポート
+import { existsSync } from 'fs';
 import process from 'node:process';
 import { dirname, resolve } from 'path';
+import { performance } from 'perf_hooks';
 import { fileURLToPath } from 'url';
+// 高精度パフォーマンス計測用
 
+// サードパーティモジュールのインポート
 import * as dotenv from 'dotenv';
 
 // ESM環境でのファイルパス取得
@@ -35,8 +38,11 @@ const baseEnvFile = '.env';
 const envFile = `.env.${nodeEnv}`;
 const localEnvFile = `${envFile}.local`;
 
-// 環境変数ファイルの読み込み処理
+/**
+ * 環境変数ファイルの読み込み処理
+ */
 function loadEnvFiles() {
+  // 環境変数ファイルの読み込み
   // ベース環境変数を読み込み
   dotenv.config({ path: resolve(rootDir, baseEnvFile) });
   // 環境固有の環境変数を読み込み（優先）
@@ -72,7 +78,6 @@ const logger = {
     const formattedContext = formatContext(context);
     process.stdout.write(`\x1b[36m[DEBUG]\x1b[0m ${message}${formattedContext}\n`);
   },
-
   log: (message, context = {}) => {
     const formattedContext = formatContext(context);
     process.stdout.write(`\x1b[32m[OK]\x1b[0m ${message}${formattedContext}\n`);
@@ -80,36 +85,50 @@ const logger = {
 
   // パフォーマンス計測 (ロガーガイドラインに準拠)
   measureTimeAsync: async (label, fn, context = {}) => {
-    const start = process.hrtime();
+    // 高精度タイムスタンプ取得
+    const start = performance.now();
+    const startTimestamp = new Date().toISOString();
+
     try {
       const result = await fn();
-      const [seconds, nanoseconds] = process.hrtime(start);
-      const durationMs = (seconds * 1000 + nanoseconds / 1000000).toFixed(2);
-      logger.debug(`${label} - 完了`, { ...context, durationMs });
-      return result;
-    } catch (error) {
-      const [seconds, nanoseconds] = process.hrtime(start);
-      const durationMs = (seconds * 1000 + nanoseconds / 1000000).toFixed(2);
-      logger.error(`${label} - エラー`, {
+      const durationMs = (performance.now() - start).toFixed(3); // 精度向上(小数点3桁)
+
+      logger.debug(`${label} - 完了`, {
         ...context,
         durationMs,
-        error: error instanceof Error ? error.message : String(error),
+        startTime: startTimestamp,
+        endTime: new Date().toISOString(),
       });
+      return result;
+    } catch (error) {
+      const durationMs = (performance.now() - start).toFixed(3);
+
+      // エラーハンドリングの強化
+      const errorDetails = {
+        ...context,
+        durationMs,
+        startTime: startTimestamp,
+        endTime: new Date().toISOString(),
+        errorType: error?.constructor?.name || 'Unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        stack:
+          error instanceof Error && process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+      };
+
+      logger.error(`${label} - エラー`, errorDetails);
       throw error;
     }
   },
 
   measureTime: (label, fn, context = {}) => {
-    const start = process.hrtime();
+    const start = performance.now();
     try {
       const result = fn();
-      const [seconds, nanoseconds] = process.hrtime(start);
-      const durationMs = (seconds * 1000 + nanoseconds / 1000000).toFixed(2);
+      const durationMs = (performance.now() - start).toFixed(2);
       logger.debug(`${label} - 完了`, { ...context, durationMs });
       return result;
     } catch (error) {
-      const [seconds, nanoseconds] = process.hrtime(start);
-      const durationMs = (seconds * 1000 + nanoseconds / 1000000).toFixed(2);
+      const durationMs = (performance.now() - start).toFixed(2);
       logger.error(`${label} - エラー`, {
         ...context,
         durationMs,
@@ -626,7 +645,7 @@ function checkEnvFiles() {
       // ファイルの存在確認
       envFiles.forEach(file => {
         const filePath = resolve(rootDir, file);
-        if (fs.existsSync(filePath)) {
+        if (existsSync(filePath)) {
           infos.push(`${file} ファイルが存在します。`);
         } else {
           if (file === '.env.example') {

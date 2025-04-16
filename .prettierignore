@@ -42,3 +42,7 @@ Thumbs.db
 
 # データファイル - CSVなどの大型データファイル
 public/data/*.csv
+
+# GitHub Pages関連ファイル - デプロイ設定はフォーマット対象外
+.github/workflows/
+.nojekyll

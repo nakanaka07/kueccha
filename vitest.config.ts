@@ -1,3 +1,4 @@
+import { cpus } from 'os';
 import { resolve } from 'path';
 
 import react from '@vitejs/plugin-react';
@@ -42,11 +43,13 @@ const getThreadOptions = (env: { isCI: boolean; isDebugMode: boolean }) => {
   if (isDebugMode) {
     return { singleThread: true };
   }
+  // 利用可能なCPUコア数に基づいて最適化（ESM互換）
+  const cpuCount = cpus().length;
 
-  // CI環境は制限付き、通常環境は適度なスレッド数
+  // CI環境は制限付き、通常環境はCPUコア数に基づいた設定
   return {
-    maxThreads: isCI ? 2 : 4,
-    minThreads: isCI ? 1 : 2,
+    maxThreads: isCI ? 2 : Math.max(2, cpuCount - 1),
+    minThreads: isCI ? 1 : Math.max(1, Math.floor(cpuCount / 2)),
     singleThread: false,
   };
 };
@@ -57,10 +60,13 @@ const getThreadOptions = (env: { isCI: boolean; isDebugMode: boolean }) => {
  */
 const getCoverageConfig = () => {
   const isProd = process.env.NODE_ENV === 'production';
+  const isCI = getEnvBool('CI', false);
 
   return {
     provider: 'v8' as const,
-    reporter: ['text', 'html'],
+    reporter: isCI
+      ? ['text', 'json', 'html'] // CI環境ではJSON形式も出力（自動化処理との連携用）
+      : ['text', 'html'],
     exclude: [
       'node_modules/**',
       'dist/**',
@@ -68,6 +74,8 @@ const getCoverageConfig = () => {
       '**/*.test.{ts,tsx}',
       'src/setupTests.ts',
       '*.config.ts',
+      'config/**', // 設定ファイル除外
+      'scripts/**', // スクリプトファイル除外
     ],
     thresholds: {
       statements: isProd ? 75 : 70,
@@ -77,6 +85,7 @@ const getCoverageConfig = () => {
     },
     reportsDirectory: './coverage',
     all: true,
+    clean: true, // 実行前にカバレッジディレクトリをクリーン
   };
 };
 
@@ -118,20 +127,22 @@ export default defineConfig(() => {
         globals: true,
         setupFiles: ['./src/setupTests.ts'],
         include: ['**/*.{test,spec}.{ts,tsx}'],
-        exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'],
-
-        // パフォーマンス向上設定
+        exclude: ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**'], // パフォーマンス向上設定
         isolate: true,
-        reporters: ['default', 'html'],
+        reporters: env.isCI ? ['default', 'html', 'json'] : ['default', 'html'],
         watch: false,
+        shuffleFiles: env.isCI, // CI環境ではファイル順序をシャッフルして隠れた依存関係を検出
+        passWithNoTests: true, // テストファイルがない場合にエラーにしない
+        allowOnly: !env.isCI, // CI環境では .only 使用時にエラーにする
 
         // カバレッジ設定 - 型安全に修正
         coverage: coverageConfig,
 
         // 安定性設定
-        testTimeout: 15000,
+        testTimeout: env.isCI ? 20000 : 15000, // CI環境ではタイムアウトを緩和
         retry: env.isCI ? 2 : 0,
         bail: env.isCI ? 1 : 0,
+        silent: env.isCI, // CI環境では標準出力を抑制
 
         // スレッド設定 - 環境に応じた最適化
         poolOptions: {

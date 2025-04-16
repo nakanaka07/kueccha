@@ -14,7 +14,7 @@
  * - コード最適化ガイドラインに基づくロガー活用
  *
  * 実行方法:
- * - npm run perf:report [--output=path] [--log=path]
+ * - pnpm run perf:report [--output=path] [--log=path]
  *
  * オプション:
  * --output=path  レポート出力先ディレクトリを指定
@@ -78,6 +78,88 @@ const PERF_THRESHOLDS = {
 };
 
 /**
+ * 収集されたパフォーマンス指標を格納するオブジェクト
+ * @type {Object}
+ */
+const performanceMetrics = {
+  operations: [],
+  summary: {
+    totalCount: 0,
+    totalDuration: 0,
+    criticalCount: 0,
+    warningCount: 0,
+    normalCount: 0,
+  },
+};
+
+/**
+ * パフォーマンスの重大度レベルを判定する
+ * @param {number} duration - 実行時間（ミリ秒）
+ * @returns {'critical'|'warning'|'normal'} 重大度レベル
+ */
+function getSeverityLevel(duration) {
+  if (duration >= PERF_THRESHOLDS.critical) return 'critical';
+  if (duration >= PERF_THRESHOLDS.warning) return 'warning';
+  return 'normal';
+}
+
+/**
+ * メモリ使用量の変化を計算する
+ * @param {Object} start - 開始時のメモリ使用状況
+ * @param {Object} end - 終了時のメモリ使用状況
+ * @returns {Object} メモリ使用量の差分
+ */
+function getMemoryDelta(start, end) {
+  return {
+    rss: formatMemory(end.rss - start.rss),
+    heapTotal: formatMemory(end.heapTotal - start.heapTotal),
+    heapUsed: formatMemory(end.heapUsed - start.heapUsed),
+    external: formatMemory(end.external - start.external),
+  };
+}
+
+/**
+ * メモリサイズをフォーマットする
+ * @param {number} bytes - バイト数
+ * @returns {string} フォーマットされたメモリサイズ
+ */
+function formatMemory(bytes) {
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+/**
+ * パフォーマンスメトリクスを記録する
+ * @param {string} name - 操作名
+ * @param {number} duration - 実行時間（ミリ秒）
+ * @param {string} severity - 重大度
+ * @param {Object|null} memoryInfo - メモリ使用情報
+ * @param {Object} context - コンテキスト情報
+ */
+function recordPerformanceMetric(name, duration, severity, memoryInfo, context) {
+  // 操作の記録
+  performanceMetrics.operations.push({
+    name,
+    duration,
+    timestamp: new Date().toISOString(),
+    severity,
+    memory: memoryInfo,
+    context,
+  });
+
+  // サマリー情報の更新
+  performanceMetrics.summary.totalCount++;
+  performanceMetrics.summary.totalDuration += duration;
+
+  if (severity === 'critical') {
+    performanceMetrics.summary.criticalCount++;
+  } else if (severity === 'warning') {
+    performanceMetrics.summary.warningCount++;
+  } else {
+    performanceMetrics.summary.normalCount++;
+  }
+}
+
+/**
  * シンプルなロガーの実装
  * ロガー使用ガイドラインに準拠しつつ、依存関係を減らす
  */
@@ -90,17 +172,59 @@ const logger = {
       console.debug(`\x1b[36m[DEBUG]\x1b[0m ${msg}${formatContext(ctx)}`);
     }
   },
-  log: (msg, ctx) => console.log(`\x1b[32m[OK]\x1b[0m ${msg}${formatContext(ctx)}`),
-  // パフォーマンス計測関数
-  measureTime: (name, fn, ctx = {}) => {
-    const start = performance.now();
+  log: (msg, ctx) => console.log(`\x1b[32m[OK]\x1b[0m ${msg}${formatContext(ctx)}`) /**
+   * パフォーマンス計測（同期関数）
+   * @param {string} name - 計測する操作の名前
+   * @param {Function} fn - 実行する同期関数
+   * @param {Object} ctx - 追加コンテキスト情報
+   * @param {Object} [options] - 計測オプション
+   * @param {boolean} [options.memory] - メモリ使用量も計測するか
+   * @param {number} [options.threshold] - 警告する閾値（ミリ秒）
+   * @returns {any} fnの戻り値
+   */,
+  measureTime: (name, fn, ctx = {}, options = { memory: false, threshold: 0 }) => {
+    const startTime = performance.now();
+    const startMemory = options.memory ? process.memoryUsage() : null;
+
     try {
       const result = fn();
-      const duration = performance.now() - start;
-      logger.debug(`${name} (${duration.toFixed(2)}ms)`, { ...ctx, duration });
+      const duration = performance.now() - startTime;
+
+      // メモリ使用量の計測
+      const memoryInfo = options.memory ? getMemoryDelta(startMemory, process.memoryUsage()) : null;
+
+      // 閾値チェック
+      const severity = getSeverityLevel(duration);
+
+      // 重大度に応じたログレベルを使用（セキュリティ問題を回避）
+      if (severity === 'critical') {
+        logger.error(`${name} (${duration.toFixed(2)}ms) [重大な遅延]`, {
+          ...ctx,
+          duration,
+          severity,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      } else if (severity === 'warning') {
+        logger.warn(`${name} (${duration.toFixed(2)}ms) [警告レベルの遅延]`, {
+          ...ctx,
+          duration,
+          severity,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      } else {
+        logger.debug(`${name} (${duration.toFixed(2)}ms)`, {
+          ...ctx,
+          duration,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      }
+
+      // パフォーマンスメトリクスの記録（後で集計するため）
+      recordPerformanceMetric(name, duration, severity, memoryInfo, ctx);
+
       return result;
     } catch (err) {
-      const duration = performance.now() - start;
+      const duration = performance.now() - startTime;
       logger.error(`${name} 失敗 (${duration.toFixed(2)}ms)`, {
         ...ctx,
         duration,
@@ -109,16 +233,59 @@ const logger = {
       throw err;
     }
   },
-  // 非同期パフォーマンス計測関数
-  measureTimeAsync: async (name, fn, ctx = {}) => {
-    const start = performance.now();
+  /**
+   * パフォーマンス計測（非同期関数）
+   * @param {string} name - 計測する操作の名前
+   * @param {Function} fn - 実行する非同期関数
+   * @param {Object} ctx - 追加コンテキスト情報
+   * @param {Object} [options] - 計測オプション
+   * @param {boolean} [options.memory] - メモリ使用量も計測するか
+   * @param {number} [options.threshold] - 警告する閾値（ミリ秒）
+   * @returns {Promise<any>} fnの戻り値を含むPromise
+   */
+  measureTimeAsync: async (name, fn, ctx = {}, options = {}) => {
+    const startTime = performance.now();
+    const startMemory = options.memory ? process.memoryUsage() : null;
+
     try {
       const result = await fn();
-      const duration = performance.now() - start;
-      logger.debug(`${name} (${duration.toFixed(2)}ms)`, { ...ctx, duration });
+      const duration = performance.now() - startTime;
+
+      // メモリ使用量の計測
+      const memoryInfo = options.memory ? getMemoryDelta(startMemory, process.memoryUsage()) : null;
+
+      // 閾値チェック
+      const severity = getSeverityLevel(duration);
+
+      // 重大度に応じたログレベルを使用（セキュリティ問題を回避）
+      if (severity === 'critical') {
+        logger.error(`${name} (${duration.toFixed(2)}ms) [重大な遅延]`, {
+          ...ctx,
+          duration,
+          severity,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      } else if (severity === 'warning') {
+        logger.warn(`${name} (${duration.toFixed(2)}ms) [警告レベルの遅延]`, {
+          ...ctx,
+          duration,
+          severity,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      } else {
+        logger.debug(`${name} (${duration.toFixed(2)}ms)`, {
+          ...ctx,
+          duration,
+          ...(memoryInfo && { memory: memoryInfo }),
+        });
+      }
+
+      // パフォーマンスメトリクスの記録
+      recordPerformanceMetric(name, duration, severity, memoryInfo, ctx);
+
       return result;
     } catch (err) {
-      const duration = performance.now() - start;
+      const duration = performance.now() - startTime;
       logger.error(`${name} 失敗 (${duration.toFixed(2)}ms)`, {
         ...ctx,
         duration,
@@ -126,6 +293,14 @@ const logger = {
       });
       throw err;
     }
+  },
+
+  /**
+   * 処理のパフォーマンス指標を取得
+   * @returns {Object} 蓄積されたパフォーマンス指標
+   */
+  getPerformanceMetrics: () => {
+    return { ...performanceMetrics };
   },
 };
 

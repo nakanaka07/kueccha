@@ -16,6 +16,21 @@ export interface LogContext {
   requestId?: string; // リクエスト識別子
 }
 
+// パフォーマンス計測用コンテキスト拡張
+export interface PerformanceLogContext extends LogContext {
+  duration: number; // 処理時間（ミリ秒）
+  startTime?: number; // 開始時間
+  endTime?: number; // 終了時間
+  operationType?: string; // 処理タイプ（例: API呼び出し、レンダリングなど）
+}
+
+// パフォーマンス計測結果型定義
+export interface PerformanceResult {
+  duration: number; // 処理時間（ミリ秒）
+  operationName: string; // 処理名
+  context?: LogContext; // 追加のコンテキスト情報
+}
+
 // ログ出力関数のシグネチャ定義
 type LogFunction = (message: string, context?: LogContext) => void;
 
@@ -104,10 +119,99 @@ const createLogger =
   };
 /* eslint-enable no-console */
 
+// パフォーマンス計測ユーティリティ
+const createTimer = (logFunc: LogFunction) => {
+  return (operationName: string, context: LogContext = {}): (() => PerformanceResult) => {
+    // 高精度タイムスタンプを使用して開始時間を記録
+    const startTime = performance.now();
+
+    return () => {
+      // 終了時間を計測
+      const endTime = performance.now();
+      // 処理時間を計算（ミリ秒単位）
+      const duration = endTime - startTime; // 計測結果をログに記録
+      const performanceContext: PerformanceLogContext = {
+        ...context,
+        duration,
+        startTime,
+        endTime,
+        operationType:
+          typeof context.operationType === 'string' ? context.operationType : 'general',
+      };
+
+      logFunc(`Performance: ${operationName} (${duration.toFixed(2)}ms)`, performanceContext);
+
+      return {
+        duration,
+        operationName,
+        context: performanceContext,
+      };
+    };
+  };
+};
+
+// 非同期処理のパフォーマンス計測
+const measureAsync = (logFunc: LogFunction) => {
+  return async <T>(
+    operationName: string,
+    operation: () => Promise<T>,
+    context: LogContext = {}
+  ): Promise<T> => {
+    const startTime = performance.now();
+    try {
+      // 実際の処理を実行
+      const result = await operation();
+
+      // 終了時間と処理時間を計測
+      const endTime = performance.now();
+      const duration = endTime - startTime; // 成功した場合のログ記録
+      const performanceContext: PerformanceLogContext = {
+        ...context,
+        duration,
+        startTime,
+        endTime,
+        operationType: typeof context.operationType === 'string' ? context.operationType : 'async',
+        success: true,
+      };
+
+      logFunc(`Performance: ${operationName} (${duration.toFixed(2)}ms)`, performanceContext);
+
+      return result;
+    } catch (error) {
+      // エラー発生時も処理時間を計測
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // エラーの場合のログ記録
+      const errorContext: PerformanceLogContext = {
+        ...context,
+        duration,
+        startTime,
+        endTime,
+        operationType: typeof context.operationType === 'string' ? context.operationType : 'async',
+        success: false,
+        error,
+      };
+
+      // エラー情報をerrorレベルでログ出力
+      createLogger('error')(`Failed: ${operationName} (${duration.toFixed(2)}ms)`, errorContext);
+
+      // エラーを再スロー
+      throw error;
+    }
+  };
+};
+
 // 外部公開用のログ機能
 export const configLogger = {
   error: createLogger('error'),
   warn: createLogger('warn'),
   info: createLogger('info'),
   debug: createLogger('debug'),
+
+  // パフォーマンス計測関連機能
+  startTimer: createTimer(createLogger('info')),
+  startDebugTimer: createTimer(createLogger('debug')),
+  measure: measureAsync(createLogger('info')),
+  measureDebug: measureAsync(createLogger('debug')),
 };
