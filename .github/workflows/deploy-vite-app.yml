@@ -1,0 +1,140 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 並列ビルドを防止
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.8.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'      # pnpmキャッシュを効率的に設定（依存関係インストール前に配置）
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules/.pnpm
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      # 依存関係インストール（キャッシュ後に実行）
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+
+      # リポジトリ名から動的にVITE_BASE_PATHを設定
+      - name: Extract repository name
+        id: repo-name
+        run: |
+          REPO_NAME=${GITHUB_REPOSITORY#*/}
+          echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "リポジトリ名 '$REPO_NAME' からベースパスを設定: /$REPO_NAME/"
+          
+      # GitHub Pages用の環境変数を設定
+      - name: Set environment variables for build
+        run: |
+          echo "VITE_BASE_PATH=/${{ steps.repo-name.outputs.name }}/" >> $GITHUB_ENV
+          echo "NODE_ENV=production" >> $GITHUB_ENV
+
+      # 型チェック
+      - name: Run type check
+        run: pnpm typecheck || echo "::warning::Type check issues found, but continuing build"
+
+      # リント
+      - name: Run lint
+        run: pnpm lint || echo "::warning::Linting issues found, but continuing build"      # ビルド前の依存関係分析
+      - name: Analyze dependencies
+        run: pnpm dlx depcheck --skip-missing=true || echo "::warning::Dependency check completed with warnings"
+      
+      # GitHub Pages用の最適化ビルド実行
+      - name: Build for GitHub Pages
+        run: pnpm build:ghpages
+        env:
+          # 他の必要な環境変数はGitHubのSecretsから設定
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}
+          # バンドルサイズ最適化のための環境変数を追加
+          VITE_DROP_CONSOLE: true # 本番ビルドでconsole.*を削除
+          VITE_MINIFY_LEVEL: extreme # 最大限の圧縮を適用      # バンドルサイズ分析（ビルド後の最適化ヒントを得るため）
+      - name: Analyze bundle size
+        run: |
+          echo "バンドルサイズ分析を実行中..."
+          npx vite-bundle-visualizer -o ./dist/bundle-stats.html || echo "::warning::Bundle analysis failed, but continuing"
+          
+      # 静的ホスティング用の必要なファイルを追加
+      - name: Add special files for GitHub Pages
+        run: |
+          # Jekyll処理を無効化するための.nojekyllファイル追加
+          touch ./dist/.nojekyll
+          
+          # SPA対応のために404.htmlを追加（index.htmlをコピー）
+          cp ./dist/index.html ./dist/404.html
+          
+          # キャッシュ最適化のためにassets用のヘッダー設定ファイル追加
+          cat > ./dist/_headers << EOF
+          /assets/*
+            Cache-Control: public, max-age=31536000, immutable
+          *.js
+            Cache-Control: public, max-age=31536000, immutable
+          *.css
+            Cache-Control: public, max-age=31536000, immutable
+          /
+            Cache-Control: public, max-age=3600
+          EOF
+          
+          echo "静的サイトデプロイの準備が完了しました"
+          
+      # ビルド結果の検証
+      - name: Validate build output
+        run: |
+          if [ ! -f "./dist/index.html" ]; then
+            echo "::error::Build failed - index.html not found"
+            exit 1
+          fi
+          echo "ビルド結果の検証が完了しました"
+
+      # GitHub Pagesビルドとデプロイ
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+          
+  # デプロイジョブを分離して信頼性を向上
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
