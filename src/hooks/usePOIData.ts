@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 // 型定義
+import { getEnvBool } from '@/env/core';
 import type { POI } from '@/types/poi';
 // ユーティリティ
 import { clearPOICache } from '@/utils/clearCache';
 import { logCSVContent } from '@/utils/csvInspector';
 import { parseCSVtoPOIs, combinePOIArrays } from '@/utils/csvProcessor';
-import { getEnvBool } from '@/env/core';
 import { fetchPOIsFromSheet } from '@/utils/googleSheets';
 import { createLogContext } from '@/utils/logContext';
 import { logger, LogLevel } from '@/utils/logger';

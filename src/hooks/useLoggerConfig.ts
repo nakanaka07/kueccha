@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 
-import { LogLevelType } from '@/types/env-types';
 import { getEnvVar } from '@/env/core';
 import { toLogLevel } from '@/env/transforms';
+import { LogLevelType } from '@/types/env-types';
 import { logger, LogLevel } from '@/utils/logger';
 
 /**

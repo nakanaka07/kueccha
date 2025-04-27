@@ -1,9 +1,9 @@
 // filepath: c:\Users\int-x-survey\Desktop\kueccha\src\components\InfoWindowStatus.tsx
 import React, { useMemo, useCallback } from 'react';
 
+import { ENV } from '@/env/index';
 import { LogLevel } from '@/types/logger'; // LogLevelをインポート
 import type { PointOfInterest } from '@/types/poi';
-import { ENV } from '@/env/index';
 import { logger } from '@/utils/logger';
 import { measureSyncPerformance, useWhyDidYouUpdate } from '@/utils/performance';
 

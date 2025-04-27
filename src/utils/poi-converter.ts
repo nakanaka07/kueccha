@@ -4,9 +4,9 @@
 import { limitObjectSize, safeString } from './poi-utils'; // poi-utils からインポート
 
 import { DEFAULT_LAT, DEFAULT_LNG, POI_TYPE_PATTERNS, WKT_REGEX } from '@/constants/poi';
-import { POIType, RawPOIData, PointOfInterest } from '@/types/poi';
 import { getEnvVar } from '@/env/core';
 import { toBool } from '@/env/transforms';
+import { POIType, RawPOIData, PointOfInterest } from '@/types/poi';
 import { logger, LogLevel } from '@/utils/logger';
 
 const POI_COMPONENT = 'POIConverter'; // このファイル固有のコンポーネント名

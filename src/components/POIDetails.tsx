@@ -4,8 +4,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { POIFooter } from '@/components/POIFooter';
 import { POIHeader } from '@/components/POIHeader';
 import { InfoTabContent, HoursTabContent, MapTabContent } from '@/components/POITabContents';
-import type { PointOfInterest } from '@/types/poi';
 import { ENV } from '@/env';
+import type { PointOfInterest } from '@/types/poi';
 import { logger, LogLevel } from '@/utils/logger';
 import '@/global.css';
 

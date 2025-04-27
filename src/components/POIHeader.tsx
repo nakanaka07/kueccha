@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 
-import type { PointOfInterest } from '@/types/poi';
 import { ENV } from '@/env';
+import type { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
 // コンポーネント名を定数化（ロギングやデバッグで一貫して使用するため）

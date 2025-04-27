@@ -16,8 +16,8 @@ import type { IDBPDatabase } from 'idb';
 
 import { parseCSVtoPOIs } from './csvProcessor';
 
+import { getEnvVar } from '@/env/core';
 import type { LogContext } from '@/types/logger';
-import { getEnv } from '@/env/core';
 import { logger } from '@/utils/logger';
 import { measurePerformance } from '@/utils/performance';
 
@@ -112,30 +112,31 @@ const API_ERROR_MESSAGES: Record<string, string> = {
 const CACHE_CONFIG = {
   /** キャッシュ有効期限（ミリ秒）: 環境変数から取得または開発環境では15分、本番環境では60分 */
   EXPIRY_MS:
-    Number(getEnv('VITE_CACHE_EXPIRY_MS', { required: false })) ||
+    Number(getEnvVar({ key: 'VITE_CACHE_EXPIRY_MS', required: false })) ||
     (import.meta.env.DEV ? 15 : 60) * 60 * 1000,
   /** キャッシュ強制更新の閾値（ミリ秒）: 環境変数から取得するか、デフォルト12時間 */
   FORCE_REFRESH_MS:
-    Number(getEnv('VITE_CACHE_FORCE_REFRESH_MS', { required: false })) || 12 * 60 * 60 * 1000,
+    Number(getEnvVar({ key: 'VITE_CACHE_FORCE_REFRESH_MS', required: false })) ||
+    12 * 60 * 60 * 1000,
   /** データベース名 */
   DB_NAME: 'poi-cache-db',
   /** データベースバージョン */
   DB_VERSION: 3, // バージョンアップで新機能追加
   /** キャッシュ整理の最大エントリ数 */
-  MAX_ENTRIES: Number(getEnv('VITE_CACHE_MAX_ENTRIES', { required: false })) || 100,
+  MAX_ENTRIES: Number(getEnvVar({ key: 'VITE_CACHE_MAX_ENTRIES', required: false })) || 100,
   /** オフラインモードでのキャッシュ延長係数 */
   OFFLINE_EXTENSION_FACTOR:
-    Number(getEnv('VITE_CACHE_OFFLINE_EXTENSION', { required: false })) || 5,
+    Number(getEnvVar({ key: 'VITE_CACHE_OFFLINE_EXTENSION', required: false })) || 5,
   /** API接続タイムアウト（ミリ秒） */
-  API_TIMEOUT_MS: Number(getEnv('VITE_API_TIMEOUT_MS', { required: false })) || 10000,
+  API_TIMEOUT_MS: Number(getEnvVar({ key: 'VITE_API_TIMEOUT_MS', required: false })) || 10000,
   /** キャッシュクリーンアップの間隔（ミリ秒） */
   CLEANUP_INTERVAL_MS: 24 * 60 * 60 * 1000, // 24時間ごと
   /** 最後にクリーンアップを実行した時刻のストレージキー */
   LAST_CLEANUP_KEY: 'poi-cache-last-cleanup',
   /** リトライ設定 */
   RETRY: {
-    MAX_ATTEMPTS: Number(getEnv('VITE_API_MAX_RETRY', { required: false })) || 2,
-    DELAY_MS: Number(getEnv('VITE_API_RETRY_DELAY_MS', { required: false })) || 1000,
+    MAX_ATTEMPTS: Number(getEnvVar({ key: 'VITE_API_MAX_RETRY', required: false })) || 2,
+    DELAY_MS: Number(getEnvVar({ key: 'VITE_API_RETRY_DELAY_MS', required: false })) || 1000,
     BACKOFF_FACTOR: 1.5,
   },
 };
@@ -624,11 +625,10 @@ export async function fetchFromGoogleSheets(
     forceRefresh,
     networkStatus: getNetworkStatus(),
   };
-
   // パフォーマンス計測
   return await measurePerformance('Google Sheetsデータ取得', async () => {
-    const API_KEY = getEnv('VITE_GOOGLE_API_KEY', { required: true }).trim();
-    const SPREADSHEET_ID = getEnv('VITE_GOOGLE_SPREADSHEET_ID', { required: true }).trim();
+    const API_KEY = getEnvVar({ key: 'VITE_GOOGLE_API_KEY', required: true }).trim();
+    const SPREADSHEET_ID = getEnvVar({ key: 'VITE_GOOGLE_SPREADSHEET_ID', required: true }).trim();
     const networkStatus = getNetworkStatus();
 
     // 強制更新でなく、オンラインの場合はキャッシュを最初に試す

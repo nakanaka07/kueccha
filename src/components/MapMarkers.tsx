@@ -8,29 +8,68 @@ import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import type { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
-// 静的オプションをコンポーネント外で定義（再レンダリング時の再作成を防止）
-const INFO_WINDOW_OPTIONS = {
-  maxWidth: 320,
-  pixelOffset: new google.maps.Size(0, -30),
-};
-
-// マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
-function isAdvancedMarkerElement(
-  marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker
-): marker is google.maps.marker.AdvancedMarkerElement {
-  return 'content' in marker;
+// デバッグヘルパー関数の直接定義（型エラー回避のため）
+function debugMarkersAndPOIs(
+  markers: google.maps.marker.AdvancedMarkerElement[],
+  pois: PointOfInterest[]
+): void {
+  try {
+    logger.info('==== マーカーとPOIのデバッグ情報 ====', {
+      component: 'MapMarkersDebug',
+      markerCount: markers.length,
+      poiCount: pois.length,
+      invalidMarkers: markers.filter(marker => !marker.position).length,
+      unmappedMarkers: markers.filter(marker => !marker.map).length,
+      invalidPOIs: pois.filter(poi => !poi.id || (!poi.latitude && !poi.lat)).length,
+    });
+  } catch (error) {
+    logger.error('デバッグ情報出力中にエラー', {
+      component: 'MapMarkersDebug',
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
+
+function debugMarkerVisibility(
+  visiblePOIs: PointOfInterest[],
+  markers: google.maps.marker.AdvancedMarkerElement[],
+  mapRef: React.RefObject<google.maps.Map | null>
+): void {
+  try {
+    // mapRefを使用して地図情報をログに含める
+    const mapInfo = mapRef.current
+      ? {
+          zoom: mapRef.current.getZoom(),
+          center: mapRef.current.getCenter()?.toJSON(),
+          hasBounds: !!mapRef.current.getBounds(),
+        }
+      : { status: 'マップが初期化されていません' };
+
+    logger.info('マーカー可視性デバッグ情報', {
+      component: 'MapMarkersDebug',
+      visiblePoisCount: visiblePOIs.length,
+      totalMarkersCount: markers.length,
+      mapInfo,
+    });
+  } catch (error) {
+    logger.error('可視性デバッグ情報出力中にエラー', {
+      component: 'MapMarkersDebug',
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+// タイプガード関数は、Google Maps APIが読み込まれた後に利用可能になります
 
 interface MapMarkersProps {
   /**
    * 表示するPOIデータの配列
    */
-  pois: PointOfInterest[];
-
-  /**
+  pois: PointOfInterest[] /**
    * マップの参照
-   */
-  mapRef: React.MutableRefObject<google.maps.Map | null>;
+   * @deprecated MutableRefObject は非推奨ですが、互換性のために RefObject を使用
+   */;
+  mapRef: React.RefObject<google.maps.Map | null>;
 
   /**
    * フィルタリング条件
@@ -84,6 +123,31 @@ const MapMarkers = memo(
     // パフォーマンス計測用
     const renderStartTime = useRef<number>(performance.now());
 
+    // Google Maps APIが初期化された後に使用する情報ウィンドウのオプション
+    const INFO_WINDOW_OPTIONS = useMemo(() => {
+      if (!mapRef?.current || !google?.maps) {
+        return {
+          maxWidth: 320,
+          pixelOffset: null,
+        };
+      }
+
+      return {
+        maxWidth: 320,
+        pixelOffset: new google.maps.Size(0, -30),
+      };
+    }, [mapRef]);
+
+    // マーカーがAdvancedMarkerElementかどうかを判定する型ガード関数
+    const isAdvancedMarkerElement = useCallback(
+      (
+        marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker
+      ): marker is google.maps.marker.AdvancedMarkerElement => {
+        return 'content' in marker;
+      },
+      []
+    );
+
     // コンポーネントのレンダリングパフォーマンスを計測
     useEffect(() => {
       const renderTime = performance.now() - renderStartTime.current;
@@ -132,10 +196,42 @@ const MapMarkers = memo(
       mapRef,
       enableClustering,
       onMarkerClick: handleMarkerClickForMapMarkers, // メモ化したコールバックを使用
-    }); // マーカー ID 参照マップを作成（効率化）
+    });
+
+    // マーカー生成後のログ出力（デバッグ時のみ）
+    useEffect(() => {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('マーカー生成完了', {
+          component: COMPONENT_NAME,
+          markerCount: markers?.length || 0,
+          poisCount: filteredPOIs?.length || 0,
+        });
+      }
+    }, [markers, filteredPOIs]);
+
+    // マーカー ID 参照マップを作成（効率化）
     const markerMap = useMemo(() => {
+      // Google Maps APIがまだ読み込まれていない場合は空のマップを返す
+      if (!google?.maps) {
+        logger.debug('Google Maps APIがまだ読み込まれていないため、空のマーカーマップを返します', {
+          component: COMPONENT_NAME,
+        });
+        return new Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>();
+      }
+
+      // ポイとマーカーの数が一致するか確認
+      if (markers.length !== filteredPOIs.length) {
+        logger.warn('マーカー数とPOI数が一致しません', {
+          component: COMPONENT_NAME,
+          markersCount: markers.length,
+          poisCount: filteredPOIs.length,
+        });
+      }
+
       // 大量マーカー対応：初期容量指定によるハッシュ衝突減少と高速化
-      const map = new Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>(); // より安全なアクセス方法でマーカーと位置情報をマッピング
+      const map = new Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>();
+
+      // より安全なアクセス方法でマーカーと位置情報をマッピング
       markers.forEach((marker, index) => {
         // 配列の境界チェックを最適化
         if (index < 0 || index >= filteredPOIs.length) {
@@ -169,7 +265,7 @@ const MapMarkers = memo(
     }, [markers, filteredPOIs]);
 
     // 表示範囲内のマーカーのみを描画（最適化）
-    const { visiblePOIs } = useMarkerVisibility({
+    const { visiblePOIs, hasError } = useMarkerVisibility({
       mapRef,
       markers,
       pois: filteredPOIs,
@@ -180,6 +276,30 @@ const MapMarkers = memo(
       // メモ化したコールバックを使用
       onVisibilityChange: handleVisibilityChange,
     });
+
+    // マーカー可視性エラーチェック
+    useEffect(() => {
+      if (hasError) {
+        logger.warn('マーカー可視性の計算でエラーが発生しました。すべてのマーカーを表示します。', {
+          component: COMPONENT_NAME,
+          markersCount: markers.length,
+          poisCount: filteredPOIs.length,
+        });
+      }
+    }, [hasError, markers.length, filteredPOIs.length]); // デバッグ情報の出力（開発環境のみ）
+    useEffect(() => {
+      if (process.env.NODE_ENV === 'development') {
+        if (markers.length > 0 && filteredPOIs.length > 0) {
+          // マーカーとPOIの問題を診断
+          debugMarkersAndPOIs(markers, filteredPOIs);
+          // 可視性の問題を診断
+          if (mapRef.current) {
+            debugMarkerVisibility(visiblePOIs, markers, mapRef);
+          }
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [markers.length, filteredPOIs.length, visiblePOIs.length]);
 
     // 詳細表示処理
     const handleViewDetails = useCallback(
@@ -202,8 +322,7 @@ const MapMarkers = memo(
     // 情報ウィンドウを閉じる処理
     const handleInfoWindowClose = useCallback(() => {
       setSelectedPOI(null);
-    }, []); // マーカークリックイベントのリスナー設定
-    // 最適化されたリスナー関数を参照安定性のため外部で定義
+    }, []); // マーカークリックイベントのリスナー設定    // 最適化されたリスナー関数を参照安定性のため外部で定義
     const addMarkerClickListener = useCallback(
       (
         marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker,
@@ -217,7 +336,7 @@ const MapMarkers = memo(
           return marker.addListener('click', () => handleMarkerClickForMapMarkers(poi));
         }
       },
-      [handleMarkerClickForMapMarkers]
+      [handleMarkerClickForMapMarkers, isAdvancedMarkerElement]
     );
 
     // イベントリスナーを設定するuseEffect
@@ -279,19 +398,22 @@ const MapMarkers = memo(
         lng: selectedPOI.longitude,
       };
     }, [selectedPOI]);
-
     return (
       <>
         {' '}
-        {selectedPOI && infoWindowContent && selectedPOIPosition && (
-          <GoogleInfoWindow
-            position={selectedPOIPosition}
-            onCloseClick={handleInfoWindowClose}
-            options={INFO_WINDOW_OPTIONS}
-          >
-            <div className='info-window-container'>{infoWindowContent}</div>
-          </GoogleInfoWindow>
-        )}
+        {selectedPOI &&
+          infoWindowContent &&
+          selectedPOIPosition &&
+          google?.maps &&
+          INFO_WINDOW_OPTIONS && (
+            <GoogleInfoWindow
+              position={selectedPOIPosition}
+              onCloseClick={handleInfoWindowClose}
+              options={INFO_WINDOW_OPTIONS}
+            >
+              <div className='info-window-container'>{infoWindowContent}</div>
+            </GoogleInfoWindow>
+          )}
       </>
     );
   }

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
 
-import type { PointOfInterest } from '@/types/poi';
 import { ENV } from '@/env';
+import type { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
 const COMPONENT_NAME = 'POIFooter';

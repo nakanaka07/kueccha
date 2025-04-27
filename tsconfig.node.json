@@ -11,11 +11,7 @@
     "declaration": true, // 複合プロジェクトでは宣言ファイルの生成が必要
     "outDir": "./dist-node", // 宣言ファイルの出力先を明示的に指定
     "rootDir": "./", // ソースファイルのルートを明示的に指定
-    "types": [
-      "node",
-      "vite/client",
-      "vitest/globals"
-    ],
+    "types": ["node", "vite/client", "vitest/globals"],
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -30,30 +26,14 @@
     "noImplicitOverride": true, // 継承時の明示的なオーバーライド    // 拡充したパスエイリアス - tsconfig.jsonと一致
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@components/*": [
-        "./src/components/*"
-      ],
-      "@hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@utils/*": [
-        "./src/utils/*"
-      ],
-      "@types/*": [
-        "./src/types/*"
-      ],
-      "@assets/*": [
-        "./src/assets/*"
-      ],
-      "@constants/*": [
-        "./src/constants/*"
-      ],
-      "@config/*": [
-        "./config/*"
-      ]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@config/*": ["./config/*"]
     }
   },
   // Node.js環境で処理するファイル - 環境変数関連とその依存ファイルを明示的に含める
@@ -67,8 +47,5 @@
     "src/utils/logger.ts",
     "src/types/env-types.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

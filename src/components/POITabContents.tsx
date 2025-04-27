@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 
-import type { PointOfInterest } from '@/types/poi';
 import { ENV } from '@/env';
+import type { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 import { formatWeekdaySchedule } from '@/utils/markerUtils';
 

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ES2022", // モダンブラウザに最適化
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ], // 最新の標準ライブラリを活用
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // 最新の標準ライブラリを活用
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": true,
@@ -37,9 +33,7 @@
     /* Path Aliases - コンポーネントとフィーチャーへのアクセスを最適化 */
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   },
   "include": [

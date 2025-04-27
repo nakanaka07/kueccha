@@ -340,6 +340,22 @@ export function useMapMarkers({
   const createMarker = useCallback(
     (poi: PointOfInterest, map: google.maps.Map) => {
       try {
+        // 引数検証を強化
+        if (!poi) {
+          logger.warn('POIが指定されていません', {
+            component: COMPONENT_NAME,
+          });
+          return null;
+        }
+
+        if (!map) {
+          logger.warn('Mapが指定されていません', {
+            component: COMPONENT_NAME,
+            poiId: poi?.id || 'unknown',
+          });
+          return null;
+        }
+
         // マーカーの位置を検証
         const position = {
           lat: poi.latitude || poi.lat || 0,
@@ -419,11 +435,29 @@ export function useMapMarkers({
                 component: COMPONENT_NAME,
                 poiId: poi.id,
               });
-              marker.map = map;
+
+              try {
+                marker.map = map;
+              } catch (mapSetError) {
+                logger.error('マーカーの地図設定に失敗しました', {
+                  component: COMPONENT_NAME,
+                  poiId: poi.id,
+                  error: mapSetError instanceof Error ? mapSetError.message : String(mapSetError),
+                });
+              }
             }
 
             // クリックイベントを設定
-            marker.addListener('gmp-click', () => onMarkerClickRef.current(poi));
+            try {
+              marker.addListener('gmp-click', () => onMarkerClickRef.current(poi));
+            } catch (listenerError) {
+              logger.error('マーカークリックリスナーの設定に失敗しました', {
+                component: COMPONENT_NAME,
+                poiId: poi.id,
+                error:
+                  listenerError instanceof Error ? listenerError.message : String(listenerError),
+              });
+            }
 
             return marker;
           } catch (advancedMarkerError) {
@@ -615,23 +649,33 @@ export function useMapMarkers({
       // パフォーマンス計測終了とログ記録
       const duration = performance.now() - startTime;
       logCompletionMetrics(duration, validPois.length, newMarkers.length);
-    }
-
-    // パフォーマンスメトリクスのログ出力を行う内部関数
+    } // パフォーマンスメトリクスのログ出力を行う内部関数
     function logCompletionMetrics(duration: number, totalValid: number, totalCreated: number) {
       // 環境に応じてログレベルを調整
       const isSignificant = totalValid > 20 || duration > 500;
-      const logMethod = isSignificant ? logger.info : logger.debug;
 
-      logMethod('マーカー作成完了', {
-        component: COMPONENT_NAME,
-        totalPOIs: pois.length,
-        validPOIs: totalValid,
-        createdMarkers: totalCreated,
-        successRate: totalValid > 0 ? `${Math.round((totalCreated / totalValid) * 100)}%` : '0%',
-        durationMs: Math.round(duration),
-        markerPerSecond: duration > 0 ? Math.round((totalCreated / duration) * 1000) : 0,
-      });
+      // thisバインディングの問題を修正：直接メソッドを呼び出す
+      if (isSignificant) {
+        logger.info('マーカー作成完了', {
+          component: COMPONENT_NAME,
+          totalPOIs: pois.length,
+          validPOIs: totalValid,
+          createdMarkers: totalCreated,
+          successRate: totalValid > 0 ? `${Math.round((totalCreated / totalValid) * 100)}%` : '0%',
+          durationMs: Math.round(duration),
+          markerPerSecond: duration > 0 ? Math.round((totalCreated / duration) * 1000) : 0,
+        });
+      } else {
+        logger.debug('マーカー作成完了', {
+          component: COMPONENT_NAME,
+          totalPOIs: pois.length,
+          validPOIs: totalValid,
+          createdMarkers: totalCreated,
+          successRate: totalValid > 0 ? `${Math.round((totalCreated / totalValid) * 100)}%` : '0%',
+          durationMs: Math.round(duration),
+          markerPerSecond: duration > 0 ? Math.round((totalCreated / duration) * 1000) : 0,
+        });
+      }
     }
 
     // クラスタリングのセットアップを行う内部関数

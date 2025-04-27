@@ -141,10 +141,25 @@ export function useMarkerVisibility({
       isDevMode: boolean
     ): boolean => {
       try {
-        const position = marker.position as google.maps.LatLng;
+        // 引数の検証強化 - nullチェックを追加
+        if (!marker) {
+          logger.warn('無効なマーカー（null/undefined）が渡されました', {
+            component: COMPONENT_NAME,
+            poiId: poi?.id || 'unknown',
+          });
+          return false;
+        }
 
-        // 位置情報の有効性チェック
-        if (!position) {
+        // POIのnullチェック追加
+        if (!poi || !poi.id) {
+          logger.warn('無効なPOI（null/undefined）が渡されました', {
+            component: COMPONENT_NAME,
+          });
+          return false;
+        }
+
+        // marker.position が undefined または null の場合の対応
+        if (!marker.position) {
           logger.warn('マーカーの位置情報が不正です', {
             component: COMPONENT_NAME,
             poiId: poi.id,
@@ -158,38 +173,76 @@ export function useMarkerVisibility({
           return false;
         }
 
-        // 表示範囲内かチェック
-        if (extendedBounds.contains(position)) {
-          // 表示範囲内の場合
-          if (marker.map !== map) {
-            logger.debug('マーカーを表示範囲内として表示します', {
+        // position の型によって処理を分岐
+        let positionLatLng: google.maps.LatLng;
+
+        if (marker.position instanceof google.maps.LatLng) {
+          // すでに LatLng オブジェクトの場合
+          positionLatLng = marker.position;
+        } else {
+          // LatLngLiteral オブジェクトの場合
+          try {
+            positionLatLng = new google.maps.LatLng(
+              marker.position.lat || 0,
+              marker.position.lng || 0
+            );
+          } catch (error) {
+            logger.warn('マーカー位置の変換に失敗しました', {
               component: COMPONENT_NAME,
               poiId: poi.id,
-              position: { lat: position.lat(), lng: position.lng() },
+              position: marker.position,
+              error,
             });
-            marker.map = map;
-          }
-          return true;
-        } else {
-          // 表示範囲外の場合
-          if (isDevMode) {
-            // デバッグモードでは表示範囲外でもマーカーを表示
-            if (marker.map !== map) {
-              logger.debug('デバッグモード: 範囲外ですがマーカーを表示します', {
-                component: COMPONENT_NAME,
-                poiId: poi.id,
-                position: { lat: position.lat(), lng: position.lng() },
-              });
-              marker.map = map;
-            }
-            return true; // デバッグモードでは可視としてカウント
-          } else {
-            // 本番環境では範囲外のマーカーは地図から外す（描画コストを削減）
             if (marker.map) {
               marker.map = null;
             }
             return false;
           }
+        }
+
+        // 表示範囲内かチェック
+        try {
+          if (extendedBounds.contains(positionLatLng)) {
+            // 表示範囲内の場合
+            if (marker.map !== map) {
+              logger.debug('マーカーを表示範囲内として表示します', {
+                component: COMPONENT_NAME,
+                poiId: poi.id,
+                position: { lat: positionLatLng.lat(), lng: positionLatLng.lng() },
+              });
+              marker.map = map;
+            }
+            return true;
+          } else {
+            // 表示範囲外の場合
+            if (isDevMode) {
+              // デバッグモードでは表示範囲外でもマーカーを表示
+              if (marker.map !== map) {
+                logger.debug('デバッグモード: 範囲外ですがマーカーを表示します', {
+                  component: COMPONENT_NAME,
+                  poiId: poi.id,
+                  position: { lat: positionLatLng.lat(), lng: positionLatLng.lng() },
+                });
+                marker.map = map;
+              }
+              return true; // デバッグモードでは可視としてカウント
+            } else {
+              // 本番環境では範囲外のマーカーは地図から外す（描画コストを削減）
+              if (marker.map) {
+                marker.map = null;
+              }
+              return false;
+            }
+          }
+        } catch (boundsError) {
+          logger.warn('マーカー表示領域チェックでエラーが発生しました', {
+            component: COMPONENT_NAME,
+            poiId: poi.id,
+            error: boundsError,
+          });
+          // エラー発生時はデフォルトで表示する
+          marker.map = map;
+          return true;
         }
       } catch (error) {
         logger.error('マーカー処理中にエラーが発生しました', {
@@ -224,6 +277,15 @@ export function useMarkerVisibility({
       const bounds = map.getBounds();
       if (!bounds) {
         throw new Error('マップの表示領域が取得できません');
+      }
+
+      // 安全チェック - マーカーとPOIの数の検証
+      if (markers.length !== pois.length) {
+        logger.warn('マーカー数とPOI数が一致しません', {
+          component: COMPONENT_NAME,
+          markersCount: markers.length,
+          poisCount: pois.length,
+        });
       }
 
       // オフライン時の処理
@@ -275,21 +337,41 @@ export function useMarkerVisibility({
       const newVisibleIds = new Set<string>();
       const isDevMode = process.env.NODE_ENV === 'development';
 
-      // マーカーとPOIを対応付けて表示状態を更新
-      markers.forEach((marker, index) => {
-        // pois 配列の安全なアクセス
-        const poi = safeGetPOI(pois, index);
+      // マーカーとPOIを対応付けて表示状態を更新 - アレイインデックスではなく、安全なイテレーションを使用
+      const validPairs: Array<{
+        marker: google.maps.marker.AdvancedMarkerElement;
+        poi: PointOfInterest;
+      }> = [];
 
-        // poi が undefined の場合のフォールバック
-        if (!poi) {
-          logger.warn('POI data is missing for marker at index', {
-            component: COMPONENT_NAME,
-            index,
-          });
+      // 各マーカーに対して対応するPOIを見つける
+      for (let i = 0; i < markers.length; i++) {
+        // サイズの範囲チェック
+        if (i >= 0 && i < pois.length) {
+          // 安全なアクセス方法を使用
+          const marker = markers.at(i);
+          const poi = pois.at(i);
+
+          if (marker && poi && poi.id) {
+            validPairs.push({ marker, poi });
+          } else {
+            result.errorCount++;
+            if (isDevMode) {
+              logger.debug('マーカーまたはPOIが無効です', {
+                component: COMPONENT_NAME,
+                index: i,
+                hasMarker: !!marker,
+                hasPoi: !!poi,
+                hasPoiId: !!(poi && poi.id),
+              });
+            }
+          }
+        } else {
           result.errorCount++;
-          return;
         }
+      }
 
+      // 有効なペアだけを処理
+      validPairs.forEach(({ marker, poi }) => {
         const isVisible = processMarker(marker, poi, extendedBounds, map, isDevMode);
         if (isVisible) {
           newVisibleIds.add(poi.id);
@@ -301,15 +383,46 @@ export function useMarkerVisibility({
 
       // 成功時に最後の状態を保存
       lastKnownVisibleIds.current = new Set(newVisibleIds);
-
       return result;
     } catch (error) {
       setHasError(true);
       logger.error('マーカー可視性更新中にエラーが発生しました', {
         component: COMPONENT_NAME,
-        error,
+        error:
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
         renderCount: renderCountRef.current,
       });
+
+      // マーカーをすべて表示する緊急フォールバック
+      // ユーザーエクスペリエンスを確保するため
+      const fallbackVisibleIds = new Set<string>();
+      if (mapRef.current) {
+        try {
+          markers.forEach((marker, idx) => {
+            if (idx >= 0 && idx < pois.length) {
+              const poi = pois.at(idx);
+              if (marker && poi && poi.id) {
+                marker.map = mapRef.current;
+                fallbackVisibleIds.add(poi.id);
+              }
+            }
+          });
+
+          result.visibleIds = fallbackVisibleIds;
+          result.visibleCount = fallbackVisibleIds.size;
+        } catch (fallbackError) {
+          logger.warn('緊急フォールバック処理中にエラーが発生しました', {
+            component: COMPONENT_NAME,
+            error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+          });
+        }
+      }
 
       // エラー時はオフラインモードの戦略を適用
       result.isOfflineMode = true;

@@ -31,6 +31,15 @@ export const MapInitializer: React.FC<MapInitializerProps> = memo(
 
     // 佐渡島の境界設定をmemo化してオブジェクト生成を最適化
     const sadoBounds = useMemo(() => {
+      // GoogleのAPIが初期化される前はセンターのみ返す
+      if (!window.google?.maps) {
+        return {
+          bounds: null,
+          center: { lat: 38.0413, lng: 138.3689 },
+        };
+      }
+
+      // APIが利用可能な場合はLatLngBoundsを作成
       return {
         bounds: new google.maps.LatLngBounds(
           { lat: 37.8, lng: 138.1 }, // 南西
@@ -38,15 +47,19 @@ export const MapInitializer: React.FC<MapInitializerProps> = memo(
         ),
         center: { lat: 38.0413, lng: 138.3689 },
       };
-    }, []);
-
-    // Google Maps読み込み完了時のコールバック
+    }, []); // Google Maps読み込み完了時のコールバック
     const handleMapLoad = useCallback(
       (map: google.maps.Map) => {
         logger.info('Google Maps APIの読み込みが完了しました');
 
-        // 佐渡島の境界を設定して地図を調整
-        map.fitBounds(sadoBounds.bounds);
+        // 佐渡島の境界を設定して地図を調整（boundsが存在する場合のみ）
+        if (sadoBounds.bounds) {
+          map.fitBounds(sadoBounds.bounds);
+        } else {
+          // boundsがない場合は中心点とズームレベルを設定
+          map.setCenter(sadoBounds.center);
+          map.setZoom(11);
+        }
 
         // 親コンポーネントにマップインスタンスを渡す
         onMapLoad(map);

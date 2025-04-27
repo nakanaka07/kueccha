@@ -1,6 +1,6 @@
 // 型のインポートは明示的にimport type構文を使用
-import type { POIType, POICategory, PointOfInterest } from '@/types/poi';
 import { getEnvVar } from '@/env';
+import type { POIType, POICategory, PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
 // 必要な時だけ環境変数を取得する関数

@@ -3,9 +3,9 @@
  */
 import { normalizeSearchQuery, limitObjectSize } from './poi-utils'; // poi-utils からインポート
 
-import { PointOfInterest, POIFilterOptions, POICategory, District } from '@/types/poi';
 import { getEnvVar } from '@/env/core';
 import { toBool } from '@/env/transforms';
+import { PointOfInterest, POIFilterOptions, POICategory, District } from '@/types/poi';
 import { logger } from '@/utils/logger';
 
 const POI_COMPONENT = 'POIFilter'; // このファイル固有のコンポーネント名

@@ -10,8 +10,8 @@ import {
   FooterSection,
 } from '@/components/InfoWindowSections';
 import StatusBadge from '@/components/InfoWindowStatus';
-import type { PointOfInterest } from '@/types/poi';
 import { ENV } from '@/env/index';
+import type { PointOfInterest } from '@/types/poi';
 import { logger, LogLevel } from '@/utils/logger';
 import '@/global.css';
 

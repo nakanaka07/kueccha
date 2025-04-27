@@ -116,6 +116,7 @@ export default defineConfig(({ mode }): UserConfig => {
       alias: {
         '@': resolve(__dirname, './src'),
       },
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.d.ts'],
     }, // 依存関係の最適化（YAGNI原則に基づき、必要な依存関係のみ含める）
     optimizeDeps: {
       // よく使われるコアライブラリと地図関連ライブラリのみ事前最適化

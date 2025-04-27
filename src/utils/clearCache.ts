@@ -12,7 +12,7 @@
 import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
 
-import { getEnv } from '@/env/core';
+import { getEnvVar } from '@/env/core';
 import { logger } from '@/utils/logger';
 
 // ストレージキー定数
@@ -103,10 +103,9 @@ export function clearPOICache(): number {
       localStorage.removeItem(STORAGE_KEYS.POI_DATA_TIMESTAMP);
       removedKeys.push(STORAGE_KEYS.POI_DATA_TIMESTAMP);
       count++;
-    }
-
-    // フィルター状態をクリア（オプション）
-    const clearFilters = getEnv('VITE_CLEAR_FILTERS_WITH_CACHE', { required: false }) === 'true';
+    } // フィルター状態をクリア（オプション）
+    const clearFilters =
+      getEnvVar({ key: 'VITE_CLEAR_FILTERS_WITH_CACHE', required: false }) === 'true';
     if (clearFilters && localStorage.getItem(STORAGE_KEYS.FILTER_STATE)) {
       localStorage.removeItem(STORAGE_KEYS.FILTER_STATE);
       removedKeys.push(STORAGE_KEYS.FILTER_STATE);
