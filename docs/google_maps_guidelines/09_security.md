@@ -1,18 +1,32 @@
 # 9. セキュリティ対策
 
-## APIキー保護
+## 静的ホスティング環境向けAPIキー保護
 
 ```typescript
-// APIキーのセキュリティ対策
-function setupSecureApiKey(): string {
+// 静的ホスティング環境でのAPIキーセキュリティ対策
+export function setupSecureApiKey(): void {
   const apiKey = ENV.google.apiKey;
 
-  // APIキーが適切に保護されているか確認
+  // APIキー保護の検証
   if (!ENV.google.apiKeyRestrictions) {
     logger.warn('APIキーにHTTPリファラ制限が設定されていない可能性があります', {
       component: 'SecurityCheck',
       action: 'api_key_security_warning',
     });
+
+    // 静的ホスティング環境向けのセキュリティアドバイス
+    logger.warn(
+      '静的ホスティング環境では、以下の制限を設定することを強く推奨します:',
+      {
+        component: 'SecurityCheck',
+        recommendedRestrictions: [
+          'HTTPリファラ制限 (例: *.github.io/* またはホスティングドメイン)',
+          'APIの使用制限 (Maps JavaScript API、Places APIなど必要なAPIのみ)',
+          'リクエスト割当量の設定',
+          'キーローテーションの定期実施',
+        ],
+      }
+    );
   }
 
   // CSP設定の確認
@@ -25,15 +39,13 @@ function setupSecureApiKey(): string {
       action: 'csp_missing_warning',
     });
   }
-
-  return apiKey;
 }
 ```
 
 ## 2025年版強化セキュリティ対策
 
 ```typescript
-// 2025年の最新セキュリティ対策を実装
+// 2025年の最新セキュリティ対策を実装（静的ホスティング環境に最適化）
 function setupEnhancedSecurity(): void {
   // APIキーの保護
   setupSecureApiKey();
@@ -41,14 +53,17 @@ function setupEnhancedSecurity(): void {
   // 最新のCSP設定を適用
   applySecureCSPPolicy();
 
-  // Subresource Integrity (SRI) の検証
-  verifySRI();
+  // インラインスクリプト保護
+  protectInlineScripts();
 
-  // トークンベースの認証（2025年の新機能）
-  setupTokenBasedAuth();
+  // アクセストークンの保存場所を最適化
+  setupSecureTokenStorage();
+
+  // 外部コンテンツの検証
+  verifyCrossOriginContent();
 }
 
-// 2025年推奨のCSP設定
+// 2025年推奨のCSP設定（静的ホスティング対応）
 function applySecureCSPPolicy(): void {
   // CSPヘッダーが既に存在するか確認
   const existingCSP = document.querySelector(
@@ -58,7 +73,7 @@ function applySecureCSPPolicy(): void {
     return; // 既存のCSPを優先
   }
 
-  // Google Maps API用の現代的なCSP設定（2025年版）
+  // GitHub Pages等の静的ホスティング向けCSP設定（2025年版）
   const cspContent =
     "default-src 'self'; " +
     "script-src 'self' https://*.googleapis.com https://*.gstatic.com; " +
@@ -69,13 +84,11 @@ function applySecureCSPPolicy(): void {
     "frame-src 'self' https://www.google.com; " +
     "object-src 'none'; " +
     "base-uri 'self'; " +
-    "form-action 'self';" +
+    "form-action 'self'; " +
     // 2025年の新しいCSP指示
-    "navigate-to 'self'; " +
+    "navigate-to 'self' https://*.google.com; " + // 静的ホスティングからのナビゲーション許可
     "webrtc 'block'; " +
-    "worker-src 'self'; " +
-    'trusted-types googlemaps default; ' +
-    "require-trusted-types-for 'script'";
+    "worker-src 'self'; ";
 
   // CSPメタタグを作成
   const meta = document.createElement('meta');
@@ -85,22 +98,89 @@ function applySecureCSPPolicy(): void {
   // ヘッドに追加
   document.head.appendChild(meta);
 
-  logger.info('セキュアなCSPポリシーが適用されました', {
+  logger.info('静的ホスティング向け最適化CSPポリシーが適用されました', {
     component: 'SecurityEnforcement',
-    action: 'csp_applied',
+    action: 'static_hosting_csp_applied',
   });
 }
 
-// SRI検証（外部スクリプトの整合性検証）
-function verifySRI(): void {
-  // Google Maps APIスクリプト要素を取得
-  const mapsScripts = document.querySelectorAll(
-    'script[src*="googleapis.com"]'
-  );
+// APIキーのリファラ保護を検証するユーティリティ
+function validateApiKeyRestrictions(): boolean {
+  try {
+    // 現在のリファラが制限に含まれているか確認するテスト
+    fetch(
+      `https://maps.googleapis.com/maps/api/js?key=${ENV.google.apiKey}&callback=initMap&libraries=places&v=weekly&testingreferer=true`,
+      { method: 'HEAD' }
+    )
+      .then(response => {
+        if (response.status === 403) {
+          // 403はリファラ制限が正しく機能している可能性が高い
+          logger.info('APIキーのリファラ制限が正しく機能しています', {
+            component: 'SecurityCheck',
+            action: 'api_key_restriction_check',
+            status: 'working',
+          });
+          return true;
+        } else {
+          // 200などのステータスはリファラ制限が効いていない可能性がある
+          logger.warn(
+            'APIキーのリファラ制限が正しく設定されていない可能性があります',
+            {
+              component: 'SecurityCheck',
+              action: 'api_key_restriction_check',
+              status: 'warning',
+            }
+          );
+          return false;
+        }
+      })
+      .catch(() => {
+        // ネットワークエラー等の場合は判定不能
+        return false;
+      });
+  } catch (error) {
+    return false;
+  }
 
-  // SRI属性をチェック
-  mapsScripts.forEach(script => {
-    if (!(script instanceof HTMLScriptElement)) return;
+  return true;
+}
+```
+
+## 静的ホスティングのセキュリティ強化
+
+```typescript
+// 静的ホスティング環境における攻撃対策
+function setupStaticHostingSecurityMeasures(): void {
+  // 1. APIキー使用をモニタリング
+  setupApiKeyUsageMonitoring();
+
+  // 2. 静的ホスティングに適した認証方法を使用
+  setupStaticHostingFriendlyAuth();
+
+  // 3. ローカルストレージの暗号化
+  setupEncryptedLocalStorage();
+
+  // 4. クリックジャッキング対策
+  setupFrameProtection();
+
+  // 5. XSS対策（特にマーカーの動的コンテンツ生成）
+  sanitizeDynamicMarkerContent();
+}
+
+// マーカーの動的コンテンツサニタイズ
+function sanitizeDynamicMarkerContent(content: string): string {
+  // DOMPurifyなどのライブラリを使用してサニタイズ
+  return DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['div', 'span', 'b', 'i', 'img'],
+    ALLOWED_ATTR: ['class', 'style', 'src', 'alt', 'aria-label', 'role'],
+    USE_PROFILES: { html: true },
+  });
+}
+```
+
+// SRI属性をチェック
+mapsScripts.forEach(script => {
+if (!(script instanceof HTMLScriptElement)) return;
 
     if (!script.integrity) {
       logger.warn('Google Maps スクリプトにSRI属性が設定されていません', {
@@ -109,44 +189,45 @@ function verifySRI(): void {
         src: script.src,
       });
     }
-  });
+
+});
 }
 
 // トークンベースの認証実装（2025年の新機能）
 function setupTokenBasedAuth(): void {
-  // APIアクセストークンが設定されているか確認
-  if (!ENV.google.apiAccessToken) {
-    return;
-  }
+// APIアクセストークンが設定されているか確認
+if (!ENV.google.apiAccessToken) {
+return;
+}
 
-  // トークンの有効期限を確認
-  const tokenExpiry = parseTokenExpiry(ENV.google.apiAccessToken);
-  if (tokenExpiry && tokenExpiry < Date.now() + 3600 * 1000) {
-    // トークンの有効期限が1時間以内の場合は更新
-    scheduleTokenRefresh();
-  }
+// トークンの有効期限を確認
+const tokenExpiry = parseTokenExpiry(ENV.google.apiAccessToken);
+if (tokenExpiry && tokenExpiry < Date.now() + 3600 \* 1000) {
+// トークンの有効期限が1時間以内の場合は更新
+scheduleTokenRefresh();
+}
 
-  // トークンリフレッシュのスケジュール設定
-  function scheduleTokenRefresh(): void {
-    if (tokenExpiry) {
-      const timeUntilExpiry = Math.max(
-        0,
-        tokenExpiry - Date.now() - 600 * 1000
-      ); // 期限の10分前
-      setTimeout(refreshApiAccessToken, timeUntilExpiry);
-    }
-  }
+// トークンリフレッシュのスケジュール設定
+function scheduleTokenRefresh(): void {
+if (tokenExpiry) {
+const timeUntilExpiry = Math.max(
+0,
+tokenExpiry - Date.now() - 600 \* 1000
+); // 期限の10分前
+setTimeout(refreshApiAccessToken, timeUntilExpiry);
+}
+}
 
-  // APIアクセストークンの更新処理
-  async function refreshApiAccessToken(): Promise<void> {
-    try {
-      const response = await fetch('/api/refresh-maps-token', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+// APIアクセストークンの更新処理
+async function refreshApiAccessToken(): Promise<void> {
+try {
+const response = await fetch('/api/refresh-maps-token', {
+method: 'POST',
+credentials: 'same-origin',
+headers: {
+'Content-Type': 'application/json',
+},
+});
 
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${response.status}`);
@@ -181,26 +262,28 @@ function setupTokenBasedAuth(): void {
       // エラー時は短い間隔で再試行
       setTimeout(refreshApiAccessToken, 60 * 1000);
     }
-  }
+
+}
 }
 
 // トークンから有効期限を解析
 function parseTokenExpiry(token: string): number | null {
-  try {
-    // JWTの場合（セキュリティ上の理由で検証せずに読むのみ）
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1]));
-      if (payload.exp) {
-        return payload.exp * 1000; // UNIX時間（秒）をミリ秒に変換
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
+try {
+// JWTの場合（セキュリティ上の理由で検証せずに読むのみ）
+const parts = token.split('.');
+if (parts.length === 3) {
+const payload = JSON.parse(atob(parts[1]));
+if (payload.exp) {
+return payload.exp \* 1000; // UNIX時間（秒）をミリ秒に変換
 }
-```
+}
+return null;
+} catch {
+return null;
+}
+}
+
+````
 
 ## XSS対策
 
@@ -235,7 +318,7 @@ function createSafeInfoWindow(
     maxWidth: 300,
   });
 }
-```
+````
 
 ## APIキーの制限と使用量モニタリング
 

@@ -2,12 +2,12 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 
 // クライアント側では validateClientEnv を使用
-import { validateClientEnv } from './utils/env/client-validator';
+import { validateClientEnv } from '../config/client-validator';
 // サーバー側の validateEnv は直接呼び出さない（設定ファイルでのみ使用）
 
 import '@/global.css';
 import App from '@/App';
-import { getEnvVar, getEnvBool } from '@/utils/env/core';
+import { getEnvVar, getEnvBool } from '@/env/core';
 import { logger, LogLevel } from '@/utils/logger';
 
 /**

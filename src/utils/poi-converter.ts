@@ -4,9 +4,9 @@
 import { limitObjectSize, safeString } from './poi-utils'; // poi-utils からインポート
 
 import { DEFAULT_LAT, DEFAULT_LNG, POI_TYPE_PATTERNS, WKT_REGEX } from '@/constants/poi';
-import { POIType, RawPOIData, PointOfInterest } from '@/types/poi-types';
-import { getEnvVar } from '@/utils/env/core';
-import { toBool } from '@/utils/env/transforms';
+import { POIType, RawPOIData, PointOfInterest } from '@/types/poi';
+import { getEnvVar } from '@/env/core';
+import { toBool } from '@/env/transforms';
 import { logger, LogLevel } from '@/utils/logger';
 
 const POI_COMPONENT = 'POIConverter'; // このファイル固有のコンポーネント名
@@ -156,16 +156,16 @@ function createPointOfInterest(
     longitude: lng, // lngのエイリアスとして追加
     isClosed: isTrueValue(rawData.閉店情報),
     type: poiType,
-    category: categories.length > 0 ? categories[0] : undefined,
+    category: categories.length > 0 ? categories[0] : '',
     categories,
-    genre: rawData.ジャンル,
+    genre: rawData.ジャンル || '',
     hasParking: isTrueValue(rawData.駐車場情報),
     hasCashless: isTrueValue(rawData.キャッシュレス),
     address: safeString(rawData.所在地, ''),
-    district: rawData.地区,
-    問い合わせ: rawData.問い合わせ,
-    関連情報: rawData.関連情報,
-    'Google マップで見る': rawData['Google マップで見る'],
+    district: rawData.地区 || '',
+    問い合わせ: rawData.問い合わせ || '',
+    関連情報: rawData.関連情報 || '',
+    'Google マップで見る': rawData['Google マップで見る'] || '',
     営業時間: businessHours,
     月曜定休日: isTrueValue(rawData.月曜定休日),
     火曜定休日: isTrueValue(rawData.火曜定休日),
@@ -175,7 +175,7 @@ function createPointOfInterest(
     土曜定休日: isTrueValue(rawData.土曜定休日),
     日曜定休日: isTrueValue(rawData.日曜定休日),
     祝祭定休日: isTrueValue(rawData.祝祭定休日),
-    定休日について: rawData.定休日について,
+    定休日について: rawData.定休日について || '',
     searchText,
   };
 }
@@ -227,8 +227,8 @@ function extractWktCoordinates(wkt: string | undefined): { lat: number; lng: num
  * @returns 抽出された緯度・経度、抽出失敗時はnull
  */
 function extractLatLngCoordinates(data: {
-  北緯?: string;
-  東経?: string;
+  北緯?: string | undefined;
+  東経?: string | undefined;
 }): { lat: number; lng: number } | null {
   // 両方の座標情報が存在しない場合は早期リターン
   if (
@@ -305,9 +305,13 @@ function extractCoordinates(rawData: RawPOIData): { lat: number; lng: number } {
     if (isValidCoordinates(wktCoordinates)) {
       return wktCoordinates;
     }
-
     // 北緯・東経フィールドからの抽出ロジック
-    const latLngCoordinates = extractLatLngCoordinates(rawData);
+    const 北緯 = rawData.北緯 || undefined;
+    const 東経 = rawData.東経 || undefined;
+    const latLngCoordinates = extractLatLngCoordinates({
+      北緯,
+      東経,
+    });
     if (isValidCoordinates(latLngCoordinates)) {
       return latLngCoordinates;
     }

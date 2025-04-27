@@ -1,14 +1,22 @@
 /**
  * Google Maps API用の拡張型定義
- * @types/google.maps に含まれていない最新機能の型定義
+ *
+ * このファイルでは @types/google.maps に含まれていない最新機能の型定義を提供します。
+ * 公式型定義に先行して必要な機能をカバーし、型安全性を確保します。
  *
  * 環境変数ガイドラインに従い、env.d.tsで定義された型を参照し、
  * ロガーガイドラインに準拠したコンテキスト構造を採用しています。
  *
- * @see ../constants/maps.ts - 実際のAPI設定とマップ設定
- * @see ../utils/env.ts - 環境変数アクセス機能
- * @see ../hooks/useGoogleMaps.ts - Google Maps APIの初期化と管理
- * @see ../../env.d.ts - 環境変数型定義（特にVITE_GOOGLE_MAPS_*系）
+ * KISS原則とYAGNI原則に基づいて設計されており、必要な型のみを定義しています。
+ *
+ * @version 1.4.0
+ * @since 1.1.0
+ * @see {@link ../constants/maps.ts 実際のAPI設定とマップ設定}
+ * @see {@link ../utils/env.ts 環境変数アクセス機能}
+ * @see {@link ../hooks/useGoogleMaps.ts Google Maps APIの初期化と管理}
+ * @see {@link ../../env.d.ts 環境変数型定義（特にVITE_GOOGLE_MAPS_*系）}
+ * @see {@link ../../docs/google_maps_guidelines/index.md Google Maps ガイドライン}
+ * @see {@link ../../docs/google_maps_guidelines/13_typescript.md 型安全性とリント最適化}
  */
 
 // google.maps.marker 名前空間に関する型定義の拡張
@@ -45,46 +53,55 @@ declare namespace google.maps {
     /** 関連するリクエスト情報 */
     request?: unknown;
   }
-
   /**
-   * API状態監視のための型
-   * ロガーガイドラインに従い、標準コンテキスト項目を含む
+   * Maps APIの状態を監視するための型
+   *
+   * ロガーガイドラインに準拠したコンテキスト構造を採用し、
+   * APIの初期化状態、パフォーマンス、エラー情報などを記録します。
+   *
+   * @see {@link ../../docs/logger_usage_guidelines.md ロガー使用ガイドライン}
    */
   interface MapsApiStatus {
-    /** APIがロードされているか */
+    /** APIが正常にロードされたかどうか */
     isLoaded: boolean;
 
-    /** 現在のAPIバージョン */
+    /** 現在のAPIバージョン（例: '3.54'） */
     version?: string;
 
-    /** ロードされているライブラリ */
+    /** ロードされているライブラリのリスト（例: ['maps', 'places']） */
     loadedLibraries?: string[];
 
-    /** 最新のエラー情報 */
+    /** 最新のエラー情報（エラーが発生した場合のみ設定） */
     lastError?: MapsApiError | null;
 
-    /** 初期化開始時刻 */
-    initStartTime?: number;
+    /**
+     * 初期化のタイムスタンプと測定情報
+     */
+    timing?: {
+      /** 初期化開始時刻（ミリ秒単位のタイムスタンプ） */
+      initStartTime: number;
 
-    /** 初期化完了時刻 */
-    initCompletedTime?: number;
+      /** 初期化完了時刻（ミリ秒単位のタイムスタンプ） */
+      initCompletedTime?: number;
 
-    /** 初期化パフォーマンス情報 */
-    performance?: {
       /** 初期化にかかった時間(ms) */
-      initDurationMs: number;
+      initDurationMs?: number;
 
       /** マップレンダリングにかかった時間(ms) */
       renderDurationMs?: number;
     };
 
-    /** ロガーコンテキスト統合項目 */
+    /**
+     * ロガーコンテキスト統合情報
+     * ロガーガイドラインに準拠した標準フィールド
+     */
+    /** コンポーネント/モジュール名（例: 'MapInitializer'） */
     component?: string;
 
-    /** 実行中のアクション */
+    /** 実行中のアクション/操作名（例: 'init_maps_api'） */
     action?: string;
 
-    /** 関連するエンティティID */
+    /** 関連するエンティティのID */
     entityId?: string;
 
     /** 処理結果のステータス */

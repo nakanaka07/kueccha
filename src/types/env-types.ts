@@ -7,14 +7,17 @@
  * KISS（Keep It Simple, Stupid）およびYAGNI（You Aren't Gonna Need It）原則に
  * 基づいて最適化されています。
  *
- * @see ../docs/env_usage_guidelines.md
- * @see ../docs/logger_usage_guidelines.md
- * @see ../docs/code_optimization_guidelines.md
+ * @version 1.4.0
+ * @since 1.0.0
+ * @see {@link ../../docs/env_usage_guidelines.md 環境変数管理ガイドライン}
+ * @see {@link ../../docs/logger_usage_guidelines.md ロガー使用ガイドライン}
+ * @see {@link ../../docs/code_optimization_guidelines.md コード最適化ガイドライン}
  */
 
 /**
  * ロガーレベルを表す型
  * ロガー使用ガイドラインに準拠したログレベル定義
+ * @see {@link ./logger.ts LogLevel} - ログレベルの列挙型との対応
  */
 export type LogLevelType = 'error' | 'warn' | 'info' | 'debug';
 

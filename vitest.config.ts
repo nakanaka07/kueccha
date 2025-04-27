@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config';
 // config/logger.tsからconfigLoggerをインポート
 import { configLogger as logger } from './config/config-logger';
 // 環境変数ユーティリティをインポート
-import { getEnvBool } from './src/utils/env/core';
+import { getEnvBool } from './src/env/core';
 
 /**
  * プロジェクトのルートディレクトリからの相対パス解決を簡略化する関数

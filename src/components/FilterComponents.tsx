@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'; // React と useCallback をインポート
 
-import { getEnvBool } from '@/utils/env/core';
+import { getEnvBool } from '@/env/core';
 import { logger, LogLevel, LogContext } from '@/utils/logger'; // LogContext型を追加でインポート
 
 // 環境設定を一箇所に集約（KISS原則に基づくシンプルな設定）
@@ -58,9 +58,10 @@ const logIfNeeded = (message: string, level: LogLevel, context: LogContext): voi
   }
 };
 
+// 型安全性の向上のためのより明確な定義
 interface CheckboxGroupProps {
-  items: string[];
-  selectedItems: Map<string, boolean>; // Record<string, boolean> から Map<string, boolean> へ変更
+  items: readonly string[]; // 不変配列として定義
+  selectedItems: ReadonlyMap<string, boolean>; // 読み取り専用Mapとして定義
   onChange: (item: string, checked: boolean) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
@@ -83,6 +84,7 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = React.memo(
     'aria-labelledby': ariaLabelledby,
   }) => {
     // メモ化の最適化: 依存配列を必要最小限に
+    // useCallbackの依存配列を最適化し、コンポーネント定数を依存配列から除外
     const handleChange = useCallback(
       (item: string, checked: boolean) => {
         onChange(item, checked);
@@ -169,6 +171,7 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = React.memo(
 
 CheckboxGroup.displayName = COMPONENT_NAMES.CHECKBOX_GROUP;
 
+// より厳密な型定義
 interface FilterPanelHeaderProps {
   isExpanded: boolean;
   togglePanel: () => void;

@@ -1,6 +1,6 @@
 // 型のインポートは明示的にimport type構文を使用
 import type { POIType, POICategory, PointOfInterest } from '@/types/poi';
-import { getEnvVar } from '@/utils/env';
+import { getEnvVar } from '@/env';
 import { logger } from '@/utils/logger';
 
 // 必要な時だけ環境変数を取得する関数
@@ -104,18 +104,23 @@ export function getMarkerIcon(
     // POIタイプとカテゴリが直接渡された場合
     const iconType = typeOrPoi;
 
-    // 型安全な方法でアクセス - Map型を使用して完全に安全なアプローチ
-    let iconBase = POI_TYPE_ICON_BASE.other; // デフォルト値を先に設定
+    // ローカルのアイコン画像を使用
+    let url = '';
 
-    // 安全な方法で値を取得
-    if (iconType === 'restaurant') iconBase = POI_TYPE_ICON_BASE.restaurant;
-    else if (iconType === 'shop') iconBase = POI_TYPE_ICON_BASE.shop;
-    else if (iconType === 'attraction') iconBase = POI_TYPE_ICON_BASE.attraction;
-    else if (iconType === 'toilet') iconBase = POI_TYPE_ICON_BASE.toilet;
-    else if (iconType === 'parking') iconBase = POI_TYPE_ICON_BASE.parking;
-
-    // Google Maps Platform Icon APIのURL
-    const url = `https://maps.google.com/mapfiles/ms/icons/${iconBase}-dot.png`;
+    // POIタイプに基づいてプロジェクト内のアイコンを選択
+    switch (iconType) {
+      case 'restaurant':
+        url = '/assets/shi_icon01.png';
+        break;
+      case 'parking':
+        url = '/assets/parking.png';
+        break;
+      case 'toilet':
+        url = '/assets/toilette.png';
+        break;
+      default:
+        url = '/assets/area_icon_map01.png';
+    }
 
     // 閉店している場合は色を薄くする
     const iconOpacity = isClosed ? 0.5 : 1.0;
@@ -222,10 +227,21 @@ export function getSvgMarkerIcon(
       'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z';
 
     // SVGデータURI - ブラウザが直接読み込める形式
-    const svgIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"><path d="${svgPath}" fill="${encodeURIComponent(color)}" /></svg>`;
+    // カラーコードは#を含めて正しくエスケープする必要がある
+    const encodedColor = encodeURIComponent(color);
+    const svgIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"><path d="${svgPath}" fill="${encodedColor}" /></svg>`;
 
     // 閉店している場合は半透明にする
     const iconOpacity = isClosed ? 0.5 : 1.0;
+
+    logger.debug('マーカーアイコンを生成しました', {
+      component: 'MarkerUtils',
+      action: 'getSvgMarkerIcon',
+      type,
+      category,
+      isClosed,
+      color: encodedColor,
+    });
 
     return {
       url: svgIcon,

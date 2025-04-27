@@ -41,6 +41,61 @@ function createAccessibleMarker(
 }
 ```
 
+## 静的ホスティング環境でのアクセシビリティ対応
+
+```typescript
+// 静的ホスティング環境向けのアクセシビリティ機能実装
+export function setupAccessibilityForStaticHosting(
+  map: google.maps.Map,
+  mapContainerId: string = 'map'
+): void {
+  // 1. アクセシビリティメッセージの追加
+  const mapContainer = document.getElementById(mapContainerId);
+  if (!mapContainer) return;
+
+  // スクリーンリーダーのためのヘルプテキスト
+  const a11yHelpText = document.createElement('div');
+  a11yHelpText.setAttribute('role', 'status');
+  a11yHelpText.setAttribute('aria-live', 'polite');
+  a11yHelpText.classList.add('sr-only'); // 視覚的に非表示だがスクリーンリーダーには読まれるクラス
+  a11yHelpText.id = 'map-a11y-status';
+  mapContainer.appendChild(a11yHelpText);
+
+  // 2. キーボードナビゲーション機能
+  setupKeyboardNavigation(map, mapContainerId);
+
+  // 3. フォーカス管理とトラップ回避
+  setupFocusManagement(mapContainerId);
+
+  // 4. カラーコントラスト対応
+  if (window.matchMedia('(prefers-contrast: more)').matches) {
+    applyHighContrastMapStyle(map);
+  }
+
+  // 5. 拡大表示への対応
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setupReducedMotionExperience(map);
+  }
+
+  // 6. マーカー選択状態の視覚的・聴覚的フィードバック強化
+  enhanceMarkerSelectionFeedback(map);
+
+  // 7. アクセシビリティ状態の更新関数を返却
+  return {
+    announceToScreenReader: (message: string) => {
+      const statusElement = document.getElementById('map-a11y-status');
+      if (statusElement) {
+        statusElement.textContent = message;
+        // 短いタイムアウト後にクリア（スクリーンリーダーに確実に読ませるため）
+        setTimeout(() => {
+          statusElement.textContent = '';
+        }, 3000);
+      }
+    },
+  };
+}
+```
+
 ## キーボード操作対応
 
 ```typescript

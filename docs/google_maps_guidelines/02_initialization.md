@@ -10,6 +10,8 @@ const { isLoaded, error, map } = useGoogleMaps({
   onMapLoaded: handleMapLoaded,
   skipInit: !isMapElementReady,
   initTimeout: 15000, // 15秒のタイムアウト
+  centerPosition: { lat: 38.0168, lng: 138.3686 }, // 佐渡島の中心座標
+  useCacheBuster: ENV.isDevelopment, // 開発環境ではキャッシュを回避
 });
 ```
 
@@ -67,8 +69,8 @@ const REQUIRED_LIBRARIES = [
   'maps',
   'marker',
   'places',
-  'webgl',
-  'localcontext',
+  'webgl', // 高性能レンダリング用
+  'localcontext', // 地域情報強化用
 ];
 
 export const getLoaderOptions = (): LoaderOptions => {
@@ -101,6 +103,46 @@ export const getLoaderOptions = (): LoaderOptions => {
 };
 ```
 
+## 静的ホスティング環境での初期化最適化
+
+```typescript
+// 静的ホスティング環境でのロード最適化
+export const optimizeStaticHostingLoad = (
+  map: google.maps.Map,
+  options: OptimizationOptions
+): void => {
+  // APIリクエスト数を削減するための設定
+  map.setOptions({
+    // スクロールやズームでのタイル読み込みを最適化
+    tilt: 0, // 3Dビューを無効化してリクエスト削減
+    maxZoom: options.maxZoom || 17, // 過剰なズームを防止
+    minZoom: options.minZoom || 8, // 過度な縮小を防止
+
+    // キャッシュ戦略最適化
+    clickableIcons: false, // 不要なPOIクリックを無効化
+  });
+
+  // APIリクエストとレンダリング最適化
+  if (options.disablePointsOfInterest) {
+    map.setOptions({
+      styles: [
+        {
+          featureType: 'poi',
+          stylers: [{ visibility: 'off' }], // Googleデフォルトの施設アイコン非表示
+        },
+      ],
+    });
+  }
+
+  // 静的データ優先のローディング戦略
+  if (options.preloadStaticData) {
+    prefetchStaticMapData();
+  }
+};
+```
+
+````
+
 ## エラーハンドリングとリカバリー戦略
 
 ```typescript
@@ -119,4 +161,4 @@ try {
   showMapLoadingError();
   attemptToLoadStaticMap();
 }
-```
+````

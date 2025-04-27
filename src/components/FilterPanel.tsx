@@ -1,7 +1,7 @@
 import '@/global.css';
 
 // React フック
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, memo } from 'react';
 
 // プロジェクト固有のインポート
 import {
@@ -11,78 +11,90 @@ import {
   StatusFilterInput,
 } from './FilterComponents';
 
-import { useFilterLogic } from '@/hooks/useFilterLogic';
-import type { PointOfInterest } from '@/types/poi-types'; // Corrected import path
-import { logger } from '@/utils/logger'; // Removed LogLevel import as it's not directly used here
+import { useFilterLogic, type FilterLogicResult } from '@/hooks/useFilterLogic';
+import type { PointOfInterest } from '@/types/poi';
+import { logger } from '@/utils/logger';
 
 // コンポーネント名を定数化して再利用（ロガーガイドライン準拠）
 const COMPONENT_NAME = 'FilterPanel';
 
+// 型定義を分離して再利用性を高める
 interface FilterPanelProps {
   pois: PointOfInterest[];
   onFilterChange: (filteredPois: PointOfInterest[]) => void;
   className?: string;
 }
 
+// フィルターグループの型定義を分離
+interface FilterGroup {
+  id: string;
+  groupLabel: string;
+  itemLabelPrefix: string;
+  items: string[];
+  selectedItems: Map<string, boolean>;
+  onChange: (item: string, isChecked: boolean) => void;
+  onToggleAll: (selectAll: boolean) => void;
+}
+
+interface FilterPanelContentProps {
+  filterLogic: FilterLogicResult;
+  filterGroups: FilterGroup[];
+  handleResetFilters: () => void;
+}
+
 /**
  * フィルターパネルの内容部分を描画するコンポーネント
+ * メモ化してパフォーマンスを最適化
  */
-const FilterPanelContent: React.FC<{
-  filterLogic: ReturnType<typeof useFilterLogic>;
-  filterGroups: Array<{
-    id: string;
-    groupLabel: string;
-    itemLabelPrefix: string;
-    items: string[];
-    selectedItems: Map<string, boolean>; // Changed from Record<string, boolean>
-    onChange: (item: string, isChecked: boolean) => void;
-    onToggleAll: (selectAll: boolean) => void;
-  }>;
-  handleResetFilters: () => void;
-}> = ({ filterLogic, filterGroups, handleResetFilters }) => {
-  return (
-    <div
-      id='filter-content'
-      className='filter-panel-content'
-      role='group'
-      aria-labelledby='filter-heading'
-    >
-      {/* テキスト検索フィルター */}
-      <SearchInput value={filterLogic.searchText} onChange={filterLogic.setSearchText} />
+const FilterPanelContent = memo<FilterPanelContentProps>(
+  ({ filterLogic, filterGroups, handleResetFilters }) => {
+    return (
+      <div
+        id='filter-content'
+        className='filter-panel-content'
+        role='group'
+        aria-labelledby='filter-heading'
+      >
+        {/* テキスト検索フィルター */}
+        <SearchInput value={filterLogic.searchText} onChange={filterLogic.setSearchText} />
 
-      {/* 営業状態フィルター */}
-      <StatusFilterInput value={filterLogic.statusFilter} onChange={filterLogic.setStatusFilter} />
-
-      {/* フィルターグループの宣言的レンダリング */}
-      {filterGroups.map(group => (
-        <CheckboxGroup
-          key={group.id}
-          items={group.items}
-          selectedItems={group.selectedItems} // Now expects Map
-          onChange={group.onChange}
-          onSelectAll={() => group.onToggleAll(true)}
-          onDeselectAll={() => group.onToggleAll(false)}
-          groupLabel={group.groupLabel}
-          itemLabelPrefix={group.itemLabelPrefix}
-          id={`${group.id}-filter-group`}
-          aria-labelledby={`${group.id}-filter-heading`}
+        {/* 営業状態フィルター */}
+        <StatusFilterInput
+          value={filterLogic.statusFilter}
+          onChange={filterLogic.setStatusFilter}
         />
-      ))}
 
-      {/* リセットボタンセクション */}
-      <div className='filter-actions'>
-        <button
-          type='button'
-          onClick={handleResetFilters}
-          className='reset-button'
-          aria-label='すべてのフィルターをリセット'
-        >
-          フィルターをリセット
-        </button>
+        {/* フィルターグループの宣言的レンダリング */}
+        {filterGroups.map(group => (
+          <CheckboxGroup
+            key={group.id}
+            items={group.items}
+            selectedItems={group.selectedItems} // Now expects Map
+            onChange={group.onChange}
+            onSelectAll={() => group.onToggleAll(true)}
+            onDeselectAll={() => group.onToggleAll(false)}
+            groupLabel={group.groupLabel}
+            itemLabelPrefix={group.itemLabelPrefix}
+            id={`${group.id}-filter-group`}
+            aria-labelledby={`${group.id}-filter-heading`}
+          />
+        ))}
+
+        {/* リセットボタンセクション */}
+        <div className='filter-actions'>
+          <button
+            type='button'
+            onClick={handleResetFilters}
+            className='reset-button'
+            aria-label='すべてのフィルターをリセット'
+          >
+            フィルターをリセット
+          </button>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
 
 /**
  * POIデータのフィルタリングを行うパネルコンポーネント

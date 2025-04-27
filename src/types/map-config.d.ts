@@ -1,12 +1,18 @@
 /**
  * マップ設定に関する型定義
  *
- * このファイルはマップ関連の設定オブジェクトの型を定義します
+ * このファイルはマップ関連の設定オブジェクトの型を定義します。
  * 環境変数ガイドラインに従って、マップID、中心座標、ズームレベル等の
- * 設定パラメータに強力な型付けを提供します
+ * 設定パラメータに強力な型付けを提供します。
  *
- * @see ../constants/maps.ts - マップの定数定義
- * @see ../utils/env.ts - 環境変数アクセス
+ * KISS原則に基づき、各設定オプションを明確に分離し、関連する型をグループ化しています。
+ *
+ * @version 1.4.0
+ * @since 1.0.0
+ * @see {@link ../constants/maps.ts マップの定数定義}
+ * @see {@link ../utils/env.ts 環境変数アクセス}
+ * @see {@link ../../docs/google_maps_guidelines/index.md Google Maps ガイドライン}
+ * @see {@link ../../docs/env_usage_guidelines.md 環境変数管理ガイドライン}
  */
 
 /**

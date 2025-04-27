@@ -1,211 +1,78 @@
-import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
-
-import { validateEnv } from '../config/env-validator';
+import { Suspense, useRef } from 'react';
 
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { MapLoadingError } from '@/components/MapLoadingError';
+import LoadingState from '@/components/LoadingState';
+import MapInitializer from '@/components/MapInitializer';
 import MapMarkers from '@/components/MapMarkers';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps';
-import { usePOIConverter } from '@/hooks/usePOIConverter';
-import { usePOIData } from '@/hooks/usePOIData';
-import type { PointOfInterest } from '@/types/poi';
-import { getEnvVar } from '@/utils/env/core';
-import { toLogLevel } from '@/utils/env/transforms';
-import { logger } from '@/utils/logger';
+import { useAppInitializer } from '@/hooks/useAppInitializer';
+import { useLoadPOIData, usePOIStore } from '@/store/poiStore';
 
 /**
  * メインアプリケーションコンポーネント
- * 地図の表示とPOIデータの管理を行います
+ *
+ * 責任分離と最適化を施したバージョン：
+ * - 環境初期化 (useAppInitializer)
+ * - 地図表示 (MapInitializer)
+ * - POIデータ管理 (Zustand Store)
+ * - Suspenseによるローディング状態の改善
  */
 function App() {
-  // --- 状態管理 ---
-  const [envError, setEnvError] = useState<string | null>(null);
+  // マップへの参照を保持
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [isMapElementReady, setIsMapElementReady] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
-  // --- 副作用 ---
-  // 1. 環境変数検証とキャッシュクリア (初回のみ)
-  useEffect(() => {
-    logger.info('アプリケーション初期化開始');
-    try {
-      logger.info('環境変数検証を開始');
-      validateEnv(import.meta.env);
-      logger.info('環境変数検証 完了');
+  // アプリケーションの初期化処理（環境変数検証、ロガー設定）
+  const { envError } = useAppInitializer();
 
-      // アプリケーション起動時のキャッシュクリア条件をチェック
-      const shouldClearCache =
-        getEnvVar({
-          key: 'VITE_CLEAR_CACHE_ON_START',
-          defaultValue: 'false',
-        }) === 'true';
+  // Zustandから取得したPOI状態を利用
+  const pois = usePOIStore(state => state.pois);
+  const isLoading = usePOIStore(state => state.isLoading);
+  const selectPOI = usePOIStore(state => state.selectPOI);
+  const error = usePOIStore(state => state.error);
 
-      // 開発モードかつキャッシュクリアが有効な場合、または強制パラメータがある場合
-      if (
-        shouldClearCache ||
-        (import.meta.env.DEV && window.location.search.includes('force_clear_cache'))
-      ) {
-        import('@/utils/clearCache')
-          .then(({ clearPOICache }) => {
-            const clearedCount = clearPOICache();
-            logger.info('アプリ起動時にキャッシュをクリアしました', {
-              clearedCount,
-              component: 'App',
-            });
-          })
-          .catch(err => {
-            logger.error('キャッシュクリアモジュールの読み込みに失敗', {
-              error: err,
-              component: 'App',
-            });
-          });
-      }
-    } catch (error) {
-      const errorMsg = '環境変数の検証中にエラーが発生しました';
-      logger.error(errorMsg, { error });
-      setEnvError(errorMsg);
-    }
-  }, []);
+  // POIデータロードフック
+  const { processPOIData } = useLoadPOIData(envError === null);
 
-  // 2. ロガー設定 (初回のみ)
-  useEffect(() => {
-    const logLevelStr = getEnvVar({
-      key: 'VITE_LOG_LEVEL',
-      defaultValue: import.meta.env.DEV ? 'debug' : 'info',
-    });
-    const logLevel = toLogLevel(logLevelStr);
-    logger.configure({ minLevel: logLevel });
-    logger.info('ロガー設定を環境に合わせて調整しました', { logLevel });
-  }, []); // 3. POIデータ取得 (環境変数エラーがない場合)
-  const { data: rawPois, error: poisError } = usePOIData({ enabled: envError === null });
-
-  // POIデータ変換フック
-  const { convertPOItoPointOfInterest } = usePOIConverter();
-
-  // POIデータを表示可能な形式に変換
-  const pois = useMemo(() => {
-    if (!rawPois || rawPois.length === 0) return [];
-    return rawPois.map(poi => convertPOItoPointOfInterest(poi));
-  }, [rawPois, convertPOItoPointOfInterest]); // 4. POI状態管理は現在シンプルな形で実装（必要最小限）
-  // POIの選択状態を保持（現在UI表示に使用していないが、選択処理のために必要）
-  const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
-
-  // POI選択状態の変更を監視してログに記録
-  useEffect(() => {
-    if (selectedPOI) {
-      logger.debug('選択されたPOI情報', {
-        id: selectedPOI.id,
-        name: selectedPOI.name,
-      });
-    }
-  }, [selectedPOI]);
-
-  // 5. マップ要素準備完了ハンドラ (useEffect内で直接セット)
-  useEffect(() => {
-    if (document.getElementById('map')) {
-      logger.debug('マップDOM要素が準備完了');
-      setIsMapElementReady(true);
-    }
-    // TODO: Consider MutationObserver if map div might appear later
-  }, []); // Check only once on mount
-
-  // 6. Google Maps API 読み込み完了コールバック (トップレベル)
-  const handleMapLoad = useCallback((map: google.maps.Map) => {
-    logger.info('Google Maps APIの読み込みが完了しました');
+  // マップロード時のハンドラ
+  const handleMapLoad = (map: google.maps.Map) => {
     mapRef.current = map;
+    // マップが準備できたらPOIデータを処理
+    processPOIData();
+  };
+  // --- エラー表示の処理 ---
+  if (envError) {
+    return <ErrorDisplay message={envError} />;
+  }
 
-    // 佐渡島の境界を設定して地図を調整
-    const sadoBounds = new google.maps.LatLngBounds(
-      { lat: 37.8, lng: 138.1 }, // 南西
-      { lat: 38.4, lng: 138.6 } // 北東
-    );
-    map.fitBounds(sadoBounds);
-  }, []); // 依存配列は空
-
-  // 7. Google Maps API 読み込み (フックは常に呼び出す)
-  const shouldLoadMap = isMapElementReady && envError === null;
-  const { error: mapLoadError } = useGoogleMaps(
-    shouldLoadMap ? '#map' : null, // 条件に応じて mapId を null にする
-    {
-      initOptions: {
-        zoom: 11,
-        center: { lat: 38.0413, lng: 138.3689 },
-      },
-      timeout: 15000,
-      onLoad: handleMapLoad, // トップレベルで定義したコールバックを使用
-    }
-  );
-
-  // --- コールバック ---
-
-  // 地図読み込み再試行ハンドラ
-  const handleRetryMapLoad = useCallback(() => {
-    logger.info('地図読み込みの再試行を実行', { retryCount: retryCount + 1 });
-    setRetryCount(prev => prev + 1);
-    // マップ要素の準備状態をリセットし、再チェックをトリガー
-    setIsMapElementReady(false);
-    // 少し遅延させてDOMの準備を確認
-    setTimeout(() => {
-      if (document.getElementById('map')) {
-        setIsMapElementReady(true);
-      }
-    }, 0);
-  }, [retryCount]);
-
-  // --- メモ化された計算 ---  // 表示すべきエラーの決定
-  const displayError = useMemo(() => {
-    if (envError) return envError;
-    // mapLoadError は useGoogleMaps から直接取得したものを使用
-    // (shouldLoadMap が false の場合、フックが null またはエラーでない値を返すことを期待)
-    if (mapLoadError) return '地図の読み込みに失敗しました: ' + mapLoadError;
-    if (poisError) return 'スポット情報の読み込みに失敗しました: ' + poisError;
-    return null;
-  }, [envError, mapLoadError, poisError]);
-
-  // エラーコンポーネントの選択
-  const errorComponent = useMemo(() => {
-    if (!displayError) return null;
-    // 地図読み込みエラーの場合
-    if (mapLoadError) {
-      // mapLoadError を直接使用
-      return <MapLoadingError error={displayError} onRetry={handleRetryMapLoad} />;
-    }
-    // その他のエラー
-    return <ErrorDisplay message={displayError} />;
-  }, [displayError, mapLoadError, handleRetryMapLoad]); // mapLoadError を依存配列に追加  // POIの選択ハンドラ
-  const handleSelectPOI = useCallback((poi: PointOfInterest) => {
-    logger.info('POIが選択されました', { id: poi.id, name: poi.name });
-    setSelectedPOI(poi);
-  }, []);
+  if (error) {
+    return <ErrorDisplay message={error} />;
+  }
 
   // --- レンダリング ---
   return (
     <div className='app-container'>
-      {/* エラー表示 */}
-      {errorComponent}
-
       {/* アプリケーションコンテンツ */}
       <div id='map' className='map-container' />
 
-      {/* マーカー表示 - Google Maps読み込み完了かつPOIデータがある場合のみ表示 */}
-      {mapRef.current && pois && pois.length > 0 && (
-        <MapMarkers pois={pois} mapRef={mapRef} onSelectPOI={handleSelectPOI} />
-      )}
+      {/* マップ初期化コンポーネント */}
+      <MapInitializer onMapLoad={handleMapLoad} environmentError={envError} />
+
+      {/* Suspenseを使用したコンテンツローディング */}
+      <Suspense fallback={<LoadingState message='コンテンツを読み込み中...' />}>
+        {/* マーカー表示 - Google Maps読み込み完了かつPOIデータがある場合のみ表示 */}
+        {mapRef.current ? (
+          isLoading ? (
+            <LoadingState message='POIデータを読み込み中...' />
+          ) : pois.length > 0 ? (
+            <MapMarkers pois={pois} mapRef={mapRef} onSelectPOI={selectPOI} />
+          ) : (
+            <LoadingState message='表示するPOIデータがありません' />
+          )
+        ) : (
+          <LoadingState message='地図を初期化中...' />
+        )}
+      </Suspense>
     </div>
   );
 }
 
 export default App;
-
-// 削除されたカスタムフックと関数:
-// - useEnvValidation
-// - useLoggerConfiguration
-// - useMapRetry
-// - useMapState
-// - usePOIManagement
-// - useMapManagement
-// - useUIState
-// - errorToString
-// - calculateDisplayError
-// - selectErrorComponent
-// - useAppConfiguration (呼び出し箇所を削除)

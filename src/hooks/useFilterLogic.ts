@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
-import type { PointOfInterest } from '@/types/poi-types';
+import type { PointOfInterest } from '@/types/poi';
 import { logger, LogLevel } from '@/utils/logger';
 
 // コンポーネント名を定数として定義（ロガー用）
@@ -39,16 +39,16 @@ export interface FilterLogicResult extends FilterState {
 /**
  * テキスト検索条件に基づいてPOIをフィルタリングする関数
  * 頻繁に呼び出されるのでインライン化は避けて再利用
+ * パフォーマンスのために最適化されています
  */
 const matchesSearchText = (poi: PointOfInterest, searchLower: string): boolean => {
   if (searchLower === '') return true;
+  // 最も一般的なマッチ（名前）を最初にチェックしてショートサーキット評価を活用
+  if (poi.name.toLowerCase().includes(searchLower)) return true;
+  if (poi.address && poi.address.toLowerCase().includes(searchLower)) return true;
 
-  // PointOfInterest uses optional genre
-  const genreMatch = typeof poi.genre === 'string' && poi.genre.toLowerCase().includes(searchLower);
-  const nameMatch = poi.name.toLowerCase().includes(searchLower);
-  const addressMatch = poi.address.toLowerCase().includes(searchLower);
-
-  return nameMatch || addressMatch || genreMatch;
+  // オプショナルなプロパティは最後にチェック
+  return typeof poi.genre === 'string' && poi.genre.toLowerCase().includes(searchLower);
 };
 
 /**
@@ -146,9 +146,23 @@ const filterPOIs = (
 
       const searchLower = searchText.toLowerCase();
 
-      // 実際に true の値を持つフィルターがあるかチェック
-      const hasActiveCategoryFilter = Array.from(categoryFilters.values()).some(v => v);
-      const hasActiveDistrictFilter = Array.from(districtFilters.values()).some(v => v);
+      // 最適化: 空の検索や全選択の場合、処理を早期に返す
+      const isEmptySearch = searchLower === '';
+      const isAllStatusFilter = statusFilter === 'all';
+
+      // 実際に true の値を持つフィルターがあるかチェック（メソッドを最適化）
+      const hasActiveCategoryFilter = Array.from(categoryFilters.values()).some(Boolean);
+      const hasActiveDistrictFilter = Array.from(districtFilters.values()).some(Boolean);
+
+      // すべてのフィルタが非アクティブの場合は早期リターン
+      if (
+        isEmptySearch &&
+        isAllStatusFilter &&
+        !hasActiveCategoryFilter &&
+        !hasActiveDistrictFilter
+      ) {
+        return pois;
+      }
 
       // フィルタリング実行前にログ記録
       logger.debug('POIフィルタリング開始', {
@@ -157,6 +171,7 @@ const filterPOIs = (
         poiCount: pois.length,
         statusFilter,
         searchTextLength: searchText.length,
+        hasFilters: { category: hasActiveCategoryFilter, district: hasActiveDistrictFilter },
       });
 
       return pois.filter(poi => {
@@ -171,21 +186,21 @@ const filterPOIs = (
         }
 
         // 営業状態フィルター
-        if (statusFilter !== 'all') {
+        if (!isAllStatusFilter) {
           const isOpen = !poi.isClosed; // isClosed フラグを使用
           if (statusFilter === 'open' && !isOpen) return false;
           if (statusFilter === 'closed' && isOpen) return false;
         }
 
-        // テキスト検索フィルター
-        if (!matchesSearchText(poi, searchLower)) {
+        // テキスト検索フィルター（空検索時はスキップ）
+        if (!isEmptySearch && !matchesSearchText(poi, searchLower)) {
           return false;
         }
 
         return true;
       });
     },
-    LogLevel.DEBUG // 単純にLogLevelの値のみを渡す
+    LogLevel.DEBUG
   );
 };
 
@@ -213,101 +228,100 @@ export const useFilterLogic = (
   const [searchText, setSearchText] = useState('');
 
   const { categories, districts } = useMemo(() => extractUniqueValues(pois), [pois]);
+  // filterMapを更新する共通関数（重複コード削減）
+  const updateFilterMap = useCallback(
+    <T extends string>(
+      currentMap: Map<string, boolean>,
+      newItems: T[]
+    ): [Map<string, boolean>, boolean] => {
+      const next = new Map(currentMap);
+      let changed = false;
+
+      // 新しいアイテムを追加
+      for (const item of newItems) {
+        if (!next.has(item)) {
+          next.set(item, true);
+          changed = true;
+        }
+      }
+
+      // 存在しなくなったアイテムを削除
+      for (const key of Array.from(next.keys())) {
+        if (!newItems.includes(key as T)) {
+          next.delete(key);
+          changed = true;
+        }
+      }
+
+      return [changed ? next : currentMap, changed];
+    },
+    []
+  );
 
   // Initialize filters when categories/districts change
   useEffect(() => {
+    // カテゴリフィルターの更新
     setCategoryFilters(prev => {
-      const next = new Map(prev);
-      let changed = false;
-      categories.forEach(cat => {
-        if (!next.has(cat)) {
-          next.set(cat, true);
-          changed = true;
-        }
-      });
-      // Remove categories that no longer exist
-      Array.from(next.keys()).forEach(key => {
-        if (!categories.includes(key)) {
-          next.delete(key);
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
+      const [newMap] = updateFilterMap(prev, categories);
+      return newMap;
     });
 
+    // 地区フィルターの更新
     setDistrictFilters(prev => {
-      const next = new Map(prev);
-      let changed = false;
-      districts.forEach(dist => {
-        if (!next.has(dist)) {
-          next.set(dist, true);
-          changed = true;
-        }
-      });
-      // Remove districts that no longer exist
-      Array.from(next.keys()).forEach(key => {
-        if (!districts.includes(key)) {
-          next.delete(key);
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
+      const [newMap] = updateFilterMap(prev, districts);
+      return newMap;
     });
-  }, [categories, districts]);
+  }, [categories, districts, updateFilterMap]);
 
   const { createToggleHandler, createChangeHandler } = useFilterSelection();
-
   const handleCategoryChange = createChangeHandler(setCategoryFilters);
   const handleDistrictChange = createChangeHandler(setDistrictFilters);
   const handleToggleAllCategories = createToggleHandler(categories, setCategoryFilters);
   const handleToggleAllDistricts = createToggleHandler(districts, setDistrictFilters);
-  // Debounce filter changes slightly to avoid rapid updates during typing
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const filteredPOIs = useMemo(() => {
     return filterPOIs(pois, categoryFilters, districtFilters, statusFilter, searchText);
   }, [pois, categoryFilters, districtFilters, statusFilter, searchText]);
+  /**
+   * 最適化されたデバウンスフック
+   */
+  const useDebounce = <T>(value: T, delay: number, callback: (value: T) => void): void => {
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        callback(value);
+      }, delay);
 
-  // Call onFilterChange when filteredPOIs changes (debounced)
-  useEffect(() => {
-    // フィルター結果に変更があった場合のみデバウンスタイマーを設定
-    const debouncedHandler = () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      debounceTimeoutRef.current = setTimeout(() => {
-        onFilterChange(filteredPOIs);
-        debounceTimeoutRef.current = null; // タイマー参照をクリア
-      }, 50); // 50ms debounce
-    };
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay, callback]);
+  };
 
-    debouncedHandler();
+  // デバウンスされたコールバック
+  const debouncedFilterChange = useCallback(
+    (pois: PointOfInterest[]) => {
+      onFilterChange(pois);
+    },
+    [onFilterChange]
+  );
 
-    // クリーンアップ関数
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-        debounceTimeoutRef.current = null;
-      }
-    };
-  }, [filteredPOIs, onFilterChange]);
-
+  // 最適化されたデバウンス処理（複雑なRef管理を避ける）
+  useDebounce(filteredPOIs, 50, debouncedFilterChange);
   const handleResetFilters = useCallback(() => {
-    setCategoryFilters(prev => {
-      const next = new Map(prev);
-      categories.forEach(cat => next.set(cat, true));
-      return next;
-    });
-    setDistrictFilters(prev => {
-      const next = new Map(prev);
-      districts.forEach(dist => next.set(dist, true));
-      return next;
-    });
+    // Mapオブジェクト全体を新しく作り直す（より効率的なリセット方法）
+    const resetCategoryFilters = new Map(categories.map(cat => [cat, true]));
+    const resetDistrictFilters = new Map(districts.map(dist => [dist, true]));
+
+    setCategoryFilters(resetCategoryFilters);
+    setDistrictFilters(resetDistrictFilters);
     setStatusFilter('all');
     setSearchText('');
+
     logger.info('フィルターリセット完了', {
       component: COMPONENT_NAME,
       action: 'reset_filters_complete',
+      categoryCount: categories.length,
+      districtCount: districts.length,
     });
   }, [categories, districts]);
 

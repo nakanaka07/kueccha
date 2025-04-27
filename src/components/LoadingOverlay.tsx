@@ -33,17 +33,16 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
       <p role='status'>マップ要素を準備中...</p>
     );
   }, [isLoaded, isMapElementReady]);
+  // 現在のロード状態を文字列で取得する関数（useCallbackでメモ化）
+  const getCurrentStateString = useCallback(() => {
+    if (isLoaded) return '読み込み完了';
+    if (isLoadingPOIs) return 'POIデータ読み込み中';
+    if (isMapElementReady) return 'Maps API初期化中';
+    return 'マップ要素準備中';
+  }, [isLoaded, isLoadingPOIs, isMapElementReady]);
 
   // ロード状態の変更をログに記録（状態変更時）
   useEffect(() => {
-    // デバッグ用に現在の状態を文字列で取得
-    const getCurrentStateString = () => {
-      if (isLoaded) return '読み込み完了';
-      if (isLoadingPOIs) return 'POIデータ読み込み中';
-      if (isMapElementReady) return 'Maps API初期化中';
-      return 'マップ要素準備中';
-    };
-
     // 状態変化をデバッグログに出力
     logger.debug('読み込み状態が変更されました', {
       component: 'LoadingOverlay',
@@ -63,8 +62,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
         loadTime: performance.now(),
       });
     }
-    // 依存配列から logConfig と loadingStateString を削除
-  }, [isLoadingPOIs, isLoaded, isMapElementReady]);
+  }, [isLoadingPOIs, isLoaded, isMapElementReady, getCurrentStateString]);
 
   return (
     <div className='loading-overlay' role='progressbar' aria-busy='true' aria-live='polite'>

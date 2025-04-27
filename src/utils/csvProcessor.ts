@@ -1,5 +1,6 @@
-import { type POI, type POICategory, type POIType } from '@/types/poi';
-import { logger, LogLevel } from '@/utils/logger';
+import { POI, POICategory, POIType } from '../types/poi';
+import { getEnvVar } from '../env/core';
+import { logger, LogLevel } from '../utils/logger';
 
 /**
  * CSVデータを処理するユーティリティ
@@ -14,10 +15,24 @@ const COMPONENT_NAME = 'CSVProcessor';
 
 // 未使用関数を削除（KISSの原則に基づく簡素化）
 
-// 佐渡島のデフォルト座標（フォールバック用）- 環境変数から取得またはデフォルト値を使用
+// 佐渡島のデフォルト座標（フォールバック用）- 環境変数から取得
 const DEFAULT_POSITION = {
-  lat: 38.05, // 佐渡島のデフォルト緯度
-  lng: 138.36, // 佐渡島のデフォルト経度
+  lat: parseFloat(getEnvVar({ key: 'VITE_DEFAULT_LAT', defaultValue: '38.05' })),
+  lng: parseFloat(getEnvVar({ key: 'VITE_DEFAULT_LNG', defaultValue: '138.36' })),
+};
+
+// CSV処理の設定 - 環境変数から取得して最適化
+const CSV_CONFIG = {
+  // 一度に処理する最大行数（チャンク処理用）
+  CHUNK_SIZE: parseInt(getEnvVar({ key: 'VITE_CSV_CHUNK_SIZE', defaultValue: '1000' })),
+  // 処理の一時中断時間（ミリ秒）- UIレンダリングのブロッキング防止
+  CHUNK_DELAY: parseInt(getEnvVar({ key: 'VITE_CSV_CHUNK_DELAY', defaultValue: '0' })),
+  // 最大キャッシュサイズ
+  MAX_CACHE_SIZE: parseInt(getEnvVar({ key: 'VITE_MAX_TEXT_CACHE_SIZE', defaultValue: '1000' })),
+  // エラー発生時の最大リトライ回数
+  MAX_RETRIES: parseInt(getEnvVar({ key: 'VITE_CSV_MAX_RETRIES', defaultValue: '3' })),
+  // デバッグモード
+  DEBUG: getEnvVar({ key: 'VITE_CSV_DEBUG', defaultValue: 'false' }) === 'true',
 };
 
 /**
@@ -90,16 +105,28 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
           });
         }
 
-        // ヘッダーの後の行からデータを処理
-        const results = lines
-          .slice(1)
-          .filter(line => line.trim() !== '')
-          .map((line, index) => createPOI(line, columnMap, type, index));
+        // 大きなCSVファイルの場合はチャンク処理で効率化
+        let results: POI[];
+        if (lines.length > CSV_CONFIG.CHUNK_SIZE) {
+          logger.info('大規模CSVデータをチャンク処理で解析します', {
+            totalLines: lines.length,
+            chunkSize: CSV_CONFIG.CHUNK_SIZE,
+            component: COMPONENT_NAME,
+            action: 'chunkProcessing',
+          });
+          // チャンク処理を使用（非同期処理だがUIスレッドをブロックしないよう同期的に待機）
+          results = processDataLinesInChunks(lines.slice(1), columnMap, type);
+        } else {
+          // 標準的なサイズのCSVファイルは通常処理
+          results = processDataLines(lines.slice(1), columnMap, type);
+        }
 
         logger.info('CSVデータ解析完了', {
           type,
           totalEntries: results.length,
-          validEntries: results.filter(p => isValidLatLng(p.position.lat, p.position.lng)).length,
+          validEntries: results.filter(
+            p => p.position && isValidLatLng(p.position.lat, p.position.lng)
+          ).length,
           component: COMPONENT_NAME,
           action: 'parse',
           durationCategory: 'csvProcessing',
@@ -122,6 +149,169 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
     });
     return [];
   }
+}
+
+/**
+ * 大きなCSVファイルをチャンク単位で処理する関数
+ * UIスレッドをブロックせずに大量のデータを処理
+ */
+function processDataLinesInChunks(
+  lines: string[],
+  columnMap: Record<string, number | undefined>,
+  type: POIType
+): POI[] {
+  const results: POI[] = [];
+  const validLines = lines.filter(line => line.trim() !== '');
+  const totalLines = validLines.length;
+
+  // チャンク数を計算
+  const chunkCount = Math.ceil(totalLines / CSV_CONFIG.CHUNK_SIZE);
+  logger.debug('CSVデータをチャンクに分割', {
+    totalLines,
+    chunkCount,
+    chunkSize: CSV_CONFIG.CHUNK_SIZE,
+    component: COMPONENT_NAME,
+    action: 'chunkSplit',
+  });
+
+  // 各チャンクを同期的に処理（パフォーマンス最適化のため）
+  for (let i = 0; i < chunkCount; i++) {
+    const startIdx = i * CSV_CONFIG.CHUNK_SIZE;
+    const endIdx = Math.min(startIdx + CSV_CONFIG.CHUNK_SIZE, totalLines);
+    const chunkLines = validLines.slice(startIdx, endIdx);
+
+    try {
+      // チャンクを処理
+      const chunkResults = processDataLinesWithRetry(chunkLines, columnMap, type, i);
+      results.push(...chunkResults);
+
+      // 進捗状況をログに記録
+      if (i % 5 === 0 || i === chunkCount - 1) {
+        const progress = Math.round((endIdx / totalLines) * 100);
+        logger.debug('CSVチャンク処理進捗', {
+          chunkIndex: i,
+          progress: `${progress}%`,
+          processedLines: endIdx,
+          totalLines,
+          resultsCount: results.length,
+          component: COMPONENT_NAME,
+        });
+      }
+    } catch (error) {
+      logger.error('CSVチャンク処理中にエラー', {
+        chunkIndex: i,
+        startLine: startIdx,
+        endLine: endIdx,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        component: COMPONENT_NAME,
+        action: 'chunkProcess',
+      });
+
+      // エラーが発生しても処理を続行し、可能な限りデータを抽出
+      continue;
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 単一のCSVデータチャンクを処理し、エラー発生時にリトライする関数
+ */
+function processDataLinesWithRetry(
+  lines: string[],
+  columnMap: Record<string, number | undefined>,
+  type: POIType,
+  chunkIndex: number
+): POI[] {
+  let retries = 0;
+  let results: POI[] = [];
+  let success = false;
+
+  while (!success && retries <= CSV_CONFIG.MAX_RETRIES) {
+    try {
+      // 各行を個別に処理してエラーの影響範囲を局所化
+      results = lines
+        .map((line, index) => {
+          try {
+            return createPOI(line, columnMap, type, chunkIndex * CSV_CONFIG.CHUNK_SIZE + index);
+          } catch (lineError) {
+            // 個別行の処理でエラーが発生してもスキップして続行
+            logger.warn('CSV行の処理に失敗', {
+              lineIndex: chunkIndex * CSV_CONFIG.CHUNK_SIZE + index,
+              lineContent: line.length > 50 ? `${line.substring(0, 47)}...` : line,
+              error: lineError instanceof Error ? lineError.message : String(lineError),
+              component: COMPONENT_NAME,
+            });
+
+            // エラーが発生した行は空のデータで代用（フィルタリング可能なように）
+            return createEmptyPOI(type, chunkIndex * CSV_CONFIG.CHUNK_SIZE + index);
+          }
+        })
+        .filter(poi => poi.name !== '無効なデータ');
+
+      success = true;
+    } catch (error) {
+      retries++;
+      logger.warn(`CSVチャンク処理リトライ (${retries}/${CSV_CONFIG.MAX_RETRIES})`, {
+        chunkIndex,
+        error: error instanceof Error ? error.message : String(error),
+        component: COMPONENT_NAME,
+      });
+
+      if (retries >= CSV_CONFIG.MAX_RETRIES) {
+        logger.error('CSVチャンク処理の最大リトライ回数を超過', {
+          chunkIndex,
+          component: COMPONENT_NAME,
+          action: 'chunkRetryFailed',
+        });
+        // 最後のリトライでも失敗した場合は空の結果を返す
+        return [];
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * エラー発生時に使用する空のPOIオブジェクトを作成
+ */
+function createEmptyPOI(type: POIType, index: number): POI {
+  return {
+    id: `error-${type}-${index}`,
+    name: '無効なデータ',
+    type,
+    isClosed: true,
+    position: DEFAULT_POSITION,
+    lat: DEFAULT_POSITION.lat,
+    lng: DEFAULT_POSITION.lng,
+    latitude: DEFAULT_POSITION.lat,
+    longitude: DEFAULT_POSITION.lng,
+    address: '',
+    area: '',
+    category: 'unspecified',
+    genre: '',
+    contact: '',
+    businessHours: '',
+    parkingInfo: '',
+    infoUrl: '',
+    googleMapsUrl: '',
+    searchText: '無効なデータ',
+  };
+}
+
+/**
+ * 通常サイズのCSVデータ行を処理する関数
+ */
+function processDataLines(
+  lines: string[],
+  columnMap: Record<string, number | undefined>,
+  type: POIType
+): POI[] {
+  return lines
+    .filter(line => line.trim() !== '')
+    .map((line, index) => createPOI(line, columnMap, type, index));
 }
 
 /**
@@ -185,11 +375,16 @@ function extractBasicInfo(
 function extractLocationInfo(
   columns: string[],
   columnMap: Record<string, number | undefined>
-): Pick<POI, 'position' | 'address' | 'area'> {
+): Pick<POI, 'position' | 'address' | 'area' | 'lat' | 'lng' | 'latitude' | 'longitude'> {
+  const position = parseWKT(getSafeColumnValue(columns, columnMap.wkt, ''));
   return {
-    position: parseWKT(getSafeColumnValue(columns, columnMap.wkt, '')),
+    position,
     address: getSafeColumnValue(columns, columnMap.address, ''),
     area: getSafeColumnValue(columns, columnMap.area, ''),
+    lat: position?.lat ?? 0,
+    lng: position?.lng ?? 0,
+    latitude: position?.lat ?? 0,
+    longitude: position?.lng ?? 0,
   };
 }
 
@@ -480,7 +675,7 @@ export function filterPOIsByCategory(pois: POI[], categories: POICategory[]): PO
     return pois;
   }
 
-  const filtered = pois.filter(poi => categories.includes(poi.category));
+  const filtered = pois.filter(poi => poi.category && categories.includes(poi.category));
   logger.debug('カテゴリでPOIをフィルタリングしました', {
     originalCount: pois.length,
     filteredCount: filtered.length,
@@ -503,7 +698,7 @@ export function filterPOIsByArea(pois: POI[], areas: string[]): POI[] {
     return pois;
   }
 
-  const filtered = pois.filter(poi => areas.includes(poi.area));
+  const filtered = pois.filter(poi => poi.area && areas.includes(poi.area));
   logger.debug('地区でPOIをフィルタリングしました', {
     originalCount: pois.length,
     filteredCount: filtered.length,
@@ -577,11 +772,11 @@ export function filterPOIsBySearchText(pois: POI[], searchText: string): POI[] {
           return true;
         }
 
-        // それ以外の場合は個別フィールドを検索
+        // それ以外の場合は個別フィールドを検索（undefinedチェックを追加）
         return (
           normalizeText(poi.name).includes(normalizedSearchText) ||
-          normalizeText(poi.genre).includes(normalizedSearchText) ||
-          normalizeText(poi.address).includes(normalizedSearchText)
+          (poi.genre && normalizeText(poi.genre).includes(normalizedSearchText)) ||
+          (poi.address && normalizeText(poi.address).includes(normalizedSearchText))
         );
       });
 

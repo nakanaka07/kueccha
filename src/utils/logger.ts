@@ -1,13 +1,21 @@
+// filepath: c:\Users\int-x-survey\Desktop\kueccha\src\utils\logger.ts
 /**
  * アプリケーションログユーティリティ
  *
  * 環境に応じた適切なログ出力を行い、将来的な外部サービス連携にも対応可能な
  * 柔軟なロギングシステムを提供します。
+ *
+ * @author 佐渡で食えっちゃプロジェクトチーム
+ * @version 1.3.0
+ * @lastUpdate 2025年4月26日
  */
 
 import { LogLevelType } from '../types/env-types';
 
-// ログレベルの列挙型定義
+/**
+ * ログレベルの列挙型定義
+ * 数値ベースの列挙型を使用することで、簡単に比較操作が可能
+ */
 export enum LogLevel {
   ERROR = 0,
   WARN = 1,
@@ -15,88 +23,133 @@ export enum LogLevel {
   DEBUG = 3,
 }
 
-// 環境設定の簡易モック（実際のプロジェクト構成に合わせて調整）
+// 環境設定の簡易モック（Node.jsとブラウザ両対応）
 const ENV = {
   env: {
-    isDev: import.meta.env.DEV || false,
-    isProd: import.meta.env.PROD || false,
-    mode: (import.meta.env.MODE || 'development') as 'development' | 'production' | 'test',
-  },
+    isDev:
+      typeof process !== 'undefined'
+        ? process.env.NODE_ENV !== 'production'
+        : typeof import.meta !== 'undefined'
+          ? import.meta.env?.DEV || false
+          : false,
+    isProd:
+      typeof process !== 'undefined'
+        ? process.env.NODE_ENV === 'production'
+        : typeof import.meta !== 'undefined'
+          ? import.meta.env?.PROD || false
+          : false,
+    mode:
+      typeof process !== 'undefined'
+        ? process.env.NODE_ENV || 'development'
+        : typeof import.meta !== 'undefined'
+          ? import.meta.env?.MODE || 'development'
+          : 'development',
+  } as { isDev: boolean; isProd: boolean; mode: 'development' | 'production' | 'test' },
   logging: {
-    level: (import.meta.env.VITE_LOG_LEVEL || 'info') as LogLevelType,
+    level: (typeof process !== 'undefined'
+      ? process.env.VITE_LOG_LEVEL
+      : typeof import.meta !== 'undefined'
+        ? import.meta.env?.VITE_LOG_LEVEL
+        : 'info') as LogLevelType,
   },
 };
 
-// transforms.ts と同じ数値ベースのLogLevelを使用
-// 文字列表現はマッピング関数を使用して変換する
-const logLevelToString = (level: LogLevel): string => {
-  switch (level) {
-    case LogLevel.ERROR:
-      return 'error';
-    case LogLevel.WARN:
-      return 'warn';
-    case LogLevel.INFO:
-      return 'info';
-    case LogLevel.DEBUG:
-      return 'debug';
-    default:
-      return 'info';
-  }
+// ログレベル文字列を数値に変換するマッピング
+const LOG_LEVEL_MAP: Record<LogLevelType, LogLevel> = {
+  error: LogLevel.ERROR,
+  warn: LogLevel.WARN,
+  info: LogLevel.INFO,
+  debug: LogLevel.DEBUG,
 };
 
-// LogLevel列挙型は数値として直接使用できるため、変換関数は不要
+// デフォルトの最小ログレベル（環境変数から取得）
+const DEFAULT_MIN_LOG_LEVEL = LOG_LEVEL_MAP[ENV.logging.level] ?? LogLevel.INFO;
+
+// 動的環境変数による実行時のログレベル設定
+let RUNTIME_LOG_LEVEL = DEFAULT_MIN_LOG_LEVEL;
+
+// 実行時の強制デバッグモード（開発者向け）
+let FORCE_DEBUG = false;
 
 /**
- * ログの追加コンテキスト情報の型定義
+ * ログレベルを文字列に変換する関数
+ */
+function logLevelToString(level: LogLevel): string {
+  switch (level) {
+    case LogLevel.ERROR:
+      return 'ERROR';
+    case LogLevel.WARN:
+      return 'WARN';
+    case LogLevel.INFO:
+      return 'INFO';
+    case LogLevel.DEBUG:
+      return 'DEBUG';
+    default:
+      return 'INFO';
+  }
+}
+
+/**
+ * ログコンテキストの型定義
  */
 export interface LogContext {
   component?: string;
+  action?: string;
   userId?: string;
   requestId?: string;
   [key: string]: unknown;
 }
 
 /**
- * ロガーに記録されるログエントリの型定義
- * バッファに保存されるログデータの形式を定義
+ * ログバッファ内のログエントリの型定義
  */
 interface LogBufferItem {
   level: LogLevel;
   message: string;
   timestamp: Date;
-  context?: Record<string, unknown>;
+  context?: Record<string, unknown> | undefined;
 }
 
 /**
  * 外部ログサービス連携用のインターフェース
- * 将来的な拡張ポイント
  */
 export interface LogTransport {
   log(level: LogLevel, message: string, context?: LogContext): void;
+  flush?(): Promise<void>;
 }
 
 /**
  * コンテキストフォーマッター関数の型定義
  */
-export type ContextFormatter = (context: LogContext | undefined) => LogContext | undefined;
+export type ContextFormatter = (
+  context: Record<string, unknown> | undefined
+) => Record<string, unknown> | undefined;
 
 /**
- * ロガー設定用のインターフェース
+ * ロガー設定インターフェース
  */
 interface LoggerConfig {
   minLevel: LogLevel;
   enableConsole?: boolean;
   includeTimestamps?: boolean;
   maxLogBufferSize?: number;
+  transports?: LogTransport[];
   samplingRates?: Map<string, number>;
-  contextFormatter?: (context: Record<string, unknown>) => Record<string, unknown>;
+  contextFormatter?: ContextFormatter;
+  redactionKeys?: string[];
 }
 
 /**
- * 最適化されたロガー実装
- * - パフォーマンス重視: 条件付きロギングによる不要な処理回避
- * - メモリ効率: シンプルなバッファ実装
- * - KISS原則: 必要な機能だけをシンプルに実装
+ * サンプリングカウンターの型定義
+ * マップを使用してオブジェクトインジェクション脆弱性を回避
+ */
+type SamplingCounters = Map<string, number>;
+
+/**
+ * ロガーインスタンスのメモリ最適化バージョン
+ * - 不要なオブジェクト生成を最小限に
+ * - 条件付きロギングにより無駄なフォーマット処理を回避
+ * - メモリリークを防止するサイズ制限付きログバッファ
  */
 class Logger {
   private config: LoggerConfig = {
@@ -104,51 +157,114 @@ class Logger {
     enableConsole: true,
     includeTimestamps: true,
     maxLogBufferSize: 100,
+    transports: [],
+    redactionKeys: ['password', 'token', 'secret', 'apiKey', 'key', 'credential'],
+    samplingRates: new Map(),
   };
-  // 最近のログエントリを保持するバッファ（デバッグ用）
+
   private logBuffer: LogBufferItem[] = [];
-  // サンプリングカウンター（パフォーマンス最適化用）
-  // Map型を使用してObject Injection脆弱性を解消
-  private samplingCounters = new Map<string, number>();
+  private samplingCounters: SamplingCounters = new Map();
+  private bufferFlushPromise: Promise<void> | null = null;
+  private lastBufferFlush = Date.now();
+  private readonly flushInterval = 5000; // 5秒ごとにバッファをフラッシュ
 
   /**
-   * ロガー設定を更新
+   * コンストラクタ
+   * @param config 初期設定（オプション）
    */
-  configure(config: Partial<LoggerConfig>): void {
-    this.config = { ...this.config, ...config };
+  constructor(config?: Partial<LoggerConfig>) {
+    if (config) {
+      this.configure(config);
+    }
+
+    // 環境変数からログレベルを設定
+    this.updateLogLevel();
+
+    // 開発モードでは詳細ログを有効化
+    if (ENV.env.isDev) {
+      this.config.minLevel = LogLevel.DEBUG;
+    }
   }
 
   /**
-   * デバッグログエントリを記録
+   * 実行時にログレベルを更新
+   * @param level 新しいログレベル（オプション）
+   */
+  updateLogLevel(level?: LogLevelType): void {
+    if (level && Object.prototype.hasOwnProperty.call(LOG_LEVEL_MAP, level)) {
+      RUNTIME_LOG_LEVEL = LOG_LEVEL_MAP[level as keyof typeof LOG_LEVEL_MAP];
+      this.config.minLevel = RUNTIME_LOG_LEVEL;
+    } else {
+      // 環境変数からの設定
+      this.config.minLevel = RUNTIME_LOG_LEVEL;
+    }
+
+    // 強制デバッグモードの場合はすべてのレベルのログを表示
+    if (FORCE_DEBUG) {
+      this.config.minLevel = LogLevel.DEBUG;
+    }
+  }
+
+  /**
+   * ロガー設定を更新
+   * @param config 更新する設定
+   */
+  configure(config: Partial<LoggerConfig>): void {
+    // 設定を安全にマージ
+    this.config = {
+      ...this.config,
+      ...config,
+      // サンプリングレートとredactionKeysは特殊な処理が必要
+      samplingRates: config.samplingRates || this.config.samplingRates || new Map(),
+      redactionKeys: config.redactionKeys || this.config.redactionKeys || [],
+    };
+
+    // 設定更新後にログレベルを再適用
+    this.updateLogLevel();
+  }
+
+  /**
+   * デバッグレベルのログを記録
+   * @param message ログメッセージ
+   * @param context 付加情報（オプション）
    */
   debug(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.DEBUG, message, context);
   }
 
   /**
-   * 情報ログエントリを記録
+   * 情報レベルのログを記録
+   * @param message ログメッセージ
+   * @param context 付加情報（オプション）
    */
   info(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.INFO, message, context);
   }
 
   /**
-   * 警告ログエントリを記録
+   * 警告レベルのログを記録
+   * @param message ログメッセージ
+   * @param context 付加情報（オプション）
    */
   warn(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.WARN, message, context);
   }
 
   /**
-   * エラーログエントリを記録
+   * エラーレベルのログを記録
+   * @param message ログメッセージ
+   * @param context 付加情報（オプション）
    */
   error(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.ERROR, message, context);
   }
 
   /**
-   * 処理時間を測定し結果をログに記録
-   * パフォーマンス監視に便利な短縮形メソッド
+   * 処理時間を計測してログ出力する便利メソッド
+   * @param label 処理の名前
+   * @param callback 測定する処理
+   * @param logLevel ログレベル（デフォルトはDEBUG）
+   * @returns 処理の結果
    */
   measureTime<T>(label: string, callback: () => T, logLevel: LogLevel = LogLevel.DEBUG): T {
     // 現在の設定でこのレベルのログが出力されない場合は測定をスキップ
@@ -170,8 +286,11 @@ class Logger {
   }
 
   /**
-   * 非同期処理の時間を測定し結果をログに記録
-   * async/await と組み合わせて使用するためのメソッド
+   * 非同期処理の時間を計測してログ出力する
+   * @param label 処理の名前
+   * @param callback 測定する非同期処理
+   * @param logLevel ログレベル（デフォルトはDEBUG）
+   * @returns 処理の結果Promise
    */
   async measureTimeAsync<T>(
     label: string,
@@ -179,7 +298,7 @@ class Logger {
     logLevel: LogLevel = LogLevel.DEBUG
   ): Promise<T> {
     // 現在の設定でこのレベルのログが出力されない場合は測定をスキップ
-    if (logLevel > this.config.minLevel) {
+    if (logLevel > this.config.minLevel && !FORCE_DEBUG) {
       return callback();
     }
 
@@ -212,32 +331,82 @@ class Logger {
 
   /**
    * 最近のログエントリを取得（デバッグ用）
+   * @returns ログバッファのコピー
    */
-  getRecentLogs() {
+  getRecentLogs(): LogBufferItem[] {
     return [...this.logBuffer];
   }
 
   /**
+   * すべてのログトランスポートのバッファを強制的にフラッシュ
+   * @returns 完了を表すPromise
+   */
+  async flushBuffers(): Promise<void> {
+    if (this.config.transports && this.config.transports.length > 0) {
+      await Promise.all(
+        this.config.transports
+          .filter(transport => typeof transport.flush === 'function')
+          .map(transport => transport.flush?.())
+      );
+    }
+  }
+
+  /**
+   * 強制デバッグモードを切り替え（開発時のみ有効）
+   * @param enable 有効にするかどうか
+   */
+  enableForceDebug(enable: boolean): void {
+    if (ENV.env.isProd && enable) {
+      this.warn('本番環境で強制デバッグモードは有効化できません', {
+        component: 'Logger',
+        action: 'enableForceDebug',
+        currentEnv: ENV.env.mode,
+      });
+      return;
+    }
+
+    FORCE_DEBUG = enable;
+    this.updateLogLevel();
+
+    if (enable) {
+      this.info('強制デバッグモードを有効化しました', {
+        component: 'Logger',
+        action: 'enableForceDebug',
+      });
+    } else {
+      this.info('強制デバッグモードを無効化しました', {
+        component: 'Logger',
+        action: 'enableForceDebug',
+      });
+    }
+  }
+
+  /**
    * 内部的なログ処理関数
-   * サンプリング・フィルタリングを適用
+   * @param level ログレベル
+   * @param message ログメッセージ
+   * @param context 付加情報（オプション）
    */
   private log(level: LogLevel, message: string, context?: Record<string, unknown>): void {
-    // 設定されたレベル以下のログはスキップ
-    if (level > this.config.minLevel) {
+    // FORCE_DEBUGが有効でない限り、設定されたレベル以下のログはスキップ
+    if (level > this.config.minLevel && !FORCE_DEBUG) {
       return;
-    } // コンポーネント名をコンテキストから取得
-    const componentName = context?.component as string | undefined; // サンプリングレートの適用（パフォーマンス負荷の高い処理のロギングを間引く）
+    }
+
+    // コンポーネント名をコンテキストから取得（サンプリング用）
+    const componentName = context?.component as string | undefined;
+
+    // サンプリングレートの適用（大量ログ出力を防止）
     if (
       componentName &&
       this.config.samplingRates &&
       this.config.samplingRates.has(componentName)
     ) {
-      // Map型を使用したコンポーネントごとのサンプリングカウンター（安全なアクセス）
       const currentCount = this.samplingCounters.get(componentName) || 0;
       const newCount = currentCount + 1;
       this.samplingCounters.set(componentName, newCount);
 
-      // サンプリングレートに基づいて出力をスキップ（Map型を使用して安全にアクセス）
+      // サンプリングレートに基づいて出力をスキップ
       const rate = this.config.samplingRates.get(componentName);
       if (rate !== undefined && newCount % rate !== 0) {
         return;
@@ -247,67 +416,210 @@ class Logger {
     // タイムスタンプの生成
     const timestamp = new Date();
 
-    // コンテキスト情報の拡張
-    let enhancedContext = context || {};
-    if (this.config.contextFormatter) {
+    // センシティブデータの保護
+    let enhancedContext = context ? this.redactSensitiveData(context) : undefined;
+
+    // コンテキストフォーマッターの適用（設定されている場合）
+    if (this.config.contextFormatter && enhancedContext) {
       enhancedContext = this.config.contextFormatter(enhancedContext);
     }
 
-    // 内部バッファにログを保存（最大サイズを超えた場合は古いものから削除）
-    this.logBuffer.push({
+    // 内部バッファにログを保存
+    const logEntry: LogBufferItem = {
       level,
       message,
       context: enhancedContext,
       timestamp,
-    }); // バッファサイズの制限を適用
-    const maxSize = this.config.maxLogBufferSize || 100; // デフォルト値を設定
+    };
+
+    this.logBuffer.push(logEntry);
+
+    // バッファサイズの制限を適用
+    const maxSize = this.config.maxLogBufferSize || 100;
     if (this.logBuffer.length > maxSize) {
       this.logBuffer.shift();
-    } // コンソールへの出力（有効な場合のみ）
-    if (this.config.enableConsole) {
-      // ログレベルを文字列に変換
-      const levelStr = logLevelToString(level);
-      const timestampStr = this.config.includeTimestamps
-        ? `${timestamp.toISOString().slice(11, 23)} `
-        : '';
+    }
 
-      // 安全なメソッド呼び出し（Object Injectionの問題を回避）
-      let consoleMethod: (message: string, ...optionalParams: unknown[]) => void;
-      // 数値ベースのログレベルを使用してオブジェクトインジェクション問題を回避
-      if (level === LogLevel.ERROR) {
-        consoleMethod = console.error;
-      } else if (level === LogLevel.WARN) {
-        consoleMethod = console.warn;
-      } else if (level === LogLevel.INFO || level === LogLevel.DEBUG) {
-        consoleMethod = console.info; // debugとinfoは両方console.infoを使用
-      } else {
-        consoleMethod = console.info; // デフォルトはinfo
-      }
+    // コンソールへの出力（有効な場合のみ）
+    if (this.config.enableConsole || FORCE_DEBUG) {
+      this.writeToConsole(level, message, timestamp, enhancedContext);
+    }
 
-      // コンテキスト情報が存在する場合は含める
-      if (Object.keys(enhancedContext).length > 0) {
-        consoleMethod(`${timestampStr}[${levelStr.toUpperCase()}] ${message}`, enhancedContext);
-      } else {
-        consoleMethod(`${timestampStr}[${levelStr.toUpperCase()}] ${message}`);
+    // 外部トランスポートへの送信
+    this.sendToTransports(level, message, enhancedContext);
+
+    // 必要に応じて非同期でログバッファを外部サービスに送信
+    this.scheduleBufferFlush();
+  }
+
+  /**
+   * コンソールにログを出力
+   * @param level ログレベル
+   * @param message メッセージ
+   * @param timestamp タイムスタンプ
+   * @param context コンテキスト情報
+   */
+  private writeToConsole(
+    level: LogLevel,
+    message: string,
+    timestamp: Date,
+    context?: Record<string, unknown>
+  ): void {
+    const timestampStr = this.config.includeTimestamps
+      ? `${timestamp.toISOString().slice(11, 23)} `
+      : '';
+
+    const levelStr = logLevelToString(level);
+
+    // 安全なコンソールメソッドの選択
+    let consoleMethod: (message: string, ...optionalParams: unknown[]) => void;
+    switch (level) {
+      case LogLevel.ERROR:
+        consoleMethod = console.error.bind(console);
+        break;
+      case LogLevel.WARN:
+        consoleMethod = console.warn.bind(console);
+        break;
+      case LogLevel.INFO:
+      case LogLevel.DEBUG:
+      default:
+        // デバッグとインフォは同じメソッドを使用
+        consoleMethod = console.info.bind(console);
+        break;
+    }
+
+    // コンポーネント名があればログ表示に追加
+    const componentStr = context?.component ? `[${String(context.component)}] ` : '';
+
+    // コンテキスト情報が存在する場合はフォーマット
+    if (context && Object.keys(context).length > 0) {
+      consoleMethod(`${timestampStr}[${levelStr}] ${componentStr}${message}`, context);
+    } else {
+      consoleMethod(`${timestampStr}[${levelStr}] ${componentStr}${message}`);
+    }
+  }
+
+  /**
+   * 設定されたトランスポートにログを送信
+   * @param level ログレベル
+   * @param message ログメッセージ
+   * @param context コンテキスト情報
+   */
+  private sendToTransports(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>
+  ): void {
+    if (!this.config.transports || this.config.transports.length === 0) {
+      return;
+    }
+
+    for (const transport of this.config.transports) {
+      try {
+        transport.log(level, message, context as LogContext);
+      } catch (error) {
+        // トランスポートエラーはコンソールに記録するだけ
+        console.error('ログトランスポートエラー', {
+          transportError: error instanceof Error ? error.message : String(error),
+          originalMessage: message,
+        });
       }
     }
+  }
+
+  /**
+   * バッファのフラッシュをスケジュール
+   */
+  private scheduleBufferFlush(): void {
+    const now = Date.now();
+    const timeSinceLastFlush = now - this.lastBufferFlush;
+
+    // 一定時間が経過していれば、フラッシュを実行
+    if (timeSinceLastFlush >= this.flushInterval && !this.bufferFlushPromise) {
+      this.bufferFlushPromise = this.flushBuffers().finally(() => {
+        this.bufferFlushPromise = null;
+        this.lastBufferFlush = Date.now();
+      });
+    }
+  }
+
+  /**
+   * 機密データを編集（リダクション）
+   * @param context 編集対象のコンテキスト
+   * @returns 編集後のコンテキスト
+   */
+  private redactSensitiveData(context: Record<string, unknown>): Record<string, unknown> {
+    if (!this.config.redactionKeys || this.config.redactionKeys.length === 0) {
+      return context;
+    }
+
+    // コンテキストのコピーを作成
+    const safeContext = { ...context };
+
+    // 機密キーをリダクション
+    const keys = Object.keys(safeContext);
+    for (const key of keys) {
+      const lowerKey = key.toLowerCase();
+      const sensitiveKeys = this.config.redactionKeys;
+
+      // Object.prototype.hasOwnPropertyを使用して安全にプロパティにアクセス
+      if (Object.prototype.hasOwnProperty.call(safeContext, key)) {
+        // 安全な方法でキーチェック
+        if (sensitiveKeys.some(redactKey => lowerKey.includes(redactKey.toLowerCase()))) {
+          // 機密データを特定した場合は値をマスク
+          Object.defineProperty(safeContext, key, {
+            value: '[REDACTED]',
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        } else {
+          // 安全にプロパティ値を取得 (オブジェクトインジェクション対策)
+          const value = Object.prototype.hasOwnProperty.call(safeContext, key)
+            ? Object.getOwnPropertyDescriptor(safeContext, key)?.value
+            : undefined;
+
+          if (
+            typeof value === 'object' &&
+            value !== null &&
+            !(value instanceof Date) // Date型は対象外
+          ) {
+            // ネストされたオブジェクトも再帰的にリダクション
+            const nestedObj = value as Record<string, unknown>;
+            Object.defineProperty(safeContext, key, {
+              value: this.redactSensitiveData(nestedObj),
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
+          }
+        }
+      }
+    }
+
+    return safeContext;
   }
 }
 
 // シングルトンインスタンスをエクスポート
 export const logger = new Logger();
 
-// 注：envLoggerは既にcore.tsで定義されているため、ここでは初期化は不要です
-// 循環参照を避けるため、この部分は削除します
-
-// プロダクション環境での外部サービス連携
+// プロダクション環境での外部サービス連携設定
 if (ENV.env.isProd) {
   try {
     logger.info('外部エラー追跡サービスとの連携を初期化しています');
-    // 実装コメントは変更なし
+
+    // 実際の外部サービスの設定は、エラー追跡サービス（Sentry等）の
+    // 専用モジュールに置くことが推奨されます。このコメントは設定例です。
+    //
+    // 以下は構成例：
+    // 1. トランスポートの設定
+    // 2. ログレベルの設定
+    // 3. サンプリングレートの設定（大量ログを間引く）
+
     logger.info('外部エラー追跡サービスの統合が完了しました');
-  } catch (err) {
-    // no-consoleルールに準拠したエラーログ
+  } catch (err: unknown) {
+    // エラーの場合でもロガー自体は利用可能に
     logger.error(`外部トランスポートの初期化に失敗しました`, {
       error: err instanceof Error ? err.message : String(err),
     });

@@ -99,6 +99,103 @@ function getOptimalMarkerSize(
 
 - **ポイントの識別**: 各マーカーに一意のIDを割り当てる
 - **キャッシュ**: マーカーオブジェクトをキャッシュして再利用
+- **遅延レンダリング**: 視認範囲内のマーカーのみを優先的に表示
+- **バッチ更新**: マーカー更新をグループ化して一度に適用
+
+## 静的ホスティング向け最適化
+
+```typescript
+// 静的ホスティング環境でのマーカーパフォーマンス最適化
+export function optimizeMarkersForStaticHosting(
+  markers: Array<google.maps.marker.AdvancedMarkerElement | google.maps.Marker>,
+  map: google.maps.Map
+): void {
+  // マーカーの表示を制御するビューポート監視
+  let visibleMarkers = new Set<string>();
+  const markerMap = new Map<string, any>();
+
+  // 各マーカーにIDを割り当て
+  markers.forEach(marker => {
+    const markerId = getUniqueMarkerId(marker);
+    markerMap.set(markerId, marker);
+  });
+
+  // ビューポート変更リスナー
+  map.addListener('idle', () => {
+    const bounds = map.getBounds();
+    if (!bounds) return;
+
+    // 現在のビューポート内のマーカー
+    const newVisibleMarkers = new Set<string>();
+
+    // ビューポート内のマーカーを特定
+    markers.forEach(marker => {
+      const position = marker.getPosition();
+      if (position && bounds.contains(position)) {
+        const markerId = getUniqueMarkerId(marker);
+        newVisibleMarkers.add(markerId);
+      }
+    });
+
+    // 新しく表示すべきマーカー
+    newVisibleMarkers.forEach(markerId => {
+      if (!visibleMarkers.has(markerId)) {
+        const marker = markerMap.get(markerId);
+        if (marker && 'setMap' in marker) {
+          marker.setMap(map);
+        } else if (marker && 'map' in marker) {
+          marker.map = map;
+        }
+      }
+    });
+
+    // 非表示にすべきマーカー
+    visibleMarkers.forEach(markerId => {
+      if (!newVisibleMarkers.has(markerId)) {
+        const marker = markerMap.get(markerId);
+        if (marker && 'setMap' in marker) {
+          marker.setMap(null);
+        } else if (marker && 'map' in marker) {
+          marker.map = null;
+        }
+      }
+    });
+
+    // 表示中マーカーリストを更新
+    visibleMarkers = newVisibleMarkers;
+  });
+
+  // 最初のビューポートでのマーカー表示を初期化
+  map.addListenerOnce('idle', () => {
+    // 意図的に'idle'イベントを再発火して初期マーカー表示を行う
+    google.maps.event.trigger(map, 'idle');
+  });
+}
+```
+
+## ローカルアセットマーカーの使用
+
+```typescript
+// ローカルアセットを使用したマーカー作成（CDN依存の削減）
+export function createLocalAssetMarker(
+  position: google.maps.LatLngLiteral,
+  category: POICategory
+): google.maps.Marker {
+  // カテゴリに基づくローカルアイコンパス
+  const iconPath = getLocalIconPath(category);
+
+  return new google.maps.Marker({
+    position,
+    icon: {
+      url: iconPath,
+      scaledSize: new google.maps.Size(36, 36),
+      // ローカルホストでのキャッシュバスティングは開発時のみ
+      url: ENV.isDevelopment ? `${iconPath}?t=${Date.now()}` : iconPath,
+    },
+  });
+}
+```
+
 - **バッチ更新**: マーカー更新を一度にまとめて処理
 
 ```typescript

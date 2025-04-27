@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { logger, LogLevel } from '@/utils/logger';
+import { LogLevel } from '@/utils/logger';
+import { logWithLevel, summarizeMessage } from '@/utils/logging';
 
 interface ErrorDisplayProps {
   message: string;
@@ -50,11 +51,10 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = React.memo(
   }) => {
     // コンポーネントマウント時に追加のエラーハンドリングを実行
     React.useEffect(() => {
-      // エラーメッセージが長すぎる場合は要約する（ロギング最適化）
-      const logMessage = message.length > 200 ? `${message.substring(0, 200)}...` : message;
-
       // エラーをログに記録（エラーレベルを明示的に使用）
       const errorLevel = LogLevel.ERROR;
+      const logMessage = summarizeMessage(message);
+
       logWithLevel(errorLevel, 'UIにエラーが表示されました', {
         message: logMessage,
         component: 'ErrorDisplay',
@@ -71,40 +71,17 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = React.memo(
       onErrorShown?.();
     }, [message, onError, onErrorShown]);
 
-    // ログレベルに応じたロギング処理をカプセル化
-    const logWithLevel = (
-      level: LogLevel,
-      logMessage: string,
-      context: Record<string, unknown>
-    ) => {
-      switch (level) {
-        case LogLevel.ERROR:
-          logger.error(logMessage, context);
-          break;
-        case LogLevel.WARN:
-          logger.warn(logMessage, context);
-          break;
-        case LogLevel.INFO:
-          logger.info(logMessage, context);
-          break;
-        case LogLevel.DEBUG:
-          logger.debug(logMessage, context);
-          break;
-        default:
-          logger.info(logMessage, context);
-      }
-    };
-
     // 再読み込みハンドラ
     const handleReload = React.useCallback(() => {
       // 開発環境では詳細ログ、本番環境ではシンプルなログ
       const logLevel = import.meta.env.DEV ? LogLevel.DEBUG : LogLevel.INFO;
+      const shortenedMessage = summarizeMessage(message, 50);
 
       // ログレベルに応じてログ出力
       const reloadContext = {
         component: 'ErrorDisplay',
         action: 'page_reload',
-        errorMessage: message.length > 50 ? `${message.substring(0, 50)}...` : message,
+        errorMessage: shortenedMessage,
       };
 
       logWithLevel(logLevel, 'ユーザーが再読み込みを実行', reloadContext);

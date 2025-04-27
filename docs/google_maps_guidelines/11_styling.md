@@ -1,102 +1,183 @@
 # 11. スタイリングと設定の互換性
 
-## mapIDとカスタムスタイルの関係
+## 静的ホスティング環境におけるスタイリング戦略
 
 ```typescript
-// mapIDとカスタムスタイルの適切な組み合わせ方
-function configureMapStyling(map: google.maps.Map): void {
+// 静的ホスティング環境に最適化されたマップスタイリング設定
+export function configureMapStyling(
+  map: google.maps.Map,
+  options: StylingOptions = {}
+): void {
   // 前提：環境変数からのmapID取得
   const mapId = ENV.google.mapId;
 
-  if (mapId) {
-    // Cloud Consoleで設計したスタイルを使用する場合
+  // 静的ホスティング環境における最適化
+  const isStaticHosting = isStaticHostingEnvironment();
+
+  if (mapId && !isStaticHosting) {
+    // Cloud Consoleで設計したスタイルを使用する場合（動的環境）
     map.mapId = mapId;
     logger.info('Cloud Consoleで設計されたMapIDスタイルを適用します', {
       component: 'MapStyling',
       mapId,
     });
 
-    // 重要: インラインスタイルの適用に関する注意
-    // - mapIdが設定されている場合、一部のスタイル設定は上書きされません
-    // - 特にfeatureType/elementTypeベースのスタイルはmapIdの設定が優先されます
-
     // 補足的なスタイルのみを追加（競合しない要素のみ）
-    const supplementalStyles = [
-      // 特定の要素だけを選択的に上書き
-      {
-        featureType: 'poi.business',
-        stylers: [{ visibility: 'simplified' }],
-      },
-    ];
-
+    const supplementalStyles = getSupplementalStyles();
     map.setOptions({ styles: supplementalStyles });
   } else {
-    // mapIdがない場合は完全なインラインスタイルを適用
-    logger.info('インラインスタイル設定を適用します', {
-      component: 'MapStyling',
-    });
+    // 静的ホスティング環境またはmapIdがない場合は完全なインラインスタイルを適用
+    logger.info(
+      `インラインスタイル設定を適用します ${isStaticHosting ? '(静的ホスティング最適化)' : ''}`,
+      {
+        component: 'MapStyling',
+        isStaticHosting,
+      }
+    );
+
+    // 静的ホスティング用に最適化されたスタイルを適用
     map.setOptions({
-      styles: SADO_ISLAND_CUSTOM_STYLES,
+      styles: isStaticHosting
+        ? STATIC_HOSTING_OPTIMIZED_STYLES
+        : SADO_ISLAND_CUSTOM_STYLES,
     });
+
+    // 静的ホスティング環境向けの追加最適化
+    if (isStaticHosting) {
+      optimizeStylesForStaticHosting(map);
+    }
   }
 }
 
-// mapIdとインラインスタイルの競合を避けるベストプラクティス
-const STYLE_COMPATIBILITY_RECOMMENDATIONS = {
-  // mapIdを使う場合の推奨事項
-  withMapId: [
-    '• Cloud Consoleでスタイルを完全に管理し、コード内でのスタイル定義を最小限に',
-    '• 必要な場合は補足的なスタイル（例：特定のPOIの表示/非表示）のみをコードで適用',
-    '• スタイル変更が必要な場合はCloud Consoleで行い、アプリケーションの再デプロイ不要',
+// 静的ホスティング環境向けの最適化スタイル
+export const STATIC_HOSTING_OPTIMIZED_STYLES = [
+  // 基本的なスタイル定義
+  {
+    featureType: 'all',
+    elementType: 'geometry',
+    stylers: [{ visibility: 'simplified' }],
+  },
+
+  // 不要な要素を非表示にしてレンダリングを最適化
+  {
+    featureType: 'poi',
+    elementType: 'labels',
+    stylers: [{ visibility: 'off' }],
+  },
+
+  // テクスチャとアイコンを簡素化
+  {
+    featureType: 'transit',
+    stylers: [{ visibility: 'off' }],
+  },
+
+  // 佐渡島の海岸線を強調
+  {
+    featureType: 'water',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#a3ccff' }],
+  },
+
+  // 主要道路を強調（ユーザビリティ向上）
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#ffaa00' }, { weight: 2 }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.icon',
+    stylers: [{ visibility: 'off' }], // 道路アイコンを非表示
+  },
+];
+
+// 静的ホスティング環境向けスタイル最適化
+function optimizeStylesForStaticHosting(map: google.maps.Map): void {
+  // APIコール削減のための設定
+  map.setOptions({
+    // 不要な詳細情報を制限
+    disableDefaultUI: true,
+    zoomControl: true,
+    fullscreenControl: true,
+
+    // ストリートビュー・回転操作を無効化（APIリクエスト削減）
+    rotateControl: false,
+    streetViewControl: false,
+
+    // タイルの読み込みを最適化
+    tilt: 0, // 2Dモードに固定
+  });
+
+  // プリフェッチとキャッシュ
+  if ('caches' in window) {
+    prefetchCriticalTiles();
+  }
+}
+
+// mapIdとインラインスタイルの競合を避けるベストプラクティス（静的ホスティング対応）
+export const STYLE_COMPATIBILITY_RECOMMENDATIONS = {
+  // 静的ホスティングでmapIdを使う場合の推奨事項
+  staticHostingWithMapId: [
+    '• 静的ホスティング環境では、インラインスタイルが優先推奨（API利用削減）',
+    '• mapIdを使う場合は、適切なキャッシュ戦略と組み合わせる',
+    '• リクエスト数を減らすため、詳細度の低いスタイルを選択する',
   ],
 
-  // インラインスタイルを使う場合の推奨事項
-  withInlineStyles: [
-    '• mapIdを設定せず、すべてのスタイルをコード内で完全に管理',
-    '• 動的なスタイル変更（季節、時間帯、ユーザー設定など）が必要な場合に適している',
-    '• スタイル変更にはコード更新と再デプロイが必要',
+  // インラインスタイルを使う場合の推奨事項（静的ホスティング向け）
+  staticHostingWithInlineStyles: [
+    '• すべてのスタイルをコード内で管理し、不要な詳細・アイコンを非表示に',
+    '• APIリクエストを削減するため、ポリゴン単純化と詳細度調整を活用',
+    '• 静的ホスティングに最適化された簡素なスタイル定義を使用',
   ],
 
-  // ハイブリッドアプローチ（注意が必要）
+  // ハイブリッドアプローチ
   hybrid: [
     '• mapIdをベースとして使用し、特定の状況下で限定的なスタイルを上書き',
-    '• 競合の可能性を常に考慮し、テスト環境で十分に検証が必要',
-    '• 上書きが効かない場合は、異なるmapIdを用意するか完全にインラインスタイルに移行',
+    '• 静的ホスティング環境では、常に負荷とパフォーマンスを考慮した設計を',
+    '• 開発時は詳細なスタイル、本番では簡素化したスタイルを使い分ける',
   ],
 };
 
-// 実装例：季節によるスタイル変更とmapIdの併用
-function applySeasonnalThemeWithMapId(map: google.maps.Map) {
-  // 基本スタイルはmapIdで設定済みと仮定
-  const mapId = ENV.google.mapId;
-  if (!mapId) {
-    logger.warn('mapIdが設定されていないため、季節テーマを直接適用します', {
-      component: 'SeasonalTheme',
-    });
-    applySadoSeasonalTheme(map); // 直接すべてのスタイルを適用
-    return;
-  }
-
-  // mapIdがある場合は補足的なスタイルのみを追加
+// 実装例：季節によるスタイル変更（静的ホスティング最適化版）
+export function applySeasonalThemeWithStaticHosting(map: google.maps.Map) {
   const now = new Date();
   const month = now.getMonth() + 1;
+  const isStaticHosting = isStaticHostingEnvironment();
 
-  // 季節ごとに異なるmapIdを使い分ける（推奨アプローチ）
-  if (month >= 3 && month <= 5 && ENV.google.springMapId) {
-    // 春用のmapIdが設定されている場合
-    map.mapId = ENV.google.springMapId;
-  } else if (month >= 6 && month <= 8 && ENV.google.summerMapId) {
-    // 夏用のmapIdが設定されている場合
-    map.mapId = ENV.google.summerMapId;
+  // 季節スタイル適用戦略
+  if (isStaticHosting) {
+    // 静的ホスティングではプリロードされたスタイル定義を使用
+    const seasonalStyle = getPreloadedSeasonalStyle(month);
+    map.setOptions({ styles: seasonalStyle });
+
+    logger.debug('静的ホスティング用の季節スタイルを適用しました', {
+      component: 'SeasonalTheme',
+      season: getSeasonName(month),
+      styleElements: seasonalStyle.length,
+    });
   } else {
-    // デフォルトのmapIdを使用
-    map.mapId = mapId;
+    // 通常環境では季節別mapIdまたはフルスタイリング
+    const mapId = ENV.google.mapId;
 
-    // 補足的な季節スタイルを適用（一部要素のみ）
-    // 注意: これらは基本スタイルと競合する可能性があります
-    const limitedSeasonalStyle = getSeasonSpecificOverrides(month);
-    if (limitedSeasonalStyle.length > 0) {
-      map.setOptions({ styles: limitedSeasonalStyle });
+    // 季節ごとに異なるmapIdを使い分ける
+    if (month >= 3 && month <= 5 && ENV.google.springMapId) {
+      // 春用のmapId
+      map.mapId = ENV.google.springMapId;
+    } else if (month >= 6 && month <= 8 && ENV.google.summerMapId) {
+      // 夏用のmapId
+      map.mapId = ENV.google.summerMapId;
+    } else if (mapId) {
+      // デフォルトのmapId
+      map.mapId = mapId;
+
+      // 補足的な季節スタイルを適用
+      const seasonalOverrides = getSeasonSpecificOverrides(month);
+      if (seasonalOverrides.length > 0) {
+        map.setOptions({ styles: seasonalOverrides });
+      }
+    } else {
+      // mapIdがない場合は季節に応じたフルスタイル
+      applySadoSeasonalTheme(map);
     }
   }
 }

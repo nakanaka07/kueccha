@@ -1,31 +1,56 @@
 import { useMemo } from 'react';
 
 import type { PointOfInterest } from '@/types/poi';
-// ENV import might be needed if PERFORMANCE_CONFIG was just one usage
-// import { ENV } from '@/utils/env';
 import { logger, LogLevel } from '@/utils/logger';
 
 /**
+ * POIフィルタリングのパフォーマンス設定
+ * ロギングとパフォーマンス計測の動作を制御します
+ */
+const PERFORMANCE_CONFIG = {
+  // 詳細なパフォーマンス計測を有効にするかどうか
+  ENABLE_DETAILED_METRICS: true,
+  // フィルタリング時のログレベル
+  LOG_LEVEL: LogLevel.DEBUG,
+  // パフォーマンス警告しきい値（ミリ秒）
+  SLOW_FILTER_THRESHOLD: 100,
+  // POI処理時の詳細ロギングを有効にするかどうか
+  ENABLE_POI_DEBUG: false,
+};
+
+/**
  * POIフィルタリングのオプション
+ * 型安全性の向上と明確なデフォルト値の設定
  */
 export interface FilterOptions {
   /**
    * カテゴリでフィルタリングする場合の対象カテゴリ配列
    * 指定された場合、配列内のいずれかのカテゴリに一致するPOIのみが返される
+   * デフォルト: 空配列（フィルタリングなし）
    */
-  categories?: string[];
+  categories?: readonly string[];
 
   /**
    * 営業中のみ表示するかどうか
    * trueの場合、閉店しているPOIや当日が定休日のPOIは除外される
+   * デフォルト: false（すべての営業状態を表示）
    */
   isOpen?: boolean;
 
   /**
    * 検索テキスト
    * 名称、ジャンル、住所のいずれかが一致するPOIのみが返される
+   * デフォルト: undefined（検索フィルタなし）
+   *
+   * 注意: 内部的に小文字に変換・トリムされて処理されます
    */
   searchText?: string;
+
+  /**
+   * フィルタリング処理の詳細ログを出力するかどうか
+   * デフォルト: false
+   */
+  enableDetailedLogging?: boolean;
 }
 
 // コンポーネント識別子（ログ出力で使用）
@@ -34,10 +59,13 @@ const COMPONENT_NAME = 'useFilteredPOIs';
 /**
  * カテゴリフィルタリングのロジック
  * @param poi 対象のPOI
- * @param categories フィルタリング対象のカテゴリ配列
+ * @param categories フィルタリング対象のカテゴリ配列（読み取り専用可）
  * @returns 選択されたカテゴリに一致する場合はtrue
  */
-const matchesCategory = (poi: PointOfInterest, categories: string[] | undefined): boolean => {
+const matchesCategory = (
+  poi: PointOfInterest,
+  categories: readonly string[] | undefined
+): boolean => {
   // カテゴリが未指定または空の場合は全て対象
   if (!categories || categories.length === 0) return true;
 
@@ -109,98 +137,233 @@ const matchesSearchText = (poi: PointOfInterest, searchText: string | undefined)
 /**
  * POIのフィルタリングを実行する関数（純粋関数・簡素化）
  */
+/**
+ * POIのフィルタリングを実行する関数（純粋関数・最適化済み）
+ *
+ * @param pois フィルタリング対象のPOI配列
+ * @param filters フィルタリング条件
+ * @param normalizedSearchText 正規化済み検索テキスト
+ * @returns フィルタリングされたPOI配列
+ */
 const filterPOIs = (
-  pois: PointOfInterest[],
-  filters: FilterOptions,
+  pois: readonly PointOfInterest[],
+  filters: {
+    categories: readonly string[];
+    isOpen: boolean;
+  },
   normalizedSearchText?: string
 ): PointOfInterest[] => {
-  // 入力データが空の場合は早期リターン
-  if (!pois.length) return [];
+  // 入力データが空の場合は早期リターン - 型安全性の向上
+  if (!pois || !pois.length) return [];
 
-  // フィルタが何もない場合は元の配列をそのまま返す
-  const hasCategoryFilter = filters.categories && filters.categories.length > 0;
+  // フィルタ条件の存在確認を厳密化 - コードの堅牢性向上
+  const hasCategoryFilter = filters.categories.length > 0;
   const hasOpenFilter = filters.isOpen === true;
-  const hasSearchFilter = Boolean(normalizedSearchText);
+  const hasSearchFilter = Boolean(normalizedSearchText?.trim());
 
+  // 最適化: フィルタ条件が何もない場合は元の配列をコピーして返す
   if (!hasCategoryFilter && !hasOpenFilter && !hasSearchFilter) {
-    return pois;
+    return [...pois];
   }
 
-  // フィルタリング実行 (短絡評価でシンプルに)
-  return pois.filter(poi => {
+  // フィルタリング処理のカウントを記録（詳細なメトリクス用）
+  let processedCount = 0;
+  let skippedCount = 0;
+  let errorCount = 0;
+
+  // フィルタリング実行 (最適化された短絡評価と堅牢なエラー処理)
+  const filteredPOIs = pois.filter(poi => {
+    processedCount++;
+
     try {
+      // null/undefinedチェック - 型安全性の向上
+      if (!poi) {
+        skippedCount++;
+        return false;
+      }
+
       // 早期リターン戦略：コスト低・除外効果高の順に評価
       // 営業中でない場合除外
       if (hasOpenFilter && !isOpenNow(poi)) return false;
+
       // カテゴリが一致しない場合除外
       if (hasCategoryFilter && !matchesCategory(poi, filters.categories)) return false;
+
       // 検索テキストが一致しない場合除外
-      // normalizedSearchText が undefined でないことを確認してから matchesSearchText を呼び出す
       if (hasSearchFilter && normalizedSearchText && !matchesSearchText(poi, normalizedSearchText))
         return false;
 
       // 全ての条件をクリアした場合に残す
       return true;
     } catch (error) {
-      // エラーログを記録し、問題のあるPOIは除外
-      logger.warn(`POI フィルタリングエラー`, {
+      // エラーカウント増加
+      errorCount++;
+
+      // 改善されたエラーログ - より詳細なコンテキスト情報
+      logger.warn(`POIフィルタリングエラー`, {
         component: COMPONENT_NAME,
         action: 'filter_error',
         entityId: poi.id || 'unknown',
         poiName: poi.name || 'unknown',
+        poiData: PERFORMANCE_CONFIG.ENABLE_DETAILED_METRICS
+          ? {
+              // デバッグに役立つ最小限の情報のみ
+              hasCategories: Boolean(poi.categories?.length),
+              isClosed: poi.isClosed,
+              hasSearchableText: Boolean(poi.name || poi.genre || poi.address),
+            }
+          : undefined,
         error:
-          error instanceof Error ? { message: error.message, stack: error.stack } : String(error),
-        // エラーコンテキストに必要な情報のみ含める
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
       });
+
       return false; // エラーが発生したPOIは結果から除外
     }
   });
+
+  // 詳細メトリクスが有効な場合、フィルタリング統計を記録
+  if (PERFORMANCE_CONFIG.ENABLE_DETAILED_METRICS) {
+    logger.debug(`POIフィルタリング統計`, {
+      component: COMPONENT_NAME,
+      totalItems: pois.length,
+      filteredItems: filteredPOIs.length,
+      processedCount,
+      skippedCount,
+      errorCount,
+      filterCriteria: {
+        categories: hasCategoryFilter ? filters.categories.length : 0,
+        isOpen: hasOpenFilter,
+        hasSearchText: hasSearchFilter,
+      },
+    });
+  }
+
+  return filteredPOIs;
 };
 
 /**
- * POIデータをフィルタリングするカスタムフック (簡素化・ロギング最適化)
+ * POIデータをフィルタリングするカスタムフック (最適化済み)
  *
  * 指定された条件に基づいてPOIをフィルタリングし、結果をメモ化して返します。
+ * パフォーマンスを最適化するため、必要最小限の再計算のみ行います。
  *
  * @param pois フィルタリング対象のPOIデータ配列
  * @param filters フィルタリング条件
  * @returns フィルタリングされたPOI配列
  */
 export function useFilteredPOIs(
-  pois: PointOfInterest[],
+  pois: PointOfInterest[] | readonly PointOfInterest[] | undefined,
   filters: FilterOptions = {}
 ): PointOfInterest[] {
+  // 安全な入力値の確保（型安全性の向上）
+  const safePois = useMemo(() => (Array.isArray(pois) ? pois : []), [pois]);
+
   // 検索テキストを正規化（メモ化の最適化のため）
   const normalizedSearchText = useMemo(
     // searchTextが存在する場合のみ処理、なければundefined
-    () => (filters.searchText ? filters.searchText.toLowerCase().trim() : undefined),
+    () => {
+      const searchText = filters.searchText;
+      if (!searchText) return undefined;
+
+      const normalized = searchText.toLowerCase().trim();
+      // 空文字列になった場合はundefinedを返す
+      return normalized ? normalized : undefined;
+    },
     [filters.searchText]
   );
-
-  // フィルタリング設定の安定した参照を作成 (簡素化)
+  // フィルタリング設定の安定した参照を作成 (最適化済み)
   const stableFilters = useMemo(
     () => ({
-      categories: filters.categories,
-      isOpen: filters.isOpen,
-      // searchTextはnormalizedSearchTextを使うので不要
+      // カテゴリが存在する場合のみ参照を保持（空配列をデフォルト値として使用）
+      categories:
+        filters.categories && filters.categories.length > 0
+          ? filters.categories
+          : ([] as readonly string[]),
+      // 明示的にブール値に変換して安定した参照を確保
+      isOpen: filters.isOpen === true,
+      // detailedLoggingオプションをサポート
+      enableDetailedLogging: filters.enableDetailedLogging === true,
     }),
-    [filters.categories, filters.isOpen]
-  ); // フィルタリング結果をメモ化
+    [filters.categories, filters.isOpen, filters.enableDetailedLogging]
+  );
+  // フィルタリング結果をメモ化し、不要な再計算を防止
   return useMemo(() => {
-    // 基本的なパフォーマンス計測とロギング
+    // 詳細なパフォーマンス計測とロギング
     return logger.measureTime(
       'POIフィルタリング処理', // ログラベル
-      () =>
-        filterPOIs(
-          pois,
+      () => {
+        // フィルタが何もない場合は早期リターン（最適化）
+        const hasFilters = Boolean(
+          stableFilters.categories.length > 0 || stableFilters.isOpen || normalizedSearchText
+        );
+
+        if (!hasFilters && safePois.length > 0) {
+          if (PERFORMANCE_CONFIG.ENABLE_POI_DEBUG) {
+            logger.debug('フィルタなし - 元のPOI配列を返します', {
+              component: COMPONENT_NAME,
+              poiCount: safePois.length,
+            });
+          }
+          return [...safePois]; // イミュータブルな配列としてコピーを返す
+        }
+
+        // フィルタリング処理開始
+        const startTime = performance.now();
+
+        // 型安全性の担保: PoIとfiltersを適切な型に整形
+        const result = filterPOIs(
+          safePois,
           {
-            categories: stableFilters.categories || [],
-            isOpen: stableFilters.isOpen ?? false,
+            categories: stableFilters.categories,
+            isOpen: stableFilters.isOpen,
           },
           normalizedSearchText
-        ), // 実行する関数
-      LogLevel.DEBUG // ログレベル
-      // 4番目の引数（ログコンテキスト）を削除
+        );
+
+        const duration = performance.now() - startTime;
+
+        // パフォーマンス測定とログ出力
+        if (PERFORMANCE_CONFIG.ENABLE_DETAILED_METRICS) {
+          const filteringRatio =
+            safePois.length > 0 ? ((safePois.length - result.length) / safePois.length) * 100 : 0;
+
+          // パフォーマンス警告しきい値を超えた場合は警告ログ
+          if (duration > PERFORMANCE_CONFIG.SLOW_FILTER_THRESHOLD) {
+            logger.warn(`POIフィルタリングに時間がかかりました`, {
+              component: COMPONENT_NAME,
+              duration: `${duration.toFixed(2)}ms`,
+              threshold: PERFORMANCE_CONFIG.SLOW_FILTER_THRESHOLD,
+              itemCount: safePois.length,
+              resultCount: result.length,
+              filteringRatio: `${filteringRatio.toFixed(1)}%`,
+              filters: {
+                hasCategories: stableFilters.categories.length > 0,
+                categories: stableFilters.categories.length,
+                isOpenFilter: stableFilters.isOpen,
+                searchTextLength: normalizedSearchText?.length || 0,
+              },
+            });
+          } else if (stableFilters.enableDetailedLogging) {
+            // 詳細ロギングが有効な場合は常に統計を出力
+            logger.debug(`POIフィルタリング完了`, {
+              component: COMPONENT_NAME,
+              duration: `${duration.toFixed(2)}ms`,
+              itemCount: safePois.length,
+              resultCount: result.length,
+              filteringRatio: `${filteringRatio.toFixed(1)}%`,
+            });
+          }
+        }
+
+        return result;
+      },
+      PERFORMANCE_CONFIG.LOG_LEVEL
     );
-  }, [pois, normalizedSearchText, stableFilters]); // 依存配列
+  }, [safePois, normalizedSearchText, stableFilters]); // 依存配列を最適化
 }

@@ -3,7 +3,7 @@
 ## クラスタリング設定のベストプラクティス
 
 ```typescript
-// クラスタリング設定の例
+// クラスタリング設定の基本例
 const setupClustering = (
   markers: google.maps.marker.AdvancedMarkerElement[],
   map: google.maps.Map
@@ -99,59 +99,154 @@ function getResponsiveGridSize(): number {
   // モバイルデバイスでは小さめのグリッドサイズ
   const baseSize = isMobileDevice ? 50 : 60;
 
-  // 高解像度画面の場合は調整
-  const adjustedSize = Math.round(baseSize * Math.min(1.5, devicePixelRatio));
+  // デバイスの解像度に応じてサイズを調整
+  return Math.round(baseSize * Math.min(1.5, devicePixelRatio));
+}
+```
 
-  return adjustedSize;
+## 静的ホスティングにおけるクラスタリング最適化
+
+```typescript
+// 静的ホスティング環境向けのクラスタリング最適化
+export function setupOptimizedClustering(
+  markers: google.maps.marker.AdvancedMarkerElement[] | google.maps.Marker[],
+  map: google.maps.Map,
+  options: ClusteringOptions = {}
+): MarkerClusterer {
+  // クラスタリング計算を最適化
+  const algorithm = new SuperClusterAlgorithm({
+    maxZoom: options.maxZoom || 16,
+    gridSize: options.gridSize || getResponsiveGridSize(),
+    // クライアントサイド処理に最適化されたクラスタリング設定
+    radius: options.radius || 40,
+    minPoints: options.minPoints || 3,
+
+    // 計算負荷を抑える最適化
+    batchSize: 500,
+    maxClusters: 100,
+
+    // 静的データセットに特化した設定
+    extent: 256,
+    nodeSize: 64,
+
+    // 事前計算されたインデックスの使用（初回生成が高速化）
+    reduce: true,
+  });
+
+  // クリック時のズーム動作を最適化
+  const clusterClickBehavior = (cluster: Cluster) => {
+    // クラスター内のマーカーが少ない場合は直接すべて表示
+    if (cluster.markers.length < 10) {
+      expandCluster(cluster, map);
+    } else {
+      // マーカーが多い場合はズームで段階的に表示
+      const bounds = calculateClusterBounds(cluster);
+      map.fitBounds(bounds, {
+        padding: 50,
+        maxZoom: 16,
+      });
+    }
+  };
+
+  // クラスターの見た目を生成（メモリ効率の良いコンポーネント）
+  const optimizedRenderer = {
+    render: ({ count, position, markers: clusterMarkers }) => {
+      // クラスターアイコン要素
+      const element = document.createElement('div');
+      element.className = 'cluster-marker';
+      element.style.width = '40px';
+      element.style.height = '40px';
+
+      // 色はカテゴリカラーか、データ量に応じたヒートマップ色
+      const color = options.useHeatmapColors
+        ? getHeatmapColor(count)
+        : getPrimaryCategoryColor(clusterMarkers);
+
+      element.style.backgroundColor = color;
+      element.style.borderRadius = '50%';
+      element.style.display = 'flex';
+      element.style.alignItems = 'center';
+      element.style.justifyContent = 'center';
+      element.style.color = '#FFFFFF';
+      element.style.fontWeight = 'bold';
+      element.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+      element.innerText = count.toString();
+
+      // アクセシビリティ属性
+      element.setAttribute('role', 'img');
+      element.setAttribute('aria-label', `場所のクラスター ${count}件`);
+
+      return new google.maps.marker.AdvancedMarkerElement({
+        position,
+        content: element,
+      });
+    },
+  };
+
+  // 最適化されたクラスタラーを返却
+  return new MarkerClusterer({
+    map,
+    markers,
+    algorithm,
+    renderer: optimizedRenderer,
+    onClusterClick: clusterClickBehavior,
+  });
+}
+```
+
+// 高解像度画面の場合は調整
+const adjustedSize = Math.round(baseSize \* Math.min(1.5, devicePixelRatio));
+
+return adjustedSize;
 }
 
 // カテゴリーに基づく高度なクラスターアイコン生成
 function createEnhancedClusterElement({
-  count,
-  primaryCategory,
-  categoryCount,
+count,
+primaryCategory,
+categoryCount,
 }: {
-  count: number;
-  primaryCategory: string | null;
-  categoryCount: Record<string, number>;
+count: number;
+primaryCategory: string | null;
+categoryCount: Record<string, number>;
 }): HTMLElement {
-  const container = document.createElement('div');
-  container.className = 'advanced-cluster';
+const container = document.createElement('div');
+container.className = 'advanced-cluster';
 
-  // サイズをマーカー数に応じて調整（対数スケール）
-  const size = Math.min(55, Math.max(40, 40 + Math.log10(count) * 7));
-  container.style.width = `${size}px`;
-  container.style.height = `${size}px`;
+// サイズをマーカー数に応じて調整（対数スケール）
+const size = Math.min(55, Math.max(40, 40 + Math.log10(count) \* 7));
+container.style.width = `${size}px`;
+container.style.height = `${size}px`;
 
-  // カテゴリーに応じた色を設定
-  const backgroundColor = primaryCategory
-    ? getCategoryColor(primaryCategory)
-    : '#1E88E5';
+// カテゴリーに応じた色を設定
+const backgroundColor = primaryCategory
+? getCategoryColor(primaryCategory)
+: '#1E88E5';
 
-  // メインのクラスターサークルを作成
-  const mainCircle = document.createElement('div');
-  mainCircle.className = 'cluster-main-circle';
-  mainCircle.style.width = '100%';
-  mainCircle.style.height = '100%';
-  mainCircle.style.borderRadius = '50%';
-  mainCircle.style.backgroundColor = backgroundColor;
-  mainCircle.style.display = 'flex';
-  mainCircle.style.alignItems = 'center';
-  mainCircle.style.justifyContent = 'center';
-  mainCircle.style.color = '#FFFFFF';
-  mainCircle.style.fontWeight = 'bold';
-  mainCircle.style.fontSize = `${Math.max(12, Math.min(18, 13 + Math.log10(count)))}px`;
-  mainCircle.style.border = '2px solid white';
-  mainCircle.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.3)';
-  mainCircle.textContent = count.toString();
+// メインのクラスターサークルを作成
+const mainCircle = document.createElement('div');
+mainCircle.className = 'cluster-main-circle';
+mainCircle.style.width = '100%';
+mainCircle.style.height = '100%';
+mainCircle.style.borderRadius = '50%';
+mainCircle.style.backgroundColor = backgroundColor;
+mainCircle.style.display = 'flex';
+mainCircle.style.alignItems = 'center';
+mainCircle.style.justifyContent = 'center';
+mainCircle.style.color = '#FFFFFF';
+mainCircle.style.fontWeight = 'bold';
+mainCircle.style.fontSize = `${Math.max(12, Math.min(18, 13 + Math.log10(count)))}px`;
+mainCircle.style.border = '2px solid white';
+mainCircle.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.3)';
+mainCircle.textContent = count.toString();
 
-  // 複数カテゴリーを表すミニサークルを追加（最大3つ）
-  const categories = Object.keys(categoryCount).filter(
-    cat => cat !== primaryCategory
-  );
-  if (categories.length > 0) {
-    // カテゴリーを重要度順にソート
-    categories.sort((a, b) => categoryCount[b] - categoryCount[a]);
+// 複数カテゴリーを表すミニサークルを追加（最大3つ）
+const categories = Object.keys(categoryCount).filter(
+cat => cat !== primaryCategory
+);
+if (categories.length > 0) {
+// カテゴリーを重要度順にソート
+categories.sort((a, b) => categoryCount[b] - categoryCount[a]);
 
     // 上位2つのカテゴリーのみ表示
     const topCategories = categories.slice(0, 2);
@@ -174,12 +269,14 @@ function createEnhancedClusterElement({
       miniCircle.style.transform = `translate(${x}px, ${y}px)`;
       container.appendChild(miniCircle);
     });
-  }
 
-  container.appendChild(mainCircle);
-  return container;
 }
-```
+
+container.appendChild(mainCircle);
+return container;
+}
+
+````
 
 ## カスタムクラスターレンダラーの実装
 
@@ -210,7 +307,7 @@ function createClusterIcon(count: number): HTMLElement {
 
   return div;
 }
-```
+````
 
 ## クラスタリングのパフォーマンス最適化
 

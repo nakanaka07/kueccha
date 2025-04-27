@@ -1,14 +1,14 @@
 # 10. 佐渡島固有の最適化
 
-## 地域に特化したマップ設定
+## 静的ホスティング対応の佐渡島最適化
 
 ```typescript
-// 佐渡島専用のマップ初期設定
-const SADO_ISLAND_MAP_OPTIONS = {
+// 静的ホスティング向け佐渡島地域特化マップ設定
+export const SADO_ISLAND_MAP_OPTIONS = {
   center: { lat: 38.0413, lng: 138.3689 }, // 佐渡島の中心
   zoom: 10, // 島全体が見える程度
-  minZoom: 7,
-  maxZoom: 18,
+  minZoom: 7, // 過度なズームアウトを制限してAPIリクエスト削減
+  maxZoom: 18, // 詳細レベルも適切に制限
   // 佐渡島の地図境界を設定
   restriction: {
     latLngBounds: {
@@ -21,14 +21,20 @@ const SADO_ISLAND_MAP_OPTIONS = {
   },
   // 佐渡島の地形を強調表示
   mapTypeId: google.maps.MapTypeId.TERRAIN,
-  // 地形の高さを強調
+  // 静的ホスティング最適化: 3D表示を無効化
   tilt: 0,
   // カスタムマップスタイル
   styles: SADO_ISLAND_CUSTOM_STYLES,
+  // 不要なPOIを非表示にして表示を最適化
+  disableDefaultUI: false,
+  zoomControl: true,
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: true,
 };
 
-// 佐渡島の地域に合わせたカスタムスタイル
-const SADO_ISLAND_CUSTOM_STYLES = [
+// 佐渡島の地域に合わせたカスタムスタイル（静的ホスティング最適化版）
+export const SADO_ISLAND_CUSTOM_STYLES = [
   {
     // 佐渡島の海岸線を強調
     featureType: 'water',
@@ -47,14 +53,94 @@ const SADO_ISLAND_CUSTOM_STYLES = [
     elementType: 'geometry.fill',
     stylers: [{ color: '#ffaa00' }, { weight: 3 }],
   },
+  {
+    // 不要なPOIアイコンを削減（APIリクエスト低減）
+    featureType: 'poi',
+    elementType: 'labels.icon',
+    stylers: [{ visibility: 'off' }],
+  },
+];
+```
+
+## 佐渡島データのプリロード
+
+```typescript
+// 佐渡島の地理データをプリロードして静的ホスティング環境でのパフォーマンスを向上
+export async function preloadSadoIslandData(): Promise<void> {
+  try {
+    // 1. 佐渡島の主要エリアデータをロード
+    const areaData = await loadAreaData();
+
+    // 2. ローカルストレージにキャッシュ
+    cacheAreasToLocalStorage(areaData);
+
+    // 3. POIデータをロード
+    const poiData = await loadStaticPOIData();
+
+    // 4. ジオコーディング結果をプリロード
+    await precacheGeocodingResults();
+
+    logger.info('佐渡島データのプリロードが完了しました', {
+      component: 'SadoDataLoader',
+      areaCount: areaData.length,
+      poiCount: poiData.length,
+    });
+
+    return { areaData, poiData };
+  } catch (error) {
+    logger.error('佐渡島データのプリロードに失敗しました', {
+      component: 'SadoDataLoader',
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    // ローカルキャッシュから回復を試みる
+    return recoverFromLocalCache();
+  }
+}
+
+// 佐渡島の重要エリアデータを定義（静的ホスティング用）
+export const SADO_KEY_AREAS = [
+  {
+    name: '両津・相川地区',
+    bounds: {
+      north: 38.32,
+      south: 38.03,
+      east: 138.51,
+      west: 138.23,
+    },
+    zoomLevel: 12,
+    poiCategories: ['港', 'レストラン', '観光名所', '宿泊施設'],
+  },
+  {
+    name: '金井・佐和田・新穂・畑野・真野地区',
+    bounds: {
+      north: 38.08,
+      south: 37.94,
+      east: 138.4,
+      west: 138.26,
+    },
+    zoomLevel: 13,
+    poiCategories: ['レストラン', '観光名所', 'スナック'],
+  },
+  {
+    name: '赤泊・羽茂・小木地区',
+    bounds: {
+      north: 37.96,
+      south: 37.8,
+      east: 138.31,
+      west: 138.16,
+    },
+    zoomLevel: 13,
+    poiCategories: ['レストラン', '観光名所', '港'],
+  },
 ];
 ```
 
 ## 日本語地図表示の最適化
 
 ```typescript
-// 日本語表示の最適化
-function optimizeJapaneseMapDisplay(map: google.maps.Map) {
+// 日本語表示の最適化（静的ホスティング対応）
+export function optimizeJapaneseMapDisplay(map: google.maps.Map) {
   // 日本語フォントの最適化
   const japaneseOptimizedStyles = [
     {
@@ -77,26 +163,50 @@ function optimizeJapaneseMapDisplay(map: google.maps.Map) {
 
   // 地図の言語を日本語に設定
   map.setOptions({
-    styles: japaneseOptimizedStyles,
+    styles: [...(map.get('styles') || []), ...japaneseOptimizedStyles],
     language: 'ja',
   });
+
+  // フォント読み込みの最適化
+  loadOptimizedJapaneseFonts();
+}
+
+// 日本語フォントの最適化読み込み
+function loadOptimizedJapaneseFonts(): void {
+  // 必要なフォントのみをプリロード
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'preload';
+  fontLink.href =
+    'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap';
+  fontLink.as = 'style';
+  document.head.appendChild(fontLink);
+
+  // スタイルシートも追加
+  const styleLink = document.createElement('link');
+  styleLink.rel = 'stylesheet';
+  styleLink.href = fontLink.href;
+  document.head.appendChild(styleLink);
 }
 ```
 
-## 季節イベント対応
+## 季節イベント対応（静的ホスティング最適化）
 
 ```typescript
-// 佐渡島の季節イベント対応
-function applySadoSeasonalTheme(map: google.maps.Map) {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-
-  let seasonalStyle = [];
+// 佐渡島の季節イベント対応（静的ホスティング最適化版）
+export function applySadoSeasonalTheme(map: google.maps.Map) {
+  // 現在の季節を取得
+  const { season, events } = getCurrentSadoSeason();
 
   // 季節に応じたスタイル変更
-  if (month >= 3 && month <= 5) {
-    // 春（3-5月）- 佐渡の桜
-    seasonalStyle = SADO_SPRING_STYLES;
+  let seasonalStyle = [];
+
+  switch(season) {
+    case 'spring': // 春（3-5月）- 佐渡の桜
+      seasonalStyle = SADO_SPRING_STYLES;
+      break;
+    case 'summer': // 夏（6-8月）- 海水浴シーズン
+      seasonalStyle = SADO_SUMMER_STYLES;
+      break;
   } else if (month >= 6 && month <= 8) {
     // 夏（6-8月）- 海水浴シーズン
     seasonalStyle = SADO_SUMMER_STYLES;

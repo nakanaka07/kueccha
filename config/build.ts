@@ -1,6 +1,6 @@
 import type { BuildOptions, TerserOptions } from 'vite';
 
-import { getEnvVar } from '../src/utils/env/core';
+import { getEnvVar } from '../src/env/core';
 
 /**
  * Vite用のビルド設定を生成

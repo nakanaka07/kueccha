@@ -31,6 +31,19 @@ const useMarkerVisibility = ({
       });
 
       setVisibleMarkers(newVisibleMarkers);
+
+      // パフォーマンスメトリクスを記録
+      logger.debug('マーカー表示最適化', {
+        component: 'MarkerVisibility',
+        totalMarkers: markers.length,
+        visibleMarkers: newVisibleMarkers.length,
+        hiddenMarkers: markers.length - newVisibleMarkers.length,
+        optimizationRatio:
+          (
+            ((markers.length - newVisibleMarkers.length) / markers.length) *
+            100
+          ).toFixed(1) + '%',
+      });
     }, debounceMs);
   }, [mapRef, markers, visibilityMargin, debounceMs]);
 
@@ -78,6 +91,83 @@ function calculateExtendedBounds(
   );
 
   return extendedBounds;
+}
+```
+
+## 静的ホスティング環境向けのパフォーマンス最適化
+
+```typescript
+// 静的ホスティング環境でのパフォーマンス最適化策
+export function optimizeForStaticHosting(map: google.maps.Map): void {
+  // 1. API呼び出し回数を最小化するための設定
+  map.setOptions({
+    // 不要な詳細情報を制限
+    clickableIcons: false, // Google POIのクリックを無効化
+    disableDefaultUI: true, // 不要なUIコントロールを無効化
+
+    // 必要なUIコントロールのみを有効化
+    zoomControl: true,
+    mapTypeControl: false, // マップタイプの切り替えを無効化
+    streetViewControl: false, // ストリートビューを無効化
+    fullscreenControl: true,
+  });
+
+  // 2. キャッシュ戦略の最適化
+  if ('cacheStorage' in window) {
+    precacheCriticalMapAssets();
+  }
+
+  // 3. タイルロード戦略の最適化
+  const sadoIslandBounds = new google.maps.LatLngBounds(
+    { lat: 37.6, lng: 138.0 }, // 南西
+    { lat: 38.4, lng: 138.6 } // 北東
+  );
+
+  // 佐渡島周辺の主要ズームレベルのタイルを優先的にロード
+  prefetchPriorityMapTiles(sadoIslandBounds, [9, 10, 11]);
+
+  // 4. WebWorkerでの処理を活用（可能な場合）
+  if (window.Worker) {
+    setupMarkerProcessingWorker();
+  }
+
+  // 5. レンダリングのパフォーマンス監視
+  setupRenderingPerformanceMonitoring(map);
+}
+
+// レンダリングパフォーマンスの監視
+function setupRenderingPerformanceMonitoring(map: google.maps.Map): void {
+  let frameCount = 0;
+  let lastTime = performance.now();
+
+  // フレームレート監視
+  const monitorFrameRate = () => {
+    const now = performance.now();
+    frameCount++;
+
+    // 1秒ごとにフレームレートを計測
+    if (now - lastTime >= 1000) {
+      const fps = frameCount;
+      frameCount = 0;
+      lastTime = now;
+
+      // パフォーマンスが低下している場合は最適化を実行
+      if (fps < 30) {
+        applyLowPerformanceOptimizations(map, fps);
+      }
+
+      // パフォーマンスメトリクスをログに記録
+      logger.debug('マップレンダリングパフォーマンス', {
+        component: 'MapRenderer',
+        fps,
+        performanceCategory: fps < 30 ? 'low' : fps < 50 ? 'medium' : 'high',
+      });
+    }
+
+    requestAnimationFrame(monitorFrameRate);
+  };
+
+  requestAnimationFrame(monitorFrameRate);
 }
 ```
 

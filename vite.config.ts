@@ -7,7 +7,7 @@ import { createBuildOptions } from './config/build';
 import { configLogger } from './config/config-logger';
 import { validateEnv } from './config/env-validator';
 import { createPlugins } from './config/plugins';
-import { getEnvVar } from './src/utils/env/core';
+import { getEnvVar } from './config/simple-core';
 
 /**
  * 佐渡で食えっちゃアプリ向けVite設定
@@ -65,11 +65,10 @@ export default defineConfig(({ mode }): UserConfig => {
         });
       },
     });
-  }
-  // 静的サイト前提の設定
+  } // 静的サイト前提の設定
   return {
     base: basePath,
-    plugins,
+    plugins, // ビルド設定はここでは行わず、下部で定義
 
     // サーバー設定（ローカル開発専用 - GitHub Pages等の静的ホスティングでは不要）
     server: {

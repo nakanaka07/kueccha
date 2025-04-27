@@ -1,4 +1,4 @@
-import { getEnvBool } from '@/utils/env';
+import { getEnvBool } from '@/env';
 import { logger } from '@/utils/logger';
 
 /**
