@@ -2,11 +2,42 @@ import { InfoWindow as GoogleInfoWindow } from '@react-google-maps/api';
 import React, { useState, useCallback, memo, useMemo, useEffect, useRef } from 'react';
 
 import InfoWindow from '@/components/InfoWindow';
+import { getEnvVar } from '@/env/core';
 import { useFilteredPOIs } from '@/hooks/useFilteredPOIs';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMarkerVisibility } from '@/hooks/useMarkerVisibility';
 import type { PointOfInterest } from '@/types/poi';
 import { logger } from '@/utils/logger';
+
+// 静的ホスティング環境かどうかを確認する関数
+const isStaticHostingEnv = (): boolean => {
+  const staticHostingEnv =
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true';
+  const staticDomains = ['github.io', 'netlify.app', 'vercel.app', 'pages.dev'];
+  const isStaticDomain = staticDomains.some(domain => window.location.hostname.includes(domain));
+
+  return staticHostingEnv || isStaticDomain;
+};
+
+// 静的ホスティング環境での最適化設定
+const STATIC_HOSTING_CONFIG = {
+  // 静的ホスティングでは表示するマーカーの最大数を制限（パフォーマンス向上のため）
+  maxVisibleMarkers: 100,
+  // 静的ホスティング環境でのクラスタリング閾値を下げる（より積極的にクラスタリング）
+  clusteringThreshold: 50,
+  // デバウンス時間（ms）
+  debounceDelay: 300,
+  // 可視マーカーの余裕値（画面外のマーカーも一定範囲内なら描画）
+  visibilityMargin: 0.8,
+};
+
+// 通常環境での設定
+const DEFAULT_CONFIG = {
+  maxVisibleMarkers: 200,
+  clusteringThreshold: 100,
+  debounceDelay: 200,
+  visibilityMargin: 1.0,
+};
 
 // デバッグヘルパー関数の直接定義（型エラー回避のため）
 function debugMarkersAndPOIs(
@@ -169,6 +200,37 @@ const MapMarkers = memo(
     // フィルタリングされたPOIを取得
     const filteredPOIs = useFilteredPOIs(pois, filters);
 
+    // 環境に基づいて適切な設定を選択
+    const config = useMemo(() => {
+      const isStatic = isStaticHostingEnv();
+      if (isStatic) {
+        logger.debug('静的ホスティング環境向け設定を使用します', {
+          component: COMPONENT_NAME,
+          maxMarkers: STATIC_HOSTING_CONFIG.maxVisibleMarkers,
+        });
+        return STATIC_HOSTING_CONFIG;
+      }
+      return DEFAULT_CONFIG;
+    }, []);
+
+    // POI数が多すぎる場合は制限する（パフォーマンス向上）
+    const optimizedPOIs = useMemo(() => {
+      if (filteredPOIs.length <= config.maxVisibleMarkers) {
+        return filteredPOIs;
+      }
+
+      // 最大表示数を超える場合は警告ログを出力
+      logger.warn('POI表示数を制限します', {
+        component: COMPONENT_NAME,
+        totalPOIs: filteredPOIs.length,
+        limitedTo: config.maxVisibleMarkers,
+      });
+
+      // 重要度や評価に基づいて選別した方がよいが、
+      // ここではシンプルに最初のN個を選択
+      return filteredPOIs.slice(0, config.maxVisibleMarkers);
+    }, [filteredPOIs, config.maxVisibleMarkers]);
+
     // useCallbackでメモ化したコールバックを渡す
     const handleMarkerClickForMapMarkers = useCallback(
       (poi: PointOfInterest) => {
@@ -182,19 +244,26 @@ const MapMarkers = memo(
 
     // 可視マーカー数の変化をログに記録するコールバックをメモ化
     const handleVisibilityChange = useCallback((visibleCount: number, totalCount: number) => {
-      logger.debug('マーカー表示状態が更新されました', {
-        component: COMPONENT_NAME,
-        visibleCount,
-        totalCount,
-        visibilityRatio: totalCount > 0 ? (visibleCount / totalCount) * 100 : 0,
-      });
+      // 静的ホスティング環境では頻繁なログを減らす
+      if (!isStaticHostingEnv() || visibleCount % 10 === 0) {
+        logger.debug('マーカー表示状態が更新されました', {
+          component: COMPONENT_NAME,
+          visibleCount,
+          totalCount,
+          visibilityRatio: totalCount > 0 ? (visibleCount / totalCount) * 100 : 0,
+          isStaticHosting: isStaticHostingEnv(),
+        });
+      }
     }, []);
 
     // マーカーを生成
     const { markers } = useMapMarkers({
-      pois: filteredPOIs,
+      pois: optimizedPOIs, // 制限されたPOI数を使用
       mapRef,
-      enableClustering,
+      // 静的ホスティング環境または設定で有効化されている場合にクラスタリングを使用
+      enableClustering:
+        enableClustering ||
+        (isStaticHostingEnv() && optimizedPOIs.length > config.clusteringThreshold),
       onMarkerClick: handleMarkerClickForMapMarkers, // メモ化したコールバックを使用
     });
 
@@ -204,10 +273,12 @@ const MapMarkers = memo(
         logger.debug('マーカー生成完了', {
           component: COMPONENT_NAME,
           markerCount: markers?.length || 0,
-          poisCount: filteredPOIs?.length || 0,
+          poisCount: optimizedPOIs?.length || 0,
+          originalPoisCount: filteredPOIs?.length || 0,
+          limited: optimizedPOIs.length < filteredPOIs.length,
         });
       }
-    }, [markers, filteredPOIs]);
+    }, [markers, optimizedPOIs, filteredPOIs]);
 
     // マーカー ID 参照マップを作成（効率化）
     const markerMap = useMemo(() => {
@@ -220,11 +291,11 @@ const MapMarkers = memo(
       }
 
       // ポイとマーカーの数が一致するか確認
-      if (markers.length !== filteredPOIs.length) {
+      if (markers.length !== optimizedPOIs.length) {
         logger.warn('マーカー数とPOI数が一致しません', {
           component: COMPONENT_NAME,
           markersCount: markers.length,
-          poisCount: filteredPOIs.length,
+          poisCount: optimizedPOIs.length,
         });
       }
 
@@ -234,17 +305,17 @@ const MapMarkers = memo(
       // より安全なアクセス方法でマーカーと位置情報をマッピング
       markers.forEach((marker, index) => {
         // 配列の境界チェックを最適化
-        if (index < 0 || index >= filteredPOIs.length) {
+        if (index < 0 || index >= optimizedPOIs.length) {
           logger.warn('無効なマーカーインデックスへのアクセスを防止しました', {
             component: COMPONENT_NAME,
             index,
-            arrayLength: filteredPOIs.length,
+            arrayLength: optimizedPOIs.length,
           });
           return; // 早期リターンで以降の処理をスキップ
         }
 
         // セキュリティ対策: Array.atメソッドを使用して安全にアクセス（Modern JS/TS機能）
-        const poi = Array.isArray(filteredPOIs) ? filteredPOIs.at(index) : undefined;
+        const poi = Array.isArray(optimizedPOIs) ? optimizedPOIs.at(index) : undefined;
         if (!poi?.id) return;
 
         // セキュリティ対策：poiのidを文字列として明示的に扱い、安全にマップに追加
@@ -262,17 +333,21 @@ const MapMarkers = memo(
       }
 
       return map;
-    }, [markers, filteredPOIs]);
+    }, [markers, optimizedPOIs]);
 
     // 表示範囲内のマーカーのみを描画（最適化）
     const { visiblePOIs, hasError } = useMarkerVisibility({
       mapRef,
       markers,
-      pois: filteredPOIs,
+      pois: optimizedPOIs,
       // モバイルデバイスではパフォーマンス向上のためデバウンス時間を長めに設定
-      debounceMs: 300,
+      debounceMs: isStaticHostingEnv()
+        ? STATIC_HOSTING_CONFIG.debounceDelay
+        : DEFAULT_CONFIG.debounceDelay,
       // 表示範囲に余裕を持たせる（佐渡島最適化）
-      visibilityMargin: 1.0, // 0.5から1.0に変更して広めに設定
+      visibilityMargin: isStaticHostingEnv()
+        ? STATIC_HOSTING_CONFIG.visibilityMargin
+        : DEFAULT_CONFIG.visibilityMargin, // 0.5から1.0に変更して広めに設定
       // メモ化したコールバックを使用
       onVisibilityChange: handleVisibilityChange,
     });
@@ -283,15 +358,15 @@ const MapMarkers = memo(
         logger.warn('マーカー可視性の計算でエラーが発生しました。すべてのマーカーを表示します。', {
           component: COMPONENT_NAME,
           markersCount: markers.length,
-          poisCount: filteredPOIs.length,
+          poisCount: optimizedPOIs.length,
         });
       }
-    }, [hasError, markers.length, filteredPOIs.length]); // デバッグ情報の出力（開発環境のみ）
+    }, [hasError, markers.length, optimizedPOIs.length]); // デバッグ情報の出力（開発環境のみ）
     useEffect(() => {
       if (process.env.NODE_ENV === 'development') {
-        if (markers.length > 0 && filteredPOIs.length > 0) {
+        if (markers.length > 0 && optimizedPOIs.length > 0) {
           // マーカーとPOIの問題を診断
-          debugMarkersAndPOIs(markers, filteredPOIs);
+          debugMarkersAndPOIs(markers, optimizedPOIs);
           // 可視性の問題を診断
           if (mapRef.current) {
             debugMarkerVisibility(visiblePOIs, markers, mapRef);
@@ -299,7 +374,7 @@ const MapMarkers = memo(
         }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [markers.length, filteredPOIs.length, visiblePOIs.length]);
+    }, [markers.length, optimizedPOIs.length, visiblePOIs.length]);
 
     // 詳細表示処理
     const handleViewDetails = useCallback(

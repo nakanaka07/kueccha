@@ -7,7 +7,21 @@ import { logger } from '@/utils/logger';
 const isDev = () => getEnvVar({ key: 'MODE', defaultValue: 'production' }) === 'development';
 const isDebugLogging = () => getEnvVar({ key: 'VITE_LOG_LEVEL', defaultValue: 'info' }) === 'debug';
 
+// 静的ホスティング環境かどうか確認する関数
+const isStaticHosting = (): boolean => {
+  const staticHostingEnv =
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true';
+  // よく使われる静的ホスティングのドメインをチェック
+  const staticDomains = ['github.io', 'netlify.app', 'vercel.app', 'pages.dev'];
+  const isStaticDomain =
+    typeof window !== 'undefined' &&
+    staticDomains.some(domain => window.location.hostname.includes(domain));
+
+  return staticHostingEnv || isStaticDomain;
+};
+
 // 安全なマーカーアイコン用のキャッシュ (型安全なMap実装)
+// 静的ホスティング環境では多くのリクエストを保存するためにキャッシュサイズを大きくする
 const iconCache = new Map<string, MarkerIconOptions>();
 
 /**
@@ -112,6 +126,9 @@ export function getMarkerIcon(
       return iconCache.get(cacheKey)!;
     }
 
+    // 静的ホスティング環境かどうか確認
+    const isStatic = isStaticHosting();
+
     // POIタイプとカテゴリが直接渡された場合
     const iconType = typeOrPoi;
 
@@ -119,21 +136,23 @@ export function getMarkerIcon(
     let url = '';
 
     // POIタイプに基づいてプロジェクト内のアイコンを選択
+    // 静的ホスティング環境では相対パスを使用
+    const assetPath = isStatic ? '.' : '';
     switch (iconType) {
       case 'restaurant':
-        url = '/assets/shi_icon01.png';
+        url = `${assetPath}/assets/shi_icon01.png`;
         break;
       case 'parking':
-        url = '/assets/parking.png';
+        url = `${assetPath}/assets/parking.png`;
         break;
       case 'toilet':
-        url = '/assets/toilette.png';
+        url = `${assetPath}/assets/toilette.png`;
         break;
       default:
-        url = '/assets/area_icon_map01.png';
+        url = `${assetPath}/assets/area_icon_map01.png`;
     }
 
-    // 閉店している場合は色を薄くする
+    // 閉店している場合は色を薄くする（静的ホスティングで重要）
     const iconOpacity = isClosed ? 0.5 : 1.0;
 
     // 結果をキャッシュに格納
@@ -145,6 +164,21 @@ export function getMarkerIcon(
     };
 
     iconCache.set(cacheKey, result);
+
+    // 静的ホスティング環境ではキャッシュサイズを監視
+    if (isStatic && iconCache.size > 500) {
+      // キャッシュが大きすぎる場合は古いエントリを削除（LRU風）
+      const keysToDelete = Array.from(iconCache.keys()).slice(0, 100);
+      keysToDelete.forEach(key => iconCache.delete(key));
+
+      logger.debug('マーカーアイコンキャッシュをクリーニングしました', {
+        component: 'MarkerUtils',
+        previousSize: iconCache.size + keysToDelete.length,
+        currentSize: iconCache.size,
+        deletedEntries: keysToDelete.length,
+      });
+    }
+
     return result;
   } catch (error) {
     // エラーが発生した場合は構造化ログに記録し、デフォルトアイコンを返す

@@ -13,6 +13,8 @@ export interface CacheManagerOptions {
   notifyUser?: boolean;
   /** オフラインモードでのキャッシュ処理戦略 */
   offlineStrategy?: 'skip' | 'force' | 'default';
+  /** 静的ホスティング環境でのキャッシュ有効期限（時間単位、デフォルト24時間） */
+  staticHostingCacheTTL?: number;
 }
 
 /**
@@ -59,6 +61,40 @@ export const useCacheManager = (options?: CacheManagerOptions) => {
       }
     }
 
+    // 静的ホスティング環境かどうかを検出
+    const isStaticHosting =
+      getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true' ||
+      (typeof window !== 'undefined' &&
+        (window.location.hostname.includes('github.io') ||
+          window.location.hostname.includes('netlify.app') ||
+          window.location.hostname.includes('vercel.app')));
+
+    // 静的ホスティング環境の場合はキャッシュの有効期限（TTL）を考慮
+    if (isStaticHosting) {
+      // キャッシュの最終更新日時をローカルストレージから取得
+      const lastCacheClear = localStorage.getItem('sadoPOI_lastCacheClear');
+      if (lastCacheClear) {
+        const lastClearTime = new Date(lastCacheClear).getTime();
+        const currentTime = Date.now();
+        const hours = (currentTime - lastClearTime) / (1000 * 60 * 60);
+
+        // TTL（デフォルト24時間）を超えている場合はキャッシュをクリア
+        const cacheTTL = options?.staticHostingCacheTTL || 24;
+        if (hours > cacheTTL) {
+          logger.debug('キャッシュTTL期限切れのため更新します', {
+            component: 'CacheManager',
+            hours,
+            cacheTTL,
+            lastClear: new Date(lastClearTime).toISOString(),
+          });
+          return true;
+        }
+        return false;
+      }
+      // 初回アクセス時はキャッシュクリアを実行
+      return true;
+    }
+
     // 環境変数からキャッシュクリアの設定を取得
     const clearCacheFromEnv =
       getEnvVar({
@@ -71,7 +107,7 @@ export const useCacheManager = (options?: CacheManagerOptions) => {
       import.meta.env.DEV && window.location.search.includes('force_clear_cache');
 
     return clearCacheFromEnv || forceClearFromURL;
-  }, [offlineStrategy]); // 依存配列にofflineStrategyのみを含める
+  }, [offlineStrategy, options?.staticHostingCacheTTL]); // 依存配列を更新
 
   /**
    * キャッシュクリア処理を実行
@@ -98,6 +134,11 @@ export const useCacheManager = (options?: CacheManagerOptions) => {
 
       // パフォーマンスメトリクス
       const operationTime = Math.round(performance.now() - operationStart);
+
+      // 最終キャッシュクリア時刻を記録（静的ホスティング向けTTL管理用）
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('sadoPOI_lastCacheClear', new Date().toISOString());
+      }
 
       logger.info('アプリ起動時にキャッシュをクリアしました', {
         clearedCount,

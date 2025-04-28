@@ -63,6 +63,7 @@ const LOG_CONTEXT = {
   component: 'PerformanceReport',
   action: 'generate_report',
   timestamp: new Date().toISOString(),
+  isStaticAnalysis: options.staticAnalysis,
 };
 
 /**
@@ -75,12 +76,22 @@ const PERF_LOG_FILE =
 const REPORT_OUTPUT_DIR =
   options.outputDir || process.env.REPORT_OUTPUT_DIR || resolve(rootDir, 'reports');
 
-// パフォーマンス閾値設定（ミリ秒）- シンプルな固定値を使用しつつ環境変数での上書きを許可
-const PERF_THRESHOLDS = {
+// 静的ホスティング環境向けの調整された閾値
+const STATIC_HOSTING_THRESHOLDS = {
+  critical: 800, // 静的環境ではより厳しい基準
+  warning: 250, // 静的環境での警告しきい値
+  info: 80, // 静的環境での情報しきい値
+};
+
+// 通常のパフォーマンス閾値設定
+const DEFAULT_THRESHOLDS = {
   critical: Number(process.env.PERF_THRESHOLD_CRITICAL) || 1000, // 重大な遅延
   warning: Number(process.env.PERF_THRESHOLD_WARNING) || 300, // 警告レベルの遅延
   info: Number(process.env.PERF_THRESHOLD_INFO) || 100, // 注目すべき遅延
 };
+
+// 適切な閾値を選択
+const PERF_THRESHOLDS = options.staticAnalysis ? STATIC_HOSTING_THRESHOLDS : DEFAULT_THRESHOLDS;
 
 /**
  * 収集されたパフォーマンス指標を格納するオブジェクト
@@ -94,6 +105,7 @@ const performanceMetrics = {
     criticalCount: 0,
     warningCount: 0,
     normalCount: 0,
+    isStaticAnalysis: options.staticAnalysis,
   },
 };
 

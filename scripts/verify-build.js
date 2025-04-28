@@ -11,12 +11,18 @@
  * - HTML/CSS/JSの基本的な構造検証
  * - パフォーマンス最適化の確認
  * - GitHub Pages固有の設定検証
+ * - 静的ホスティング環境向けの最適化検証
  *
  * 使用方法: node scripts/verify-build.js [options]
- * Options:
- *  --verbose         詳細な検証情報を表示
+ * Options:  const assetsDir = path.join(DIST_DIR, 'assets');
+  if (fs.existsSync(assetsDir)) {    // JSファイル数のチェック
+    const jsFiles = fs.readdirSync(assetsDir)
+      .filter(file => file.endsWith('.js'));
+      
+    logger.verbose(`JSファイル数: ${jsFiles.length}個`);--verbose         詳細な検証情報を表示
  *  --ci              CI環境での実行モードを有効化
  *  --fix             問題を自動修正（可能な場合）
+ *  --static-hosting  静的ホスティング環境向けの厳格なチェックを実行
  */
 
 // Node.jsグローバル変数を明示的に宣言
@@ -48,6 +54,8 @@ function parseOptions() {
     verbose: args.includes('--verbose'),
     ciMode: args.includes('--ci') || process.env.CI === 'true',
     fix: args.includes('--fix'),
+    staticHosting: args.includes('--static-hosting') || process.env.STATIC_HOSTING === 'true',
+    basePath: args.find(arg => arg.startsWith('--base-path='))?.replace('--base-path=', '') || '',
   };
 }
 
@@ -287,11 +295,175 @@ function checkGitHubPagesConfig() {
   return true;
 }
 
+// 静的ホスティング向けの設定チェック
+function checkStaticHostingConfig() {
+  logger.info('静的ホスティング設定を検証中...');
+
+  // 必須ファイルの再確認
+  const essentialFiles = ['index.html', '404.html', 'assets'];
+  for (const file of essentialFiles) {
+    const filePath = path.join(DIST_DIR, file);
+    if (!fs.existsSync(filePath)) {
+      logger.error(`静的ホスティングに必要なファイルが見つかりません: ${file}`);
+      return false;
+    }
+  }
+
+  // 404.htmlの内容チェック
+  const notFoundPath = path.join(DIST_DIR, '404.html');
+  if (fs.existsSync(notFoundPath)) {
+    const notFoundContent = fs.readFileSync(notFoundPath, 'utf-8');
+
+    if (!notFoundContent.includes('<title>')) {
+      logger.error('404.htmlにタイトルタグがありません');
+      return false;
+    }
+
+    if (!notFoundContent.includes('index.html')) {
+      logger.warning('404.htmlにindex.htmlへのリンクがありません');
+    }
+  }
+
+  // robots.txtのチェック
+  const robotsPath = path.join(DIST_DIR, 'robots.txt');
+  if (fs.existsSync(robotsPath)) {
+    logger.success('robots.txtファイルが存在します');
+  } else {
+    logger.warning('robots.txtファイルが見つかりません');
+  }
+
+  return true;
+}
+
+// 静的ホスティング環境向けの追加チェック
+function checkStaticHostingOptimizations() {
+  if (!options.staticHosting) {
+    return true; // 静的ホスティングモードでない場合はスキップ
+  }
+  
+  logger.info('静的ホスティング環境向けの最適化を検証中...');
+  let hasWarnings = false;
+
+  // base pathの設定確認
+  const indexPath = path.join(DIST_DIR, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    const indexContent = fs.readFileSync(indexPath, 'utf-8');
+    const expectedBasePath = options.basePath || 'kueccha'; // デフォルトはkueccha
+    
+    // ベースパスの確認 - 複数のパターンをサポート
+    const baseTagExists = indexContent.includes(`<base href="/${expectedBasePath}/"`) || 
+                           indexContent.includes(`<base href="./"`) ||
+                           indexContent.includes(`<base href="/"`);
+    
+    if (!baseTagExists) {
+      logger.error(`静的ホスティング用のbase hrefタグが見つかりません (/${expectedBasePath}/)`);
+      hasWarnings = true;
+      
+      // 自動修正
+      if (options.fix) {
+        try {
+          const updatedContent = indexContent.replace(
+            /<head>([\s\S]*?)<\/head>/,
+            `<head>$1\n  <base href="/${expectedBasePath}/" />\n</head>`
+          );
+          fs.writeFileSync(indexPath, updatedContent);
+          logger.success(`base hrefタグを追加しました: /${expectedBasePath}/`);
+        } catch (error) {
+          logger.error(`base hrefタグの追加に失敗しました: ${error.message}`);
+        }
+      }
+    } else {
+      logger.success('base hrefタグが適切に設定されています');
+    }
+    
+    // プリロードとプリコネクトの最適化確認
+    if (!indexContent.includes('<link rel="preconnect"')) {
+      logger.warning('静的ホスティング環境のパフォーマンス向上のためのpreconnectタグが見つかりません');
+      hasWarnings = true;
+    }
+    
+    // マニフェストとアイコンの確認
+    if (!indexContent.includes('manifest.json')) {
+      logger.warning('PWAマニフェストへの参照が見つかりません');
+      hasWarnings = true;
+    }
+  }
+    // アセットの最適化確認
+  const assetsDir = path.join(DIST_DIR, 'assets');
+  if (fs.existsSync(assetsDir)) {    // JSファイル数のチェック
+    const jsFiles = fs.readdirSync(assetsDir)
+      .filter(file => file.endsWith('.js'));
+      
+    logger.verbose(`JSファイル数: ${jsFiles.length}個`);
+    
+    // 非同期読み込みの確認
+    const indexContent = fs.readFileSync(indexPath, 'utf-8');
+    const hasAsyncScripts = indexContent.includes('defer') || indexContent.includes('async');
+    if (!hasAsyncScripts) {
+      logger.warning('静的ホスティング環境では、スクリプトの非同期読み込み(defer/async)を推奨します');
+      hasWarnings = true;
+    }
+      
+    // JSONデータは圧縮されているか
+    const dataDir = path.join(DIST_DIR, 'data');
+    if (fs.existsSync(dataDir)) {
+      const jsonFiles = fs.readdirSync(dataDir)
+        .filter(file => file.endsWith('.json'));
+        
+      if (jsonFiles.length > 0) {
+        let totalSize = 0;
+        jsonFiles.forEach(file => {
+          const filePath = path.join(dataDir, file);
+          totalSize += fs.statSync(filePath).size;
+        });
+        
+        logger.info(`JSONデータファイル: ${jsonFiles.length}個, 合計サイズ: ${(totalSize / 1024).toFixed(2)}KB`);
+        
+        if (totalSize > 500 * 1024) { // 500KB以上
+          logger.warning('JSONデータのサイズが大きすぎます。データの分割またはGzip圧縮を検討してください');
+          hasWarnings = true;
+        }
+      }
+    }
+  }
+  
+  // .nojekyllファイルを確認（静的ホスティング必須）
+  const nojekyllPath = path.join(DIST_DIR, '.nojekyll');
+  if (!fs.existsSync(nojekyllPath)) {
+    logger.error('静的ホスティング環境には .nojekyll ファイルが必須です');
+    hasWarnings = true;
+    
+    // 自動修正
+    if (options.fix) {
+      try {
+        fs.writeFileSync(nojekyllPath, '');
+        logger.success('.nojekyll ファイルを作成しました');
+      } catch (error) {
+        logger.error(`${error.message}`);
+      }
+    }
+  }
+  
+  // CSSの数を確認（複数のCSSファイルは結合すべき）
+  const cssFiles = fs.readdirSync(assetsDir)
+    .filter(file => file.endsWith('.css'));
+    
+  if (cssFiles.length > 2) {
+    logger.warning(`CSSファイルが多すぎます(${cssFiles.length}個)。パフォーマンス向上のため結合を推奨します`);
+    hasWarnings = true;
+  }
+  
+  return !hasWarnings;
+}
+
 // メイン実行関数
 async function main() {
   logger.info('=== ビルド検証を開始 ===');
   logger.info(`日時: ${new Date().toLocaleString()}`);
   logger.info(`モード: ${options.ciMode ? 'CI' : '標準'} ${options.fix ? '(自動修正有効)' : ''}`);
+  if (options.staticHosting) {
+    logger.info(chalk.magenta('静的ホスティング環境向け最適化検証を実行します'));
+  }
 
   let success = true;
 
@@ -301,12 +473,27 @@ async function main() {
     logger.error('ファイル構造の検証に失敗しました');
     success = false;
   }
-
   // GitHub Pages設定の検証
   const ghPagesValid = checkGitHubPagesConfig();
   if (!ghPagesValid && !options.fix) {
     logger.warning('GitHub Pages設定に問題があります');
     // 重大エラーではないので success = false としない
+  }
+
+  // 静的ホスティング設定の検証
+  const staticHostingConfigValid = checkStaticHostingConfig();
+  if (!staticHostingConfigValid) {
+    logger.warning('静的ホスティング設定に問題があります');
+    // 警告レベルの問題なのでsuccess = falseとはしない
+  }
+
+  // 静的ホスティング最適化の検証（オプションが有効な場合のみ）
+  if (options.staticHosting) {
+    const staticOptimizationsValid = checkStaticHostingOptimizations();
+    if (!staticOptimizationsValid) {
+      logger.warning('静的ホスティング環境向けの最適化に問題があります');
+      // 警告レベルの問題なのでsuccess = falseとはしない
+    }
   }
 
   // 必要に応じて追加の検証ステップを実行

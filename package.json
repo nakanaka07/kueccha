@@ -57,7 +57,9 @@
     "// CI/CD連携": "----------------------------",
     "ci": "cross-env CI=true pnpm validate:env && pnpm typecheck && pnpm lint && pnpm test:config",
     "ci:build": "pnpm ci && cross-env NODE_ENV=production vite build",
-    "ci:deploy": "pnpm ci && pnpm build:ghpages && node scripts/verify-build.js"
+    "ci:deploy": "pnpm ci && pnpm build:ghpages && node scripts/verify-build.js",
+    "static-hosting": "node scripts/static-hosting-setup.mjs",
+    "verify:static": "node scripts/static-hosting-check.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

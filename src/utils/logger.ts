@@ -43,7 +43,22 @@ const ENV = {
         : typeof import.meta !== 'undefined'
           ? import.meta.env?.MODE || 'development'
           : 'development',
-  } as { isDev: boolean; isProd: boolean; mode: 'development' | 'production' | 'test' },
+    // 静的ホスティングかどうかを確認
+    isStaticHosting:
+      typeof window !== 'undefined'
+        ? // 環境変数で指定されている場合
+          (typeof import.meta !== 'undefined' && import.meta.env?.VITE_STATIC_HOSTING === 'true') ||
+          // または特定ドメインで判定
+          window.location.hostname.includes('github.io') ||
+          window.location.hostname.includes('netlify.app') ||
+          window.location.hostname.includes('vercel.app')
+        : false,
+  } as {
+    isDev: boolean;
+    isProd: boolean;
+    isStaticHosting: boolean;
+    mode: 'development' | 'production' | 'test';
+  },
   logging: {
     level: (typeof process !== 'undefined'
       ? process.env.VITE_LOG_LEVEL
@@ -267,7 +282,12 @@ class Logger {
    */
   measureTime<T>(label: string, callback: () => T, logLevel: LogLevel = LogLevel.DEBUG): T {
     // 静的ホスティング環境での最適化: 本番環境ではDEBUGログを出力しない場合はパフォーマンス計測をスキップ
-    if (ENV.env.isProd && logLevel === LogLevel.DEBUG && this.config.minLevel < LogLevel.DEBUG) {
+    if (
+      ENV.env.isProd &&
+      ENV.env.isStaticHosting &&
+      logLevel === LogLevel.DEBUG &&
+      this.config.minLevel < LogLevel.DEBUG
+    ) {
       return callback();
     }
 
@@ -280,14 +300,30 @@ class Logger {
     const result = callback();
     const duration = performance.now() - start;
 
-    this.log(logLevel, `${label} 完了`, {
-      label,
-      durationMs: duration.toFixed(2),
-      performanceMeasure: true,
-      // 静的ホスティング最適化のための情報を追加
-      isStaticHosted: ENV.env.isProd,
-      timestamp: new Date().toISOString(),
-    });
+    // ログ出力を作業量に応じて調整
+    if (duration > 100) {
+      // 100ms以上かかる重い処理はINFOレベルに引き上げ
+      const actualLevel = Math.min(logLevel, LogLevel.INFO);
+      this.log(actualLevel, `${label} 完了 (${duration.toFixed(2)}ms)`, {
+        label,
+        durationMs: duration.toFixed(2),
+        performanceMeasure: true,
+        isLongRunning: true,
+        // 静的ホスティング最適化のための情報を追加
+        isStaticHosted: ENV.env.isProd && ENV.env.isStaticHosting,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      // 軽い処理は通常のログレベルで出力
+      this.log(logLevel, `${label} 完了`, {
+        label,
+        durationMs: duration.toFixed(2),
+        performanceMeasure: true,
+        // 静的ホスティング最適化のための情報を追加
+        isStaticHosted: ENV.env.isProd && ENV.env.isStaticHosting,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return result;
   }
@@ -304,6 +340,16 @@ class Logger {
     callback: () => Promise<T>,
     logLevel: LogLevel = LogLevel.DEBUG
   ): Promise<T> {
+    // 静的ホスティング環境での最適化
+    if (
+      ENV.env.isProd &&
+      ENV.env.isStaticHosting &&
+      logLevel === LogLevel.DEBUG &&
+      this.config.minLevel < LogLevel.DEBUG
+    ) {
+      return callback();
+    }
+
     // 現在の設定でこのレベルのログが出力されない場合は測定をスキップ
     if (logLevel > this.config.minLevel && !FORCE_DEBUG) {
       return callback();
@@ -314,11 +360,26 @@ class Logger {
       const result = await callback();
       const duration = performance.now() - start;
 
-      this.log(logLevel, `${label} 完了`, {
-        label,
-        durationMs: duration.toFixed(2),
-        performanceMeasure: true,
-      });
+      // 長時間実行の場合はログレベルを引き上げ
+      if (duration > 300) {
+        // 300ms以上かかる処理はINFOレベルへ
+        const actualLevel = Math.min(logLevel, LogLevel.INFO);
+        this.log(actualLevel, `${label} 完了 (${duration.toFixed(2)}ms)`, {
+          label,
+          durationMs: duration.toFixed(2),
+          performanceMeasure: true,
+          isLongRunning: true,
+          isAsyncMeasure: true,
+          isStaticHosted: ENV.env.isProd && ENV.env.isStaticHosting,
+        });
+      } else {
+        this.log(logLevel, `${label} 完了`, {
+          label,
+          durationMs: duration.toFixed(2),
+          performanceMeasure: true,
+          isAsyncMeasure: true,
+        });
+      }
 
       return result;
     } catch (error) {
@@ -330,6 +391,7 @@ class Logger {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         performanceMeasure: true,
+        isAsyncMeasure: true,
       });
 
       throw error;

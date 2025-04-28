@@ -7,16 +7,21 @@ import { logger } from '@/utils/logger';
 
 // 静的ホスティング環境であるかの判断
 const isStaticHosting = (): boolean => {
-  return (
-    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true' ||
-    window.location.hostname.includes('github.io') ||
-    window.location.hostname.includes('netlify.app')
-  );
+  // 環境変数で明示的に指定されているか、ドメインでチェック
+  const staticHostingEnv =
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true';
+  // よく使われる静的ホスティングのドメインをチェック
+  const staticDomains = ['github.io', 'netlify.app', 'vercel.app', 'pages.dev'];
+  const isStaticDomain = staticDomains.some(domain => window.location.hostname.includes(domain));
+
+  return staticHostingEnv || isStaticDomain;
 };
 
-// 静的ホスティング向けのマップタイムアウト設定（より短く）
-const STATIC_HOSTING_TIMEOUT = 10000;
+// 静的ホスティング向けのマップタイムアウト設定
+const STATIC_HOSTING_TIMEOUT = 8000; // より短く設定して素早いフォールバック
 const DEFAULT_TIMEOUT = 15000;
+// リトライ間隔と最大回数
+const RETRY_DELAY = 3000;
 
 interface MapInitializerProps {
   onMapLoad: (map: google.maps.Map) => void;
@@ -89,31 +94,46 @@ export const MapInitializer: React.FC<MapInitializerProps> = memo(
       // マップ要素の準備状態をリセットし、再チェックをトリガー
       setIsMapElementReady(false);
 
-      // 少し遅延させてDOMの準備を確認
+      // RETRY_DELAYミリ秒後にDOM要素の存在を確認
       setTimeout(() => {
         if (document.getElementById('map')) {
           setIsMapElementReady(true);
+          logger.debug('再試行: マップDOM要素が準備完了', { retryAttempt: retryCount + 1 });
+        } else {
+          logger.warn('再試行: マップDOM要素が見つかりません', { retryAttempt: retryCount + 1 });
         }
-      }, 0);
+      }, RETRY_DELAY);
     }, [retryCount]);
 
     // マップを読み込むべきかの判定
     const shouldLoadMap = isMapElementReady && environmentError === null;
 
-    // マップ初期化オプションをメモ化
+    // マップ初期化オプションをメモ化（静的ホスティング向けの最適化を含む）
+    const isStatic = isStaticHosting(); // 関数呼び出し結果を変数に保存
     const initOptions = useMemo(
       () => ({
         zoom: 11,
         center: sadoBounds.center,
+        // 静的ホスティング向けのUI最適化オプション
+        disableDefaultUI: isStatic,
+        gestureHandling: 'greedy', // モバイルでのピンチズームを改善
+        fullscreenControl: true, // フルスクリーンは常に利用可能に
+        maxZoom: 18, // 最大ズームレベルを制限してタイル読み込みを最適化
+        minZoom: 9, // 最小ズームレベルを設定
+        // マウスホイールズームを少し遅くして操作性向上
+        scrollwheel: true,
+        zoomControl: !isStatic, // 静的ホスティング時はUIを最小限に
       }),
-      [sadoBounds]
+      [sadoBounds, isStatic]
     );
 
-    // Google Maps API読み込み
+    // Google Maps API読み込み（キャッシュ使用設定を追加）
     const { error: mapLoadError } = useGoogleMaps(shouldLoadMap ? '#map' : null, {
       initOptions,
-      timeout: isStaticHosting() ? STATIC_HOSTING_TIMEOUT : DEFAULT_TIMEOUT,
+      timeout: isStatic ? STATIC_HOSTING_TIMEOUT : DEFAULT_TIMEOUT,
       onLoad: handleMapLoad,
+      // オプションで自動初期化を制御（現状はデフォルトtrueのまま）
+      autoInit: true,
     });
 
     // エラーがあれば表示

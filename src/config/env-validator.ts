@@ -40,6 +40,10 @@ export interface EnvValidationContext extends LogContext {
  */
 const ENV_FALLBACKS: Record<string, string> = {
   VITE_GOOGLE_API_KEY: 'dummy-api-key-for-development-only',
+  VITE_GOOGLE_MAPS_MAP_ID: '', // オプション
+  VITE_LOG_LEVEL: 'info',
+  VITE_MAPS_MINIMAL_UI: 'true', // 静的ホスティング向け
+  VITE_STATIC_HOSTING: 'false', // デフォルトは非静的
   // 他のフォールバック値があれば追加
 };
 
@@ -61,14 +65,13 @@ export function validateEnv(env: Record<string, string>): {
 } {
   // パフォーマンス測定開始
   validationStartTime = performance.now();
-
   // 検証コンテキストの初期化
   const validationContext: EnvValidationContext = {
     component: 'env-validator',
     fallbacksApplied: {},
   };
 
-  // 開発環境と本番環境で必要な変数
+  // 必須環境変数（全環境共通）
   const requiredVars = ['VITE_GOOGLE_API_KEY'];
 
   // 本番環境でのみ必要な変数
@@ -99,6 +102,19 @@ export function validateEnv(env: Record<string, string>): {
 
     return isMissing;
   });
+
+  // 推奨環境変数のチェック（個別にハンドリングして安全に処理）
+  // VITE_GOOGLE_MAPS_MAP_ID
+  checkRecommendedVar('VITE_GOOGLE_MAPS_MAP_ID', env, errors, validatedEnv, validationContext);
+
+  // VITE_LOG_LEVEL
+  checkRecommendedVar('VITE_LOG_LEVEL', env, errors, validatedEnv, validationContext);
+
+  // VITE_MAPS_MINIMAL_UI
+  checkRecommendedVar('VITE_MAPS_MINIMAL_UI', env, errors, validatedEnv, validationContext);
+
+  // VITE_STATIC_HOSTING
+  checkRecommendedVar('VITE_STATIC_HOSTING', env, errors, validatedEnv, validationContext);
 
   // 本番環境の場合は追加の変数をチェック
   if (env.NODE_ENV === 'production') {

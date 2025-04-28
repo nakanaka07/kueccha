@@ -88,6 +88,15 @@ const getLoaderOptions = () => {
   const mapId = getEnvVar({ key: 'VITE_GOOGLE_MAPS_MAP_ID', defaultValue: '' }).trim();
   const apiKey = getEnvVar({ key: 'VITE_GOOGLE_API_KEY', defaultValue: '' });
   const version = getEnvVar({ key: 'VITE_GOOGLE_MAPS_VERSION', defaultValue: 'weekly' });
+  const isStaticHosting =
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true';
+
+  // 静的ホスティングではキャッシュを最大活用
+  const cacheOptions = isStaticHosting
+    ? {
+        authReferrerPolicy: 'origin', // リファラを制限し、APIキーを保護
+      }
+    : {};
 
   // ベースとなるオプション（必須項目）
   const baseOptions = {
@@ -100,6 +109,7 @@ const getLoaderOptions = () => {
     ] as GoogleMapsLibraries[],
     language: 'ja',
     region: 'JP',
+    ...cacheOptions,
   };
 
   // マップIDが存在する場合のみmapIdsプロパティを追加
@@ -114,10 +124,13 @@ const getLoaderOptions = () => {
 const buildMapOptions = (initOptions: google.maps.MapOptions = {}): google.maps.MapOptions => {
   const mapId = getEnvVar({ key: 'VITE_GOOGLE_MAPS_MAP_ID', defaultValue: '' }).trim();
 
-  // 基本オプション（東京中心をデフォルトに）
+  // 基本オプション（佐渡島中心をデフォルトに変更）
   const baseOptions: google.maps.MapOptions = {
-    center: { lat: 35.6812, lng: 139.7671 },
-    zoom: 12,
+    center: { lat: 38.0413, lng: 138.3689 }, // 佐渡島の中心座標
+    zoom: 11,
+    // 静的ホスティング向け最適化オプション
+    disableDefaultUI: getEnvVar({ key: 'VITE_MAPS_MINIMAL_UI', defaultValue: 'false' }) === 'true',
+    gestureHandling: 'greedy', // モバイルでのピンチズームを改善
     ...initOptions,
   };
 
