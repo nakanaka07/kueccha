@@ -231,6 +231,11 @@ export const MapContainer = memo(
         data-sado-bounds='true'
         data-map-retry-config={`max:${maxRetries}`}
         data-performance-tracking='enabled'
+        // 静的ホスティング環境向けの最適化属性
+        data-static-hosting='github-pages'
+        aria-label='佐渡島の地図'
+        role='application'
+        tabIndex={0} // キーボードフォーカスを可能にする
       />
     );
   }

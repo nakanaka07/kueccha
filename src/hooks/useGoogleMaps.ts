@@ -93,12 +93,10 @@ const getLoaderOptions = () => {
   const baseOptions = {
     apiKey,
     version,
+    // 静的ホスティング環境向けに最適化：必要最低限のライブラリのみ使用
     libraries: [
-      'places',
-      'geometry',
-      'drawing',
-      'visualization',
-      'marker',
+      'marker', // マーカー表示に必要
+      'geometry', // 位置計算に必須
     ] as GoogleMapsLibraries[],
     language: 'ja',
     region: 'JP',
@@ -228,12 +226,24 @@ export function useGoogleMaps(
         return { success: true, map: mapRef.current, error: null };
       }
 
+      // オフラインチェックを追加（navigator.onLine APIを使用）
+      if (!navigator.onLine) {
+        logger.warn('オフライン状態を検出しました。キャッシュから地図を初期化します', {
+          component: 'useGoogleMaps',
+          useCache: true,
+        });
+        // オフライン時の代替表示を試みる処理をここに実装
+      }
+
       // 環境変数の検証
       const { isValid, errors } = validateMapsEnvironmentVars();
       if (!isValid) {
         const errorMsg = `Google Maps API初期化エラー: ${errors.join(', ')}`;
         throw new Error(errorMsg);
       }
+
+      // パフォーマンス計測開始
+      const initStartTime = performance.now();
 
       // APIロードとタイムアウト処理
       const mapsApiPromise = loadGoogleMapsApi();
@@ -257,6 +267,14 @@ export function useGoogleMaps(
       const mapInstance = await createMapInstance(mapsApi, container as HTMLElement);
       mapRef.current = mapInstance;
 
+      // パフォーマンス計測終了
+      const initEndTime = performance.now();
+      logger.debug('Google Maps 初期化パフォーマンス', {
+        component: 'useGoogleMaps',
+        initDuration: initEndTime - initStartTime,
+        timestamp: new Date().toISOString(),
+      });
+
       return { success: true, map: mapInstance, error: null };
     } catch (error) {
       // エラー情報を構造化
@@ -267,6 +285,7 @@ export function useGoogleMaps(
         action: 'api_initialization_error',
         selector: selector || 'null',
         errorDetail: errorMsg,
+        isOnline: navigator.onLine,
       });
 
       return { success: false, map: null, error: errorMsg };

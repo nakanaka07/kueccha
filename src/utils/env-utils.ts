@@ -1,6 +1,6 @@
 /**
  * 環境変数を取得するシンプルなユーティリティ
- * Vite設定ファイル用に最適化、パスエイリアス不使用
+ * Node.js環境とブラウザ環境の両方で動作するよう最適化
  */
 
 /**
@@ -10,7 +10,7 @@
  * @param options.defaultValue デフォルト値
  * @returns 環境変数の値
  */
-export function getEnvVar(options: { key: string; defaultValue?: string }) {
+export function getEnvVar(options: { key: string; defaultValue?: string }): string {
   const { key, defaultValue = '' } = options;
 
   try {
@@ -44,7 +44,5 @@ export function getEnvVar(options: { key: string; defaultValue?: string }) {
   }
 }
 
-// デフォルトエクスポート
-export default {
-  getEnvVar,
-};
+// ユーティリティのエクスポート
+export default { getEnvVar };

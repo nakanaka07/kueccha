@@ -1,8 +1,8 @@
 /**
  * ロギング関連ユーティリティ関数
- * 
+ *
  * ロギング処理に関する補助機能を提供します。
- * 
+ *
  * @author 佐渡で食えっちゃプロジェクトチーム
  * @version 1.0.0
  * @lastUpdate 2025年4月28日
@@ -53,7 +53,7 @@ export const summarizeMessage = (message: string, maxLength: number = 200): stri
 
 /**
  * コンポーネント名とメッセージを使用して標準化されたログ出力を行う
- * 
+ *
  * @param level - ログレベル
  * @param component - コンポーネント名
  * @param message - ログメッセージ
@@ -71,7 +71,7 @@ export const logStandard = (
 
 /**
  * エラーオブジェクトからログコンテキストを作成するヘルパー
- * 
+ *
  * @param error - エラーオブジェクト
  * @param additionalContext - 追加のコンテキスト
  * @returns エラー情報を含むログコンテキスト
@@ -85,19 +85,19 @@ export const createErrorContext = (
     errorType: error instanceof Error ? error.constructor.name : typeof error,
     ...additionalContext,
   };
-  
+
   // スタックトレースが存在する場合は追加
   if (error instanceof Error && error.stack) {
     errorInfo.stack = error.stack;
   }
-  
+
   return errorInfo;
 };
 
 /**
  * 指定された確率でのみログを出力する関数
  * サンプリングレートの代わりに使用できます
- * 
+ *
  * @param level - ログレベル
  * @param message - ログメッセージ
  * @param context - ログコンテキスト
@@ -120,7 +120,7 @@ export const logRandomly = (
 
 /**
  * パフォーマンス測定の結果を簡単に出力するヘルパー
- * 
+ *
  * @param operation - 測定対象の操作名
  * @param durationMs - 所要時間（ミリ秒）
  * @param component - コンポーネント名
@@ -132,17 +132,16 @@ export const logPerformance = (
   component: string,
   additionalContext: Record<string, unknown> = {}
 ): void => {
-  const durationFormatted = typeof durationMs === 'number' 
-    ? durationMs.toFixed(2)
-    : String(durationMs);
-  
+  const durationFormatted =
+    typeof durationMs === 'number' ? durationMs.toFixed(2) : String(durationMs);
+
   const context = createLogContext(component, {
     operation,
     durationMs: durationFormatted,
     performanceMetric: true,
     ...additionalContext,
   });
-  
+
   // 時間によってログレベルを変える（閾値は調整可能）
   let level = LogLevel.DEBUG;
   if (durationMs > 1000) {
@@ -151,13 +150,9 @@ export const logPerformance = (
   if (durationMs > 3000) {
     level = LogLevel.WARN;
   }
-  
+
   logWithLevel(level, `${operation} 完了 (${durationFormatted}ms)`, context);
 };
 
 // エクスポートする主要関数群
-export {
-  logger,
-  createLogContext,
-  LogLevel,
-};
+export { logger, createLogContext, LogLevel };

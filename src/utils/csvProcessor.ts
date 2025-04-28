@@ -8,12 +8,25 @@ import { logger, LogLevel } from '../utils/logger';
  * CSVファイルからPOIデータを読み込み、アプリケーションで使用可能な形式に変換します。
  * WKT（Well-Known Text）形式の座標を緯度・経度に変換し、
  * 各種フィルタリングや検索に必要なデータ構造を構築します。
+ *
+ * 静的ホスティング環境向けに最適化されています。
  */
 
 // CSVプロセッサーのコンポーネント名（ロガー用）
 const COMPONENT_NAME = 'CSVProcessor';
 
-// 未使用関数を削除（KISSの原則に基づく簡素化）
+// 静的ホスティング環境向けの設定を確認
+const isStaticHosting = (): boolean => {
+  return (
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true' ||
+    window.location.hostname.includes('github.io') ||
+    window.location.hostname.includes('netlify.app')
+  );
+};
+
+// キャッシュ設定
+const ENABLE_CSV_CACHE = true; // キャッシュを有効化
+const csvResultCache = new Map<string, POI[]>();
 
 // 佐渡島のデフォルト座標（フォールバック用）- 環境変数から取得
 const DEFAULT_POSITION = {
@@ -52,6 +65,20 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
     return [];
   }
 
+  // キャッシュキーの作成
+  const cacheKey = `${type}-${csvText.length}-${csvText.substring(0, 50)}`;
+
+  // 静的ホスティング環境の場合、処理結果をキャッシュから取得
+  if (ENABLE_CSV_CACHE && csvResultCache.has(cacheKey)) {
+    logger.info('CSVデータをキャッシュから取得', {
+      type,
+      component: COMPONENT_NAME,
+      action: 'cache_hit',
+      isStaticHost: isStaticHosting(),
+    });
+    return csvResultCache.get(cacheKey)!;
+  }
+
   try {
     // コンテキスト情報を準備
     const context = {
@@ -59,6 +86,7 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
       linesCount: csvText.split('\n').length,
       component: COMPONENT_NAME,
       action: 'parse',
+      isStaticHost: isStaticHosting(),
     };
 
     // ログレベルを指定してmeasureTimeを呼び出す
@@ -132,6 +160,21 @@ export function parseCSVtoPOIs(csvText: string, type: POIType): POI[] {
           durationCategory: 'csvProcessing',
           linesCount: context.linesCount,
         });
+
+        // 結果をキャッシュに保存
+        if (ENABLE_CSV_CACHE) {
+          const cacheKey = `${type}-${csvText.length}-${csvText.substring(0, 50)}`;
+          csvResultCache.set(cacheKey, results);
+
+          // キャッシュのサイズをログに記録
+          logger.debug('CSVデータをキャッシュに保存', {
+            type,
+            component: COMPONENT_NAME,
+            action: 'cache_store',
+            cacheSize: csvResultCache.size,
+            isStaticHost: isStaticHosting(),
+          });
+        }
 
         return results;
       },

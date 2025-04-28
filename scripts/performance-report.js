@@ -7,18 +7,21 @@
  * - アプリケーションのパフォーマンス測定データを解析
  * - ボトルネックの特定と最適化ポイントの提案
  * - パフォーマンスの時系列変化の追跡
+ * - 静的ホスティング環境向けの最適化ポイント検出
  *
  * 最適化ガイドライン:
  * - シンプルさ優先の原則（KISS）に基づいた明確なコードフロー
  * - 必要な機能のみを実装（YAGNI原則）
  * - コード最適化ガイドラインに基づくロガー活用
+ * - 静的ホスティング環境向けの最適化分析
  *
  * 実行方法:
- * - pnpm run perf:report [--output=path] [--log=path]
+ * - pnpm run perf:report [--output=path] [--log=path] [--static]
  *
  * オプション:
  * --output=path  レポート出力先ディレクトリを指定
  * --log=path     パフォーマンスログファイルのパスを指定
+ * --static       静的ホスティング環境向け最適化分析を実行
  */
 
 import { createReadStream } from 'fs';
@@ -40,10 +43,12 @@ const options = args.reduce(
       acc.outputDir = arg.replace('--output=', '');
     } else if (arg.startsWith('--log=')) {
       acc.logFile = arg.replace('--log=', '');
+    } else if (arg === '--static') {
+      acc.staticAnalysis = true;
     }
     return acc;
   },
-  { outputDir: '', logFile: '' }
+  { outputDir: '', logFile: '', staticAnalysis: false }
 );
 
 // ESM環境でのファイルパス取得
@@ -551,6 +556,104 @@ function analyzePerformanceData(performanceData) {
 }
 
 /**
+ * 静的ホスティング環境向けの最適化分析を行う
+ * @param {Array<Object>} performanceData パフォーマンスログデータ
+ * @returns {Object} 静的ホスティング環境向けの分析結果
+ */
+function analyzeForStaticHosting(performanceData) {
+  return logger.measureTime(
+    '静的ホスティング環境向けの分析',
+    () => {
+      const result = {
+        summary: {
+          staticHostingIssues: 0,
+          highPriorityIssues: 0,
+        },
+        recommendations:
+          /** @type {Array<{type: string, category: string, message: string}>} */ ([]),
+        staticHostingStats: {
+          apiCalls: 0,
+          mapOperations: 0,
+          markerVisibilityUpdates: 0,
+          csvProcessing: 0,
+        },
+      };
+
+      // APIコール関連の問題を検出
+      const apiCalls = performanceData.filter(
+        entry =>
+          (entry.component && entry.component.includes('GoogleMaps')) ||
+          (entry.action && entry.action.includes('api'))
+      );
+
+      // マーカー可視性更新の最適化
+      const markerVisibilityOperations = performanceData.filter(
+        entry =>
+          entry.component === 'useMarkerVisibility' || entry.message?.includes('マーカー可視性')
+      );
+
+      // CSV処理の最適化
+      const csvOperations = performanceData.filter(
+        entry => entry.component === 'CSVProcessor' || entry.action?.includes('parse')
+      );
+
+      // データの集計
+      result.staticHostingStats.apiCalls = apiCalls.length;
+      result.staticHostingStats.markerVisibilityUpdates = markerVisibilityOperations.length;
+      result.staticHostingStats.csvProcessing = csvOperations.length;
+
+      // 問題と推奨事項の特定
+
+      // 1. APIコールが多すぎる場合
+      if (apiCalls.length > 10) {
+        result.recommendations.push({
+          type: 'warning',
+          category: 'static-hosting',
+          message: `静的ホスティング環境では、多数のGoogleマップAPIコール(${apiCalls.length}件)が検出されました。キャッシュと遅延ロードを検討してください。`,
+        });
+        result.summary.staticHostingIssues++;
+      }
+
+      // 2. マーカー可視性の更新が頻繁すぎる場合
+      if (markerVisibilityOperations.length > 20) {
+        result.recommendations.push({
+          type: 'warning',
+          category: 'static-hosting',
+          message: `マーカー可視性の更新が${markerVisibilityOperations.length}回検出されました。静的ホスティング環境では更新頻度の削減とキャッシュの利用を検討してください。`,
+        });
+        result.summary.staticHostingIssues++;
+      }
+
+      // 3. CSVデータ処理の最適化
+      if (csvOperations.length > 0) {
+        // 処理時間の長いCSV操作を見つける
+        const slowCsvOps = csvOperations.filter(op => op.durationMs && op.durationMs > 500);
+        if (slowCsvOps.length > 0) {
+          result.recommendations.push({
+            type: 'critical',
+            category: 'static-hosting',
+            message: `静的ホスティング環境では、${slowCsvOps.length}件の低速CSV処理操作が検出されました。事前処理済みJSONデータの使用を検討してください。`,
+          });
+          result.summary.staticHostingIssues++;
+          result.summary.highPriorityIssues++;
+        }
+      }
+
+      // 4. 一般的な静的ホスティング環境の最適化推奨事項
+      result.recommendations.push({
+        type: 'info',
+        category: 'static-hosting',
+        message:
+          '静的ホスティング環境では、CDNの利用、画像の最適化、アセットの圧縮を検討してください。',
+      });
+
+      return result;
+    },
+    LOG_CONTEXT
+  );
+}
+
+/**
  * パフォーマンスレポートの生成と保存
  * @param {Object} analysisResult 分析結果
  * @returns {Promise<string>} 保存したファイルパス
@@ -682,7 +785,26 @@ async function main() {
     }
 
     // データの分析
-    const analysisResult = analyzePerformanceData(performanceData);
+    const analysisResult = analyzePerformanceData(performanceData); // 静的ホスティング環境向けの最適化分析
+    if (options.staticAnalysis) {
+      logger.info('静的ホスティング環境向けの最適化分析を実行します', LOG_CONTEXT);
+
+      // 静的ホスティング環境向けの分析を行う
+      const staticAnalysisResult = analyzeForStaticHosting(performanceData);
+
+      // 分析結果を統合
+      analysisResult.staticHostingAnalysis = staticAnalysisResult;
+
+      // 静的ホスティング向けの推奨事項を追加
+      if (staticAnalysisResult.recommendations && staticAnalysisResult.recommendations.length > 0) {
+        analysisResult.recommendations.push(...staticAnalysisResult.recommendations);
+      }
+
+      logger.info('静的ホスティング環境向けの最適化分析が完了しました', {
+        ...LOG_CONTEXT,
+        issuesFound: staticAnalysisResult.recommendations?.length || 0,
+      });
+    }
 
     // レポートの生成と保存
     const reportPath = await generateAndSaveReport(analysisResult);

@@ -266,8 +266,13 @@ class Logger {
    * @returns 処理の結果
    */
   measureTime<T>(label: string, callback: () => T, logLevel: LogLevel = LogLevel.DEBUG): T {
+    // 静的ホスティング環境での最適化: 本番環境ではDEBUGログを出力しない場合はパフォーマンス計測をスキップ
+    if (ENV.env.isProd && logLevel === LogLevel.DEBUG && this.config.minLevel < LogLevel.DEBUG) {
+      return callback();
+    }
+
     // 現在の設定でこのレベルのログが出力されない場合は測定をスキップ
-    if (logLevel > this.config.minLevel) {
+    if (logLevel > this.config.minLevel && !FORCE_DEBUG) {
       return callback();
     }
 
@@ -279,6 +284,9 @@ class Logger {
       label,
       durationMs: duration.toFixed(2),
       performanceMeasure: true,
+      // 静的ホスティング最適化のための情報を追加
+      isStaticHosted: ENV.env.isProd,
+      timestamp: new Date().toISOString(),
     });
 
     return result;
@@ -603,7 +611,7 @@ class Logger {
 /**
  * ログコンテキストを生成する関数
  * logContext.tsから統合
- * 
+ *
  * @param component - ログを出力するコンポーネント/モジュール名
  * @param additionalContext - 追加のコンテキスト情報
  * @returns 構造化されたログコンテキスト

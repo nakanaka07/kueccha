@@ -19,8 +19,7 @@ import { parseCSVtoPOIs } from './csvProcessor';
 import { getEnvVar } from '@/env/core';
 import type { LogContext } from '@/types/logger';
 import { logger } from '@/utils/logger';
-import { measurePerformance } from '@/utils/performance';
-
+import { measureSyncPerformance as measurePerformance } from '@/utils/performance';
 // POIType型を直接定義
 type POIType = 'restaurant' | 'parking' | 'toilet' | 'shop' | 'attraction' | 'other';
 

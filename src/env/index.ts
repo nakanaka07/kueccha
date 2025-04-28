@@ -9,7 +9,7 @@
 
 // 各モジュールから厳選した関数のみをインポート
 
-import { validateClientEnv } from '../../config/client-validator';
+import { validateClientEnv } from '../config/client-validator';
 
 import { getCachedEnvVar, getCachedEnvBool } from './cache';
 import { getEnvVar, getEnvBool } from './core';
@@ -77,6 +77,9 @@ export const ENV: EnvironmentConfig = {
     googleSheets: getEnvBool('VITE_FEATURE_GOOGLE_SHEETS', false),
     offlineMode: getEnvBool('VITE_FEATURE_OFFLINE_MODE', true),
     markerClustering: isMarkerClusteringEnabled(),
+    // 静的ホスティング環境向けの新機能フラグ
+    enableProductionProfiling: getEnvBool('VITE_FEATURE_PRODUCTION_PROFILING', false),
+    staticHostOptimization: getEnvBool('VITE_FEATURE_STATIC_HOST_OPT', true),
   },
   ui: {
     map: {

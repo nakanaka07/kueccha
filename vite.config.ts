@@ -4,10 +4,10 @@ import { resolve } from 'path';
 import { defineConfig, loadEnv, type UserConfig } from 'vite';
 
 import { createBuildOptions } from './config/build';
-import { configLogger } from './config/config-logger';
-import { validateEnv } from './config/env-validator';
 import { createPlugins } from './config/plugins';
-import { getEnvVar } from './config/simple-core';
+import { configLogger } from './src/config/config-logger';
+import { validateEnv } from './src/config/env-validator';
+import envUtils from './src/utils/env-utils';
 
 /**
  * 佐渡で食えっちゃアプリ向けVite設定
@@ -38,14 +38,13 @@ export default defineConfig(({ mode }): UserConfig => {
 
   // 環境変数のバリデーション
   validateEnv(env);
-
   // GitHub PagesのベースパスはCI/CDで動的に設定
   // VITE_BASE_PATHを優先し、なければBASE_PATHを使用（互換性のため）
   const basePath =
     isProd || isPreview
-      ? getEnvVar({
+      ? envUtils.getEnvVar({
           key: 'VITE_BASE_PATH',
-          defaultValue: getEnvVar({ key: 'BASE_PATH', defaultValue: '/kueccha/' }),
+          defaultValue: envUtils.getEnvVar({ key: 'BASE_PATH', defaultValue: '/kueccha/' }),
         })
       : '/';
 

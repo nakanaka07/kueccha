@@ -432,6 +432,9 @@ export function useMarkerVisibility({
 
   // 可視性状態の更新処理
   const handleVisibilityUpdate = useCallback(() => {
+    // パフォーマンス計測開始
+    const updateStartTime = performance.now();
+
     // パフォーマンス計測を統合
     return logger.measureTime(
       'マーカー可視性の更新',
@@ -447,6 +450,16 @@ export function useMarkerVisibility({
             onVisibilityChange(result.visibleCount, markers.length);
           }
 
+          // 更新時間を計測
+          const updateEndTime = performance.now();
+          const updateDuration = updateEndTime - updateStartTime;
+
+          // パフォーマンスメトリクスを記録
+          const optimizationRatio =
+            markers.length > 0
+              ? ((markers.length - result.visibleCount) / markers.length) * 100
+              : 0;
+
           // 最適化の統計情報をログ
           logger.debug('マーカー可視性を更新しました', {
             component: COMPONENT_NAME,
@@ -454,8 +467,13 @@ export function useMarkerVisibility({
             totalCount: markers.length,
             errorCount: result.errorCount,
             visibilityRatio: markers.length > 0 ? result.visibleCount / markers.length : 0,
+            optimizationRatio: `${optimizationRatio.toFixed(1)}%`,
             isOfflineMode: result.isOfflineMode,
             renderCount: renderCountRef.current,
+            performance: {
+              updateDuration,
+              timestamp: new Date().toISOString(),
+            },
           });
         }
 

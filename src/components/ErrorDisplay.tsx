@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { LogLevel } from '@/utils/logger';
-import { logWithLevel, summarizeMessage } from '@/utils/logging';
+import { logWithLevel, summarizeMessage } from '@/utils/logger-utils';
 
 interface ErrorDisplayProps {
   message: string;

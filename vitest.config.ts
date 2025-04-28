@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 // config/logger.tsからconfigLoggerをインポート
-import { configLogger as logger } from './config/config-logger';
+import { configLogger as logger } from './src/config/config-logger';
 // 環境変数ユーティリティをインポート
 import { getEnvBool } from './src/env/core';
 

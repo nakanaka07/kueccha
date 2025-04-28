@@ -7,6 +7,9 @@ import { logger } from '@/utils/logger';
 const isDev = () => getEnvVar({ key: 'MODE', defaultValue: 'production' }) === 'development';
 const isDebugLogging = () => getEnvVar({ key: 'VITE_LOG_LEVEL', defaultValue: 'info' }) === 'debug';
 
+// 安全なマーカーアイコン用のキャッシュ (型安全なMap実装)
+const iconCache = new Map<string, MarkerIconOptions>();
+
 /**
  * マーカーアイコンの設定インターフェース
  */
@@ -101,6 +104,14 @@ export function getMarkerIcon(
       return getMarkerIcon(poiType, poiCategory, poiClosed);
     }
 
+    // キャッシュキーの作成
+    const cacheKey = `${typeOrPoi}-${category}-${isClosed}`;
+
+    // キャッシュにある場合はそれを返す（パフォーマンス最適化）
+    if (iconCache.has(cacheKey)) {
+      return iconCache.get(cacheKey)!;
+    }
+
     // POIタイプとカテゴリが直接渡された場合
     const iconType = typeOrPoi;
 
@@ -125,12 +136,16 @@ export function getMarkerIcon(
     // 閉店している場合は色を薄くする
     const iconOpacity = isClosed ? 0.5 : 1.0;
 
-    return {
+    // 結果をキャッシュに格納
+    const result = {
       url,
       scaledSize: new google.maps.Size(32, 32),
       anchor: new google.maps.Point(16, 16),
       opacity: iconOpacity,
     };
+
+    iconCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     // エラーが発生した場合は構造化ログに記録し、デフォルトアイコンを返す
     logger.error('マーカーアイコン生成中にエラーが発生しました', {
@@ -194,6 +209,14 @@ export function getSvgMarkerIcon(
   isClosed = false
 ): MarkerIconOptions {
   try {
+    // キャッシュキーの作成
+    const cacheKey = `svg-${type}-${category}-${isClosed}`;
+
+    // キャッシュにある場合はそれを返す（パフォーマンス最適化）
+    if (iconCache.has(cacheKey)) {
+      return iconCache.get(cacheKey)!;
+    }
+
     // パフォーマンスに影響するデバッグログは環境変数に基づいて制御
     if (isDev() && isDebugLogging()) {
       logger.debug('SVGマーカーアイコンの生成', {
@@ -234,21 +257,28 @@ export function getSvgMarkerIcon(
     // 閉店している場合は半透明にする
     const iconOpacity = isClosed ? 0.5 : 1.0;
 
-    logger.debug('マーカーアイコンを生成しました', {
-      component: 'MarkerUtils',
-      action: 'getSvgMarkerIcon',
-      type,
-      category,
-      isClosed,
-      color: encodedColor,
-    });
+    // パフォーマンス計測のため、必要なときだけログを出力
+    if (isDev() && isDebugLogging()) {
+      logger.debug('マーカーアイコンを生成しました', {
+        component: 'MarkerUtils',
+        action: 'getSvgMarkerIcon',
+        type,
+        category,
+        isClosed,
+        color: encodedColor,
+      });
+    }
 
-    return {
+    // 結果を作成してキャッシュに格納
+    const result = {
       url: svgIcon,
       scaledSize: new google.maps.Size(36, 36),
       anchor: new google.maps.Point(18, 36), // マーカーの先端が座標に合うように
       opacity: iconOpacity,
     };
+
+    iconCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     // エラーが発生した場合は構造化ログに記録し、デフォルトアイコンを返す
     logger.error('SVGマーカーアイコン生成中にエラーが発生しました', {

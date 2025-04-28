@@ -9,6 +9,7 @@
  */
 
 import type { PointOfInterest } from '../types/poi';
+
 import { logger } from './logger';
 
 /**

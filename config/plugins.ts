@@ -5,7 +5,7 @@ import { splitVendorChunkPlugin } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA, type VitePWAOptions } from 'vite-plugin-pwa';
 
-import { configLogger } from './config-logger';
+import { configLogger } from '../src/config/config-logger';
 
 /**
  * Vite用のプラグイン配列を構築

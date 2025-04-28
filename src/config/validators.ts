@@ -4,7 +4,7 @@
  * セキュリティを強化した実装
  */
 
-import { getEnvVar } from '../src/env/core';
+import { getEnvVar } from '../env/core';
 
 import { logger } from '@/utils/logger';
 

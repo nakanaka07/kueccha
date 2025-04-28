@@ -6,7 +6,7 @@
  * パスエイリアスを使わず、相対パスのみを使用
  */
 
-import { logger } from '../../config/simple-logger';
+import { logger } from '../config/simple-logger';
 
 // 型定義
 export interface GetEnvVarOptions {

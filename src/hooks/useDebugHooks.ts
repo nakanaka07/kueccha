@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 
 import { logger } from '@/utils/logger';
-import { safeGetProperty } from '@/utils/performance';
+import { safeGetProperty } from '@/utils/safeUtils';
 
 /**
  * コンポーネントの再レンダリング理由を追跡するフック

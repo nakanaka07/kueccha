@@ -1,8 +1,22 @@
 import { useCallback, useEffect, useState, useMemo, memo } from 'react';
 
 import { MapLoadingError } from '@/components/MapLoadingError';
+import { getEnvVar } from '@/env';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { logger } from '@/utils/logger';
+
+// 静的ホスティング環境であるかの判断
+const isStaticHosting = (): boolean => {
+  return (
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true' ||
+    window.location.hostname.includes('github.io') ||
+    window.location.hostname.includes('netlify.app')
+  );
+};
+
+// 静的ホスティング向けのマップタイムアウト設定（より短く）
+const STATIC_HOSTING_TIMEOUT = 10000;
+const DEFAULT_TIMEOUT = 15000;
 
 interface MapInitializerProps {
   onMapLoad: (map: google.maps.Map) => void;
@@ -98,7 +112,7 @@ export const MapInitializer: React.FC<MapInitializerProps> = memo(
     // Google Maps API読み込み
     const { error: mapLoadError } = useGoogleMaps(shouldLoadMap ? '#map' : null, {
       initOptions,
-      timeout: 15000,
+      timeout: isStaticHosting() ? STATIC_HOSTING_TIMEOUT : DEFAULT_TIMEOUT,
       onLoad: handleMapLoad,
     });
 

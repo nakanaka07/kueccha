@@ -45,7 +45,13 @@
     "config/**/*.ts",
     "src/env/**/*.ts",
     "src/utils/logger.ts",
-    "src/types/env-types.ts"
+    "src/utils/env-utils.ts",
+    "src/types/env-types.ts",
+    "src/config/config-logger.ts",
+    "src/config/client-validator.ts",
+    "src/config/env-validator.ts",
+    "src/config/simple-logger.ts",
+    "src/config/validators.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

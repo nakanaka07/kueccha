@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-import { validateEnv, EnvValidationError } from '../../config/env-validator';
+import { validateEnv, EnvValidationError } from '../config/env-validator';
 
 import { logger } from '@/utils/logger';
 

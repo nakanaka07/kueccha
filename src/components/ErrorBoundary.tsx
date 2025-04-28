@@ -2,7 +2,17 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 
 import ErrorDisplay from './ErrorDisplay';
 
+import { getEnvVar } from '@/env';
 import { logger } from '@/utils/logger';
+
+// 静的ホスティング環境であるかの判断
+const isStaticHosted = (): boolean => {
+  return (
+    getEnvVar({ key: 'VITE_STATIC_HOSTING', defaultValue: 'false' }) === 'true' ||
+    window.location.hostname.includes('github.io') ||
+    window.location.hostname.includes('netlify.app')
+  );
+};
 
 /**
  * エラーバウンダリーのプロパティ定義
@@ -123,7 +133,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       error,
     };
   }
-
   /**
    * エラー発生時のログ記録とコールバック実行
    * エラー情報の構造化ロギングとカスタムエラーハンドリングを実装
@@ -131,6 +140,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // プロパティからロギング設定を取得（デフォルト値を使用）
     const { componentName = 'ErrorBoundary', logLevel = 'error', onError } = this.props;
+
+    // 静的ホスティング環境かどうかをチェック
+    const isStatic = isStaticHosted();
 
     // エラー情報の詳細を収集
     const errorDetails = {
@@ -141,9 +153,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       errorStack: error.stack,
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
-      // パフォーマンス情報
-      performanceMetrics: this.getPerformanceMetrics(),
+      // パフォーマンス情報（静的ホスティング環境では最小限のみ収集）
+      performanceMetrics: isStatic ? this.getMinimalMetrics() : this.getPerformanceMetrics(),
       url: window.location.href,
+      isStaticHosting: isStatic,
     };
 
     // 設定されたログレベルでエラーをロギング
@@ -163,6 +176,21 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     // コールバックが提供されている場合は実行
     if (onError) {
       onError(error, errorInfo);
+    }
+  }
+
+  /**
+   * 静的ホスティング環境向けの最小限のパフォーマンスメトリクスを収集
+   */
+  private getMinimalMetrics(): Record<string, unknown> {
+    try {
+      const metrics: Record<string, unknown> = {};
+      if (window.performance && performance.now) {
+        metrics.timeSincePageLoad = performance.now();
+      }
+      return metrics;
+    } catch {
+      return { error: 'メトリクス収集に失敗しました' };
     }
   }
 
