@@ -1,9 +1,38 @@
 # 7. パフォーマンス最適化
 
+> **最終更新日**: 2025年4月29日  
+> **バージョン**: 2.1  
+> **作成者**: 佐渡で食えっちゃプロジェクトチーム  
+> **優先度**: 高
+
+## 目次
+
+- [基本的なパフォーマンス最適化戦略](#基本的なパフォーマンス最適化戦略)
+- [マーカーの遅延読み込みと表示範囲最適化](#マーカーの遅延読み込みと表示範囲最適化)
+- [静的ホスティング環境向けの最適化](#静的ホスティング環境向けの最適化)
+- [地図タイルとAPIリソースの最適化](#地図タイルとapiリソースの最適化)
+- [メモリ使用量の最適化](#メモリ使用量の最適化)
+- [ベクターマップとWebGL処理の活用](#ベクターマップとwebgl処理の活用)
+- [デバイス適応型最適化](#デバイス適応型最適化)
+- [パフォーマンスチェックリスト](#パフォーマンスチェックリスト)
+- [リファレンス](#リファレンス)
+- [更新履歴](#更新履歴)
+
+## 基本的なパフォーマンス最適化戦略
+
+Google Maps APIを効率的に使用するための基本戦略：
+
+- **遅延読み込み**: 必要なときに必要なものだけを読み込む
+- **リソース最適化**: APIリクエスト数の最小化とキャッシング活用
+- **レンダリング最適化**: 表示要素を必要最小限に抑える
+- **メモリ管理**: 不要なオブジェクトの適切な破棄
+
 ## マーカーの遅延読み込みと表示範囲最適化
 
+マーカーの遅延読み込みは、特に大量のマーカーを扱う場合に効果的です。
+
 ```typescript
-// マーカーの遅延読み込み実装例
+// マーカーの遅延読み込みのコア実装例
 const useMarkerVisibility = ({
   mapRef,
   markers,
@@ -12,7 +41,7 @@ const useMarkerVisibility = ({
 }) => {
   const [visibleMarkers, setVisibleMarkers] = useState<typeof markers>([]);
 
-  // 表示範囲の計算を最適化
+  // 表示範囲の計算を最適化（debounce処理）
   const updateVisibleMarkers = useMemo(() => {
     return debounce(() => {
       const map = mapRef.current;
@@ -32,17 +61,10 @@ const useMarkerVisibility = ({
 
       setVisibleMarkers(newVisibleMarkers);
 
-      // パフォーマンスメトリクスを記録
+      // パフォーマンスメトリクスを記録（オプション）
       logger.debug('マーカー表示最適化', {
-        component: 'MarkerVisibility',
         totalMarkers: markers.length,
         visibleMarkers: newVisibleMarkers.length,
-        hiddenMarkers: markers.length - newVisibleMarkers.length,
-        optimizationRatio:
-          (
-            ((markers.length - newVisibleMarkers.length) / markers.length) *
-            100
-          ).toFixed(1) + '%',
       });
     }, debounceMs);
   }, [mapRef, markers, visibilityMargin, debounceMs]);
@@ -67,63 +89,38 @@ const useMarkerVisibility = ({
 
   return { visibleMarkers };
 };
-
-// 拡張した地図表示領域を計算
-function calculateExtendedBounds(
-  bounds: google.maps.LatLngBounds,
-  margin: number
-): google.maps.LatLngBounds {
-  const ne = bounds.getNorthEast();
-  const sw = bounds.getSouthWest();
-
-  const latSpan = ne.lat() - sw.lat();
-  const lngSpan = ne.lng() - sw.lng();
-
-  const extendedBounds = new google.maps.LatLngBounds(
-    new google.maps.LatLng(
-      sw.lat() - latSpan * margin,
-      sw.lng() - lngSpan * margin
-    ),
-    new google.maps.LatLng(
-      ne.lat() + latSpan * margin,
-      ne.lng() + lngSpan * margin
-    )
-  );
-
-  return extendedBounds;
-}
 ```
 
-## 静的ホスティング環境向けのパフォーマンス最適化
+主要なポイント：
+
+- 現在の地図表示範囲に基づきマーカーをフィルタリング
+- 移動やズームの操作が完了した後に更新（debounce処理）
+- 表示範囲を少し拡張して、スムーズなスクロール体験を提供
+
+## 静的ホスティング環境向けの最適化
+
+静的ホスティング環境でのパフォーマンス最適化は特に重要です。
 
 ```typescript
 // 静的ホスティング環境でのパフォーマンス最適化策
 export function optimizeForStaticHosting(map: google.maps.Map): void {
   // 1. API呼び出し回数を最小化するための設定
   map.setOptions({
-    // 不要な詳細情報を制限
     clickableIcons: false, // Google POIのクリックを無効化
     disableDefaultUI: true, // 不要なUIコントロールを無効化
-
-    // 必要なUIコントロールのみを有効化
-    zoomControl: true,
-    mapTypeControl: false, // マップタイプの切り替えを無効化
-    streetViewControl: false, // ストリートビューを無効化
+    zoomControl: true, // 必要なUIのみ有効化
+    mapTypeControl: false,
+    streetViewControl: false,
     fullscreenControl: true,
   });
 
-  // 2. キャッシュ戦略の最適化
+  // 2. キャッシュ戦略の最適化（可能な場合）
   if ('cacheStorage' in window) {
     precacheCriticalMapAssets();
   }
 
   // 3. タイルロード戦略の最適化
-  const sadoIslandBounds = new google.maps.LatLngBounds(
-    { lat: 37.6, lng: 138.0 }, // 南西
-    { lat: 38.4, lng: 138.6 } // 北東
-  );
-
-  // 佐渡島周辺の主要ズームレベルのタイルを優先的にロード
+  const sadoIslandBounds = getSadoIslandBounds();
   prefetchPriorityMapTiles(sadoIslandBounds, [9, 10, 11]);
 
   // 4. WebWorkerでの処理を活用（可能な場合）
@@ -134,81 +131,54 @@ export function optimizeForStaticHosting(map: google.maps.Map): void {
   // 5. レンダリングのパフォーマンス監視
   setupRenderingPerformanceMonitoring(map);
 }
-
-// レンダリングパフォーマンスの監視
-function setupRenderingPerformanceMonitoring(map: google.maps.Map): void {
-  let frameCount = 0;
-  let lastTime = performance.now();
-
-  // フレームレート監視
-  const monitorFrameRate = () => {
-    const now = performance.now();
-    frameCount++;
-
-    // 1秒ごとにフレームレートを計測
-    if (now - lastTime >= 1000) {
-      const fps = frameCount;
-      frameCount = 0;
-      lastTime = now;
-
-      // パフォーマンスが低下している場合は最適化を実行
-      if (fps < 30) {
-        applyLowPerformanceOptimizations(map, fps);
-      }
-
-      // パフォーマンスメトリクスをログに記録
-      logger.debug('マップレンダリングパフォーマンス', {
-        component: 'MapRenderer',
-        fps,
-        performanceCategory: fps < 30 ? 'low' : fps < 50 ? 'medium' : 'high',
-      });
-    }
-
-    requestAnimationFrame(monitorFrameRate);
-  };
-
-  requestAnimationFrame(monitorFrameRate);
-}
 ```
+
+主要なポイント：
+
+- 不必要なAPIリクエストを減らすUI設定
+- 重要なアセットの事前キャッシュ
+- 主要な地図タイルの事前読み込み
+- バックグラウンド処理のためのWeb Workerの活用
 
 ## 地図タイルとAPIリソースの最適化
 
-- **初期マップ範囲の適切な設定**: 佐渡島全体が表示される範囲に限定
-- **ライブラリの選択的読み込み**: 必要なAPIライブラリのみロード
-- **需要ベースのタイル読み込み**: 表示される可能性が高い領域のタイルを優先的に読み込み
-- **WebGL レンダリングの活用**: パフォーマンス向上のためのWebGLモード設定
+地図リソースの読み込みを最適化することでパフォーマンスを向上させられます。
 
 ```typescript
-// WebGLレンダリング設定を含むマップ初期化オプション
+// 最適化されたマップ初期化オプション
 const DEFAULT_MAP_OPTIONS = {
   center: { lat: 38.0413, lng: 138.3689 }, // 佐渡島の中心
   zoom: 10, // 島全体が見える程度
   minZoom: 7, // 過度にズームアウトを制限
   maxZoom: 18, // ズームインも適切に制限
   restriction: {
-    latLngBounds: {
-      north: 38.4, // 佐渡島周辺に制限
-      south: 37.6,
-      east: 138.8,
-      west: 137.9,
-    },
+    latLngBounds: getSadoIslandBounds().toJSON(),
     strictBounds: false, // 少しの余裕を持たせる
   },
-  // WebGLレンダリングを有効化
-  mapId: 'YOUR_MAP_ID', // Cloud Console で作成したMapID
   useStaticMap: true, // 初期表示を高速化
 };
 
-// WebGLレンダリングの確認
-function isWebGLSupported(map: google.maps.Map): boolean {
-  return Boolean(map.getMapCapabilities().isAdvancedMarkersAvailable);
+// 佐渡島の地図範囲を取得する関数
+function getSadoIslandBounds(): google.maps.LatLngBounds {
+  return new google.maps.LatLngBounds(
+    { lat: 37.6, lng: 137.9 }, // 南西
+    { lat: 38.4, lng: 138.8 } // 北東
+  );
 }
 ```
 
+主要なポイント：
+
+- 佐渡島に関連する領域にマップの表示範囲を限定
+- ズームレベルを適切に制限
+- 静的マップを活用した初期表示の高速化
+
 ## メモリ使用量の最適化
 
+メモリリークを防ぐため、不要になったマーカーやイベントリスナーを適切にクリーンアップします。
+
 ```typescript
-// マーカーのクリーンアップ例
+// マーカーとイベントリスナーのクリーンアップ
 function cleanupMarkers(
   markers: (google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[],
   clusterer: MarkerClusterer | null
@@ -234,7 +204,7 @@ function cleanupMarkers(
   }
 }
 
-// コンポーネントのクリーンアップ処理
+// Reactコンポーネントでのクリーンアップ例
 useEffect(() => {
   return () => {
     cleanupMarkers(currentMarkers, currentClusterer);
@@ -242,284 +212,205 @@ useEffect(() => {
 }, []);
 ```
 
-## 2025年版WebGL処理による高速化
+主要なポイント：
+
+- イベントリスナーの明示的な削除
+- マーカーをマップから適切に削除
+- マーカークラスタラーの適切なクリーンアップ
+
+## ベクターマップとWebGL処理の活用
+
+2025年の最新APIではWebGLとベクターマップを活用することで、パフォーマンスを大幅に向上できます。
 
 ```typescript
-// WebGLオーバーレイを使用した高速描画
-class SadoIslandWebGLOverlay extends google.maps.webgl.WebGLOverlayView {
-  private points: PointOfInterest[] = [];
-  private program: WebGLProgram | null = null;
-  private buffers: Record<string, WebGLBuffer> = {};
-
-  constructor(points: PointOfInterest[]) {
-    super();
-    this.points = points;
-  }
-
-  // WebGLコンテキストが初期化されたときに呼び出される
-  onAdd() {
-    // 必要なリソースの初期化
-    logger.debug('WebGLオーバーレイの初期化', {
-      component: 'WebGLOverlay',
-      action: 'onAdd',
-      pointCount: this.points.length,
-    });
-  }
-
-  // WebGLコンテキストがロストしたときに呼び出される
-  onContextLost() {
-    logger.warn('WebGLコンテキストがロストしました', {
-      component: 'WebGLOverlay',
-      action: 'onContextLost',
-    });
-    this.program = null;
-    this.buffers = {};
-  }
-
-  // WebGLコンテキストが回復したときに呼び出される
-  onContextRestored(options: google.maps.webgl.WebGLDrawOptions) {
-    logger.info('WebGLコンテキストが回復しました', {
-      component: 'WebGLOverlay',
-      action: 'onContextRestored',
-    });
-    this.initializeGLResources(options.gl);
-  }
-
-  // WebGLリソースの初期化
-  private initializeGLResources(gl: WebGLRenderingContext) {
-    // シェーダープログラムの初期化
-    const vertexShader = this.createShader(
-      gl,
-      gl.VERTEX_SHADER,
-      vertexShaderSource
-    );
-    const fragmentShader = this.createShader(
-      gl,
-      gl.FRAGMENT_SHADER,
-      fragmentShaderSource
-    );
-
-    if (!vertexShader || !fragmentShader) return;
-
-    // プログラムの作成とリンク
-    this.program = gl.createProgram()!;
-    gl.attachShader(this.program, vertexShader);
-    gl.attachShader(this.program, fragmentShader);
-    gl.linkProgram(this.program);
-
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      logger.error('シェーダープログラムのリンクに失敗しました', {
-        component: 'WebGLOverlay',
-        action: 'initializeGLResources',
-        error: gl.getProgramInfoLog(this.program),
-      });
-      return;
-    }
-
-    // バッファの初期化
-    this.initializeBuffers(gl);
-  }
-
-  // 描画処理
-  onDraw(options: google.maps.webgl.WebGLDrawOptions) {
-    const gl = options.gl;
-
-    // WebGL処理の最適化：ビューポート外のポイントは処理しない
-    const visiblePoints = this.filterVisiblePoints(options.transformer);
-
-    if (!this.program) {
-      this.initializeGLResources(gl);
-      if (!this.program) return;
-    }
-
-    gl.useProgram(this.program);
-
-    // 最新の2025年WebGLパイプラインの活用
-    this.setupAttributes(gl);
-    this.updateDynamicBuffers(gl, visiblePoints, options.transformer);
-
-    // 高効率な描画コール
-    const pointCount = visiblePoints.length;
-    gl.drawArrays(gl.POINTS, 0, pointCount);
-
-    // パフォーマンスデータを記録
-    if (ENV.isDevelopment) {
-      this.logPerformanceMetrics(pointCount);
-    }
-  }
-
-  // ビューポート内の点のみをフィルタリング
-  private filterVisiblePoints(transformer: any): PointOfInterest[] {
-    const visiblePoints: PointOfInterest[] = [];
-
-    for (const point of this.points) {
-      const worldPosition = transformer.fromLatLngAltitude({
-        lat: point.lat,
-        lng: point.lng,
-        altitude: 0,
-      });
-
-      // 画面外の点は除外（ビューフラスタムカリング）
-      if (
-        worldPosition.x < -1 ||
-        worldPosition.x > 1 ||
-        worldPosition.y < -1 ||
-        worldPosition.y > 1
-      ) {
-        continue;
-      }
-
-      visiblePoints.push(point);
-    }
-
-    return visiblePoints;
-  }
-
-  // 削除時の処理
-  onRemove() {
-    // リソースのクリーンアップ
-    logger.debug('WebGLオーバーレイを削除します', {
-      component: 'WebGLOverlay',
-      action: 'onRemove',
-    });
-  }
-}
-```
-
-## 2025年版ベクターマップの最適化
-
-```typescript
-// ベクターマップを最大限に活用するための設定
+// WebGLとベクターマップの最適化設定
 function setupOptimizedVectorMap(map: google.maps.Map): void {
   // マップの機能をチェック
   const capabilities = map.getMapCapabilities();
 
   if (capabilities.isVectorMapAvailable) {
-    logger.info('ベクターマップ機能が利用可能です。最適化設定を適用します', {
-      component: 'MapOptimization',
-      action: 'setup_vector_map',
-    });
-
     // ベクターマップ専用の最適化設定
-    const vectorMapOptions = {
-      // ベクターデータの詳細レベルを設定
+    // @ts-ignore - 2025年の新API対応
+    map.setVectorOptions({
+      // ベクターデータの詳細レベル
       vectorDetail: 'high', // high, medium, low
 
-      // 2025年の新機能：視覚的なエフェクトの強化
+      // 視覚的なエフェクト設定
       visualEffects: {
-        // 建物の3D表示をシンプル化して高速化
         buildingRenderMode: '3d-simplified',
-        // 地形表示の最適化
         terrainRenderMode: 'optimized',
-        // 道路のレンダリングレベル
         roadDetail: 'medium',
       },
-    };
+    });
 
-    // @ts-ignore - 2025年の最新APIにはこれらのオプションがあるが、型定義が追いついていない可能性
-    map.setVectorOptions(vectorMapOptions);
-
-    // レンダリングモードの最適化
-    setupOptimizedRenderingMode(map);
+    // 環境に応じた適応型レンダリング
+    setupAdaptiveRendering(map);
   } else {
-    logger.info(
-      'ベクターマップ機能が利用できません。ラスターマップの最適化を適用します',
-      {
-        component: 'MapOptimization',
-        action: 'fallback_to_raster',
-      }
-    );
-
-    // ラスターマップの最適化
+    // ラスターマップのフォールバック設定
     setupRasterMapOptimizations(map);
   }
 }
 
-// デバイスパフォーマンスに基づくレンダリングモードの設定
-function setupOptimizedRenderingMode(map: google.maps.Map): void {
-  // デバイスの性能に応じてレンダリングモードを調整
+// インタラクション中のパフォーマンス最適化
+function setupAdaptiveRendering(map: google.maps.Map): void {
+  // マップドラッグ中は詳細度を下げる
+  map.addListener('dragstart', () => {
+    if (map.getMapCapabilities().isVectorMapAvailable) {
+      // @ts-ignore - 2025年の新API対応
+      map.setVectorOptions({ vectorDetail: 'low', roadDetail: 'low' });
+    }
+  });
+
+  // インタラクション完了後に品質を戻す
+  map.addListener('idle', () => {
+    if (map.getMapCapabilities().isVectorMapAvailable) {
+      // @ts-ignore - 2025年の新API対応
+      map.setVectorOptions({ vectorDetail: 'medium', roadDetail: 'medium' });
+    }
+  });
+}
+```
+
+主要なポイント：
+
+- ベクターマップのサポート検出と最適な設定
+- インタラクション中の一時的な詳細度低減
+- APIの互換性を考慮したフォールバック設定
+
+## デバイス適応型最適化
+
+デバイスのパフォーマンスやバッテリー状態に応じて最適化を適用します。
+
+```typescript
+// デバイスのパフォーマンスに応じた最適化
+function setupDeviceAdaptiveOptimizations(map: google.maps.Map): void {
+  // デバイス情報を取得
   const deviceInfo = getDevicePerformanceProfile();
 
   // 低性能デバイスの場合
   if (deviceInfo.performanceLevel === 'low') {
-    logger.info('低性能デバイスを検出。バッテリー節約モードを有効化', {
-      component: 'MapOptimization',
-      action: 'enable_battery_saving',
-    });
-
-    // バッテリー節約モード
     enableBatterySavingMode(map);
   }
-  // 高性能デバイスの場合
-  else if (deviceInfo.performanceLevel === 'high') {
-    logger.info('高性能デバイスを検出。高品質レンダリングを有効化', {
-      component: 'MapOptimization',
-      action: 'enable_high_quality',
-    });
-
-    // 高品質レンダリングを有効化
-    enableHighQualityRendering(map);
-  }
-
-  // 環境に応じた適応型レンダリング（2025年の新機能）
-  setupAdaptiveRendering(map);
-}
-
-// 環境に応じた適応型レンダリング設定
-function setupAdaptiveRendering(map: google.maps.Map): void {
-  // マップのレンダリング頻度を状況に応じて調整
-  map.addListener('dragstart', () => {
-    lowQualityDuringInteraction(map);
-  });
-
-  map.addListener('idle', () => {
-    restoreQualityAfterInteraction(map);
-  });
 
   // バッテリー状態のモニタリング（利用可能な場合）
   if ('getBattery' in navigator) {
-    monitorBatteryForRendering();
+    monitorBatteryForAdaptiveRendering(map);
   }
 }
 
-// バッテリー状態に応じたレンダリング調整
-async function monitorBatteryForRendering(): Promise<void> {
-  try {
-    // @ts-ignore - getBatteryはWeb標準だが、TypeScriptの型定義が不足している場合がある
-    const battery = await navigator.getBattery();
+// バッテリー節約モードの有効化
+function enableBatterySavingMode(map: google.maps.Map): void {
+  // フレームレートの制限
+  window.MAP_CONFIG.maxFrameRate = 30;
 
-    if (battery.level < 0.15 && !battery.charging) {
-      logger.info('バッテリー残量が少ないため、省電力モードに切り替えます', {
-        component: 'MapOptimization',
-        action: 'low_battery_optimization',
-        batteryLevel: battery.level,
-      });
+  // アニメーションの無効化
+  window.MAP_CONFIG.enableAnimations = false;
 
-      // グローバル設定で省電力モードを有効化
-      window.MAP_CONFIG.powerSavingMode = true;
-
-      // マップに適用（マップインスタンスがある場合）
-      if (window.currentMap) {
-        enableBatterySavingMode(window.currentMap);
-      }
-    }
-
-    // バッテリー状態の変化を監視
-    battery.addEventListener('levelchange', () => {
-      // バッテリーレベルに応じて設定を更新
-      updateRenderingBasedOnBattery(battery);
-    });
-
-    battery.addEventListener('chargingchange', () => {
-      // 充電状態に応じて設定を更新
-      updateRenderingBasedOnBattery(battery);
-    });
-  } catch (error) {
-    logger.warn('バッテリー状態の取得に失敗しました', {
-      component: 'MapOptimization',
-      action: 'battery_api_error',
-      error: error instanceof Error ? error.message : String(error),
-    });
+  // 詳細度の低減
+  if (map.getMapCapabilities().isVectorMapAvailable) {
+    // @ts-ignore - 2025年の新API対応
+    map.setVectorOptions({ vectorDetail: 'low' });
   }
+
+  // 3D建物の無効化
+  map.setOptions({
+    styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
+  });
 }
 ```
+
+主要なポイント：
+
+- デバイスの性能に基づいた最適化設定
+- バッテリー状態のモニタリングと適応
+- 低バッテリー状態でのレンダリング品質調整
+
+## パフォーマンスチェックリスト
+
+Google Mapsを最適化するための実装チェックリスト：
+
+### マーカーと表示の最適化
+
+- [ ] 表示範囲内のマーカーのみを描画する遅延読み込みを実装
+- [ ] マーカークラスタリングを使用して多数のマーカーを効率的に表示
+- [ ] マップの移動・ズーム時にマーカー表示を適切に更新
+- [ ] アイコンやラベルのアセットをプリロード・キャッシュ
+
+### API使用量の最適化
+
+- [ ] 佐渡島の地域に限定したマップ表示範囲を設定
+- [ ] 必要なライブラリのみをロードし不要なAPIの読み込みを回避
+- [ ] スクリプトのロードをdefer属性で遅延
+- [ ] インタラクション中は低品質レンダリングを適用
+
+### メモリと処理の最適化
+
+- [ ] 不要なマーカーやオーバーレイを適切にクリーンアップ
+- [ ] イベントリスナーを明示的に削除
+- [ ] リソースを効率的に再利用
+- [ ] Web Workersを活用して処理を分散
+
+### 静的ホスティング特有の最適化
+
+- [ ] マップアセットを適切にキャッシュ
+- [ ] 高頻度でアクセスする領域のタイルをプリフェッチ
+- [ ] レイアウトシフトを防ぐマップコンテナ設計
+- [ ] パフォーマンスメトリクスの計測と記録
+
+### デバイス適応型最適化
+
+- [ ] デバイスの性能に応じたレンダリング品質調整
+- [ ] バッテリー状態に基づく省電力モードの適用
+- [ ] インタラクション中の処理軽減
+- [ ] WebGLレンダリングの適切な活用
+
+## リファレンス
+
+### 共通型定義
+
+```typescript
+// マップ上の関心地点
+interface PointOfInterest {
+  id: string;
+  lat: number;
+  lng: number;
+  name: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  url?: string;
+  tags?: string[];
+  priority?: number;
+}
+
+// グローバル設定
+interface MapConfig {
+  powerSavingMode: boolean;
+  maxFrameRate: number;
+  enableAnimations: boolean;
+  defaultStyles?: google.maps.MapTypeStyle[];
+}
+```
+
+### 主要ヘルパー関数
+
+- **calculateExtendedBounds**: 表示範囲を指定のマージンで拡張する
+- **precacheCriticalMapAssets**: 重要なマップアセットをキャッシュする
+- **prefetchPriorityMapTiles**: 優先度の高いタイルを先読みする
+- **getDevicePerformanceProfile**: デバイスの性能プロファイルを取得する
+- **setupMarkerProcessingWorker**: マーカー処理用のWeb Workerを設定する
+
+### 関連リソース
+
+- [アクセシビリティとパフォーマンスの両立](./08_accessibility.md) - アクセシブルかつ高速なマップ実装
+- [セキュリティ対策](./09_security.md) - 安全性とパフォーマンスのバランス
+- [佐渡島固有の最適化](./10_sado_optimization.md) - 佐渡島向けの特化した最適化技術
+- [Google Maps 公式パフォーマンスガイド](https://developers.google.com/maps/documentation/javascript/performance)
+- [WebGLレンダリング活用ガイド](https://developers.google.com/maps/documentation/javascript/webgl)
+
+## 更新履歴
+
+- **2025年4月29日**: 冗長な内容を整理し、構成を改善
+- **2025年4月28日**: WebGLとベクターマップの最適化セクションを追加
+- **2025年2月15日**: バッテリー状態に基づく最適化を追加
+- **2024年12月10日**: 初版作成

@@ -24,6 +24,8 @@ function createMarker(
 
 ## 2025年の最新マーカー機能の活用
 
+以下は、2025年に導入された最新のマーカー機能とその推奨される使用方法を示します：
+
 ```typescript
 // 2025年最新のAdvanced Markerの機能を活用した例
 function createEnhancedAdvancedMarker(
@@ -66,7 +68,11 @@ function createEnhancedAdvancedMarker(
 
   return marker;
 }
+```
 
+### レスポンシブマーカーサイズの最適化
+
+```typescript
 // マーカーのサイズを状況に応じて最適化する2025年推奨パターン
 function getOptimalMarkerSize(
   devicePixelRatio: number,
@@ -101,6 +107,35 @@ function getOptimalMarkerSize(
 - **キャッシュ**: マーカーオブジェクトをキャッシュして再利用
 - **遅延レンダリング**: 視認範囲内のマーカーのみを優先的に表示
 - **バッチ更新**: マーカー更新をグループ化して一度に適用
+
+```typescript
+// マーカーキャッシュと再利用の例
+const markerCacheRef = useRef<
+  Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>
+>(new Map());
+
+// POIのIDを一貫して取得するヘルパー関数
+const getPoiId = useCallback((poi: PointOfInterest): string => {
+  return poi.id || `${poi.lat}-${poi.lng}-${poi.name}`;
+}, []);
+
+// マーカーの取得または作成（キャッシュ活用）
+function getOrCreateMarker(
+  poi: PointOfInterest
+): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
+  const id = getPoiId(poi);
+  const existingMarker = markerCacheRef.current.get(id);
+
+  if (existingMarker) {
+    updateMarker(existingMarker, poi);
+    return existingMarker;
+  }
+
+  const newMarker = createMarker(poi);
+  markerCacheRef.current.set(id, newMarker);
+  return newMarker;
+}
+```
 
 ## 静的ホスティング向け最適化
 
@@ -196,41 +231,10 @@ export function createLocalAssetMarker(
 }
 ```
 
-- **バッチ更新**: マーカー更新を一度にまとめて処理
-
-```typescript
-// マーカーキャッシュの例
-const markerCacheRef = useRef<
-  Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker>
->(new Map());
-
-// POIのIDを一貫して取得するヘルパー関数
-const getPoiId = useCallback((poi: PointOfInterest): string => {
-  return poi.id || `${poi.lat}-${poi.lng}-${poi.name}`;
-}, []);
-
-// マーカーの取得または作成
-function getOrCreateMarker(
-  poi: PointOfInterest
-): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
-  const id = getPoiId(poi);
-  const existingMarker = markerCacheRef.current.get(id);
-
-  if (existingMarker) {
-    updateMarker(existingMarker, poi);
-    return existingMarker;
-  }
-
-  const newMarker = createMarker(poi);
-  markerCacheRef.current.set(id, newMarker);
-  return newMarker;
-}
-```
-
 ## カスタムマーカーの作成とスタイリング
 
 ```typescript
-// Advanced Markerのカスタマイズ例
+// Advanced Markerのカスタマイズ例 - シンプルな実装
 function createCustomAdvancedMarker(
   poi: PointOfInterest
 ): google.maps.marker.AdvancedMarkerElement {
@@ -241,18 +245,20 @@ function createCustomAdvancedMarker(
       // PinElementが利用可能な場合はそれを使用
       if ('PinElement' in google.maps.marker) {
         const pin = new google.maps.marker.PinElement({
-          background: getIconUrl(poi.category),
+          background: getCategoryColor(poi.category), // getIconUrlと統一
           scale: poi.isHighlighted ? 1.2 : 1,
           glyph: poi.isClosed ? '×' : '',
           glyphColor: poi.isClosed ? '#ff0000' : '',
           borderColor: poi.isRecommended ? '#FFD700' : '',
+          // 2025年の新機能：角の丸みをカスタマイズ
+          borderRadius: poi.isSpecial ? '0%' : '50%',
         });
         return pin.element;
       }
 
       // フォールバックとしてカスタムDIV要素を使用
       const div = document.createElement('div');
-      div.style.backgroundImage = `url(${getIconUrl(poi.category)})`;
+      div.style.backgroundImage = `url(${getCategoryColor(poi.category)})`;
       div.style.width = '32px';
       div.style.height = '32px';
       div.style.backgroundSize = 'cover';
@@ -261,6 +267,8 @@ function createCustomAdvancedMarker(
   });
 }
 ```
+
+**注**: 上記の例は基本的な実装を示しています。より高度な実装については「2025年の最新マーカー機能の活用」セクションを参照してください。
 
 ## イベントハンドリングとメモリリーク防止
 

@@ -1,5 +1,19 @@
 # 9. セキュリティ対策
 
+> **最終更新日**: 2025年4月28日  
+> **バージョン**: 2.0  
+> **作成者**: 佐渡で食えっちゃプロジェクトチーム  
+> **重要度**: 高
+
+## 目次
+
+- [静的ホスティング環境向けAPIキー保護](#静的ホスティング環境向けapiキー保護)
+- [2025年版強化セキュリティ対策](#2025年版強化セキュリティ対策)
+- [静的ホスティングのセキュリティ強化](#静的ホスティングのセキュリティ強化)
+- [トークンベースの認証実装](#トークンベースの認証実装)
+- [XSS対策](#xss対策)
+- [APIキーの制限と使用量モニタリング](#apiキーの制限と使用量モニタリング)
+
 ## 静的ホスティング環境向けAPIキー保護
 
 ```typescript
@@ -176,11 +190,15 @@ function sanitizeDynamicMarkerContent(content: string): string {
     USE_PROFILES: { html: true },
   });
 }
-```
 
 // SRI属性をチェック
-mapsScripts.forEach(script => {
-if (!(script instanceof HTMLScriptElement)) return;
+function verifySRIAttributes(): void {
+  const mapsScripts = document.querySelectorAll(
+    'script[src*="maps.googleapis.com"]'
+  );
+
+  mapsScripts.forEach(script => {
+    if (!(script instanceof HTMLScriptElement)) return;
 
     if (!script.integrity) {
       logger.warn('Google Maps スクリプトにSRI属性が設定されていません', {
@@ -189,45 +207,48 @@ if (!(script instanceof HTMLScriptElement)) return;
         src: script.src,
       });
     }
-
-});
+  });
 }
+```
 
+## トークンベースの認証実装
+
+```typescript
 // トークンベースの認証実装（2025年の新機能）
 function setupTokenBasedAuth(): void {
-// APIアクセストークンが設定されているか確認
-if (!ENV.google.apiAccessToken) {
-return;
-}
+  // APIアクセストークンが設定されているか確認
+  if (!ENV.google.apiAccessToken) {
+    return;
+  }
 
-// トークンの有効期限を確認
-const tokenExpiry = parseTokenExpiry(ENV.google.apiAccessToken);
-if (tokenExpiry && tokenExpiry < Date.now() + 3600 \* 1000) {
-// トークンの有効期限が1時間以内の場合は更新
-scheduleTokenRefresh();
-}
+  // トークンの有効期限を確認
+  const tokenExpiry = parseTokenExpiry(ENV.google.apiAccessToken);
+  if (tokenExpiry && tokenExpiry < Date.now() + 3600 * 1000) {
+    // トークンの有効期限が1時間以内の場合は更新
+    scheduleTokenRefresh();
+  }
 
-// トークンリフレッシュのスケジュール設定
-function scheduleTokenRefresh(): void {
-if (tokenExpiry) {
-const timeUntilExpiry = Math.max(
-0,
-tokenExpiry - Date.now() - 600 \* 1000
-); // 期限の10分前
-setTimeout(refreshApiAccessToken, timeUntilExpiry);
-}
-}
+  // トークンリフレッシュのスケジュール設定
+  function scheduleTokenRefresh(): void {
+    if (tokenExpiry) {
+      const timeUntilExpiry = Math.max(
+        0,
+        tokenExpiry - Date.now() - 600 * 1000
+      ); // 期限の10分前
+      setTimeout(refreshApiAccessToken, timeUntilExpiry);
+    }
+  }
 
-// APIアクセストークンの更新処理
-async function refreshApiAccessToken(): Promise<void> {
-try {
-const response = await fetch('/api/refresh-maps-token', {
-method: 'POST',
-credentials: 'same-origin',
-headers: {
-'Content-Type': 'application/json',
-},
-});
+  // APIアクセストークンの更新処理
+  async function refreshApiAccessToken(): Promise<void> {
+    try {
+      const response = await fetch('/api/refresh-maps-token', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${response.status}`);
@@ -262,28 +283,26 @@ headers: {
       // エラー時は短い間隔で再試行
       setTimeout(refreshApiAccessToken, 60 * 1000);
     }
+  }
 
+  // トークンから有効期限を解析
+  function parseTokenExpiry(token: string): number | null {
+    try {
+      // JWTの場合（セキュリティ上の理由で検証せずに読むのみ）
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload.exp) {
+          return payload.exp * 1000; // UNIX時間（秒）をミリ秒に変換
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
 }
-}
-
-// トークンから有効期限を解析
-function parseTokenExpiry(token: string): number | null {
-try {
-// JWTの場合（セキュリティ上の理由で検証せずに読むのみ）
-const parts = token.split('.');
-if (parts.length === 3) {
-const payload = JSON.parse(atob(parts[1]));
-if (payload.exp) {
-return payload.exp \* 1000; // UNIX時間（秒）をミリ秒に変換
-}
-}
-return null;
-} catch {
-return null;
-}
-}
-
-````
+```
 
 ## XSS対策
 
@@ -318,7 +337,7 @@ function createSafeInfoWindow(
     maxWidth: 300,
   });
 }
-````
+```
 
 ## APIキーの制限と使用量モニタリング
 
@@ -408,3 +427,52 @@ function setupUsageThresholdAlerts(): void {
   }, 3600 * 1000); // 1時間ごとにチェック
 }
 ```
+
+## セキュリティ対策のまとめ
+
+Google Maps静的ホスティング環境でのセキュリティ対策は、以下のポイントが重要です：
+
+1. **APIキーの保護**
+
+   - HTTPリファラ制限の設定
+   - 使用するAPIの制限
+   - 使用量の上限設定
+
+2. **コンテンツセキュリティ**
+
+   - 適切なCSP（Content Security Policy）の設定
+   - SRI（Subresource Integrity）の実装
+   - XSS対策の徹底
+
+3. **認証と認可**
+
+   - トークンベースの認証の安全な実装
+   - トークンの安全な保存と更新
+
+4. **モニタリングと監視**
+   - API使用量の定期的な監視
+   - 異常検知とアラートの設定
+
+## セキュリティチェックリスト
+
+静的ホスティング環境でGoogle Mapsを実装する前に、以下のチェックリストを確認しましょう：
+
+- [ ] APIキーにHTTPリファラ制限が適切に設定されている
+- [ ] 必要なGoogle Maps APIのみが使用可能に制限されている
+- [ ] CSPが適切に設定され、必要なドメインのみが許可されている
+- [ ] SRIハッシュ値がスクリプト要素に設定されている
+- [ ] 動的コンテンツ（InfoWindow等）のサニタイズ処理が実装されている
+- [ ] API使用量のモニタリングが設定されている
+- [ ] セキュリティアップデートの定期的な適用体制がある
+
+## 関連ドキュメント
+
+- [パフォーマンス最適化ガイドライン](./07_performance.md) - セキュリティとパフォーマンスの両立
+- [静的ホスティングガイドライン](../static_hosting_guidelines.md) - 全体的なホスティング環境の設定
+- [チェックリスト](./12_checklist.md) - セキュリティを含む総合的な実装チェックリスト
+
+## 更新履歴
+
+- **2025年4月28日**: CSPとSRIの最新実装方法を追加
+- **2025年2月15日**: APIキー保護の推奨設定を更新
+- **2024年12月3日**: トークンベース認証の初期実装を追加

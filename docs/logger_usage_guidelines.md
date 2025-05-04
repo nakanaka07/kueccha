@@ -16,14 +16,14 @@
   - [適切なログレベル選択の基準](#適切なログレベル選択の基準)
 - [3. 構造化ログとコンテキスト情報](#3-構造化ログとコンテキスト情報)
   - [LogContext インターフェース](#logcontext-インターフェース)
-  - [構造化ロギングの長期的メリット](#構造化ロギングの長期的メリット)
+  - [構造化ロギングのメリット](#構造化ロギングの長期的メリット)
   - [効果的なコンテキスト追加方法](#効果的なコンテキスト追加方法)
   - [推奨コンテキスト項目](#推奨コンテキスト項目)
   - [プライバシーとセキュリティ考慮事項](#プライバシーとセキュリティ考慮事項)
-  - [ログのセキュリティ考慮事項](#ログのセキュリティ考慮事項owaspガイドラインより)
+  - [ログのセキュリティガイドライン](#ログのセキュリティ考慮事項owaspガイドラインより)
 - [4. パフォーマンス測定とロギング](#4-パフォーマンス測定とロギング)
   - [処理時間の自動測定](#処理時間の自動測定)
-  - [パフォーマンスモニタリングのベストプラクティス](#パフォーマンスモニタリングのベストプラクティス)
+  - [パフォーマンスモニタリング](#パフォーマンスモニタリングのベストプラクティス)
   - [非同期処理のエラーハンドリング](#非同期処理のエラーハンドリング)
 - [5. 条件付きロギングと最適化](#5-条件付きロギングと最適化)
   - [条件付きログ出力](#条件付きログ出力)
@@ -31,14 +31,14 @@
 - [6. 環境別ロギング設定](#6-環境別ロギング設定)
   - [開発環境での詳細ログ](#開発環境での詳細ログ)
   - [本番環境でのセキュアなロギング](#本番環境でのセキュアなロギング)
-  - [環境変数によるログ設定の制御](#環境変数によるログ設定の制御)
+  - [環境変数によるログ設定](#環境変数によるログ設定の制御)
 - [7. 高度なロギング機能](#7-高度なロギング機能)
-  - [テスト環境でのログバッファ活用](#テスト環境でのログバッファ活用)
-  - [Jestを使用したロガー関数のテスト手法](#jestを使用したロガー関数のテスト手法)
-  - [セキュリティとプライバシーの設計パターン](#セキュリティとプライバシーの設計パターン)
-  - [トレーシング識別子の活用](#トレーシング識別子の活用)
+  - [テスト環境でのログバッファ](#テスト環境でのログバッファ活用)
+  - [Jestでのテスト手法](#jestを使用したロガー関数のテスト手法)
+  - [セキュリティとプライバシーパターン](#セキュリティとプライバシーの設計パターン)
+  - [トレーシング識別子](#トレーシング識別子の活用)
 - [8. まとめと推奨プラクティス](#8-まとめと推奨プラクティス)
-  - [ロギングのベストプラクティスチェックリスト](#ロギングのベストプラクティスチェックリスト)
+  - [ベストプラクティスチェックリスト](#ロギングのベストプラクティスチェックリスト)
 - [参考リンク](#参考リンク)
 
 > **関連ドキュメント**
@@ -79,6 +79,7 @@ export enum LogLevel {
 }
 
 // LogLevel型を文字列リテラル型として使用することも可能
+// 注意: このガイドラインでは基本的に enum LogLevel を使用します
 export type LogLevelString = 'error' | 'warn' | 'info' | 'debug';
 
 // LogContext インターフェース
@@ -109,23 +110,27 @@ export interface LogContext {
 - **DEBUG**: 問題解決のための詳細情報
 
 ```typescript
-// ログレベル使用例
-// エラーログ - 回復不能な問題
-logger.error('APIからのデータ取得に失敗しました', error);
+// ログレベルの実践的な使用例
+// ERROR - 回復不能な問題（すべての環境でログ出力）
+logger.error('APIからのデータ取得に失敗しました', {
+  endpoint: '/api/pois',
+  errorCode: 'FETCH_FAILED',
+  statusCode: 500,
+});
 
-// 警告ログ - 代替手段を使用
+// WARN - 代替手段を使用（すべての環境でログ出力）
 logger.warn('最新データの取得に失敗しました。キャッシュを使用します', {
   cacheAge: '30分',
   retryIn: '5分後',
 });
 
-// 情報ログ - 重要な操作
+// INFO - 重要な操作（開発・ステージング環境でログ出力）
 logger.info('ユーザーがマップビューを変更しました', {
   center: { lat: 38.048, lng: 138.409 },
   zoom: 12,
 });
 
-// デバッグログ - 開発時の詳細情報
+// DEBUG - 詳細情報（主に開発環境でのみログ出力）
 logger.debug('POIデータ詳細', {
   pointCount: 156,
   categories: ['飲食', '観光', '宿泊'],
@@ -136,17 +141,9 @@ logger.debug('POIデータ詳細', {
 
 ### LogContext インターフェース
 
-```typescript
-// LogContext インターフェース
-export interface LogContext {
-  [key: string]: unknown; // 任意のプロパティを許容
-  component?: string; // コンポーネント名
-  userId?: string; // ユーザーID
-  requestId?: string; // リクエスト識別子
-}
-```
+「型定義」セクションで説明した `LogContext` インターフェースを使用して、構造化されたログにコンテキスト情報を追加できます。
 
-### 構造化ロギングの長期的メリット
+### 構造化ロギングのメリット
 
 構造化ロギングを採用することで得られる具体的なメリットとして：
 
@@ -173,10 +170,17 @@ try {
   // TypeScript 4.0以降では、catch節のerrorはunknown型になるため
   // 型チェックを行ってから使用するのが安全
   if (error instanceof Error) {
-    logger.error('データ取得失敗', error); // Error オブジェクトはスタックトレースも自動的に含まれます
+    // Error オブジェクトを直接渡す - スタックトレースも自動的に含まれる
+    logger.error('データ取得失敗', {
+      component: 'DataService',
+      error, // エラーオブジェクトをコンテキストに含める
+    });
   } else {
     // errorが非標準のエラーオブジェクトの場合
-    logger.error('データ取得失敗', { message: String(error) });
+    logger.error('データ取得失敗', {
+      component: 'DataService',
+      message: String(error),
+    });
   }
 }
 ```
@@ -229,7 +233,7 @@ logger.info(
 // 出力: { endpoint: '/api/auth', email: 'us****', token: 'ab****' }
 ```
 
-### ログのセキュリティ考慮事項（OWASPガイドラインより）
+### ログのセキュリティガイドライン（OWASPより）
 
 ログ自体を保護するための具体的な方法：
 
@@ -252,6 +256,12 @@ logger.info(
 /**
  * 同期処理の実行時間を測定し、結果を返す型安全な関数
  * @template T 関数の戻り値の型
+ * @param label メッセージラベル（処理名）
+ * @param fn 測定対象の同期関数
+ * @param level ログレベル（デフォルトはINFO）
+ * @param context 追加のコンテキスト情報
+ * @param thresholdMs この時間(ms)以上かかった場合のみログ出力
+ * @returns fn関数の戻り値
  */
 function measureTime<T>(
   label: string,
@@ -264,6 +274,12 @@ function measureTime<T>(
 /**
  * 非同期処理の実行時間を測定し、結果を返す型安全な関数
  * @template T 非同期関数の解決値の型
+ * @param label メッセージラベル（処理名）
+ * @param fn 測定対象の非同期関数
+ * @param level ログレベル（デフォルトはINFO）
+ * @param context 追加のコンテキスト情報
+ * @param thresholdMs この時間(ms)以上かかった場合のみログ出力
+ * @returns fn関数の戻り値（Promise）
  */
 function measureTimeAsync<T>(
   label: string,
@@ -292,7 +308,7 @@ const data = await logger.measureTimeAsync(
 );
 ```
 
-### パフォーマンスモニタリングのベストプラクティス
+### パフォーマンスモニタリング
 
 - 重要な処理の実行時間を常に記録する
 - `thresholdMs` パラメータを使用して、特定時間を超える処理のみをログに記録
@@ -341,7 +357,7 @@ logger.logIf(
 );
 
 // デバッグモードでのみ詳細ログを出力 - 型安全なアクセス
-// 環境変数が存在するか、またboolean型かを確認
+// 環境変数の型チェックを行う推奨パターン
 if (typeof ENV.env.isDev === 'boolean' && ENV.env.isDev) {
   logger.debug('詳細なPOIデータ', poiData);
 }
@@ -350,12 +366,12 @@ if (typeof ENV.env.isDev === 'boolean' && ENV.env.isDev) {
 ### ロギングのパフォーマンス最適化
 
 ```typescript
-// 1. サンプリングレートを使用して高頻度ログを制限
+// 1. サンプリングレートを使用して高頻度ログを制限（Map型を使用）
 logger.configure({
-  samplingRates: {
-    マップ操作: 100, // 100回に1回だけログを記録
-    データ更新: 10, // 10回に1回だけログを記録
-  },
+  samplingRates: new Map<string, number>([
+    ['マップ操作', 100], // 100回に1回だけログを記録
+    ['データ更新', 10], // 10回に1回だけログを記録
+  ]),
 });
 
 // 2. 大きなデータ構造をログに記録する前に要約
@@ -373,14 +389,15 @@ logger.debug('大量データの要約', largeDataSummary);
 
 ```typescript
 // 開発環境用設定
-if (ENV.env.isDev) {
+// 型安全のために環境変数のチェックを行うパターンに統一
+if (typeof ENV.env.isDev === 'boolean' && ENV.env.isDev) {
   logger.configure({
     minLevel: LogLevel.DEBUG, // すべてのログレベルを表示
     enableConsole: true, // コンソール出力を有効化
     includeTimestamps: true, // タイムスタンプを表示
-    deduplicateErrors: false, // エラーの重複除去を無効化
+    deduplicateErrors: false, // 開発中はエラーの重複でも毎回ログに記録
 
-    // 特定コンポーネントのみ詳細ログを取得
+    // 特定コンポーネントのみ詳細ログを取得（オブジェクトリテラル）
     componentLevels: {
       MapContainer: LogLevel.DEBUG, // 地図関連のみデバッグログも表示
       APIClient: LogLevel.INFO, // APIクライアントは情報レベルまで
@@ -398,18 +415,16 @@ if (ENV.env.isProd) {
     minLevel: LogLevel.WARN, // WARNとERRORのみ表示
     enableConsole: true, // 基本的なエラーログはコンソールにも表示
     deduplicateErrors: true, // 同一エラーの重複を防止
-    deduplicationInterval: 3600000, // 1時間（本番環境では長めに設定）
-
-    // 高頻度ログの抑制設定
-    samplingRates: {
-      マップ操作: 50, // マップ操作ログは50回に1回だけ記録
-      データ更新: 10, // データ更新ログは10回に1回だけ記録
-    },
+    deduplicationInterval: 3600000, // 1時間（本番環境では長めに設定）    // セクション5で説明したサンプリングレートを本番環境向けに最適化
+    samplingRates: new Map<string, number>([
+      ['マップ操作', 50], // 本番環境ではより厳格に50回に1回だけ記録
+      ['データ更新', 10], // 10回に1回だけ記録
+    ]),
   });
 }
 ```
 
-### 環境変数によるログ設定の制御
+### 環境変数によるログ設定
 
 ```typescript
 // env_usage_guidelines.mdで説明されている環境変数を使用したロガー設定
@@ -422,20 +437,15 @@ function getLogLevelFromEnv(): LogLevel {
     key: 'VITE_LOG_LEVEL',
     defaultValue: 'info',
   }).toLowerCase();
-
   // 文字列を LogLevel に変換
-  switch (logLevelStr) {
-    case 'debug':
-      return LogLevel.DEBUG;
-    case 'info':
-      return LogLevel.INFO;
-    case 'warn':
-      return LogLevel.WARN;
-    case 'error':
-      return LogLevel.ERROR;
-    default:
-      return LogLevel.INFO;
-  }
+  // 注: 将来的にはgetEnvVarのtransformプロパティで直接変換するとコード削減可能
+  return logLevelStr === 'debug'
+    ? LogLevel.DEBUG
+    : logLevelStr === 'warn'
+      ? LogLevel.WARN
+      : logLevelStr === 'error'
+        ? LogLevel.ERROR
+        : LogLevel.INFO;
 }
 
 // アプリケーション起動時にロガー設定を環境変数に基づいて初期化
@@ -445,13 +455,13 @@ export function initializeLogger(): void {
   logger.configure({
     minLevel: logLevel,
     enableConsole: true,
-    includeTimestamps: !ENV.env.isProd, // 本番環境ではタイムスタンプを省略して最適化
-
-    // 環境変数で個別のコンポーネントのログレベルを上書き可能
+    includeTimestamps: !ENV.env.isProd, // 本番環境ではタイムスタンプを省略して最適化    // 環境変数で個別のコンポーネントのログレベルを上書き可能
     componentLevels: {
+      // MapContainerコンポーネントのログレベルを環境変数から取得
       MapContainer: getEnvVar({
         key: 'VITE_LOG_LEVEL_MAP',
         defaultValue: logLevel,
+        // 文字列をLogLevelに変換する関数（switch文を使用する代わりにシンプルな三項演算子チェーン）
         transform: str =>
           str.toLowerCase() === 'debug'
             ? LogLevel.DEBUG
@@ -478,7 +488,7 @@ export function initializeLogger(): void {
 
 ## 7. 高度なロギング機能
 
-### テスト環境でのログバッファ活用
+### テスト環境でのログバッファ
 
 ```typescript
 describe('POIフィルター機能テスト', () => {
@@ -506,7 +516,7 @@ describe('POIフィルター機能テスト', () => {
 });
 ```
 
-### Jestを使用したロガー関数のテスト手法
+### Jestでのテスト手法
 
 ```typescript
 // ロガーのモックとテスト例
@@ -546,7 +556,7 @@ describe('POIサービスのエラーハンドリング', () => {
 });
 ```
 
-### セキュリティとプライバシーの設計パターン
+### セキュリティとプライバシーパターン
 
 ```typescript
 // 位置情報の精度を落とす例
@@ -566,27 +576,33 @@ logger.info('ユーザー位置情報', {
 });
 ```
 
-### トレーシング識別子の活用
+### トレーシング識別子
 
 ```typescript
-// トレース識別子を生成
+// トランザクションIDとしても使えるトレース識別子を生成
 const generateTraceId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
 };
 
-// リクエストごとにトレースIDを生成
-const traceId = generateTraceId();
+// リクエスト処理の開始時にトレースIDを生成し再利用
+const traceId = generateTraceId(); // 例: "lnztm1rfg2z"
 
-// 全てのログにトレースIDを含める
+// 処理開始時にトレースIDを含める
 logger.info('ユーザーリクエスト受信', {
-  traceId,
+  traceId, // ← このIDを関連するすべてのログで一貫して使用
   endpoint: '/api/pois',
   method: 'GET',
 });
 
-// 処理完了時もトレースIDを含める
-logger.info('ユーザーリクエスト完了', {
+// 中間処理でも同じトレースIDを使用
+logger.debug('POIデータ処理中', {
   traceId,
+  count: points.length,
+});
+
+// 処理完了時も同じトレースIDを使用
+logger.info('ユーザーリクエスト完了', {
+  traceId, // ← 同じリクエストに関するログを検索しやすくなる
   durationMs: performance.now() - startTime,
   status: 'success',
 });
@@ -594,7 +610,7 @@ logger.info('ユーザーリクエスト完了', {
 
 ## 8. まとめと推奨プラクティス
 
-### ロギングのベストプラクティスチェックリスト
+### ベストプラクティスチェックリスト
 
 #### ログ設計と実装
 
@@ -616,8 +632,8 @@ logger.info('ユーザーリクエスト完了', {
 
 > **関連ガイドライン**:
 >
-> - 環境変数管理ガイドライン - ロギング設定のための環境変数活用
-> - コード最適化ガイドライン - パフォーマンス監視とデバッグテクニック
+> - [環境変数管理ガイドライン](./env_usage_guidelines.md) - ロギング設定のための環境変数活用
+> - [コード最適化ガイドライン](./code_optimization_guidelines.md) - パフォーマンス監視とデバッグテクニック
 
 ## 参考リンク
 

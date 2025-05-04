@@ -17,12 +17,11 @@
   - [Zustand状態管理のベストプラクティス](#zustand状態管理のベストプラクティス)
   - [パスエイリアスの効果的活用](#パスエイリアスの効果的活用)
 - [3. パフォーマンス最適化技術](#3-パフォーマンス最適化技術)
-  - [React特有の最適化手法](#react特有の最適化手法)
+  - [React特有の最適化手法と効率的なレンダリング](#react特有の最適化手法と効率的なレンダリング)
   - [Suspenseパターンの活用](#suspenseパターンの活用)
-  - [レンダリングプロセスの最適化](#レンダリングプロセスの最適化)
 - [4. API管理とデータフェッチング戦略](#4-api管理とデータフェッチング戦略)
   - [モダンなデータフェッチング手法](#モダンなデータフェッチング手法)
-  - [オフラインサポートの実装](#オフラインサポートの実装)
+  - [オフラインサポートとエラー回復戦略](#オフラインサポートとエラー回復戦略)
 - [5. ユーザーインターフェース最適化](#5-ユーザーインターフェース最適化)
   - [CSS戦略と視覚的一貫性](#css戦略と視覚的一貫性)
   - [アニメーションの最適化](#アニメーションの最適化)
@@ -35,7 +34,7 @@
 - [8. 推奨プラクティスチェックリスト](#8-推奨プラクティスチェックリスト)
 - [9. エラーハンドリングとロギング連携](#9-エラーハンドリングとロギング連携)
   - [エラー境界とロガーの統合](#エラー境界とロガーの統合)
-  - [段階的なエラー回復戦略](#段階的なエラー回復戦略)
+  - [エラー監視と回復](#エラー監視と回復)
 - [参考リンク](#参考リンク)
 
 > **関連ドキュメント**
@@ -170,7 +169,7 @@ const isLoading = usePOIStore(state => state.isLoading); // 別の状態を分�
 
 ## 3. パフォーマンス最適化技術
 
-### React特有の最適化手法
+### React特有の最適化手法と効率的なレンダリング
 
 - **メモ化戦略**: React.memo、useMemo、useCallbackの適切な使用
 - **仮想化リスト**: 大量データ表示時のwindowingテクニック
@@ -178,6 +177,10 @@ const isLoading = usePOIStore(state => state.isLoading); // 別の状態を分�
 - **Web Vitals監視**: コアWeb指標（CLS、FID、LCP）の継続的な監視と最適化
 - **React 19の新機能活用**: Actions API、useTransition、サスペンスベースのローディングパターン
 - **適切なキー設計**: リスト要素の効率的な差分更新を可能にするユニークなキー
+- **不要な再レンダリングの特定**: React DevTools Profilerを用いたボトルネック検出
+- **レンダリングバッチの適正化**: 複数更新の一括処理
+- **レイアウトシフトの防止**: コンテンツの読み込み中のスペースリザベーション
+- **先行ロード戦略**: ユーザーが必要とする前にリソースを先読み
 
 ```typescript
 // React 19のActions APIの簡略例
@@ -215,6 +218,10 @@ function POIForm() {
 }
 ```
 
+> **注意**: React 19の機能は本ガイドライン執筆時点（2025年4月）では一部APIが変更される可能性があります。最新のAPIドキュメントを参照して実装してください。
+
+````
+
 ### Suspenseパターンの活用
 
 - **宣言的なローディング状態**: コンポーネント境界でのローディングUI定義
@@ -250,14 +257,7 @@ function POIMap({ category }) {
     </div>
   );
 }
-```
-
-### レンダリングプロセスの最適化
-
-- **不要な再レンダリングの特定**: React DevTools Profilerを用いたボトルネック検出
-- **レンダリングバッチの適正化**: 複数更新の一括処理
-- **レイアウトシフトの防止**: コンテンツの読み込み中のスペースリザベーション
-- **先行ロード戦略**: ユーザーが必要とする前にリソースを先読み
+````
 
 ## 4. API管理とデータフェッチング戦略
 
@@ -316,18 +316,20 @@ function useUpdatePOI() {
 }
 ```
 
-### オフラインサポートの実装
+### オフラインサポートとエラー回復戦略
 
 - **ネットワーク状態に応じたフォールバック**: オンライン・オフラインの適切な切り替え
 - **バックグラウンド同期による遅延更新**: オフライン時の操作を後で同期
 - **キャッシュ優先戦略とストレージ容量管理**: 限られたリソースの効率的な活用
 - **IndexedDBを活用したデータ永続化**: 大容量データの効率的なオフライン保存
 - **Service Workerによるリソースキャッシング**: ネットワーク非依存の基本機能提供
+- **段階的なデータ取得フォールバック**: ネットワークエラー時に複数の回復手段を順次試行
 
 ```typescript
-// オフライン対応のシンプルな実装例
+// オフラインサポートと段階的回復戦略の実装例
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { useIndexedDBStore } from '@/hooks/useIndexedDBStore';
+import { logger } from '@/utils/logger';
 
 function POIListWithOfflineSupport({ category }) {
   const { isOnline } = useNetworkState();
@@ -342,11 +344,30 @@ function POIListWithOfflineSupport({ category }) {
     }
   }, [isOnline, pendingChanges.length]);
 
+  // データ取得エラー時の段階的回復処理
+  const handleFetchError = async (error) => {
+    logger.warn('POIデータ取得エラー、キャッシュにフォールバック', { error });
+
+    // 1. キャッシュからデータを取得
+    const cachedData = await query.getCached();
+    if (cachedData?.length > 0) {
+      return cachedData;
+    }
+
+    // 2. 一般カテゴリのデータを取得
+    logger.warn('キャッシュが利用できないため一般カテゴリを使用');
+    return fetchGeneralCategory();
+  };
+
   // UI内でオフライン状態を表示
   return (
     <div>
       {!isOnline && <OfflineBanner pendingCount={pendingChanges.length} />}
-      <POIList data={query.data} isLoading={query.isLoading} />
+      <POIList
+        data={query.data}
+        isLoading={query.isLoading}
+        onError={handleFetchError}
+      />
     </div>
   );
 }
@@ -510,25 +531,9 @@ export default defineConfig({
     },
   },
 });
+```
 
-### 【補足】開発サーバー設定と公開時の注意
-
-> **注意:**
-> 以下のVite開発サーバー設定（`server`オプション）は、ローカル開発・検証（例: https://localhost での動作確認）を目的としています。
-> GitHub Pagesなど静的ホスティングで公開する場合、APIプロキシやサーバー設定は不要です。
-> 公開時は `server` 設定を気にせずビルド成果物（`dist`等）をそのままデプロイしてください。
->
-> **ローカルでHTTPS開発を行う場合の例:**
-> ```typescript
-> server: {
->   https: {
->     key: fs.readFileSync('.local/localhost.key'),
->     cert: fs.readFileSync('.local/localhost.cert')
->   },
->   port: 5173,
->   // 静的サイトの場合、proxy設定は不要
-> }
-> ```
+> **重要**: 開発サーバー設定と静的ホスティングについての詳細な情報は、[静的サイト前提の運用方針](#静的サイト前提の運用方針)セクションを参照してください。
 
 ## 7. 実用的なリファレンス
 
@@ -662,7 +667,7 @@ function ExpensiveComponent(props) {
 - [x] **オフライン対応**: ServiceWorkerとIndexedDBを活用したオフライン機能実装
 - [x] **テスト自動化**: 単体テスト、統合テスト、E2Eテストによる品質保証
 
-> **重要**: これらのプラクティスは「佐渡で食えっちゃ」プロジェクト全体に適用し、継続的に改善していくこと。新機能開発時にも必ずこのチェックリストを参照してください。
+> **重要**: これらのプラクティスは「佐渡で食えっちゃプロジェクト」全体に適用し、継続的に改善していくこと。新機能開発時にも必ずこのチェックリストを参照してください。
 
 ## 9. エラーハンドリングとロギング連携
 
@@ -725,81 +730,16 @@ export class ErrorBoundary extends Component<
 }
 ```
 
-### 段階的なエラー回復戦略
+### エラー監視と回復
 
-環境変数とロガーを活用した段階的なエラー回復戦略を実装することで、より柔軟なエラーハンドリングが可能になります。
+エラー発生時には段階的な回復戦略を実装することで、ユーザー体験を最大限に保護します。
 
-```typescript
-// 環境に応じたエラー処理とロギング戦略
-import { getEnvVar } from '@/utils/env';
-import { logger } from '@/utils/logger';
+- **キャッシュを活用したフォールバック**: APIリクエストが失敗した場合、まずローカルキャッシュからデータを試行
+- **カテゴリフォールバック**: 特定カテゴリのデータが取得できない場合は汎用カテゴリにフォールバック
+- **空の結果セットによる安全な失敗**: 全ての回復手段が失敗した場合でもアプリケーションのクラッシュを防止
+- **環境に応じたエラー表示**: 開発環境では詳細なエラー情報、本番環境ではユーザーフレンドリーなメッセージ
 
-// env_usage_guidelines.mdで説明されている環境変数アクセス関数を使用
-const ENABLE_DETAILED_ERRORS = getEnvVar({
-  key: 'VITE_ENABLE_DETAILED_ERRORS',
-  defaultValue: false,
-  transform: value => value.toLowerCase() === 'true',
-});
-
-// 段階的な回復を行う関数
-export async function fetchPOIData(category: string) {
-  try {
-    // logger_usage_guidelines.mdで説明されている処理時間測定を活用
-    return await logger.measureTimeAsync(
-      'POIデータフェッチ',
-      async () => {
-        const response = await fetch(`/api/pois/${category}`);
-        if (!response.ok) {
-          throw new Error(`APIエラー: ${response.status}`);
-        }
-        return response.json();
-      },
-      LogLevel.INFO,
-      { category }
-    );
-  } catch (error) {
-    // エラーロギング
-    logger.error('POIデータ取得失敗', {
-      error,
-      category,
-      retryCount: 0,
-    });
-
-    // 段階的な回復戦略
-    try {
-      // 1. 最初にキャッシュから取得を試みる
-      const cachedData = await getCachedPOIData(category);
-      if (cachedData) {
-        logger.warn('キャッシュからPOIデータを使用', { category });
-        return cachedData;
-      }
-
-      // 2. 一般カテゴリから取得を試みる
-      logger.warn('一般カテゴリからPOIデータを取得します', { category });
-      const fallbackData = await fetch('/api/pois/general').then(r => r.json());
-      return fallbackData;
-    } catch (fallbackError) {
-      // 3. 最終手段として空の結果を返す
-      logger.error('POIデータのフォールバック取得も失敗', {
-        originalError: error,
-        fallbackError,
-      });
-
-      // 開発環境では詳細なエラー情報を表示
-      if (ENABLE_DETAILED_ERRORS) {
-        throw new Error(
-          `POIデータ取得中のエラー: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-      }
-
-      // 本番環境ではユーザーフレンドリーなエラーメッセージ
-      return {
-        items: [],
-        error: '現在データを読み込めません。後でもう一度お試しください。',
-      };
-    }
-  }
-}
+> **注意**: パフォーマンス計測とエラー処理を組み合わせる場合は、[パフォーマンス計測ユーティリティ](#パフォーマンス計測ユーティリティ)セクションのユーティリティを活用してください。ロガーとの連携方法については[ロガー使用ガイドライン](./logger_usage_guidelines.md)を参照してください。
 ```
 
 ## 参考リンク

@@ -42,6 +42,10 @@
   - [環境変数関連のデバッグ手法](#環境変数関連のデバッグ手法)
 - [10. 推奨プラクティスチェックリスト](#10-推奨プラクティスチェックリスト)
 - [11. プロジェクト依存ライブラリのバージョン情報](#11-プロジェクト依存ライブラリのバージョン情報)
+- [12. 参考リンク](#12-参考リンク)
+  - [公式ドキュメント](#公式ドキュメント)
+  - [セキュリティと認証](#セキュリティと認証)
+  - [その他のツールと実装](#その他のツールと実装)
 
 > **関連ドキュメント**
 >
@@ -679,16 +683,24 @@ function maskKey(key: string): string {
 3. **ロギングへの影響**: ロギングメカニズムに影響がある場合は、logger_usage_guidelines.mdを更新する
 4. **最適化戦略への影響**: パフォーマンスや最適化に影響がある場合は、code_optimization_guidelines.mdを更新する
 
+## 12. 参考リンク
+
+### 公式ドキュメント
+
+- [Vite環境変数公式ドキュメント](https://ja.vitejs.dev/guide/env-and-mode.html) - Viteでの環境変数の基本的な使い方
+- [TypeScriptでの環境変数型定義](https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-modifying-module-d-ts.html) - 型安全な環境変数の実装方法
+- [Viteの.envタイプ定義](https://vitejs.dev/guide/env-and-mode.html#intellisense-for-typescript) - VSCodeでのIntelliSenseサポート
+
+### セキュリティと認証
+
+- [Google Mapsプラットフォーム認証ガイド](https://developers.google.com/maps/documentation/javascript/get-api-key) - APIキーの取得と設定方法
+- [環境変数のセキュリティベストプラクティス](https://docs.github.com/ja/actions/security-guides/encrypted-secrets) - GitHub Actionsでのシークレット管理
+
+### その他のツールと実装
+
+- [dotenv-expand](https://github.com/motdotla/dotenv-expand) - 環境変数内での変数参照実装
+
 > **関連ガイドライン**:
 >
-> - コード最適化ガイドライン - 効率的なビルド設定や依存関係の最適化
-> - ロガー使用ガイドライン - 環境変数を活用したログレベル設定
->
-> **参考リンク**：
->
-> - [Vite環境変数公式ドキュメント](https://ja.vitejs.dev/guide/env-and-mode.html) - Viteでの環境変数の基本的な使い方
-> - [TypeScriptでの環境変数型定義](https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-modifying-module-d-ts.html) - 型安全な環境変数の実装方法
-> - [Google Mapsプラットフォーム認証ガイド](https://developers.google.com/maps/documentation/javascript/get-api-key) - APIキーの取得と設定方法
-> - [dotenv-expand](https://github.com/motdotla/dotenv-expand) - 環境変数内での変数参照実装
-> - [環境変数のセキュリティベストプラクティス](https://docs.github.com/ja/actions/security-guides/encrypted-secrets) - GitHub Actionsでのシークレット管理
-> - [Viteの.envタイプ定義](https://vitejs.dev/guide/env-and-mode.html#intellisense-for-typescript) - VSCodeでのIntelliSenseサポート
+> - [コード最適化ガイドライン](./code_optimization_guidelines.md) - 効率的なビルド設定や依存関係の最適化
+> - [ロガー使用ガイドライン](./logger_usage_guidelines.md) - 環境変数を活用したログレベル設定

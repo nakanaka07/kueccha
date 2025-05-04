@@ -1,5 +1,20 @@
 # 8. アクセシビリティとユーザビリティ対応
 
+> **最終更新日**: 2025年4月28日  
+> **バージョン**: 2.0  
+> **作成者**: 佐渡で食えっちゃプロジェクトチーム  
+> **準拠規格**: WCAG 2.2
+
+## 目次
+
+- [スクリーンリーダー対応](#スクリーンリーダー対応)
+- [静的ホスティング環境でのアクセシビリティ対応](#静的ホスティング環境でのアクセシビリティ対応)
+- [キーボード操作対応](#キーボード操作対応)
+- [視覚的ユーザビリティの強化](#視覚的ユーザビリティの強化)
+- [高コントラストモードと色覚多様性対応](#高コントラストモードと色覚多様性対応)
+- [マップのWCAG 2.2準拠](#マップのwcag-22準拠)
+- [アクセシビリティチェックリスト](#アクセシビリティチェックリスト)
+
 ## スクリーンリーダー対応
 
 ```typescript
@@ -43,15 +58,17 @@ function createAccessibleMarker(
 
 ## 静的ホスティング環境でのアクセシビリティ対応
 
-```typescript
+````typescript
 // 静的ホスティング環境向けのアクセシビリティ機能実装
 export function setupAccessibilityForStaticHosting(
   map: google.maps.Map,
   mapContainerId: string = 'map'
-): void {
+): AccessibilityManager {
   // 1. アクセシビリティメッセージの追加
   const mapContainer = document.getElementById(mapContainerId);
-  if (!mapContainer) return;
+  if (!mapContainer) {
+    throw new Error(`Map container with id "${mapContainerId}" not found`);
+  }
 
   // スクリーンリーダーのためのヘルプテキスト
   const a11yHelpText = document.createElement('div');
@@ -67,20 +84,10 @@ export function setupAccessibilityForStaticHosting(
   // 3. フォーカス管理とトラップ回避
   setupFocusManagement(mapContainerId);
 
-  // 4. カラーコントラスト対応
-  if (window.matchMedia('(prefers-contrast: more)').matches) {
-    applyHighContrastMapStyle(map);
-  }
+  // 4. ユーザー設定に応じた表示の最適化
+  setupUserPreferenceAdaptations(map);
 
-  // 5. 拡大表示への対応
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    setupReducedMotionExperience(map);
-  }
-
-  // 6. マーカー選択状態の視覚的・聴覚的フィードバック強化
-  enhanceMarkerSelectionFeedback(map);
-
-  // 7. アクセシビリティ状態の更新関数を返却
+  // 5. アクセシビリティマネージャーを返却
   return {
     announceToScreenReader: (message: string) => {
       const statusElement = document.getElementById('map-a11y-status');
@@ -92,9 +99,31 @@ export function setupAccessibilityForStaticHosting(
         }, 3000);
       }
     },
+
+    // その他のアクセシビリティ関連メソッド
+    applyHighContrast: () => applyHighContrastMapStyle(map),
+    setupReducedMotion: () => setupReducedMotionExperience(map),
+    enhanceFeedback: () => enhanceMarkerSelectionFeedback(map),
   };
 }
-```
+
+// ユーザー設定に応じた表示の最適化
+function setupUserPreferenceAdaptations(map: google.maps.Map): void {
+  // カラーコントラスト対応
+  if (window.matchMedia('(prefers-contrast: more)').matches) {
+    applyHighContrastMapStyle(map);
+  }
+
+  // 動きの低減
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setupReducedMotionExperience(map);
+  }
+
+  // 拡大表示への対応
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    applyDarkModeMapStyle(map);
+  }
+}
 
 ## キーボード操作対応
 
@@ -115,6 +144,16 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
         }
       }
     });
+
+    // キーボード操作の視覚的フィードバック
+    mapContainer.addEventListener('keydown', () => {
+      document.body.classList.add('keyboard-navigation');
+    });
+
+    // マウス使用時の視覚的フィードバック切替
+    mapContainer.addEventListener('mousedown', () => {
+      document.body.classList.remove('keyboard-navigation');
+    });
   }
 
   // マップコントロールのアクセシビリティ強化
@@ -124,6 +163,12 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
       control.setAttribute('aria-label', label);
       control.setAttribute('role', 'button');
       control.setAttribute('tabindex', '0');
+
+      // タッチターゲットサイズの拡大（WCAG 2.2 2.5.8 Target Size (minimum)）
+      if (control instanceof HTMLElement && window.innerWidth <= 768) {
+        control.style.minWidth = '44px';
+        control.style.minHeight = '44px';
+      }
     }
   };
 
@@ -132,7 +177,7 @@ function setupKeyboardAccessibility(map: google.maps.Map) {
   setupA11yForControl('zoom-out-button', 'ズームアウト');
   setupA11yForControl('fullscreen-button', '全画面表示切り替え');
 }
-```
+````
 
 ## 視覚的ユーザビリティの強化
 
@@ -265,52 +310,67 @@ function createColorAccessibleMarkers(
 function setupWCAG22CompliantControls(
   mapContainer: HTMLElement,
   map: google.maps.Map
-) {
-  // フォーカス可視性の強化
-  mapContainer.addEventListener('keydown', event => {
-    if (event.key === 'Tab') {
-      document.body.classList.add('keyboard-navigation');
-    }
-  });
-
-  // マウス使用時はフォーカス表示を通常に戻す
-  mapContainer.addEventListener('mousedown', () => {
-    document.body.classList.remove('keyboard-navigation');
-  });
-
-  // 必要なARIAロールの追加
+): void {
+  // 必要なARIAロールとラベルの追加
   mapContainer.setAttribute('role', 'application');
   mapContainer.setAttribute('aria-label', '佐渡島の観光マップ');
+  mapContainer.setAttribute(
+    'aria-description',
+    '地図上のマーカーは観光スポットを示しています。キーボードでの操作が可能です。'
+  );
 
-  // マップコントロールのアクセシビリティ強化
-  const controls = mapContainer.querySelectorAll('.gm-control-active');
-  controls.forEach(control => {
-    if (control instanceof HTMLElement) {
-      // コントラストを強化
-      control.style.backgroundColor = '#FFFFFF';
-      control.style.color = '#000000';
+  // コントロールのアクセシビリティ強化
+  const enhanceControlAccessibility = (controls: NodeListOf<Element>) => {
+    controls.forEach(control => {
+      if (control instanceof HTMLElement) {
+        // コントラストを強化
+        control.style.backgroundColor = '#FFFFFF';
+        control.style.color = '#000000';
 
-      // フォーカス時の視覚的インジケータ
-      control.addEventListener('focus', () => {
-        control.style.outline = '3px solid #4285F4';
-      });
+        // 役割と状態を明示
+        if (!control.hasAttribute('role')) {
+          control.setAttribute('role', 'button');
+        }
 
-      control.addEventListener('blur', () => {
-        control.style.outline = '';
-      });
-    }
-  });
+        // フォーカスインジケータの強化
+        control.addEventListener('focus', () => {
+          control.style.outline = '3px solid #4285F4';
+          control.style.outlineOffset = '2px';
+        });
 
-  // モバイル用の追加アクセシビリティ設定
+        control.addEventListener('blur', () => {
+          control.style.outline = '';
+        });
+      }
+    });
+  };
+
+  // 既存のGoogle Maps UI要素にアクセシビリティ強化を適用
+  const mapControls = mapContainer.querySelectorAll(
+    '.gm-control-active, .gm-fullscreen-control'
+  );
+  enhanceControlAccessibility(mapControls);
+
+  // モバイルデバイス向けの最適化（WCAG 2.2 2.5.8 Target Size対応）
+  applyMobileAccessibilityOptimizations(mapContainer);
+
+  // Google Mapsのポップアップや情報ウィンドウの監視と強化
+  setupDynamicContentObserver(mapContainer);
+}
+
+// モバイルデバイス向けの最適化
+function applyMobileAccessibilityOptimizations(container: HTMLElement): void {
   if (window.innerWidth <= 768) {
-    // タッチターゲットサイズの拡大（WCAG 2.2 2.5.8 Target Size (minimum)）
-    const touchControls = mapContainer.querySelectorAll(
-      '.gm-control-active, .gm-fullscreen-control'
+    // タッチターゲットサイズの拡大
+    const touchControls = container.querySelectorAll(
+      'button, [role="button"], .gm-control-active, .gm-fullscreen-control'
     );
+
     touchControls.forEach(control => {
       if (control instanceof HTMLElement) {
         control.style.minWidth = '44px';
         control.style.minHeight = '44px';
+        control.style.padding = '12px';
       }
     });
   }
@@ -391,4 +451,120 @@ function provideAlternativeInteractions(
     mapContainer.appendChild(listContainer);
   }
 }
+
+// 動的に生成されるUIコンテンツの監視と強化
+function setupDynamicContentObserver(mapContainer: HTMLElement): void {
+  // MutationObserverを使って動的に追加される要素を監視
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        // 新しく追加されたinfoWindowやポップアップを強化
+        mutation.addedNodes.forEach(node => {
+          if (node instanceof HTMLElement) {
+            // InfoWindow関連要素を検出
+            const infoWindows = node.querySelectorAll(
+              '.gm-style-iw, .gm-ui-hover-effect'
+            );
+            if (infoWindows.length > 0) {
+              enhanceInfoWindowAccessibility(infoWindows);
+            }
+          }
+        });
+      }
+    });
+  });
+
+  // 監視の設定
+  observer.observe(mapContainer, { childList: true, subtree: true });
+}
+
+// 情報ウィンドウのアクセシビリティ強化
+function enhanceInfoWindowAccessibility(elements: NodeListOf<Element>): void {
+  elements.forEach(element => {
+    if (element instanceof HTMLElement) {
+      // 情報ウィンドウ本体の場合
+      if (element.classList.contains('gm-style-iw')) {
+        element.setAttribute('role', 'dialog');
+        element.setAttribute('aria-modal', 'false');
+
+        // タイトルがあれば関連付け
+        const title = element.querySelector(
+          'h1, h2, h3, h4, h5, h6, [role="heading"]'
+        );
+        if (title && title.id) {
+          element.setAttribute('aria-labelledby', title.id);
+        } else if (title) {
+          const titleId = `info-window-title-${Date.now()}`;
+          title.id = titleId;
+          element.setAttribute('aria-labelledby', titleId);
+        }
+      }
+      // 閉じるボタンの場合
+      else if (element.classList.contains('gm-ui-hover-effect')) {
+        element.setAttribute('aria-label', '情報ウィンドウを閉じる');
+        element.setAttribute('role', 'button');
+      }
+
+      // モバイル対応
+      if (window.innerWidth <= 768) {
+        if (element.classList.contains('gm-ui-hover-effect')) {
+          element.style.minWidth = '44px';
+          element.style.minHeight = '44px';
+        }
+      }
+    }
+  });
+}
 ```
+
+## アクセシビリティチェックリスト
+
+Google Mapsを実装する際、アクセシビリティ対応のために以下のチェックリストを確認しましょう。
+
+### スクリーンリーダー対応
+
+- [ ] マーカーに適切な`aria-label`属性が設定されている
+- [ ] マップコンテナに適切な`role`と`aria-label`が設定されている
+- [ ] スクリーンリーダー用の状態通知メカニズムがある
+- [ ] インフォウィンドウのコンテンツが適切に構造化されている
+
+### キーボード操作
+
+- [ ] マーカーとコントロールがTabキーでフォーカス可能
+- [ ] Escキーでマップからフォーカスを外せる
+- [ ] フォーカスの視覚的インジケータが明確
+- [ ] フォーカストラップが起きない
+
+### 視覚的ユーザビリティ
+
+- [ ] コントラスト比がWCAG AAレベル（4.5:1）以上
+- [ ] 色覚多様性に配慮した配色
+- [ ] 形状と色の組み合わせで情報を伝達
+- [ ] テキストサイズの変更に対応可能
+
+### モバイル対応
+
+- [ ] タッチターゲットサイズが44px×44px以上
+- [ ] 適切なタッチフィードバックがある
+- [ ] ピンチズームが無効化されていない
+- [ ] ジェスチャー操作に代わる手段がある
+
+### 静的ホスティング特有の考慮事項
+
+- [ ] 読み込み状態が適切に通知される
+- [ ] オフラインや低速接続時のフォールバック対応
+- [ ] パフォーマンス最適化（アニメーション削減など）
+- [ ] 外部リソース依存の最小化
+
+## 参考資料と関連ガイドライン
+
+- [Google Maps Platform アクセシビリティガイド](https://developers.google.com/maps/documentation/javascript/accessibility)
+- [WCAG 2.2 チェックリスト](https://www.w3.org/WAI/standards-guidelines/wcag/)
+- [静的ホスティング環境での最適化](../static_hosting_guidelines.md)
+- [パフォーマンス最適化](./07_performance.md) - アクセシビリティとパフォーマンスの両立についての詳細
+
+## 更新履歴
+
+- **2025年4月28日**: WCAG 2.2対応の最新ガイドラインを追加
+- **2025年2月15日**: 色覚多様性サポートの強化
+- **2024年12月10日**: 静的ホスティング環境向けのアクセシビリティ対応を追加

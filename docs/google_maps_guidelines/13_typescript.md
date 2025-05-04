@@ -1,4 +1,17 @@
-# 13. 型安全性とリント最適化（静的ホスティング対応）
+# 13. 型安全性とリント最適化
+
+> **最終更新日**: 2025年4月28日  
+> **対象環境**: 静的ホスティング（GitHub Pages, Netlify, Vercel）  
+> **TypeScriptバージョン**: 5.4 以上
+
+## 目次
+
+- [静的ホスティング環境向け Google Maps APIの型定義](#静的ホスティング環境向け-google-maps-apiの型定義)
+- [ESLintの最適化設定](#eslintの最適化設定)
+- [Google Maps固有のカスタムルール](#google-maps固有のカスタムルール)
+- [マーカーと地図オブジェクトの型安全な操作](#マーカーと地図オブジェクトの型安全な操作)
+- [型安全性向上のためのユーティリティ関数](#型安全性向上のためのユーティリティ関数)
+- [リント最適化とコード品質チェック](#リント最適化とコード品質チェック)
 
 ## 静的ホスティング環境向け Google Maps APIの型定義
 
@@ -139,7 +152,7 @@ export interface SadoPoiData {
 export {};
 ```
 
-## 静的ホスティング環境向けのESLintとTS設定最適化
+## ESLintの最適化設定
 
 ```javascript
 // eslint.config.js内のGoogle Maps関連ルール
@@ -170,6 +183,51 @@ export default tseslint.config(
     files: ['**/src/hooks/useGoogleMaps.ts', '**/src/components/Map*.tsx'],
   }
 );
+```
+
+## Google Maps固有のカスタムルール
+
+```typescript
+// ./rules/typescript.js でのGoogle Maps固有のカスタムルール
+export const typescriptRules = {
+  // Google Maps APIの推奨使用方法を強制
+  'custom-rules/maps-api-usage': [
+    'warn',
+    {
+      // 非推奨APIの使用を警告
+      deprecatedApis: [
+        'google.maps.visualization', // GeoJSON APIを使用すべき
+        'google.maps.MapTypeControlStyle.DEFAULT', // 明示的なスタイルを使用すべき
+      ],
+      // 必須のエラーハンドリング
+      requireErrorHandling: [
+        'google.maps.Map',
+        'google.maps.places.PlacesService',
+      ],
+    },
+  ],
+
+  // 型安全性の強化
+  '@typescript-eslint/consistent-type-assertions': [
+    'error',
+    {
+      assertionStyle: 'as',
+      objectLiteralTypeAssertions: 'allow-as-parameter',
+    },
+  ],
+
+  // nullチェックの強制
+  '@typescript-eslint/no-non-null-assertion': 'error',
+
+  // 未使用変数の警告
+  '@typescript-eslint/no-unused-vars': [
+    'warn',
+    {
+      varsIgnorePattern: '^_',
+      argsIgnorePattern: '^_',
+    },
+  ],
+};
 ```
 
 ## マーカーと地図オブジェクトの型安全な操作
@@ -302,253 +360,38 @@ function addSafeClickListener<T extends google.maps.MVCObject>(
 }
 ```
 
-## Google Maps API固有のESLintルール
+## まとめ：静的ホスティング環境での型安全性のベストプラクティス
 
-```typescript
-// ./rules/typescript.js でのGoogle Maps固有のカスタムルール
-export const typescriptRules = {
-  // Google Maps APIの推奨使用方法を強制
-  'custom-rules/maps-api-usage': [
-    'warn',
-    {
-      // 非推奨APIの使用を警告
-      deprecatedApis: [
-        'google.maps.visualization', // GeoJSON APIを使用すべき
-        'google.maps.MapTypeControlStyle.DEFAULT', // 明示的なスタイルを使用すべき
-      ],
-      // 必須のエラーハンドリング
-      requireErrorHandling: [
-        'google.maps.Map',
-        'google.maps.places.PlacesService',
-      ],
-    },
-  ],
+静的ホスティング環境でGoogle Maps APIを使用する際は、以下の型安全性のベストプラクティスに従うことをお勧めします：
 
-  // 型安全性の強化
-  '@typescript-eslint/consistent-type-assertions': [
-    'error',
-    {
-      assertionStyle: 'as',
-      objectLiteralTypeAssertions: 'allow-as-parameter',
-    },
-  ],
+1. **包括的な型定義ファイル**
 
-  // nullチェックの強制
-  '@typescript-eslint/no-non-null-assertion': 'error',
+   - Google Maps JavaScript APIの型定義を静的ホスティング環境向けに拡張する
+   - カスタム機能や新機能を適切に型付けする
 
-  // 未使用変数の警告
-  '@typescript-eslint/no-unused-vars': [
-    'warn',
-    {
-      varsIgnorePattern: '^_',
-      argsIgnorePattern: '^_',
-    },
-  ],
-};
-```
+2. **機能検出パターンの使用**
 
-```javascript
-// eslint.config.js内のGoogle Maps関連ルール
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import { typescriptRules } from './rules/typescript.js';
+   - APIの存在確認を型安全に行う（`in` 演算子と `typeof` チェックの併用）
+   - フォールバック機能を提供し、型の互換性を確保する
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    rules: {
-      ...typescriptRules,
-      // Google Maps API使用時の特殊ルール
-      'no-undef': 'off', // グローバルのgoogleオブジェクトへのアクセスで警告が出ないように
-      '@typescript-eslint/no-explicit-any': [
-        'error',
-        {
-          // google.maps名前空間の特定のオブジェクトはanyを許可
-          ignoreRestArgs: true,
-          allowExplicitAny: false,
-        },
-      ],
-      // APIのバージョンチェックを強制するカスタムルール
-      'custom-rules/check-maps-version': 'warn',
-    },
-    // Google Maps関連ファイルの特定
-    files: ['**/src/hooks/useGoogleMaps.ts', '**/src/components/Map*.tsx'],
-  }
-);
-```
+3. **型安全なイベント処理**
 
-## マーカーと地図オブジェクトの型安全な操作
+   - イベントリスナーを適切に型付けする
+   - ジェネリック型を活用して型情報を維持する
 
-```typescript
-// 型安全なマーカー作成関数
-function createTypeSafeMarker(
-  poi: PointOfInterest,
-  useAdvancedMarker = true
-): google.maps.marker.AdvancedMarkerElement | google.maps.Marker {
-  // Advanced Marker APIの存在確認
-  if (
-    useAdvancedMarker &&
-    typeof google.maps.marker !== 'undefined' &&
-    'AdvancedMarkerElement' in google.maps.marker &&
-    typeof google.maps.marker.AdvancedMarkerElement === 'function'
-  ) {
-    // 型安全なオプション構築
-    const options: google.maps.marker.AdvancedMarkerElementOptions = {
-      position: { lat: poi.lat, lng: poi.lng },
-      title: poi.name,
-    };
+4. **厳格なコンパイラオプション**
 
-    // マーカーコンテンツの条件分岐も型安全に
-    if ('PinElement' in google.maps.marker) {
-      const pinOptions: google.maps.marker.PinElementOptions = {
-        background: getCategoryColor(poi.category),
-        scale: poi.isHighlighted ? 1.2 : 1,
-      };
+   - `strict: true` を含む厳格なTypeScript設定を使用する
+   - `noImplicitAny` や `strictNullChecks` などの設定を有効にする
 
-      // POIのプロパティに応じて追加の設定
-      if (poi.isClosed) {
-        pinOptions.glyph = '×';
-        pinOptions.glyphColor = '#ff0000';
-      }
+5. **ESLintルールの最適化**
+   - Google Maps API特有のカスタムルールを定義する
+   - 型安全性を向上させる標準ルールを強制する
 
-      options.content = new google.maps.marker.PinElement(pinOptions).element;
-    } else {
-      // PinElementがない場合のフォールバック
-      const div = document.createElement('div');
-      div.className = 'map-marker';
-      div.textContent = poi.name.substring(0, 1);
-      options.content = div;
-    }
+これらの実践により、静的ホスティング環境でのGoogle Maps実装の堅牢性と保守性が向上し、エラーの早期検出が可能になります。
 
-    return new google.maps.marker.AdvancedMarkerElement(options);
-  } else {
-    // 従来のマーカーへのフォールバック（型を明示）
-    const options: google.maps.MarkerOptions = {
-      position: { lat: poi.lat, lng: poi.lng },
-      title: poi.name,
-      icon: {
-        url: getMarkerIcon(poi.category),
-        scaledSize: new google.maps.Size(32, 32),
-      },
-      map: null, // 初期状態ではマップに表示しない
-    };
+## 関連ガイドライン
 
-    return new google.maps.Marker(options);
-  }
-}
-```
-
-## 型安全性向上のためのユーティリティ関数
-
-```typescript
-// APIバージョンチェックユーティリティ
-function isApiVersionSupported(requiredVersion: string): boolean {
-  // Google Mapsオブジェクトが存在するか確認
-  if (typeof google === 'undefined' || !google.maps) {
-    return false;
-  }
-
-  // バージョン文字列の取得（APIから取得できる場合）
-  let apiVersion = '';
-  try {
-    // 注: バージョン情報がAPIから直接取得できない場合もある
-    // この例では実装方法を示すためのものです
-    apiVersion = (google.maps as any).version || '';
-  } catch (error) {
-    console.warn('Maps APIバージョンの取得に失敗しました', error);
-    return false;
-  }
-
-  // バージョン比較ロジック
-  return compareVersions(apiVersion, requiredVersion) >= 0;
-}
-
-// マーカータイプチェック
-// 異なるマーカータイプを安全に扱うためのタイプガード
-function isAdvancedMarker(
-  marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker
-): marker is google.maps.marker.AdvancedMarkerElement {
-  return 'content' in marker && marker.content !== undefined;
-}
-
-// イベントリスナーの型安全な追加
-function addSafeClickListener<T extends google.maps.MVCObject>(
-  target: T,
-  callback: (event: google.maps.MapMouseEvent) => void
-): google.maps.MapsEventListener {
-  return target.addListener('click', callback);
-}
-```
-
-## リント最適化とコード品質チェック
-
-以下のTypeScriptコンパイラオプションがGoogle Maps Platformとの互換性の確保と型安全性の向上に役立ちます：
-
-```json
-// tsconfig.json の推奨設定
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "strictBindCallApply": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "allowUnreachableCode": false,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
-  }
-}
-```
-
-## Google Maps API固有のESLintルール
-
-```typescript
-// ./rules/typescript.js でのGoogle Maps固有のカスタムルール
-export const typescriptRules = {
-  // Google Maps APIの推奨使用方法を強制
-  'custom-rules/maps-api-usage': [
-    'warn',
-    {
-      // 非推奨APIの使用を警告
-      deprecatedApis: [
-        'google.maps.visualization', // GeoJSON APIを使用すべき
-        'google.maps.MapTypeControlStyle.DEFAULT', // 明示的なスタイルを使用すべき
-      ],
-      // 必須のエラーハンドリング
-      requireErrorHandling: [
-        'google.maps.Map',
-        'google.maps.places.PlacesService',
-      ],
-    },
-  ],
-
-  // 型安全性の強化
-  '@typescript-eslint/consistent-type-assertions': [
-    'error',
-    {
-      assertionStyle: 'as',
-      objectLiteralTypeAssertions: 'allow-as-parameter',
-    },
-  ],
-
-  // nullチェックの強制
-  '@typescript-eslint/no-non-null-assertion': 'error',
-
-  // 未使用変数の警告
-  '@typescript-eslint/no-unused-vars': [
-    'warn',
-    {
-      varsIgnorePattern: '^_',
-      argsIgnorePattern: '^_',
-    },
-  ],
-};
-```
+- [静的ホスティング環境向け最適化ガイドライン](../static_hosting_guidelines.md) - デプロイと運用の詳細
+- [セキュリティ対策](./09_security.md) - APIキー管理と保護
+- [エラー処理とフォールバック戦略](./06_error_handling.md) - 堅牢なエラー処理
