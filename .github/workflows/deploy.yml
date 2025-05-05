@@ -62,6 +62,9 @@ jobs:
       # アプリケーションのビルド
       - name: Build application
         run: pnpm build
+        env:
+          CI: true
+          NODE_ENV: production
 
       # GitHub Pagesへのデプロイ
       - name: Deploy to GitHub Pages
