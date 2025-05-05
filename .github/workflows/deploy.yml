@@ -1,0 +1,71 @@
+name: Deploy to GitHub Pages
+
+# ワークフロー実行のトリガー設定
+on:
+  push:
+    branches:
+      - main
+  # 手動実行のためのオプション
+  workflow_dispatch:
+
+# デフォルト実行環境の設定
+env:
+  NODE_VERSION: "22" # 最新のLTS Node.jsバージョン（2025年5月現在）
+  PNPM_VERSION: "10" # 最新のpnpmメジャーバージョン（2025年5月現在）
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Node.jsのセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      # pnpmのインストール
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: pnpm install
+
+      # リポジトリ名から動的にベースパスを設定
+      - name: Set base path from repository name
+        run: |
+          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
+          echo "VITE_BASE_PATH=/$REPO_NAME/" >> .env
+          echo "Base path set to: /$REPO_NAME/"
+
+      # 環境変数の準備（GitHub Secretsから）
+      - name: Setup environment variables
+        run: |
+          # GitHubから環境変数を取得
+          echo "VITE_GOOGLE_API_KEY=${{ secrets.VITE_GOOGLE_API_KEY }}" >> .env
+          echo "VITE_GOOGLE_MAPS_MAP_ID=${{ secrets.VITE_GOOGLE_MAPS_MAP_ID }}" >> .env
+          echo "VITE_GOOGLE_SPREADSHEET_ID=${{ secrets.VITE_GOOGLE_SPREADSHEET_ID }}" >> .env
+          echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.VITE_EMAILJS_SERVICE_ID }}" >> .env
+          echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}" >> .env
+          echo "VITE_EMAILJS_PUBLIC_KEY=${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}" >> .env
+
+      # アプリケーションのビルド
+      - name: Build application
+        run: pnpm build
+
+      # GitHub Pagesへのデプロイ
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
