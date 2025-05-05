@@ -72,3 +72,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          force_orphan: true # 初回デプロイ時に新しいブランチを強制的に作成
