@@ -44,9 +44,8 @@ jobs:
       # リポジトリ名から動的にベースパスを設定
       - name: Set base path from repository name
         run: |
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-          echo "VITE_BASE_PATH=/$REPO_NAME/" >> .env
-          echo "Base path set to: /$REPO_NAME/"
+          echo "VITE_BASE_PATH=/${{ github.event.repository.name }}/" >> .env
+          echo "Base path set to: /${{ github.event.repository.name }}/"
 
       # 環境変数の準備（GitHub Secretsから）
       - name: Setup environment variables
