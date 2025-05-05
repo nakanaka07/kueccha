@@ -23,19 +23,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # pnpmのインストール
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
       # Node.jsのセットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-
-      # pnpmのインストール
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
 
       # 依存関係のインストール
       - name: Install dependencies
