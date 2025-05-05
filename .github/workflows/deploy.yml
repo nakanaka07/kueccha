@@ -32,10 +32,9 @@ jobs:
 
       # pnpmのインストール
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
 
       # 依存関係のインストール
       - name: Install dependencies
